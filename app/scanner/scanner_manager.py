@@ -63,10 +63,11 @@ class ScannerManager:
             def path_keys(path_value) -> set[str]:
                 if not path_value:
                     return set()
-                path_text = str(path_value)
+                path_text = str(path_value).lower().replace("\\", "/")
                 keys = {path_text}
                 try:
-                    keys.add(str(Path(path_text).resolve(strict=False)))
+                    resolved = str(Path(path_text).resolve(strict=False)).lower().replace("\\", "/")
+                    keys.add(resolved)
                 except Exception:
                     pass
                 return {key for key in keys if key}

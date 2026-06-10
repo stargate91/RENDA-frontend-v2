@@ -3,6 +3,7 @@ import { AlertTriangle } from 'lucide-react';
 import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import { useSettingsQuery } from '../queries/appQueries';
+import { useTranslation } from '../providers/LanguageProvider';
 
 const sendCloseResponse = (payload) => {
   try {
@@ -17,6 +18,7 @@ export default function AppClosePrompt() {
   const settingsQuery = useSettingsQuery();
   const closeBehavior = settingsQuery.data?.close_button_behavior || 'ask';
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     let ipcRenderer;
@@ -58,19 +60,20 @@ export default function AppClosePrompt() {
     <Modal
       open={isOpen}
       onClose={() => handleAction('cancel')}
-      title="Close RENDA?"
-      description="Choose whether to quit the app or minimize it to the tray."
+      title={t('closePrompt.title')}
+      description={t('closePrompt.description')}
       variant="danger"
       icon={AlertTriangle}
       footer={(
         <>
-          <Button variant="secondary-neutral" onClick={() => handleAction('cancel')}>Cancel</Button>
-          <Button variant="secondary-neutral" onClick={() => handleAction('minimize-to-tray')}>Tray</Button>
-          <Button variant="danger" onClick={() => handleAction('quit')}>Quit</Button>
+          <Button variant="secondary-neutral" onClick={() => handleAction('cancel')}>{t('closePrompt.action.cancel')}</Button>
+          <Button variant="secondary-neutral" onClick={() => handleAction('minimize-to-tray')}>{t('closePrompt.action.tray')}</Button>
+          <Button variant="danger" onClick={() => handleAction('quit')}>{t('closePrompt.action.quit')}</Button>
         </>
       )}
     >
-      <p className="support-copy">This prompt is connected to the custom Electron titlebar close action.</p>
+      <p className="support-copy">{t('closePrompt.info')}</p>
     </Modal>
   );
 }
+

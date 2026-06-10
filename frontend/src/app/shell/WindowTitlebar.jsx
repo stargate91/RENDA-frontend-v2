@@ -1,11 +1,51 @@
-import { Minus, Square, X } from 'lucide-react';
+import { Minus, Square, X, AlertTriangle } from 'lucide-react';
 import UtilityButton from '../ui/UtilityButton';
 import ProgressBar from '../ui/ProgressBar';
+import Button from '../ui/Button';
 import { sendWindowEvent } from '../lib/ipc';
+import { fetchJson } from '../lib/http';
+import { useUi } from '../providers/UiProvider';
+import { useTranslation } from '../providers/LanguageProvider';
 import useWindowProgress from './useWindowProgress';
 
 export default function WindowTitlebar() {
   const { hasProgress, scanProgress, imageProgress } = useWindowProgress();
+  const { openModal, closeModal } = useUi();
+  const { t } = useTranslation();
+
+  const handleAbort = () => {
+    openModal({
+      title: t('progress.abortConfirm.title'),
+      description: t('progress.abortConfirm.description'),
+      icon: AlertTriangle,
+      variant: 'danger',
+      content: (
+        <div style={{ padding: '4px 0', fontSize: 'var(--font-size-sm)', color: 'var(--color-muted)' }}>
+          {t('progress.abortConfirm.body')}
+        </div>
+      ),
+      footer: (
+        <>
+          <Button variant="secondary-neutral" onClick={closeModal}>
+            {t('progress.abortConfirm.cancel')}
+          </Button>
+          <Button
+            variant="danger"
+            onClick={async () => {
+              closeModal();
+              try {
+                await fetchJson('/api/task/stop', { method: 'POST' });
+              } catch (err) {
+                console.error('Failed to stop background task:', err);
+              }
+            }}
+          >
+            {t('progress.abortConfirm.confirm')}
+          </Button>
+        </>
+      ),
+    });
+  };
 
   return (
     <header className="window-titlebar">
@@ -20,7 +60,7 @@ export default function WindowTitlebar() {
 
       {hasProgress ? (
         <div className="window-titlebar__progress">
-          {scanProgress ? <ProgressBar {...scanProgress} /> : null}
+          {scanProgress ? <ProgressBar {...scanProgress} onAbort={handleAbort} /> : null}
           {imageProgress ? <ProgressBar {...imageProgress} /> : null}
         </div>
       ) : null}

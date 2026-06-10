@@ -32,7 +32,7 @@ export default function MatchModalBrowserToolbar({
           type="button"
           variant="secondary-neutral"
           size="sm"
-          onClick={() => onResolve(seriesCandidate)}
+          onClick={() => onResolve(seriesCandidate, { season: null, episode: null })}
         >
           {t('organizer.details.matchModal.useSeries')}
         </Button>

@@ -101,6 +101,8 @@ export const mapExtraRow = (item, t) => ({
   category: item.subtype && item.subtype !== 'other' ? prettifyToken(item.subtype) : '-',
   language: item.language ? String(item.language).toUpperCase() : '-',
   extension: String(item.extension || '').replace(/^\./, ''),
+  parentStatus: item.parent_status || null,
+  parent_id: item.parent_item_id,
   images: [],
   rawPayload: item,
 });

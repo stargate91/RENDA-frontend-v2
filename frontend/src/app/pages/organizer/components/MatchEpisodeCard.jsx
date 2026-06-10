@@ -1,6 +1,7 @@
-import { Clapperboard } from 'lucide-react';
+import { Clapperboard, Check } from 'lucide-react';
 import MediaCard from '../../../ui/MediaCard';
 import MetaRow from '../../../ui/MetaRow';
+import StatusBadge from '../../../ui/StatusBadge';
 
 const TMDB_IMAGE_SIZE_STILL = 'w300';
 
@@ -15,45 +16,73 @@ export default function MatchEpisodeCard({
   episodeEntry,
   isBucketed,
   isDisabled,
+  onSelect,
   onToggle,
+  isActive = false,
   t,
 }) {
   const stillUrl = getImageUrl(episodeEntry.still_path, TMDB_IMAGE_SIZE_STILL);
 
+  const handleCardClick = (e) => {
+    if (e.target.closest('.organizer-match-modal__result-action--primary')) {
+      return;
+    }
+    onToggle(episodeEntry.episode_number);
+  };
+
   return (
-    <button
+    <div
       key={`episode-${episodeEntry.id || episodeEntry.episode_number}`}
-      type="button"
       className={`organizer-match-modal__browser-card organizer-match-modal__browser-card--episode${isBucketed ? ' is-selected' : ''}`.trim()}
-      onClick={() => onToggle(episodeEntry.episode_number)}
-      disabled={isDisabled}
     >
-      <MediaCard className="organizer-match-modal__browser-card-image organizer-match-modal__browser-card-image--still">
-        {stillUrl ? (
-          <img src={stillUrl} alt="" className="organizer-match-modal__poster-image" />
-        ) : (
-          <div className="organizer-match-modal__poster-placeholder">
-            <Clapperboard size={18} />
-          </div>
-        )}
-      </MediaCard>
+      <button
+        type="button"
+        className="organizer-match-modal__browser-card-image organizer-match-modal__browser-card-image--still organizer-match-modal__browser-card--clickable"
+        style={{ border: 'none', background: 'transparent', padding: 0, width: '100%', display: 'block' }}
+        onClick={() => onToggle(episodeEntry.episode_number)}
+      >
+        <MediaCard style={{ width: '100%', height: '100%' }}>
+          {stillUrl ? (
+            <img src={stillUrl} alt="" className="organizer-match-modal__poster-image" />
+          ) : (
+            <div className="organizer-match-modal__poster-placeholder">
+              <Clapperboard size={18} />
+            </div>
+          )}
+          {isBucketed ? (
+            <div className="organizer-match-modal__browser-card-bucket-indicator">
+              <Check size={12} strokeWidth={3} />
+            </div>
+          ) : null}
+          {isActive ? (
+            <StatusBadge variant="overlay">
+              {t('organizer.details.matchModal.current')}
+            </StatusBadge>
+          ) : null}
+        </MediaCard>
+      </button>
       <div className="organizer-match-modal__browser-card-copy">
         <strong className="organizer-match-modal__browser-card-title">
           {episodeEntry.name || t('organizer.details.matchModal.episodeNum').replace('{number}', episodeEntry.episode_number)}
         </strong>
-        <MetaRow
-          className="organizer-match-modal__browser-card-meta"
-          items={[
-            `E${episodeEntry.episode_number}`,
-            episodeEntry.air_date ? String(episodeEntry.air_date).slice(0, 10) : null,
-          ]}
-        />
-        <span className="organizer-match-modal__result-action">
-          {isBucketed
-            ? t('organizer.details.matchModal.removeFromBucket')
-            : t('organizer.details.matchModal.addToBucket')}
-        </span>
+        <div className="organizer-match-modal__browser-card-meta-row">
+          <MetaRow
+            className="organizer-match-modal__browser-card-meta"
+            items={[
+              `E${episodeEntry.episode_number}`,
+              episodeEntry.air_date ? String(episodeEntry.air_date).slice(0, 10) : null,
+            ]}
+          />
+          <button
+            type="button"
+            className="organizer-match-modal__result-action organizer-match-modal__result-action--primary"
+            onClick={() => onSelect(episodeEntry)}
+            disabled={isDisabled}
+          >
+            {t('organizer.details.matchModal.select')}
+          </button>
+        </div>
       </div>
-    </button>
+    </div>
   );
 }

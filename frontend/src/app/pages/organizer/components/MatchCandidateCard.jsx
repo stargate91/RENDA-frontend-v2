@@ -53,27 +53,32 @@ export default function MatchCandidateCard({
 
   if (variant === 'poster') {
     return (
-      <button
+      <div
         key={`${sourceLabel}-${candidateId}`}
-        type="button"
         className={`organizer-match-modal__poster-card${candidate.is_active ? ' is-active' : ''}`.trim()}
-        onClick={() => onSelect(candidate)}
-        disabled={isDisabled}
       >
-        <MediaCard className="organizer-match-modal__poster-card-image">
-          {posterUrl ? (
-            <img src={posterUrl} alt="" className="organizer-match-modal__poster-image" />
-          ) : (
-            <div className="organizer-match-modal__poster-placeholder">
-              <Clapperboard size={18} />
-            </div>
-          )}
-          {candidate.is_active ? (
-            <StatusBadge variant="overlay">
-              {t('organizer.details.matchModal.current')}
-            </StatusBadge>
-          ) : null}
-        </MediaCard>
+        <button
+          type="button"
+          className="organizer-match-modal__poster-card-image"
+          style={{ border: 'none', background: 'transparent', padding: 0, width: '100%', display: 'block', cursor: 'pointer' }}
+          onClick={() => onSelect(candidate)}
+          disabled={isDisabled}
+        >
+          <MediaCard style={{ width: '100%', height: '100%' }}>
+            {posterUrl ? (
+              <img src={posterUrl} alt="" className="organizer-match-modal__poster-image" />
+            ) : (
+              <div className="organizer-match-modal__poster-placeholder">
+                <Clapperboard size={18} />
+              </div>
+            )}
+            {candidate.is_active ? (
+              <StatusBadge variant="overlay">
+                {t('organizer.details.matchModal.current')}
+              </StatusBadge>
+            ) : null}
+          </MediaCard>
+        </button>
         <div className="organizer-match-modal__poster-card-copy">
           <strong className="organizer-match-modal__poster-card-title">{displayTitle}</strong>
           <MetaRow
@@ -84,7 +89,7 @@ export default function MatchCandidateCard({
             ]}
           />
         </div>
-      </button>
+      </div>
     );
   }
 
@@ -124,13 +129,13 @@ export default function MatchCandidateCard({
         {candidate.overview ? (
           <p className="organizer-match-modal__result-overview">{candidate.overview}</p>
         ) : null}
-        <span className="organizer-match-modal__result-action">
-          {mediaType === 'tv'
-            ? t('organizer.details.matchModal.browseSeasons')
-            : isResolvingId === candidateId
+        {mediaType !== 'tv' && (
+          <span className="organizer-match-modal__result-action">
+            {isResolvingId === candidateId
               ? t('organizer.details.matchModal.applying')
               : t('organizer.details.matchModal.useMatch')}
-        </span>
+          </span>
+        )}
       </div>
     </button>
   );

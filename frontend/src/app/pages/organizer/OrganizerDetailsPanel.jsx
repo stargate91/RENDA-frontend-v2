@@ -205,10 +205,22 @@ export default function OrganizerDetailsPanel({
                 <span className="organizer-details__label">{t('organizer.details.fields.source')}</span>
                 <span className="organizer-details__value" title={activeRow.sourcePath}>{activeRow.sourcePath}</span>
               </MediaCard>
-              <MediaCard className="organizer-details__field">
-                <span className="organizer-details__label">{t('organizer.details.fields.target')}</span>
-                <span className="organizer-details__value" title={activeRow.targetPath}>{activeRow.targetPath}</span>
-              </MediaCard>
+              {(() => {
+                const unmatchedStatuses = ['new', 'no_match', 'uncertain', 'multiple', 'error'];
+                const isUnmatchedExtra = activeRow.rawType === 'extra' && activeRow.parentStatus && unmatchedStatuses.includes(activeRow.parentStatus.toLowerCase());
+                const isUnmatchedMedia = activeRow.rawType !== 'extra' && unmatchedStatuses.includes(activeRow.rawStatus);
+                
+                if (isUnmatchedMedia || isUnmatchedExtra) {
+                  return null;
+                }
+                
+                return (
+                  <MediaCard className="organizer-details__field">
+                    <span className="organizer-details__label">{t('organizer.details.fields.target')}</span>
+                    <span className="organizer-details__value" title={activeRow.targetPath}>{activeRow.targetPath}</span>
+                  </MediaCard>
+                );
+              })()}
               <div className="organizer-details__actions">
                 <Button
                   type="button"

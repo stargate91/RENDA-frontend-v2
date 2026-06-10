@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from '@/providers/LanguageProvider';
+import { useUi } from '@/providers/UiProvider';
 import {
   useSearchMetadataQuery,
   useTvSeasonsQuery,
@@ -201,21 +202,79 @@ export default function useMatchModalViewModel({
     }
   };
 
+  const [confirmState, setConfirmState] = useState(null);
+
+  const requestConfirm = (type, skipKey, onConfirm) => {
+    if (localStorage.getItem(skipKey) === 'true') {
+      onConfirm();
+      return;
+    }
+
+    const defaultSeasonVal = getDefaultSeason(row);
+    const defaultEpisodeVal = getDefaultEpisode(row);
+    let hasExisting = false;
+    let existingDetails = '';
+
+    if (type === 'series') {
+      if (defaultSeasonVal != null || defaultEpisodeVal != null) {
+        hasExisting = true;
+        const parts = [];
+        if (defaultSeasonVal != null) parts.push(`S${defaultSeasonVal}`);
+        if (defaultEpisodeVal != null) parts.push(`E${defaultEpisodeVal}`);
+        existingDetails = parts.join(' ');
+      }
+    } else if (type === 'season') {
+      if (defaultEpisodeVal != null) {
+        hasExisting = true;
+        existingDetails = `E${defaultEpisodeVal}`;
+      }
+    }
+
+    setConfirmState({
+      type,
+      skipKey,
+      hasExisting,
+      existingDetails,
+      onConfirm: () => {
+        onConfirm();
+        setConfirmState(null);
+      },
+    });
+  };
+
   const handleResolve = async (candidate, overrides = {}) => {
     const candidateId = candidate.tmdb_id || candidate.id;
-    const effectiveSeason = overrides.season ?? season;
-    const effectiveEpisode = overrides.episode ?? episode;
+    const effectiveSeason = overrides.season !== undefined ? overrides.season : season;
+    const effectiveEpisode = overrides.episode !== undefined ? overrides.episode : episode;
 
-    setIsResolvingId(candidateId);
-    try {
-      await resolveMutation.mutateAsync(buildResolvePayload(row, candidate, mode, effectiveSeason, effectiveEpisode));
-      await onResolved();
-      toast(t('organizer.toasts.matchResolveSuccess'), 'success');
-    } catch (error) {
-      toast(error.message || t('organizer.toasts.matchResolveFailed'), 'danger');
-    } finally {
-      setIsResolvingId(null);
+    const performResolve = async () => {
+      setIsResolvingId(candidateId);
+      try {
+        await resolveMutation.mutateAsync(buildResolvePayload(row, candidate, mode, effectiveSeason, effectiveEpisode));
+        await onResolved();
+        toast(t('organizer.toasts.matchResolveSuccess'), 'success');
+      } catch (error) {
+        toast(error.message || t('organizer.toasts.matchResolveFailed'), 'danger');
+      } finally {
+        setIsResolvingId(null);
+      }
+    };
+
+    if (mode === 'tv' && effectiveSeason === null && effectiveEpisode === null) {
+      requestConfirm('series', 'renda_skip_confirm_series', performResolve);
+      return;
     }
+    if (mode === 'tv' && effectiveSeason !== null && effectiveEpisode === null) {
+      const isBucket = Array.isArray(candidate?.episodes) && candidate.episodes.length > 0;
+      if (isBucket) {
+        requestConfirm('bucket', 'renda_skip_confirm_bucket', performResolve);
+      } else {
+        requestConfirm('season', 'renda_skip_confirm_season', performResolve);
+      }
+      return;
+    }
+
+    await performResolve();
   };
 
   const handleBrowseSeries = async (candidate) => {
@@ -274,7 +333,6 @@ export default function useMatchModalViewModel({
 
   const browserMetaItems = browserState.view === 'episodes'
     ? [
-        browserState.selectedSeason?.season_number != null ? `S${browserState.selectedSeason.season_number}` : null,
         browserState.selectedSeason?.episode_count ? `${browserState.selectedSeason.episode_count} eps` : null,
       ]
     : [
@@ -312,6 +370,20 @@ export default function useMatchModalViewModel({
       {
         season: browserState.selectedSeason.season_number,
         episode: null,
+      },
+    );
+  };
+
+  const handleSelectEpisode = async (episodeEntry) => {
+    if (!browserState.seriesCandidate || !browserState.selectedSeason) {
+      return;
+    }
+
+    await handleResolve(
+      browserState.seriesCandidate,
+      {
+        season: browserState.selectedSeason.season_number,
+        episode: episodeEntry.episode_number,
       },
     );
   };
@@ -354,5 +426,8 @@ export default function useMatchModalViewModel({
     handleBrowserBack,
     toggleBucketEpisode,
     handleApplyBucket,
+    handleSelectEpisode,
+    confirmState,
+    setConfirmState,
   };
 }

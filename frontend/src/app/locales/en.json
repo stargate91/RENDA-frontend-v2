@@ -34,7 +34,8 @@
       "opening": "Opening...",
       "scanning": "Scanning...",
       "rename": "Rename",
-      "organizing": "Organizing..."
+      "organizing": "Organizing...",
+      "restoreDismissed": "Restore removed"
     },
     "emptyStates": {
       "notLoaded": {
@@ -90,16 +91,24 @@
     },
     "actions": {
       "match": "Match",
+      "fixMatch": "Fix match",
       "preview": "Preview",
       "delete": "Delete",
-      "showInFolder": "Show in Folder"
+      "showInFolder": "Show in Folder",
+      "dismiss": "Remove from list",
+      "override": "Override"
+    },
+    "overrideModal": {
+      "title": "Override {type}",
+      "description": "Customize naming or organization overrides for this item."
     },
     "table": {
       "originalFilename": "Original Filename",
       "proposedFilename": "Proposed Filename",
       "targetNotes": {
         "skip": "Skipped by extras rule",
-        "delete": "Will be deleted by extras rule"
+        "delete": "Will be deleted by extras rule",
+        "fixParentFirst": "Fix parent file match first"
       },
       "subcategory": "Subcategory",
       "language": "Language",
@@ -183,7 +192,6 @@
         "noSeasons": "No seasons found for this series.",
         "noEpisodes": "No episodes found for this season.",
         "back": "Back",
-        "browseSeasons": "Browse seasons",
         "useSeries": "Use series",
         "useSeason": "Use season",
         "useBucket": "Use selected episodes",
@@ -192,12 +200,32 @@
         "removeFromBucket": "Remove from bucket",
         "loading": "Loading...",
         "useMatch": "Use this match",
+        "select": "Select",
         "applying": "Applying...",
         "current": "Current",
         "unknownSeries": "Unknown Series",
         "unknownMovie": "Unknown Movie",
         "seasonNum": "Season {number}",
-        "episodeNum": "Episode {number}"
+        "episodeNum": "Episode {number}",
+        "confirm": {
+          "dontShowAgain": "Don't show this again",
+          "cancel": "Cancel",
+          "confirmBtn": "Yes, match",
+          "series": {
+            "title": "Match to Series Only",
+            "descNoExisting": "Matching to the TV series level only (without a season or episode number) will set the file's status to 'Uncertain'. You will need to manually edit it later in the 'Review Needed' tab to assign the correct season/episode numbers.",
+            "descWithExisting": "Matching to the TV series level only will reset and ignore the detected {existing} info from the file. The file status will become 'Uncertain', and you will need to manually edit it later in the 'Review Needed' tab."
+          },
+          "season": {
+            "title": "Match to Season Only",
+            "descNoExisting": "Matching to the Season level only (without an episode number) will set the file's status to 'Uncertain'. You will need to manually edit it later in the 'Review Needed' tab to assign the correct episode number.",
+            "descWithExisting": "Matching to the Season level only will reset and ignore the detected {existing} info from the file. The file status will become 'Uncertain', and you will need to manually edit it later in the 'Review Needed' tab."
+          },
+          "bucket": {
+            "title": "Match Multiple Episodes",
+            "desc": "This will assign multiple episodes to this single file, which is useful for double-episodes or multi-episode files."
+          }
+        }
       },
       "posterPlaceholder": "Poster preview",
       "imageKinds": {
@@ -235,7 +263,11 @@
       "multiple": "Multiple",
       "error": "Error",
       "pending": "Pending",
-      "delete": "Delete"
+      "delete": "Delete",
+      "missingSeason": "?S",
+      "missingEpisode": "?E",
+      "missingSeasonTooltip": "Missing Season",
+      "missingEpisodeTooltip": "Missing Episode"
     },
     "collisionStrategy": {
       "skip": "Skip",
@@ -252,6 +284,13 @@
     }
   },
   "progress": {
+    "abortConfirm": {
+      "title": "Abort Scan?",
+      "description": "Are you sure you want to abort the active scanning or renaming process?",
+      "body": "The file currently in progress will finish processing, and the operation will then halt safely.",
+      "confirm": "Abort Process",
+      "cancel": "Go Back"
+    },
     "ready": "Ready",
     "working": "Working...",
     "scan": {
@@ -264,5 +303,16 @@
     "images": {
       "downloading": "Downloading images..."
     }
+  },
+  "closePrompt": {
+    "title": "Close RENDA?",
+    "description": "Choose whether to quit the application completely or minimize it to the system tray.",
+    "info": "This prompt is connected to the window close action.",
+    "action": {
+      "cancel": "Cancel",
+      "tray": "Minimize to Tray",
+      "quit": "Quit App"
+    }
   }
 }
+

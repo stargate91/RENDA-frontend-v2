@@ -1,5 +1,7 @@
+import { ArrowRight } from 'lucide-react';
 import Checkbox from '../../ui/Checkbox';
 import StatusPill from '../../ui/StatusPill';
+import Tooltip from '../../ui/Tooltip';
 import { mapCollisionStrategyLabel, shouldShowCollisionStrategy } from './organizerMappers';
 
 export function buildOrganizerColumns({
@@ -13,6 +15,7 @@ export function buildOrganizerColumns({
   renderSortableLabel,
   selectedRowIds,
   t,
+  onOpenMatch,
 }) {
   const columns = [
     {
@@ -42,19 +45,47 @@ export function buildOrganizerColumns({
       label: renderSortableLabel(t('organizer.table.proposedFilename'), 'target'),
       width: '500px',
       render: (value, row) => {
-        if (row.rawType !== 'extra') {
-          return value;
+        const isManualReview = activeMainTab === 'manual';
+
+        const content = (() => {
+          if (row.rawType === 'extra') {
+            const unmatchedParentStatuses = ['new', 'uncertain', 'no_match', 'multiple', 'error'];
+            if (row.parentStatus && unmatchedParentStatuses.includes(row.parentStatus.toLowerCase())) {
+              return <span className="organizer-target-note organizer-target-note--warning">{t('organizer.table.targetNotes.fixParentFirst')}</span>;
+            }
+            if (row.rawAction === 'skip') {
+              return <span className="organizer-target-note organizer-target-note--muted">{t('organizer.table.targetNotes.skip')}</span>;
+            }
+            if (row.rawAction === 'delete') {
+              return <span className="organizer-target-note organizer-target-note--danger">{t('organizer.table.targetNotes.delete')}</span>;
+            }
+          }
+          return (
+            <span className="organizer-target-proposed">
+              <ArrowRight size={14} className="organizer-target-arrow" />
+              {value}
+            </span>
+          );
+        })();
+
+        if (isManualReview && row.rawType !== 'extra') {
+          return (
+            <div className="organizer-target-cell">
+              <button
+                type="button"
+                className="organizer-target-action"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenMatch(row);
+                }}
+              >
+                {t('organizer.actions.fixMatch')}
+              </button>
+            </div>
+          );
         }
 
-        if (row.rawAction === 'skip') {
-          return <span className="organizer-target-note organizer-target-note--muted">{t('organizer.table.targetNotes.skip')}</span>;
-        }
-
-        if (row.rawAction === 'delete') {
-          return <span className="organizer-target-note organizer-target-note--danger">{t('organizer.table.targetNotes.delete')}</span>;
-        }
-
-        return value;
+        return content;
       },
     },
   ];
@@ -92,6 +123,20 @@ export function buildOrganizerColumns({
             <StatusPill className="organizer-status-cell__policy" tone="default">
               {mapCollisionStrategyLabel(row.rawAction || collisionStrategy, t)}
             </StatusPill>
+          ) : null}
+          {row.rawStatus === 'uncertain' && row.rawType === 'series' ? (
+            <Tooltip content={t('organizer.status.missingSeasonTooltip')} side="top" delay={250}>
+              <StatusPill className="organizer-status-cell__policy" tone="default">
+                {t('organizer.status.missingSeason')}
+              </StatusPill>
+            </Tooltip>
+          ) : null}
+          {row.rawStatus === 'uncertain' && (row.rawType === 'series' || row.rawType === 'season') ? (
+            <Tooltip content={t('organizer.status.missingEpisodeTooltip')} side="top" delay={250}>
+              <StatusPill className="organizer-status-cell__policy" tone="default">
+                {t('organizer.status.missingEpisode')}
+              </StatusPill>
+            </Tooltip>
           ) : null}
         </span>
       ),

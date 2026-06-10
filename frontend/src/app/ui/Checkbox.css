@@ -61,3 +61,10 @@
 .ui-checkbox-input:checked + .ui-checkbox::after {
   display: block;
 }
+
+.ui-checkbox-label {
+  margin-left: 8px;
+  color: var(--color-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1;
+}

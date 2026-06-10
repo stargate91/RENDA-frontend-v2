@@ -1,5 +1,9 @@
+import { useState } from 'react';
+import { HelpCircle } from 'lucide-react';
 import EmptyState from '../../ui/EmptyState';
 import Spinner from '../../ui/Spinner';
+import Button from '../../ui/Button';
+import Checkbox from '../../ui/Checkbox';
 import MatchCandidateCard from './components/MatchCandidateCard';
 import MatchSeasonCard from './components/MatchSeasonCard';
 import MatchEpisodeCard from './components/MatchEpisodeCard';
@@ -45,7 +49,26 @@ export default function OrganizerMatchModalContent({
     handleBrowserBack,
     toggleBucketEpisode,
     handleApplyBucket,
+    handleSelectEpisode,
+    confirmState,
+    setConfirmState,
   } = useMatchModalViewModel({ row, t, toast, onResolved });
+
+  const [dontShowAgain, setDontShowAgain] = useState(false);
+
+  const handleConfirmMatch = () => {
+    if (!confirmState) return;
+    if (dontShowAgain) {
+      localStorage.setItem(confirmState.skipKey, 'true');
+    }
+    confirmState.onConfirm();
+    setDontShowAgain(false);
+  };
+
+  const handleCancelConfirm = () => {
+    setConfirmState(null);
+    setDontShowAgain(false);
+  };
 
   return (
     <div className="organizer-match-modal">
@@ -160,15 +183,22 @@ export default function OrganizerMatchModalContent({
         {browserState.view === 'seasons' && !isBrowserLoading ? (
           browserState.seasons.length > 0 ? (
             <div className="organizer-match-modal__browser-grid organizer-match-modal__browser-grid--seasons">
-              {browserState.seasons.map((seasonEntry) => (
-                <MatchSeasonCard
-                  key={`season-${seasonEntry.season_number}`}
-                  seasonEntry={seasonEntry}
-                  isBrowserLoading={isBrowserLoading}
-                  onSelect={handleBrowseSeason}
-                  t={t}
-                />
-              ))}
+              {browserState.seasons.map((seasonEntry) => {
+                const candidateId = Number(browserState.seriesCandidate?.tmdb_id || browserState.seriesCandidate?.id || 0);
+                const rowSeriesId = Number(row.rawPayload?.series_tmdb_id || row.rawPayload?.tmdb_id || 0);
+                const isCurrentSeries = candidateId > 0 && rowSeriesId > 0 && candidateId === rowSeriesId;
+                const isActiveSeason = isCurrentSeries && Number(seasonEntry.season_number) === Number(row.rawPayload?.season);
+                return (
+                  <MatchSeasonCard
+                    key={`season-${seasonEntry.season_number}`}
+                    seasonEntry={seasonEntry}
+                    isBrowserLoading={isBrowserLoading}
+                    onSelect={handleBrowseSeason}
+                    isActive={isActiveSeason}
+                    t={t}
+                  />
+                );
+              })}
             </div>
           ) : (
             <EmptyState
@@ -181,16 +211,30 @@ export default function OrganizerMatchModalContent({
         {browserState.view === 'episodes' && !isBrowserLoading ? (
           browserState.episodes.length > 0 ? (
             <div className="organizer-match-modal__browser-grid organizer-match-modal__browser-grid--episodes">
-              {browserState.episodes.map((episodeEntry) => (
-                <MatchEpisodeCard
-                  key={`episode-${episodeEntry.id || episodeEntry.episode_number}`}
-                  episodeEntry={episodeEntry}
-                  isBucketed={bucketEpisodeNumbers.includes(episodeEntry.episode_number)}
-                  isDisabled={isResolvingId === (browserState.seriesCandidate?.tmdb_id || browserState.seriesCandidate?.id)}
-                  onToggle={toggleBucketEpisode}
-                  t={t}
-                />
-              ))}
+              {browserState.episodes.map((episodeEntry) => {
+                const candidateId = Number(browserState.seriesCandidate?.tmdb_id || browserState.seriesCandidate?.id || 0);
+                const rowSeriesId = Number(row.rawPayload?.series_tmdb_id || row.rawPayload?.tmdb_id || 0);
+                const isCurrentSeries = candidateId > 0 && rowSeriesId > 0 && candidateId === rowSeriesId;
+                const isActiveSeason = isCurrentSeries && Number(browserState.selectedSeason?.season_number) === Number(row.rawPayload?.season);
+                const currentEpisodes = Array.isArray(row.rawPayload?.episode)
+                  ? row.rawPayload.episode.map(Number)
+                  : row.rawPayload?.episode != null
+                    ? [Number(row.rawPayload.episode)]
+                    : [];
+                const isActiveEpisode = isActiveSeason && currentEpisodes.includes(Number(episodeEntry.episode_number));
+                return (
+                  <MatchEpisodeCard
+                    key={`episode-${episodeEntry.id || episodeEntry.episode_number}`}
+                    episodeEntry={episodeEntry}
+                    isBucketed={bucketEpisodeNumbers.includes(episodeEntry.episode_number)}
+                    isDisabled={isResolvingId === (browserState.seriesCandidate?.tmdb_id || browserState.seriesCandidate?.id)}
+                    onSelect={handleSelectEpisode}
+                    onToggle={toggleBucketEpisode}
+                    isActive={isActiveEpisode}
+                    t={t}
+                  />
+                );
+              })}
             </div>
           ) : (
             <EmptyState
@@ -200,6 +244,52 @@ export default function OrganizerMatchModalContent({
           )
         ) : null}
       </section>
+
+      {confirmState ? (
+        <div className="ui-confirm-overlay">
+          <div className="ui-confirm-dialog">
+            <div className="ui-confirm-header">
+              <HelpCircle size={20} className="ui-confirm-icon" />
+              <strong className="ui-confirm-title">
+                {t(`organizer.details.matchModal.confirm.${confirmState.type}.title`)}
+              </strong>
+            </div>
+            <p className="ui-confirm-description">
+              {confirmState.type === 'bucket'
+                ? t('organizer.details.matchModal.confirm.bucket.desc')
+                : confirmState.hasExisting
+                  ? t(`organizer.details.matchModal.confirm.${confirmState.type}.descWithExisting`).replace('{existing}', confirmState.existingDetails)
+                  : t(`organizer.details.matchModal.confirm.${confirmState.type}.descNoExisting`)}
+            </p>
+            <div className="ui-confirm-optout">
+              <Checkbox
+                checked={dontShowAgain}
+                onChange={(e) => setDontShowAgain(e.target.checked)}
+              >
+                {t('organizer.details.matchModal.confirm.dontShowAgain')}
+              </Checkbox>
+            </div>
+            <div className="ui-confirm-actions">
+              <Button
+                type="button"
+                variant="secondary-neutral"
+                size="sm"
+                onClick={handleCancelConfirm}
+              >
+                {t('organizer.details.matchModal.confirm.cancel')}
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={handleConfirmMatch}
+              >
+                {t('organizer.details.matchModal.confirm.confirmBtn')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

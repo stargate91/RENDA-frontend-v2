@@ -164,6 +164,7 @@ def _build_media_item_from_extra(extra, target_item_type: str):
         status=ItemStatus.NEW,
         category="video",
         target_language="en",
+        file_hash=extra.file_hash,
     )
 
 

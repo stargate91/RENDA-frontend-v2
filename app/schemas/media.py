@@ -60,6 +60,7 @@ class ExtraFileDTO(BaseModel):
     path: str
     planned_path: Optional[str] = None
     action: Optional[str] = None
+    parent_status: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -14,6 +14,7 @@ export function useOrganizerColumns({
   selectedRowIds,
   sortConfig,
   t,
+  onOpenMatch,
 }) {
   const renderSortableLabel = (label, key) => (
     <SortButton
@@ -35,6 +36,7 @@ export function useOrganizerColumns({
     renderSortableLabel,
     selectedRowIds,
     t,
+    onOpenMatch,
   }), [
     activeExtrasTab,
     activeMainTab,
@@ -46,6 +48,7 @@ export function useOrganizerColumns({
     renderSortableLabel,
     selectedRowIds,
     t,
+    onOpenMatch,
   ]);
 
   return { columns };

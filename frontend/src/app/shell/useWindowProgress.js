@@ -41,13 +41,15 @@ const getScanProgress = (status) => {
   return clampPercent(Math.round(start + ((end - start) * phaseProgress)));
 };
 
-const formatScanRemaining = (status) => {
+let lastScanStartTime = null;
+let maxScanProgress = 0;
+
+const formatScanRemaining = (status, progress) => {
   if (!status?.active) {
     return '--:--';
   }
 
   const startTime = Number(status.start_time) || 0;
-  const progress = getScanProgress(status);
 
   if (!startTime || progress <= 0 || progress >= 100) {
     return '--:--';
@@ -119,16 +121,34 @@ export default function useWindowProgress() {
   const isScanActive = Boolean(scanStatus?.active);
   const isImageActive = Boolean(imageStatus?.active);
 
+  if (!isScanActive) {
+    lastScanStartTime = null;
+    maxScanProgress = 0;
+  }
+
+  const scanProgressData = isScanActive
+    ? (() => {
+        const startTime = scanStatus.start_time || 0;
+        if (startTime !== lastScanStartTime) {
+          lastScanStartTime = startTime;
+          maxScanProgress = 0;
+        }
+        const rawProgress = getScanProgress(scanStatus);
+        if (rawProgress > maxScanProgress) {
+          maxScanProgress = rawProgress;
+        }
+        return {
+          taskName: getScanTaskName(scanStatus, t),
+          progress: maxScanProgress,
+          timeRemaining: formatScanRemaining(scanStatus, maxScanProgress),
+          active: true,
+        };
+      })()
+    : null;
+
   return {
     hasProgress: isScanActive || isImageActive,
-    scanProgress: isScanActive
-      ? {
-          taskName: getScanTaskName(scanStatus, t),
-          progress: getScanProgress(scanStatus),
-          timeRemaining: formatScanRemaining(scanStatus),
-          active: true,
-        }
-      : null,
+    scanProgress: scanProgressData,
     imageProgress: isImageActive
       ? {
           taskName: t('progress.images.downloading'),
@@ -140,3 +160,4 @@ export default function useWindowProgress() {
       : null,
   };
 }
+

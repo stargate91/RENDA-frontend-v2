@@ -1,4 +1,7 @@
 import requests
+import re
+import time
+import logging
 from typing import Dict, Any, List, Optional
 from time import sleep
 from urllib.parse import parse_qs, urlsplit
@@ -101,8 +104,6 @@ class TMDBClient:
         """
         Central API caller with Caching and Rate Limit (429) handling.
         """
-        import time
-        import logging
         logger = logging.getLogger("renda")
         
         # Ensure API key
@@ -137,16 +138,16 @@ class TMDBClient:
             except Exception as e:
                 if attempt == max_retries - 1:
                     logger.error(f"TMDB API Error ({endpoint}): {e}")
-                    return {}
+                    raise e
                 time.sleep(2 ** attempt)
         
-        return {}
-        
-        return {}
+        raise RuntimeError(f"TMDB API request failed for {endpoint}")
 
     def search(self, query: str, item_type: str = "movie", year: Optional[int] = None, language: Optional[str] = None, include_adult: bool = False, page: int = 1) -> List[Dict[str, Any]]:
         """Search TMDB (Movie or TV Show). Language is optional and only affects localized fields in results."""
-        if not self._api_key or not query:
+        if not self._api_key:
+            raise ValueError("TMDB API key is missing")
+        if not query:
             return []
 
         endpoint = "/search/movie" if item_type == "movie" else "/search/tv"
@@ -167,7 +168,9 @@ class TMDBClient:
 
     def search_person(self, query: str, language: str = "en-US", include_adult: bool = False, page: int = 1) -> List[Dict[str, Any]]:
         """Search for people (actors/directors) on TMDB."""
-        if not self._api_key or not query:
+        if not self._api_key:
+            raise ValueError("TMDB API key is missing")
+        if not query:
             return []
 
         endpoint = "/search/person"
@@ -183,7 +186,9 @@ class TMDBClient:
 
     def find_by_imdb(self, imdb_id: str, language: str = "en-US") -> Optional[Dict[str, Any]]:
         """Find a movie or TV show by its IMDb ID."""
-        if not self._api_key or not imdb_id:
+        if not self._api_key:
+            raise ValueError("TMDB API key is missing")
+        if not imdb_id:
             return None
 
         params = {
@@ -202,7 +207,8 @@ class TMDBClient:
 
     def get_details(self, tmdb_id: int, item_type: str, language: str = "en-US") -> Dict[str, Any]:
         """Retrieve detailed information about a movie or TV show."""
-        if not self._api_key: return {}
+        if not self._api_key:
+            raise ValueError("TMDB API key is missing")
 
         if item_type == "movie":
             endpoint = f"/movie/{tmdb_id}"
@@ -226,7 +232,8 @@ class TMDBClient:
 
     def get_episode_details(self, series_id: int, season_number: int, episode_number: int, language: str = "en-US") -> Dict[str, Any]:
         """Retrieve details for a specific episode."""
-        if not self._api_key: return {}
+        if not self._api_key:
+            raise ValueError("TMDB API key is missing")
 
         endpoint = f"/tv/{series_id}/season/{season_number}/episode/{episode_number}"
         params = {
@@ -238,7 +245,8 @@ class TMDBClient:
 
     def get_season_details(self, series_id: int, season_number: int, language: str = "en-US") -> Dict[str, Any]:
         """Retrieve details for a specific season."""
-        if not self._api_key: return {}
+        if not self._api_key:
+            raise ValueError("TMDB API key is missing")
 
         endpoint = f"/tv/{series_id}/season/{season_number}"
         normalized_lang = str(language or "en").split("-", 1)[0].strip() or "en"
@@ -253,7 +261,8 @@ class TMDBClient:
 
     def get_person_images(self, person_id: int) -> Dict[str, Any]:
         """Retrieve all available profile pictures for a person."""
-        if not self._api_key: return {}
+        if not self._api_key:
+            raise ValueError("TMDB API key is missing")
         
         endpoint = f"/person/{person_id}/images"
         params = {"api_key": self._api_key}
@@ -261,7 +270,8 @@ class TMDBClient:
 
     def get_person_details(self, person_id: int, language: str = "en-US") -> Dict[str, Any]:
         """Retrieve detailed information about a person."""
-        if not self._api_key: return {}
+        if not self._api_key:
+            raise ValueError("TMDB API key is missing")
         
         endpoint = f"/person/{person_id}"
         params = {
@@ -273,7 +283,8 @@ class TMDBClient:
 
     def get_trending(self, media_type: str = "all", time_window: str = "day", language: str = "en-US") -> List[Dict[str, Any]]:
         """Retrieve the daily/weekly trending movies or TV shows."""
-        if not self._api_key: return []
+        if not self._api_key:
+            raise ValueError("TMDB API key is missing")
         
         endpoint = f"/trending/{media_type}/{time_window}"
         params = {
@@ -285,7 +296,8 @@ class TMDBClient:
 
     def discover(self, media_type: str = "movie", with_genres: Optional[str] = None, language: str = "en-US", page: int = 1) -> List[Dict[str, Any]]:
         """Retrieve movies or TV shows based on various filters (e.g., genre)."""
-        if not self._api_key: return []
+        if not self._api_key:
+            raise ValueError("TMDB API key is missing")
 
         endpoint = f"/discover/{media_type}"
         params = {

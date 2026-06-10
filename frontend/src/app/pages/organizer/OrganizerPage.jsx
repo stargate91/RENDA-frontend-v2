@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { FolderOpen, Play, Search, Trash2, X } from 'lucide-react';
+import { FolderOpen, Play, Search, Sliders, Trash2, X } from 'lucide-react';
 import Page from '../../ui/Page';
 import Button from '../../ui/Button';
 import FloatingActionBar from '../../ui/FloatingActionBar';
@@ -121,6 +121,9 @@ export default function OrganizerPage() {
     sortedRows,
     tabCounts,
     totalPages,
+    dismissRows,
+    restoreDismissedRows,
+    dismissedCount,
   } = useOrganizerPageState({ discovery, t });
 
   const {
@@ -213,37 +216,51 @@ export default function OrganizerPage() {
     </>
   ) : null;
 
-  const headerActions = hasVisibleItems ? (
+  const headerActions = (hasVisibleItems || dismissedCount > 0) ? (
     <>
-      <Button
-        variant="secondary"
-        size="sm"
-        className="organizer-panel__browse-btn"
-        onClick={handleBrowseAndScan}
-        disabled={isScanActive || isBrowseStarting}
-      >
-        {browseButtonLabel}
-      </Button>
-      {shouldShowLoadRest ? (
+      {dismissedCount > 0 ? (
         <Button
-          variant="secondary"
+          variant="secondary-neutral"
           size="sm"
           className="organizer-panel__browse-btn"
-          onClick={handleLoadAll}
-          disabled={isLoadingAll}
+          onClick={restoreDismissedRows}
         >
-          {loadRestButtonLabel}
+          {t('organizer.buttons.restoreDismissed')} ({dismissedCount})
         </Button>
       ) : null}
-      <Button
-        variant="primary"
-        size="sm"
-        className="organizer-panel__browse-btn"
-        onClick={handleRename}
-        disabled={isScanActive || isRenameStarting}
-      >
-        {renameButtonLabel}
-      </Button>
+      {hasVisibleItems ? (
+        <>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="organizer-panel__browse-btn"
+            onClick={handleBrowseAndScan}
+            disabled={isScanActive || isBrowseStarting}
+          >
+            {browseButtonLabel}
+          </Button>
+          {shouldShowLoadRest ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              className="organizer-panel__browse-btn"
+              onClick={handleLoadAll}
+              disabled={isLoadingAll}
+            >
+              {loadRestButtonLabel}
+            </Button>
+          ) : null}
+          <Button
+            variant="primary"
+            size="sm"
+            className="organizer-panel__browse-btn"
+            onClick={handleRename}
+            disabled={isScanActive || isRenameStarting}
+          >
+            {renameButtonLabel}
+          </Button>
+        </>
+      ) : null}
     </>
   ) : null;
 
@@ -259,6 +276,7 @@ export default function OrganizerPage() {
     selectedRowIds,
     sortConfig,
     t,
+    onOpenMatch: (row) => openMatchModal(row),
   });
   const refreshOrganizerDiscovery = async () => {
     const data = await fetchJson('/api/discovery');
@@ -503,7 +521,6 @@ export default function OrganizerPage() {
       ),
     });
   };
-
   const openMatchModal = (row) => {
     openModal({
       title: t('organizer.details.matchModal.title'),
@@ -526,6 +543,53 @@ export default function OrganizerPage() {
     });
   };
 
+  const openOverrideModal = (row) => {
+    openModal({
+      title: t('organizer.overrideModal.title').replace('{type}', row.rawType || ''),
+      description: t('organizer.overrideModal.description'),
+      icon: Sliders,
+      content: (
+        <div className="override-modal-content" style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '10px 0' }}>
+          <div style={{ padding: '12px', border: '1px dashed var(--border-color, #ccc)', borderRadius: '4px' }}>
+            <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600' }}>Common Settings</h4>
+            <p style={{ margin: '4px 0', fontSize: '13px', color: 'var(--text-muted, #666)' }}>• Target Language (custom language for localization variables)</p>
+            <p style={{ margin: '4px 0', fontSize: '13px', color: 'var(--text-muted, #666)' }}>• Main Type Override</p>
+          </div>
+
+          {row.rawType === 'movie' && (
+            <div style={{ padding: '12px', border: '1px dashed var(--border-color, #ccc)', borderRadius: '4px' }}>
+              <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600' }}>Movie Settings</h4>
+              <p style={{ margin: '4px 0', fontSize: '13px', color: 'var(--text-muted, #666)' }}>• Edition (e.g. Extended, Director's Cut)</p>
+              <p style={{ margin: '4px 0', fontSize: '13px', color: 'var(--text-muted, #666)' }}>• Source (e.g. BluRay, WebDL)</p>
+            </div>
+          )}
+
+          {row.rawType === 'episode' && (
+            <div style={{ padding: '12px', border: '1px dashed var(--border-color, #ccc)', borderRadius: '4px' }}>
+              <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600' }}>Episode Settings</h4>
+              <p style={{ margin: '4px 0', fontSize: '13px', color: 'var(--text-muted, #666)' }}>• Season Number Override</p>
+              <p style={{ margin: '4px 0', fontSize: '13px', color: 'var(--text-muted, #666)' }}>• Episode Number Override</p>
+            </div>
+          )}
+
+          {row.rawType === 'extra' && (
+            <div style={{ padding: '12px', border: '1px dashed var(--border-color, #ccc)', borderRadius: '4px' }}>
+              <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600' }}>Extra Settings</h4>
+              <p style={{ margin: '4px 0', fontSize: '13px', color: 'var(--text-muted, #666)' }}>• Subcategory (e.g. Trailer, Behind the Scenes)</p>
+              <p style={{ margin: '4px 0', fontSize: '13px', color: 'var(--text-muted, #666)' }}>• Language Override</p>
+              <p style={{ margin: '4px 0', fontSize: '13px', color: 'var(--text-muted, #666)' }}>• Audio Type</p>
+            </div>
+          )}
+        </div>
+      ),
+      footer: (
+        <Button variant="secondary-neutral" onClick={closeModal}>
+          {t('organizer.details.delete.cancel')}
+        </Button>
+      ),
+    });
+  };
+
   const rowActions = [
     {
       key: 'match',
@@ -533,6 +597,12 @@ export default function OrganizerPage() {
       icon: Search,
       isVisible: (row) => row.rawType !== 'extra',
       onClick: (row) => openMatchModal(row),
+    },
+    {
+      key: 'override',
+      label: t('organizer.actions.override'),
+      icon: Sliders,
+      onClick: (row) => openOverrideModal(row),
     },
     {
       key: 'preview',
@@ -559,6 +629,13 @@ export default function OrganizerPage() {
       },
     },
     {
+      key: 'dismiss',
+      label: t('organizer.actions.dismiss'),
+      icon: X,
+      isVisible: (row) => row.rawType !== 'extra',
+      onClick: (row) => dismissRows([row.id]),
+    },
+    {
       key: 'delete',
       label: t('organizer.details.delete.title'),
       tooltip: t('organizer.actions.delete'),
@@ -573,6 +650,16 @@ export default function OrganizerPage() {
       visible={selectedRows.length > 0}
       title={t('organizer.bulkBar.title').replace('{count}', String(selectedRows.length))}
       actions={[
+        !selectedRows.some((row) => row.rawType === 'extra') ? {
+          key: 'dismiss',
+          label: t('organizer.actions.dismiss'),
+          icon: X,
+          onClick: () => {
+            dismissRows(selectedRows.map((r) => r.id));
+            clearSelectedRows();
+          },
+          disabled: selectedRows.length === 0,
+        } : null,
         {
           key: 'delete',
           label: t('organizer.actions.delete'),
@@ -588,7 +675,7 @@ export default function OrganizerPage() {
           onClick: clearSelectedRows,
           disabled: selectedRows.length === 0,
         },
-      ]}
+      ].filter(Boolean)}
     />
   );
 

@@ -198,15 +198,15 @@ class MediaDiscoveryService:
             action = getattr(formatter.config, f"extra_{short_cat}_action", "rename")
             
             if action == "delete":
-                extra_paths.append((ex, "-", parent_name_stem, "delete"))
+                extra_paths.append((ex, "-", parent_name_stem, "delete", p_status))
                 continue
             
             path_counts[raw_planned_path.lower()] = path_counts.get(raw_planned_path.lower(), 0) + 1
-            extra_paths.append((ex, raw_planned_path, parent_name_stem, "rename"))
+            extra_paths.append((ex, raw_planned_path, parent_name_stem, "rename", p_status))
 
         result = []
         current_counts = {}
-        for ex, raw_p, parent_name, action in extra_paths:
+        for ex, raw_p, parent_name, action, p_status in extra_paths:
             p_path = raw_p
             if action == "rename" and p_path != "-":
                 path_key = raw_p.lower()
@@ -224,6 +224,7 @@ class MediaDiscoveryService:
                 filename=Path(ex.original_path).name, extension=ex.extension,
                 category=ex.category.value, subtype=ex.subtype.value if ex.subtype else "other",
                 language=ex.language, path=ex.original_path, planned_path=p_path,
-                action=action
+                action=action,
+                parent_status=p_status.value if p_status and hasattr(p_status, 'value') else (str(p_status) if p_status else None)
             ))
         return result

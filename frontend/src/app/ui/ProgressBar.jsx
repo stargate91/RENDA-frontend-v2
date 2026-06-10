@@ -1,6 +1,8 @@
+import { X } from 'lucide-react';
+import IconButton from './IconButton';
 import './Feedback.css';
 
-export default function ProgressBar({ taskName, progress = 0, timeRemaining = '--:--', active = true, variant = 'primary' }) {
+export default function ProgressBar({ taskName, progress = 0, timeRemaining = '--:--', active = true, variant = 'primary', onAbort }) {
   const isSub = variant === 'sub';
   const containerClass = `ui-progress-bar-container ${isSub ? 'ui-progress-bar-container--sub' : ''}`.trim();
   const dotClass = `ui-progress-bar__pulse-dot ${isSub ? 'ui-progress-bar__pulse-dot--sub' : ''}`.trim();
@@ -18,6 +20,18 @@ export default function ProgressBar({ taskName, progress = 0, timeRemaining = '-
       <span className="ui-progress-bar__stats">
         {progress}% | {timeRemaining}
       </span>
+      {onAbort && (
+        <IconButton
+          variant="danger"
+          size="xs"
+          onClick={onAbort}
+          title="Abort task"
+        >
+          <X size={10} strokeWidth={2.5} />
+        </IconButton>
+      )}
     </div>
   );
 }
+
+

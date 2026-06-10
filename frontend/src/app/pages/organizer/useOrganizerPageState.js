@@ -28,6 +28,11 @@ export function useOrganizerPageState({ discovery, t }) {
       return false;
     }
   });
+  const [dismissedRowIds, setDismissedRowIds] = useState(new Set());
+
+  useEffect(() => {
+    setDismissedRowIds(new Set());
+  }, [discovery]);
 
   const reviewDiscoveryMedia = useMemo(
     () => [
@@ -48,41 +53,56 @@ export function useOrganizerPageState({ discovery, t }) {
   );
 
   const tabCounts = useMemo(() => {
-    const manualCount = reviewDiscoveryMedia.filter((item) => MANUAL_REVIEW_STATUSES.has(normalizeItemStatus(item.status))).length;
-    const moviesCount = matchedDiscoveryMedia.filter((item) => item.type === 'movie' && MATCHED_STATUSES.has(normalizeItemStatus(item.status))).length;
-    const episodesCount = matchedDiscoveryMedia.filter((item) => item.type === 'episode' && MATCHED_STATUSES.has(normalizeItemStatus(item.status))).length;
-    const extrasCount = (discovery.extras || []).length;
+    const manualCount = reviewDiscoveryMedia.filter((item) => {
+      const id = `item-${item.id}`;
+      return !dismissedRowIds.has(id) && MANUAL_REVIEW_STATUSES.has(normalizeItemStatus(item.status));
+    }).length;
+
+    const moviesCount = matchedDiscoveryMedia.filter((item) => {
+      const id = `item-${item.id}`;
+      return !dismissedRowIds.has(id) && item.type === 'movie' && MATCHED_STATUSES.has(normalizeItemStatus(item.status));
+    }).length;
+
+    const episodesCount = matchedDiscoveryMedia.filter((item) => {
+      const id = `item-${item.id}`;
+      return !dismissedRowIds.has(id) && item.type === 'episode' && MATCHED_STATUSES.has(normalizeItemStatus(item.status));
+    }).length;
+
+    const extrasCount = (discovery.extras || []).filter((item) => {
+      const id = `extra-${item.id}`;
+      const parentId = `item-${item.parent_item_id}`;
+      return !dismissedRowIds.has(id) && !dismissedRowIds.has(parentId);
+    }).length;
 
     return { manualCount, moviesCount, episodesCount, extrasCount };
-  }, [discovery, matchedDiscoveryMedia, reviewDiscoveryMedia]);
+  }, [discovery, matchedDiscoveryMedia, reviewDiscoveryMedia, dismissedRowIds]);
 
   const tabFilteredRows = useMemo(() => {
+    let rows = [];
     if (activeMainTab === 'manual') {
-      return reviewDiscoveryMedia
+      rows = reviewDiscoveryMedia
         .filter((item) => MANUAL_REVIEW_STATUSES.has(normalizeItemStatus(item.status)))
         .map((item) => mapDiscoveryItemRow(item, t));
-    }
-
-    if (activeMainTab === 'movies') {
-      return matchedDiscoveryMedia
+    } else if (activeMainTab === 'movies') {
+      rows = matchedDiscoveryMedia
         .filter((item) => item.type === 'movie' && MATCHED_STATUSES.has(normalizeItemStatus(item.status)))
         .map((item) => mapDiscoveryItemRow(item, t));
-    }
-
-    if (activeMainTab === 'episodes') {
-      return matchedDiscoveryMedia
+    } else if (activeMainTab === 'episodes') {
+      rows = matchedDiscoveryMedia
         .filter((item) => item.type === 'episode' && MATCHED_STATUSES.has(normalizeItemStatus(item.status)))
         .map((item) => mapDiscoveryItemRow(item, t));
-    }
-
-    if (activeMainTab === 'extras') {
-      return (discovery.extras || [])
+    } else if (activeMainTab === 'extras') {
+      rows = (discovery.extras || [])
         .filter((item) => item.category === EXTRA_CATEGORY_BY_TAB[activeExtrasTab])
         .map((item) => mapExtraRow(item, t));
     }
 
-    return [];
-  }, [activeExtrasTab, activeMainTab, discovery, matchedDiscoveryMedia, reviewDiscoveryMedia, t]);
+    return rows.filter(
+      (row) =>
+        !dismissedRowIds.has(row.id) &&
+        (row.rawType !== 'extra' || !dismissedRowIds.has(`item-${row.parent_id}`))
+    );
+  }, [activeExtrasTab, activeMainTab, discovery, matchedDiscoveryMedia, reviewDiscoveryMedia, t, dismissedRowIds]);
 
   const filteredRows = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -306,7 +326,26 @@ export function useOrganizerPageState({ discovery, t }) {
     scrollOrganizerToTop();
   };
 
+  const dismissRows = (rowIds) => {
+    const parentRowIds = rowIds.filter((id) => id.startsWith('item-'));
+    if (parentRowIds.length === 0) return;
+    setDismissedRowIds((current) => {
+      const next = new Set(current);
+      parentRowIds.forEach((id) => next.add(id));
+      return next;
+    });
+  };
+
+  const restoreDismissedRows = () => {
+    setDismissedRowIds(new Set());
+  };
+
+  const dismissedCount = dismissedRowIds.size;
+
   return {
+    dismissRows,
+    restoreDismissedRows,
+    dismissedCount,
     activeExtrasTab,
     activeImage,
     activeImageIndex,

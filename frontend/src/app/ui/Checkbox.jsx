@@ -1,6 +1,6 @@
 import './Checkbox.css';
 
-export default function Checkbox({ checked, onChange, disabled, className = '', ...props }) {
+export default function Checkbox({ checked, onChange, disabled, className = '', children, ...props }) {
   return (
     <label className={`ui-checkbox-wrap ${disabled ? 'is-disabled' : ''} ${className}`.trim()}>
       <input
@@ -12,6 +12,7 @@ export default function Checkbox({ checked, onChange, disabled, className = '', 
         {...props}
       />
       <span className="ui-checkbox" />
+      {children ? <span className="ui-checkbox-label">{children}</span> : null}
     </label>
   );
 }
