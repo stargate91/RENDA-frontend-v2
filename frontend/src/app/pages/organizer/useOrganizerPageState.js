@@ -9,6 +9,7 @@ import {
   normalizeItemStatus,
 } from './organizerMappers';
 import { scrollOrganizerToTop } from './organizerScroll';
+import { useOrganizerSort } from './useOrganizerSort';
 
 export function useOrganizerPageState({ discovery, t }) {
   const [activeMainTab, setActiveMainTab] = useState('manual');
@@ -19,7 +20,7 @@ export function useOrganizerPageState({ discovery, t }) {
   const [pageSize, setPageSize] = useState(40);
   const [currentPage, setCurrentPage] = useState(1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [sortConfig, setSortConfig] = useState({ key: 'source', direction: 'asc' });
+  const { sortConfig, setSortConfig, handleSortToggle } = useOrganizerSort('source', 'asc');
   const [isDetailsCollapsed, setIsDetailsCollapsed] = useState(() => {
     try {
       const saved = localStorage.getItem('organizer_details_collapsed');
@@ -31,6 +32,7 @@ export function useOrganizerPageState({ discovery, t }) {
   const [dismissedRowIds, setDismissedRowIds] = useState(new Set());
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDismissedRowIds(new Set());
   }, [discovery]);
 
@@ -70,7 +72,7 @@ export function useOrganizerPageState({ discovery, t }) {
 
     const extrasCount = (discovery.extras || []).filter((item) => {
       const id = `extra-${item.id}`;
-      const parentId = `item-${item.parent_item_id}`;
+      const parentId = `item-${item.parent_id || item.parent_item_id}`;
       return !dismissedRowIds.has(id) && !dismissedRowIds.has(parentId);
     }).length;
 
@@ -154,22 +156,26 @@ export function useOrganizerPageState({ discovery, t }) {
   const shouldShowDetailsCarousel = activeRow?.rawType === 'episode' && activeImages.length > 1;
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentPage(1);
   }, [activeMainTab, activeExtrasTab, searchQuery]);
 
   useEffect(() => {
     setSortConfig({ key: 'source', direction: 'asc' });
-  }, [activeExtrasTab, activeMainTab]);
+  }, [activeExtrasTab, activeMainTab, setSortConfig]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setActiveRowId((current) => (paginatedRows.some((row) => row.id === current) ? current : null));
   }, [paginatedRows]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentPage((current) => Math.min(current, totalPages));
   }, [totalPages]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedRowIds((current) => {
       const visibleIds = new Set(paginatedRows.map((row) => row.id));
       const next = new Set([...current].filter((id) => visibleIds.has(id)));
@@ -178,6 +184,7 @@ export function useOrganizerPageState({ discovery, t }) {
   }, [paginatedRows]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setActiveImageIndex(0);
   }, [activeRow?.id]);
 
@@ -234,13 +241,7 @@ export function useOrganizerPageState({ discovery, t }) {
     setSelectedRowIds(new Set());
   };
 
-  const handleSortToggle = (key) => {
-    setSortConfig((current) => (
-      current.key === key
-        ? { key, direction: current.direction === 'asc' ? 'desc' : 'asc' }
-        : { key, direction: 'asc' }
-    ));
-  };
+
 
   const focusFirstAvailableResult = (nextDiscovery = discovery) => {
     if (activeRowId) {

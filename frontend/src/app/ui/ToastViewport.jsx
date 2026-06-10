@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { X } from 'lucide-react';
 import './Feedback.css';
 
@@ -8,12 +8,12 @@ function ToastItem({ toast, onRemove }) {
   const remainingTimeRef = useRef(duration);
   const startTimeRef = useRef(null);
 
-  const startTimer = () => {
+  const startTimer = useCallback(() => {
     startTimeRef.current = Date.now();
     timerRef.current = window.setTimeout(() => {
       onRemove(id);
     }, remainingTimeRef.current);
-  };
+  }, [id, onRemove]);
 
   const pauseTimer = () => {
     if (timerRef.current) {
@@ -30,7 +30,7 @@ function ToastItem({ toast, onRemove }) {
         window.clearTimeout(timerRef.current);
       }
     };
-  }, [id]);
+  }, [startTimer]);
 
   return (
     <div

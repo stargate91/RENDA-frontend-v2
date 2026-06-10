@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import Button from '@/ui/Button';
 import Card from '@/ui/Card';
@@ -47,7 +47,25 @@ export default function SettingsPage() {
     omdb_api_key: '',
   });
 
-  useEffect(() => {
+  const [prevSettings, setPrevSettings] = useState(settings);
+
+  if (
+    settings.collision_strategy !== prevSettings.collision_strategy ||
+    settings.collision_duration_tolerance_seconds !== prevSettings.collision_duration_tolerance_seconds ||
+    settings.default_scan_dir !== prevSettings.default_scan_dir ||
+    settings.extras_audio_action !== prevSettings.extras_audio_action ||
+    settings.extras_img_action !== prevSettings.extras_img_action ||
+    settings.extras_meta_action !== prevSettings.extras_meta_action ||
+    settings.extras_sub_action !== prevSettings.extras_sub_action ||
+    settings.extras_video_action !== prevSettings.extras_video_action ||
+    settings.folder_library_path !== prevSettings.folder_library_path ||
+    settings.mpc_path !== prevSettings.mpc_path ||
+    settings.omdb_api_key !== prevSettings.omdb_api_key ||
+    settings.tmdb_api_key !== prevSettings.tmdb_api_key ||
+    settings.tmdb_bearer_token !== prevSettings.tmdb_bearer_token ||
+    settings.vlc_path !== prevSettings.vlc_path
+  ) {
+    setPrevSettings(settings);
     setForm({
       default_scan_dir: settings.default_scan_dir || '',
       folder_library_path: settings.folder_library_path || '',
@@ -64,22 +82,7 @@ export default function SettingsPage() {
       tmdb_bearer_token: settings.tmdb_bearer_token || '',
       omdb_api_key: settings.omdb_api_key || '',
     });
-  }, [
-    settings.collision_strategy,
-    settings.collision_duration_tolerance_seconds,
-    settings.default_scan_dir,
-    settings.extras_audio_action,
-    settings.extras_img_action,
-    settings.extras_meta_action,
-    settings.extras_sub_action,
-    settings.extras_video_action,
-    settings.folder_library_path,
-    settings.mpc_path,
-    settings.omdb_api_key,
-    settings.tmdb_api_key,
-    settings.tmdb_bearer_token,
-    settings.vlc_path,
-  ]);
+  }
 
   const handleChange = (key) => (event) => {
     setForm((current) => ({

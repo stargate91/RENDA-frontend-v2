@@ -50,7 +50,7 @@ if (isWindowsBinary && !isWindowsHost) {
   process.exit(1);
 }
 
-const child = forwardChildLifecycle(
+forwardChildLifecycle(
   spawn(electronPath, process.argv.slice(2), {
     stdio: 'inherit',
     windowsHide: false,

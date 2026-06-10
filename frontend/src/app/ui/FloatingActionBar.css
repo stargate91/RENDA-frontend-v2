@@ -1,0 +1,190 @@
+.ui-floating-bar-shell {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--space-7) + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 6;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  width: min(720px, calc(100vw - (var(--space-6) * 2)));
+  margin: 0;
+}
+
+.ui-floating-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  padding: 14px 14px 14px 18px;
+  border: 1px solid color-mix(in srgb, var(--color-line-strong) 72%, rgba(255, 255, 255, 0.04));
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(120% 150% at 50% -20%, rgba(255, 255, 255, 0.025), transparent 38%),
+    radial-gradient(140% 180% at 0% 100%, rgba(255, 255, 255, 0.018), transparent 44%),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--color-panel-strong) 97%, black),
+      color-mix(in srgb, var(--color-canvas) 94%, black));
+  box-shadow:
+    0 22px 48px rgba(0, 0, 0, 0.52),
+    0 10px 20px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.02),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    inset 0 -10px 20px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(22px) saturate(125%);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(34px) scale(0.96);
+  transition: opacity 180ms ease, transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
+}
+
+.ui-floating-bar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(180deg,
+      rgba(255, 255, 255, 0.028),
+      rgba(255, 255, 255, 0.01) 18%,
+      transparent 44%);
+  pointer-events: none;
+}
+
+.ui-floating-bar::after {
+  content: "";
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  bottom: 0;
+  height: 1px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.035), transparent);
+  pointer-events: none;
+}
+
+.ui-floating-bar-shell.is-visible .ui-floating-bar {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.ui-floating-bar__copy {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  flex: 1 1 auto;
+}
+
+.ui-floating-bar__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-ink);
+  letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: center;
+}
+
+.ui-floating-bar__actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 0 0 auto;
+}
+
+.ui-floating-bar__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--color-line) 82%, rgba(255, 255, 255, 0.04));
+  border-radius: var(--radius-input);
+  background:
+    linear-gradient(180deg,
+      rgba(255, 255, 255, 0.018),
+      rgba(255, 255, 255, 0.004)),
+    color-mix(in srgb, var(--color-panel) 95%, black);
+  color: var(--color-ink);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 8px 16px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease, color 160ms ease;
+}
+
+.ui-floating-bar__action:hover:not(:disabled) {
+  background:
+    linear-gradient(180deg,
+      rgba(255, 255, 255, 0.024),
+      rgba(255, 255, 255, 0.008)),
+    color-mix(in srgb, var(--color-panel-strong) 96%, black);
+  border-color: color-mix(in srgb, var(--color-line-strong) 84%, rgba(255, 255, 255, 0.05));
+  transform: translateY(-1px);
+}
+
+.ui-floating-bar__action:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-accent-blue);
+}
+
+.ui-floating-bar__action.is-danger {
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--color-accent-red-soft) 10%, transparent),
+      color-mix(in srgb, var(--color-state-danger) 8%, transparent)),
+    color-mix(in srgb, var(--color-state-danger) 10%, rgba(20, 8, 11, 0.62));
+  border-color: color-mix(in srgb, var(--color-state-danger) 26%, transparent);
+  color: color-mix(in srgb, var(--color-accent-red-soft) 88%, white 12%);
+}
+
+.ui-floating-bar__action.is-danger:hover:not(:disabled) {
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--color-accent-red-soft) 12%, transparent),
+      color-mix(in srgb, var(--color-state-danger) 12%, transparent)),
+    color-mix(in srgb, var(--color-state-danger) 14%, rgba(22, 8, 12, 0.72));
+  border-color: color-mix(in srgb, var(--color-state-danger) 34%, transparent);
+}
+
+.ui-floating-bar__action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 920px) {
+  .ui-floating-bar-shell {
+    bottom: calc(var(--space-6) + env(safe-area-inset-bottom, 0px));
+    width: calc(100vw - (var(--space-4) * 2));
+  }
+
+  .ui-floating-bar {
+    min-width: 0;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-3);
+    padding: 14px;
+  }
+
+  .ui-floating-bar__actions {
+    width: 100%;
+  }
+
+  .ui-floating-bar__copy {
+    min-height: 0;
+  }
+
+  .ui-floating-bar__action {
+    flex: 1 1 0;
+  }
+}

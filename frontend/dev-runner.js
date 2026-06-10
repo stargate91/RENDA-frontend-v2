@@ -95,11 +95,11 @@ for (const event of ['SIGINT', 'SIGTERM', 'SIGUSR2']) {
   process.on(event, () => shutdown(0));
 }
 
-const backend = spawnManaged('backend', 'python', ['-m', 'app.api.main'], {
+spawnManaged('backend', 'python', ['-m', 'app.api.main'], {
   cwd: projectRoot,
 });
 
-const vite = spawnManaged('vite', npmCommand, ['run', 'vite'], {
+spawnManaged('vite', npmCommand, ['run', 'vite'], {
   cwd: __dirname,
 });
 

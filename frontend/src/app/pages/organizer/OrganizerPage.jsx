@@ -1,16 +1,11 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { FolderOpen, Play, Search, Sliders, Trash2, X } from 'lucide-react';
 import Page from '../../ui/Page';
 import Button from '../../ui/Button';
-import FloatingActionBar from '../../ui/FloatingActionBar';
 import OrganizerDetailsPanel from './OrganizerDetailsPanel';
 import OrganizerHeaderPanel from './OrganizerHeaderPanel';
-import OrganizerMatchModalContent from './OrganizerMatchModalContent';
 import OrganizerResultsPanel from './OrganizerResultsPanel';
 import { useDiscoveryCountQuery, useDiscoveryQuery, useScanStatusQuery, useSettingsQuery, useStatsQuery } from '../../queries/appQueries';
-import { fetchJson } from '../../lib/http';
-import { showItemInFolder } from '../../lib/ipc';
 import { useUi } from '../../providers/UiProvider';
 import { useTranslation } from '../../providers/LanguageProvider';
 import {
@@ -18,40 +13,13 @@ import {
   PAGE_SIZE_OPTIONS,
 } from './organizerMappers';
 import { EMPTY_DISCOVERY } from './organizerConstants';
-import { useOrganizerActions } from './useOrganizerActions';
+import { useOrganizerActions } from './useOrganizerActions.jsx';
 import { useOrganizerColumns } from './useOrganizerColumns.jsx';
 import { useOrganizerDropzone } from './useOrganizerDropzone';
 import { useOrganizerPageState } from './useOrganizerPageState';
 import { useOrganizerTabs } from './useOrganizerTabs';
 import { useOrganizerViewModel } from './useOrganizerViewModel';
-
-const removeDiscoveryRow = (currentDiscovery, row) => {
-  if (!currentDiscovery) {
-    return currentDiscovery;
-  }
-
-  if (row.rawType === 'extra') {
-    return {
-      ...currentDiscovery,
-      extras: (currentDiscovery.extras || []).filter((item) => item.id !== row.itemId),
-    };
-  }
-
-  const mediaId = row.itemId;
-  return {
-    ...currentDiscovery,
-    manual: (currentDiscovery.manual || []).filter((item) => item.id !== mediaId),
-    movies: (currentDiscovery.movies || []).filter((item) => item.id !== mediaId),
-    series: (currentDiscovery.series || []).filter((item) => item.id !== mediaId),
-    collisions: (currentDiscovery.collisions || []).filter((item) => item.id !== mediaId),
-    extras: (currentDiscovery.extras || []).filter((item) => item.parent_id !== mediaId),
-  };
-};
-
-const removeDiscoveryRows = (currentDiscovery, rows) => rows.reduce(
-  (nextDiscovery, row) => removeDiscoveryRow(nextDiscovery, row),
-  currentDiscovery,
-);
+import { useOrganizerModals } from './useOrganizerModals.jsx';
 
 export default function OrganizerPage() {
   const { t } = useTranslation();
@@ -143,6 +111,8 @@ export default function OrganizerPage() {
     queryClient,
     t,
     toast,
+    openModal,
+    closeModal,
   });
   const { dropzoneProps, isDropActive } = useOrganizerDropzone({
     disabled: isScanActive || isBrowseStarting || isLoadingAll || isRenameStarting,
@@ -264,6 +234,23 @@ export default function OrganizerPage() {
     </>
   ) : null;
 
+  const {
+    openMatchModal,
+    rowActions,
+    bulkActionBar,
+    refreshOrganizerDiscovery,
+  } = useOrganizerModals({
+    t,
+    closeModal,
+    openModal,
+    toast,
+    queryClient,
+    focusFirstAvailableResult,
+    clearSelectedRows,
+    dismissRows,
+    selectedRows,
+  });
+
   const { columns } = useOrganizerColumns({
     activeExtrasTab,
     activeMainTab,
@@ -278,406 +265,6 @@ export default function OrganizerPage() {
     t,
     onOpenMatch: (row) => openMatchModal(row),
   });
-  const refreshOrganizerDiscovery = async () => {
-    const data = await fetchJson('/api/discovery');
-    queryClient.setQueryData(['discovery'], data);
-    focusFirstAvailableResult(data);
-    queryClient.invalidateQueries({ queryKey: ['discovery-count'] });
-    queryClient.invalidateQueries({ queryKey: ['stats'] });
-  };
-
-  const isPlayableOrganizerRow = (row) => {
-    if (!row?.sourcePath) {
-      return false;
-    }
-
-    if (row.rawType === 'extra') {
-      return String(row.rawPayload?.category || '').toLowerCase() === 'video';
-    }
-
-    return true;
-  };
-
-  const handlePreviewRow = async (row) => {
-    await fetchJson('/api/media/preview', {
-      method: 'POST',
-      body: JSON.stringify({ file_path: row.sourcePath }),
-    });
-  };
-
-  const handleResolveDiscoveryRow = async (row) => {
-    closeModal();
-    const previousDiscovery = queryClient.getQueryData(['discovery']);
-    const nextDiscovery = removeDiscoveryRow(previousDiscovery, row);
-    if (nextDiscovery) {
-      queryClient.setQueryData(['discovery'], nextDiscovery);
-      focusFirstAvailableResult(nextDiscovery);
-      queryClient.invalidateQueries({ queryKey: ['discovery-count'] });
-      queryClient.invalidateQueries({ queryKey: ['stats'] });
-    }
-
-    try {
-      await refreshOrganizerDiscovery();
-    } catch (error) {
-      if (previousDiscovery) {
-        queryClient.setQueryData(['discovery'], previousDiscovery);
-        focusFirstAvailableResult(previousDiscovery);
-      }
-      queryClient.invalidateQueries({ queryKey: ['discovery-count'] });
-      queryClient.invalidateQueries({ queryKey: ['stats'] });
-      throw error;
-    }
-  };
-
-  const handleDeleteDiscoveryRow = async (row, mode) => {
-    closeModal();
-    const previousDiscovery = queryClient.getQueryData(['discovery']);
-    const nextDiscovery = removeDiscoveryRow(previousDiscovery, row);
-    if (nextDiscovery) {
-      queryClient.setQueryData(['discovery'], nextDiscovery);
-      focusFirstAvailableResult(nextDiscovery);
-      queryClient.invalidateQueries({ queryKey: ['discovery-count'] });
-      queryClient.invalidateQueries({ queryKey: ['stats'] });
-    }
-
-    try {
-      await fetchJson('/api/discovery/delete', {
-        method: 'POST',
-        body: JSON.stringify({
-          item_ids: row.rawType === 'extra' ? [] : [row.itemId],
-          extra_ids: row.rawType === 'extra' ? [row.itemId] : [],
-          mode,
-        }),
-      });
-      await refreshOrganizerDiscovery();
-      const toastKey = mode === 'ignore' ? 'organizer.toasts.deleteIgnoreSuccess'
-        : mode === 'trash' ? 'organizer.toasts.deleteTrashSuccess'
-        : 'organizer.toasts.deleteDbOnlySuccess';
-      toast(t(toastKey), 'success');
-    } catch (error) {
-      if (previousDiscovery) {
-        queryClient.setQueryData(['discovery'], previousDiscovery);
-        focusFirstAvailableResult(previousDiscovery);
-      }
-      queryClient.invalidateQueries({ queryKey: ['discovery-count'] });
-      queryClient.invalidateQueries({ queryKey: ['stats'] });
-      throw error;
-    }
-  };
-
-  const handleDeleteDiscoveryRows = async (rows, mode) => {
-    closeModal();
-    clearSelectedRows();
-    const previousDiscovery = queryClient.getQueryData(['discovery']);
-    const nextDiscovery = removeDiscoveryRows(previousDiscovery, rows);
-    if (nextDiscovery) {
-      queryClient.setQueryData(['discovery'], nextDiscovery);
-      focusFirstAvailableResult(nextDiscovery);
-      queryClient.invalidateQueries({ queryKey: ['discovery-count'] });
-      queryClient.invalidateQueries({ queryKey: ['stats'] });
-    }
-
-    try {
-      await fetchJson('/api/discovery/delete', {
-        method: 'POST',
-        body: JSON.stringify({
-          item_ids: rows.filter((row) => row.rawType !== 'extra').map((row) => row.itemId),
-          extra_ids: rows.filter((row) => row.rawType === 'extra').map((row) => row.itemId),
-          mode,
-        }),
-      });
-      await refreshOrganizerDiscovery();
-      const count = rows.length;
-      const toastKey = count === 1
-        ? (mode === 'ignore' ? 'organizer.toasts.deleteIgnoreSuccess' : mode === 'trash' ? 'organizer.toasts.deleteTrashSuccess' : 'organizer.toasts.deleteDbOnlySuccess')
-        : (mode === 'ignore' ? 'organizer.toasts.deleteIgnoreSuccessPlural' : mode === 'trash' ? 'organizer.toasts.deleteTrashSuccessPlural' : 'organizer.toasts.deleteDbOnlySuccessPlural');
-      toast(t(toastKey).replace('{count}', count), 'success');
-    } catch (error) {
-      if (previousDiscovery) {
-        queryClient.setQueryData(['discovery'], previousDiscovery);
-        focusFirstAvailableResult(previousDiscovery);
-      }
-      queryClient.invalidateQueries({ queryKey: ['discovery-count'] });
-      queryClient.invalidateQueries({ queryKey: ['stats'] });
-      throw error;
-    }
-  };
-
-  const openDeleteModal = (row) => {
-    const isExtra = row.rawType === 'extra';
-    const actionCards = [
-      !isExtra ? {
-        key: 'ignore',
-        label: t('organizer.details.delete.ignore.label'),
-        description: t('organizer.details.delete.ignore.description'),
-      } : null,
-      {
-        key: 'db_only',
-        label: t('organizer.details.delete.dbOnly.label'),
-        description: t(isExtra ? 'organizer.details.delete.dbOnly.descriptionExtra' : 'organizer.details.delete.dbOnly.descriptionMedia'),
-      },
-      {
-        key: 'trash',
-        label: t('organizer.details.delete.trash.label'),
-        description: t(isExtra ? 'organizer.details.delete.trash.descriptionExtra' : 'organizer.details.delete.trash.descriptionMedia'),
-        className: 'ui-modal__action-card--danger',
-      },
-    ].filter(Boolean);
-
-    openModal({
-      title: t('organizer.details.delete.title'),
-      description: t(isExtra ? 'organizer.details.delete.descriptionExtra' : 'organizer.details.delete.descriptionMedia'),
-      icon: Trash2,
-      variant: 'danger',
-      content: (
-        <div className="ui-modal__actions-list">
-          {actionCards.map((action) => (
-            <button
-              key={action.key}
-              type="button"
-              className={`ui-modal__action-card ${action.className || ''}`.trim()}
-              onClick={() => {
-                handleDeleteDiscoveryRow(row, action.key).catch((error) => {
-                  toast(error.message || t('organizer.toasts.deleteActionFailed'), 'danger');
-                });
-              }}
-            >
-              <div className="ui-modal__action-copy">
-                <strong className="ui-modal__action-title">{action.label}</strong>
-                <span className="ui-modal__action-description">{action.description}</span>
-              </div>
-            </button>
-          ))}
-        </div>
-      ),
-      footer: (
-        <Button variant="secondary-neutral" onClick={closeModal}>
-          {t('organizer.details.delete.cancel')}
-        </Button>
-      ),
-    });
-  };
-
-  const openBulkDeleteModal = (rows) => {
-    const hasExtras = rows.some((row) => row.rawType === 'extra');
-    const hasMedia = rows.some((row) => row.rawType !== 'extra');
-    const actionCards = [
-      hasMedia ? {
-        key: 'ignore',
-        label: t('organizer.details.delete.ignore.label'),
-        description: t('organizer.details.delete.ignore.description'),
-      } : null,
-      {
-        key: 'db_only',
-        label: t('organizer.details.delete.dbOnly.label'),
-        description: hasMedia && hasExtras
-          ? t('organizer.details.bulkDelete.dbOnly.descriptionMixed')
-          : hasExtras
-            ? t('organizer.details.bulkDelete.dbOnly.descriptionExtra')
-            : t('organizer.details.bulkDelete.dbOnly.descriptionMedia'),
-      },
-      {
-        key: 'trash',
-        label: t('organizer.details.delete.trash.label'),
-        description: hasMedia && hasExtras
-          ? t('organizer.details.bulkDelete.trash.descriptionMixed')
-          : hasExtras
-            ? t('organizer.details.bulkDelete.trash.descriptionExtra')
-            : t('organizer.details.bulkDelete.trash.descriptionMedia'),
-        className: 'ui-modal__action-card--danger',
-      },
-    ].filter(Boolean);
-
-    openModal({
-      title: t('organizer.details.bulkDelete.title'),
-      description: t('organizer.details.bulkDelete.description').replace('{count}', String(rows.length)),
-      icon: Trash2,
-      variant: 'danger',
-      content: (
-        <div className="ui-modal__actions-list">
-          {actionCards.map((action) => (
-            <button
-              key={action.key}
-              type="button"
-              className={`ui-modal__action-card ${action.className || ''}`.trim()}
-              onClick={() => {
-                handleDeleteDiscoveryRows(rows, action.key).catch((error) => {
-                  toast(error.message || t('organizer.toasts.deleteActionFailed'), 'danger');
-                });
-              }}
-            >
-              <div className="ui-modal__action-copy">
-                <strong className="ui-modal__action-title">{action.label}</strong>
-                <span className="ui-modal__action-description">{action.description}</span>
-              </div>
-            </button>
-          ))}
-        </div>
-      ),
-      footer: (
-        <Button variant="secondary-neutral" onClick={closeModal}>
-          {t('organizer.details.delete.cancel')}
-        </Button>
-      ),
-    });
-  };
-  const openMatchModal = (row) => {
-    openModal({
-      title: t('organizer.details.matchModal.title'),
-      description: t('organizer.details.matchModal.description'),
-      className: 'ui-modal--wide',
-      icon: Search,
-      content: (
-        <OrganizerMatchModalContent
-          row={row}
-          t={t}
-          toast={toast}
-          onResolved={() => handleResolveDiscoveryRow(row)}
-        />
-      ),
-      footer: (
-        <Button variant="secondary-neutral" onClick={closeModal}>
-          {t('organizer.details.delete.cancel')}
-        </Button>
-      ),
-    });
-  };
-
-  const openOverrideModal = (row) => {
-    openModal({
-      title: t('organizer.overrideModal.title').replace('{type}', row.rawType || ''),
-      description: t('organizer.overrideModal.description'),
-      icon: Sliders,
-      content: (
-        <div className="override-modal-content" style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '10px 0' }}>
-          <div style={{ padding: '12px', border: '1px dashed var(--border-color, #ccc)', borderRadius: '4px' }}>
-            <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600' }}>Common Settings</h4>
-            <p style={{ margin: '4px 0', fontSize: '13px', color: 'var(--text-muted, #666)' }}>• Target Language (custom language for localization variables)</p>
-            <p style={{ margin: '4px 0', fontSize: '13px', color: 'var(--text-muted, #666)' }}>• Main Type Override</p>
-          </div>
-
-          {row.rawType === 'movie' && (
-            <div style={{ padding: '12px', border: '1px dashed var(--border-color, #ccc)', borderRadius: '4px' }}>
-              <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600' }}>Movie Settings</h4>
-              <p style={{ margin: '4px 0', fontSize: '13px', color: 'var(--text-muted, #666)' }}>• Edition (e.g. Extended, Director's Cut)</p>
-              <p style={{ margin: '4px 0', fontSize: '13px', color: 'var(--text-muted, #666)' }}>• Source (e.g. BluRay, WebDL)</p>
-            </div>
-          )}
-
-          {row.rawType === 'episode' && (
-            <div style={{ padding: '12px', border: '1px dashed var(--border-color, #ccc)', borderRadius: '4px' }}>
-              <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600' }}>Episode Settings</h4>
-              <p style={{ margin: '4px 0', fontSize: '13px', color: 'var(--text-muted, #666)' }}>• Season Number Override</p>
-              <p style={{ margin: '4px 0', fontSize: '13px', color: 'var(--text-muted, #666)' }}>• Episode Number Override</p>
-            </div>
-          )}
-
-          {row.rawType === 'extra' && (
-            <div style={{ padding: '12px', border: '1px dashed var(--border-color, #ccc)', borderRadius: '4px' }}>
-              <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600' }}>Extra Settings</h4>
-              <p style={{ margin: '4px 0', fontSize: '13px', color: 'var(--text-muted, #666)' }}>• Subcategory (e.g. Trailer, Behind the Scenes)</p>
-              <p style={{ margin: '4px 0', fontSize: '13px', color: 'var(--text-muted, #666)' }}>• Language Override</p>
-              <p style={{ margin: '4px 0', fontSize: '13px', color: 'var(--text-muted, #666)' }}>• Audio Type</p>
-            </div>
-          )}
-        </div>
-      ),
-      footer: (
-        <Button variant="secondary-neutral" onClick={closeModal}>
-          {t('organizer.details.delete.cancel')}
-        </Button>
-      ),
-    });
-  };
-
-  const rowActions = [
-    {
-      key: 'match',
-      label: t('organizer.actions.match'),
-      icon: Search,
-      isVisible: (row) => row.rawType !== 'extra',
-      onClick: (row) => openMatchModal(row),
-    },
-    {
-      key: 'override',
-      label: t('organizer.actions.override'),
-      icon: Sliders,
-      onClick: (row) => openOverrideModal(row),
-    },
-    {
-      key: 'preview',
-      label: t('organizer.actions.preview'),
-      icon: Play,
-      isVisible: isPlayableOrganizerRow,
-      onClick: async (row) => {
-        try {
-          await handlePreviewRow(row);
-        } catch (error) {
-          toast(error.message || t('organizer.toasts.previewFailed'), 'danger');
-        }
-      },
-    },
-    {
-      key: 'show-in-folder',
-      label: t('organizer.actions.showInFolder'),
-      icon: FolderOpen,
-      onClick: async (row) => {
-        const result = await showItemInFolder(row.sourcePath);
-        if (!result?.success) {
-          toast(result?.error || t('organizer.toasts.showInFolderFailed'), 'danger');
-        }
-      },
-    },
-    {
-      key: 'dismiss',
-      label: t('organizer.actions.dismiss'),
-      icon: X,
-      isVisible: (row) => row.rawType !== 'extra',
-      onClick: (row) => dismissRows([row.id]),
-    },
-    {
-      key: 'delete',
-      label: t('organizer.details.delete.title'),
-      tooltip: t('organizer.actions.delete'),
-      icon: Trash2,
-      className: 'is-danger',
-      onClick: (row) => openDeleteModal(row),
-    },
-  ];
-
-  const bulkActionBar = (
-    <FloatingActionBar
-      visible={selectedRows.length > 0}
-      title={t('organizer.bulkBar.title').replace('{count}', String(selectedRows.length))}
-      actions={[
-        !selectedRows.some((row) => row.rawType === 'extra') ? {
-          key: 'dismiss',
-          label: t('organizer.actions.dismiss'),
-          icon: X,
-          onClick: () => {
-            dismissRows(selectedRows.map((r) => r.id));
-            clearSelectedRows();
-          },
-          disabled: selectedRows.length === 0,
-        } : null,
-        {
-          key: 'delete',
-          label: t('organizer.actions.delete'),
-          icon: Trash2,
-          className: 'is-danger',
-          onClick: () => openBulkDeleteModal(selectedRows),
-          disabled: selectedRows.length === 0,
-        },
-        {
-          key: 'clear',
-          label: t('organizer.bulkBar.clear'),
-          icon: X,
-          onClick: clearSelectedRows,
-          disabled: selectedRows.length === 0,
-        },
-      ].filter(Boolean)}
-    />
-  );
 
   useEffect(() => {
     if (previousRuleSignatureRef.current === organizerRuleSignature) {
@@ -693,7 +280,15 @@ export default function OrganizerPage() {
     refreshOrganizerDiscovery().catch(() => {
       toast('Failed to refresh organizer rules', 'danger');
     });
-  }, [discoveryQuery.data, focusFirstAvailableResult, isScanActive, organizerRuleSignature, queryClient, toast]);
+  }, [
+    discoveryQuery.data,
+    focusFirstAvailableResult,
+    isScanActive,
+    organizerRuleSignature,
+    queryClient,
+    toast,
+    refreshOrganizerDiscovery,
+  ]);
 
   return (
     <Page className="organizer-page">

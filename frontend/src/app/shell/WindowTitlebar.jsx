@@ -3,7 +3,7 @@ import UtilityButton from '../ui/UtilityButton';
 import ProgressBar from '../ui/ProgressBar';
 import Button from '../ui/Button';
 import { sendWindowEvent } from '../lib/ipc';
-import { fetchJson } from '../lib/http';
+import api from '../lib/api';
 import { useUi } from '../providers/UiProvider';
 import { useTranslation } from '../providers/LanguageProvider';
 import useWindowProgress from './useWindowProgress';
@@ -20,7 +20,7 @@ export default function WindowTitlebar() {
       icon: AlertTriangle,
       variant: 'danger',
       content: (
-        <div style={{ padding: '4px 0', fontSize: 'var(--font-size-sm)', color: 'var(--color-muted)' }}>
+        <div className="ui-modal__body-text">
           {t('progress.abortConfirm.body')}
         </div>
       ),
@@ -34,7 +34,7 @@ export default function WindowTitlebar() {
             onClick={async () => {
               closeModal();
               try {
-                await fetchJson('/api/task/stop', { method: 'POST' });
+                await api.task.stop();
               } catch (err) {
                 console.error('Failed to stop background task:', err);
               }

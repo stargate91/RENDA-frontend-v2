@@ -49,6 +49,7 @@ export const UiProvider = ({ children }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useUi = () => {
   const value = useContext(UiContext);
   if (!value) {

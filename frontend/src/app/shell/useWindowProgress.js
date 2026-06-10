@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTranslation } from '../providers/LanguageProvider';
 import { useImageStatusQuery, useScanStatusQuery } from '../queries/appQueries';
 
@@ -40,9 +41,6 @@ const getScanProgress = (status) => {
   const [start, end] = range;
   return clampPercent(Math.round(start + ((end - start) * phaseProgress)));
 };
-
-let lastScanStartTime = null;
-let maxScanProgress = 0;
 
 const formatScanRemaining = (status, progress) => {
   if (!status?.active) {
@@ -121,29 +119,45 @@ export default function useWindowProgress() {
   const isScanActive = Boolean(scanStatus?.active);
   const isImageActive = Boolean(imageStatus?.active);
 
+  const [scanState, setScanState] = useState({
+    lastScanStartTime: null,
+    maxScanProgress: 0,
+  });
+
+  const startTime = scanStatus?.active ? (scanStatus.start_time || 0) : null;
+  const rawProgress = scanStatus?.active ? getScanProgress(scanStatus) : 0;
+
+  let currentMaxScanProgress = scanState.maxScanProgress;
+
   if (!isScanActive) {
-    lastScanStartTime = null;
-    maxScanProgress = 0;
+    if (scanState.lastScanStartTime !== null || scanState.maxScanProgress !== 0) {
+      setScanState({
+        lastScanStartTime: null,
+        maxScanProgress: 0,
+      });
+      currentMaxScanProgress = 0;
+    }
+  } else if (startTime !== scanState.lastScanStartTime) {
+    setScanState({
+      lastScanStartTime: startTime,
+      maxScanProgress: rawProgress,
+    });
+    currentMaxScanProgress = rawProgress;
+  } else if (rawProgress > scanState.maxScanProgress) {
+    setScanState((prev) => ({
+      ...prev,
+      maxScanProgress: rawProgress,
+    }));
+    currentMaxScanProgress = rawProgress;
   }
 
   const scanProgressData = isScanActive
-    ? (() => {
-        const startTime = scanStatus.start_time || 0;
-        if (startTime !== lastScanStartTime) {
-          lastScanStartTime = startTime;
-          maxScanProgress = 0;
-        }
-        const rawProgress = getScanProgress(scanStatus);
-        if (rawProgress > maxScanProgress) {
-          maxScanProgress = rawProgress;
-        }
-        return {
-          taskName: getScanTaskName(scanStatus, t),
-          progress: maxScanProgress,
-          timeRemaining: formatScanRemaining(scanStatus, maxScanProgress),
-          active: true,
-        };
-      })()
+    ? {
+        taskName: getScanTaskName(scanStatus, t),
+        progress: currentMaxScanProgress,
+        timeRemaining: formatScanRemaining(scanStatus, currentMaxScanProgress),
+        active: true,
+      }
     : null;
 
   return {

@@ -23,12 +23,7 @@ export default function MatchEpisodeCard({
 }) {
   const stillUrl = getImageUrl(episodeEntry.still_path, TMDB_IMAGE_SIZE_STILL);
 
-  const handleCardClick = (e) => {
-    if (e.target.closest('.organizer-match-modal__result-action--primary')) {
-      return;
-    }
-    onToggle(episodeEntry.episode_number);
-  };
+
 
   return (
     <div
@@ -38,10 +33,9 @@ export default function MatchEpisodeCard({
       <button
         type="button"
         className="organizer-match-modal__browser-card-image organizer-match-modal__browser-card-image--still organizer-match-modal__browser-card--clickable"
-        style={{ border: 'none', background: 'transparent', padding: 0, width: '100%', display: 'block' }}
         onClick={() => onToggle(episodeEntry.episode_number)}
       >
-        <MediaCard style={{ width: '100%', height: '100%' }}>
+        <MediaCard>
           {stillUrl ? (
             <img src={stillUrl} alt="" className="organizer-match-modal__poster-image" />
           ) : (

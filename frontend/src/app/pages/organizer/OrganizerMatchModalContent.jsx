@@ -11,6 +11,7 @@ import MatchModalSearchForm from './components/MatchModalSearchForm';
 import MatchModalBrowserToolbar from './components/MatchModalBrowserToolbar';
 import MatchModalBucket from './components/MatchModalBucket';
 import useMatchModalViewModel from './components/useMatchModalViewModel';
+import '../../styles/MatchModal.css';
 
 export default function OrganizerMatchModalContent({
   row,

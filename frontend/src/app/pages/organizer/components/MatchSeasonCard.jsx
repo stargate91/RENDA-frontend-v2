@@ -29,11 +29,10 @@ export default function MatchSeasonCard({
       <button
         type="button"
         className="organizer-match-modal__browser-card-image organizer-match-modal__browser-card-image--poster organizer-match-modal__browser-card--clickable"
-        style={{ border: 'none', background: 'transparent', padding: 0, width: '100%', display: 'block' }}
         onClick={() => onSelect(seasonEntry)}
         disabled={isBrowserLoading}
       >
-        <MediaCard style={{ width: '100%', height: '100%' }}>
+        <MediaCard>
           {posterUrl ? (
             <img src={posterUrl} alt="" className="organizer-match-modal__poster-image" />
           ) : (

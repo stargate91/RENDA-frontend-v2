@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { selectFolder } from '../../lib/ipc';
 import { scrollOrganizerToTop } from './organizerScroll';
 import { useScanMutation, useRenameMutation } from '../../queries/organizerQueries';
+import OrganizerRenameModalContent from './OrganizerRenameModalContent.jsx';
+import { Sparkles } from 'lucide-react';
+import Button from '../../ui/Button';
+import { mapDiscoveryItemRow, mapExtraRow } from './organizerMappers';
 
 const EMPTY_DISCOVERY = {
   manual: [],
@@ -36,13 +40,34 @@ const mergeById = (currentItems = [], nextItems = []) => {
   return [...byId.values()];
 };
 
-const mergeDiscoveryGroups = (currentDiscovery, nextDiscovery) => ({
-  manual: mergeById(currentDiscovery.manual, nextDiscovery.manual),
-  movies: mergeById(currentDiscovery.movies, nextDiscovery.movies),
-  series: mergeById(currentDiscovery.series, nextDiscovery.series),
-  collisions: mergeById(currentDiscovery.collisions, nextDiscovery.collisions),
-  extras: mergeById(currentDiscovery.extras, nextDiscovery.extras),
-});
+const mergeDiscoveryGroups = (currentDiscovery, nextDiscovery) => {
+  const nextItemIds = new Set([
+    ...(nextDiscovery.manual || []).map((i) => i.id),
+    ...(nextDiscovery.movies || []).map((i) => i.id),
+    ...(nextDiscovery.series || []).map((i) => i.id),
+    ...(nextDiscovery.collisions || []).map((i) => i.id),
+  ]);
+
+  const nextExtraIds = new Set([
+    ...(nextDiscovery.extras || []).map((i) => i.id),
+  ]);
+
+  const cleanCurrent = {
+    manual: (currentDiscovery.manual || []).filter((i) => !nextItemIds.has(i.id)),
+    movies: (currentDiscovery.movies || []).filter((i) => !nextItemIds.has(i.id)),
+    series: (currentDiscovery.series || []).filter((i) => !nextItemIds.has(i.id)),
+    collisions: (currentDiscovery.collisions || []).filter((i) => !nextItemIds.has(i.id)),
+    extras: (currentDiscovery.extras || []).filter((i) => !nextExtraIds.has(i.id)),
+  };
+
+  return {
+    manual: mergeById(cleanCurrent.manual, nextDiscovery.manual),
+    movies: mergeById(cleanCurrent.movies, nextDiscovery.movies),
+    series: mergeById(cleanCurrent.series, nextDiscovery.series),
+    collisions: mergeById(cleanCurrent.collisions, nextDiscovery.collisions),
+    extras: mergeById(cleanCurrent.extras, nextDiscovery.extras),
+  };
+};
 
 export function useOrganizerActions({
   defaultScanDir,
@@ -53,6 +78,8 @@ export function useOrganizerActions({
   queryClient,
   t,
   toast,
+  openModal,
+  closeModal,
 }) {
   const [isBrowseStarting, setIsBrowseStarting] = useState(false);
   const [isLoadingAll, setIsLoadingAll] = useState(false);
@@ -96,7 +123,7 @@ export function useOrganizerActions({
       scrollOrganizerToTop();
     }
     previousScanActiveRef.current = isScanActive;
-  }, [isScanActive, onResultsReady, queryClient, t, toast]);
+  }, [isScanActive, onResultsReady, queryClient, t, toast, discoveryQuery]);
 
   const handleScanPaths = async (paths) => {
     if (isScanActive || isBrowseStarting) {
@@ -166,25 +193,62 @@ export function useOrganizerActions({
       ...(currentDiscovery.series || []),
       ...(currentDiscovery.collisions || []),
     ];
-    const matchedItemIds = allItems
-      .filter((item) => String(item.status || '').toLowerCase() === 'matched')
-      .map((item) => item.id);
+    const matchedItems = allItems.filter((item) => String(item.status || '').toLowerCase() === 'matched');
 
-    if (matchedItemIds.length === 0) {
+    if (matchedItems.length === 0) {
       toast(t('organizer.toasts.noMatchedItems'), 'danger');
       return;
     }
 
-    setIsRenameStarting(true);
-    try {
-      await renameMutation.mutateAsync({ item_ids: matchedItemIds });
-      queryClient.invalidateQueries({ queryKey: ['scan-status'] });
-    } catch (error) {
-      toast(error.message || t('organizer.toasts.renameStartFailed'), 'danger');
-    } finally {
-      setIsRenameStarting(false);
-    }
+    const matchedItemIds = new Set(matchedItems.map((item) => item.id));
+    const matchedExtras = (currentDiscovery.extras || []).filter(
+      (extra) => matchedItemIds.has(extra.parent_id || extra.parent_item_id)
+    );
+
+    const mappedItems = [
+      ...matchedItems.map((item) => mapDiscoveryItemRow(item, t)),
+      ...matchedExtras.map((extra) => mapExtraRow(extra, t)),
+    ];
+
+    const executeRename = async () => {
+      closeModal();
+      setIsRenameStarting(true);
+      try {
+        const ids = matchedItems.map((item) => item.id);
+        await renameMutation.mutateAsync({ item_ids: ids });
+        queryClient.invalidateQueries({ queryKey: ['scan-status'] });
+      } catch (error) {
+        toast(error.message || t('organizer.toasts.renameStartFailed'), 'danger');
+      } finally {
+        setIsRenameStarting(false);
+      }
+    };
+
+    openModal({
+      title: t('organizer.renameModal.title') || 'Confirm Rename',
+      description: t('organizer.renameModal.description') || 'Review the files that will be renamed.',
+      icon: Sparkles,
+      className: 'ui-modal--extra-wide',
+      content: (
+        <OrganizerRenameModalContent
+          items={mappedItems}
+          t={t}
+        />
+      ),
+      footer: (
+        <>
+          <Button variant="secondary-neutral" onClick={closeModal}>
+            {t('organizer.details.delete.cancel') || 'Cancel'}
+          </Button>
+          <Button variant="primary" onClick={executeRename}>
+            {t('organizer.actions.rename') || 'Rename'}
+          </Button>
+        </>
+      ),
+    });
   };
+
+
 
   return {
     handleBrowseAndScan,

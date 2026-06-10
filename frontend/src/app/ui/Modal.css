@@ -43,6 +43,10 @@
   width: min(760px, 100%);
 }
 
+.ui-modal--extra-wide {
+  width: min(1080px, 100%);
+}
+
 @keyframes ui-modal-scale-up {
   from {
     transform: scale(0.97) translateY(8px);
@@ -121,6 +125,12 @@
   font: var(--text-body);
   color: var(--color-ink);
   line-height: 1.6;
+}
+
+.ui-modal__body-text {
+  padding: 4px 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-muted);
 }
 
 .ui-modal__header,

@@ -102,7 +102,7 @@ export const mapExtraRow = (item, t) => ({
   language: item.language ? String(item.language).toUpperCase() : '-',
   extension: String(item.extension || '').replace(/^\./, ''),
   parentStatus: item.parent_status || null,
-  parent_id: item.parent_item_id,
+  parent_id: item.parent_id || item.parent_item_id,
   images: [],
   rawPayload: item,
 });

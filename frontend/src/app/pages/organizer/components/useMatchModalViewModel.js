@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from '@/providers/LanguageProvider';
-import { useUi } from '@/providers/UiProvider';
 import {
   useSearchMetadataQuery,
   useTvSeasonsQuery,
@@ -328,15 +327,15 @@ export default function useMatchModalViewModel({
       ? getDisplayTitle(browserState.seriesCandidate, 'tv', t)
       : '';
 
-  const seasonsList = seasonsData?.seasons || [];
-  const episodesList = episodesData?.episodes || [];
+  const seasonsList = seasonsData?.seasons;
+  const episodesList = episodesData?.episodes;
 
   const browserMetaItems = browserState.view === 'episodes'
     ? [
         browserState.selectedSeason?.episode_count ? `${browserState.selectedSeason.episode_count} eps` : null,
       ]
     : [
-        seasonsList.length ? `${seasonsList.length} seasons` : null,
+        seasonsList?.length ? `${seasonsList.length} seasons` : null,
       ];
 
   const bucketEpisodeNumbers = browserState.bucketEpisodes || [];
@@ -390,8 +389,8 @@ export default function useMatchModalViewModel({
 
   const returnedBrowserState = useMemo(() => ({
     ...browserState,
-    seasons: seasonsList,
-    episodes: episodesList,
+    seasons: seasonsList || [],
+    episodes: episodesList || [],
   }), [browserState, seasonsList, episodesList]);
 
   return {

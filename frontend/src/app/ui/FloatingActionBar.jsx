@@ -1,3 +1,5 @@
+import './FloatingActionBar.css';
+
 export default function FloatingActionBar({
   visible = false,
   eyebrow,

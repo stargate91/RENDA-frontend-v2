@@ -60,11 +60,10 @@ export default function MatchCandidateCard({
         <button
           type="button"
           className="organizer-match-modal__poster-card-image"
-          style={{ border: 'none', background: 'transparent', padding: 0, width: '100%', display: 'block', cursor: 'pointer' }}
           onClick={() => onSelect(candidate)}
           disabled={isDisabled}
         >
-          <MediaCard style={{ width: '100%', height: '100%' }}>
+          <MediaCard>
             {posterUrl ? (
               <img src={posterUrl} alt="" className="organizer-match-modal__poster-image" />
             ) : (

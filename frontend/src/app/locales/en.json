@@ -96,7 +96,12 @@
       "delete": "Delete",
       "showInFolder": "Show in Folder",
       "dismiss": "Remove from list",
-      "override": "Override"
+      "override": "Override",
+      "rename": "Rename"
+    },
+    "renameModal": {
+      "title": "Confirm Rename",
+      "description": "Review the files that will be renamed."
     },
     "overrideModal": {
       "title": "Override {type}",

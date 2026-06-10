@@ -16,16 +16,30 @@ export function useOrganizerColumns({
   t,
   onOpenMatch,
 }) {
-  const renderSortableLabel = (label, key) => (
-    <SortButton
-      isActive={sortConfig.key === key}
-      label={label}
-      onToggle={() => handleSortToggle(key)}
-      sortDirection={sortConfig.direction}
-    />
-  );
+  const columns = useMemo(() => {
+    const renderSortableLabel = (label, key) => (
+      <SortButton
+        isActive={sortConfig.key === key}
+        label={label}
+        onToggle={() => handleSortToggle(key)}
+        sortDirection={sortConfig.direction}
+      />
+    );
 
-  const columns = useMemo(() => buildOrganizerColumns({
+    return buildOrganizerColumns({
+      activeExtrasTab,
+      activeMainTab,
+      collisionStrategy,
+      handleToggleAll,
+      handleToggleRow,
+      normalizeStatusTone,
+      paginatedRows,
+      renderSortableLabel,
+      selectedRowIds,
+      t,
+      onOpenMatch,
+    });
+  }, [
     activeExtrasTab,
     activeMainTab,
     collisionStrategy,
@@ -33,22 +47,12 @@ export function useOrganizerColumns({
     handleToggleRow,
     normalizeStatusTone,
     paginatedRows,
-    renderSortableLabel,
     selectedRowIds,
     t,
     onOpenMatch,
-  }), [
-    activeExtrasTab,
-    activeMainTab,
-    collisionStrategy,
-    handleToggleAll,
-    handleToggleRow,
-    normalizeStatusTone,
-    paginatedRows,
-    renderSortableLabel,
-    selectedRowIds,
-    t,
-    onOpenMatch,
+    sortConfig.key,
+    sortConfig.direction,
+    handleSortToggle,
   ]);
 
   return { columns };

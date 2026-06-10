@@ -653,12 +653,12 @@ app.on('browser-window-created', (_event, window) => {
   writeElectronLog('INFO', 'browser-window-created', { id: window.id });
 });
 
-app.on('before-quit', (_event) => {
+app.on('before-quit', () => {
   writeElectronLog('WARN', 'before-quit fired');
   stopBackend('before-quit');
 });
 
-app.on('will-quit', (_event) => {
+app.on('will-quit', () => {
   writeElectronLog('WARN', 'will-quit fired');
   stopBackend('will-quit');
 });

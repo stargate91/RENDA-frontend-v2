@@ -5,7 +5,7 @@ const getDroppedPaths = (dataTransfer) => {
   let webUtils;
   try {
     webUtils = window.require('electron')?.webUtils;
-  } catch (e) {
+  } catch {
     // Ignore if not in Electron
   }
 
@@ -14,7 +14,7 @@ const getDroppedPaths = (dataTransfer) => {
       if (webUtils && typeof webUtils.getPathForFile === 'function') {
         try {
           return webUtils.getPathForFile(file);
-        } catch (e) {
+        } catch {
           // Fallback to legacy path
         }
       }

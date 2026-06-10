@@ -45,7 +45,9 @@ export default function Table({ columns, rows = [], onRowClick, activeRowId = nu
                   const rawValue = row[col.key];
                   const renderedValue = col.render ? col.render(rawValue, row) : rawValue;
                   const visibleRowActions = hasRowActions ? getVisibleRowActions(row) : [];
-                  const shouldShowActions = visibleRowActions.length > 0 && hoveredRowId === row.id && col.key === lastColumnKey;
+                  const isHovered = hoveredRowId === row.id;
+                  const shouldShowActions = visibleRowActions.length > 0 && isHovered && col.key === lastColumnKey;
+                  const shouldHideValue = shouldShowActions || (col.hideOnHover && isHovered && visibleRowActions.length > 0);
                   const isEmpty = renderedValue === undefined || renderedValue === null || renderedValue === '';
                   return (
                     <td
@@ -54,7 +56,7 @@ export default function Table({ columns, rows = [], onRowClick, activeRowId = nu
                       style={col.width ? { width: col.width, maxWidth: col.width, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } : undefined}
                     >
                       <div className="ui-table__cell-content">
-                        <span className={`ui-table__cell-value${shouldShowActions ? ' is-hidden' : ''}`.trim()}>
+                        <span className={`ui-table__cell-value${shouldHideValue ? ' is-hidden' : ''}`.trim()}>
                           {isEmpty ? '-' : renderedValue}
                         </span>
                         {shouldShowActions ? (

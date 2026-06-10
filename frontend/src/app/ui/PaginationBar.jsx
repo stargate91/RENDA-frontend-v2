@@ -24,11 +24,13 @@ function PaginationPageSizes({ pageSize, pageSizeOptions, onPageSizeChange, aria
 function PaginationPageEditor({ currentPage, totalPages, onPageChange }) {
   const [isEditing, setIsEditing] = useState(false);
   const [pageValue, setPageValue] = useState(String(currentPage));
+  const [prevCurrentPage, setPrevCurrentPage] = useState(currentPage);
   const inputRef = useRef(null);
 
-  useEffect(() => {
+  if (currentPage !== prevCurrentPage) {
+    setPrevCurrentPage(currentPage);
     setPageValue(String(currentPage));
-  }, [currentPage]);
+  }
 
   useEffect(() => {
     if (isEditing) {

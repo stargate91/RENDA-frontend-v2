@@ -105,6 +105,7 @@ export function buildOrganizerColumns({
         key: 'type',
         label: renderSortableLabel(t('organizer.table.type'), 'type'),
         align: 'center',
+        hideOnHover: true,
         render: (value) => (
           <span className="organizer-type-text">
             {value}
