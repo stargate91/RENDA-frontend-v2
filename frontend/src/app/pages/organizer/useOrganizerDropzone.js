@@ -1,9 +1,25 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const getDroppedPaths = (dataTransfer) => {
   const files = Array.from(dataTransfer?.files || []);
+  let webUtils;
+  try {
+    webUtils = window.require('electron')?.webUtils;
+  } catch (e) {
+    // Ignore if not in Electron
+  }
+
   const paths = files
-    .map((file) => file?.path)
+    .map((file) => {
+      if (webUtils && typeof webUtils.getPathForFile === 'function') {
+        try {
+          return webUtils.getPathForFile(file);
+        } catch (e) {
+          // Fallback to legacy path
+        }
+      }
+      return file?.path;
+    })
     .filter(Boolean);
   return [...new Set(paths)];
 };
@@ -11,6 +27,16 @@ const getDroppedPaths = (dataTransfer) => {
 export function useOrganizerDropzone({ disabled = false, onDropPaths }) {
   const [isDropActive, setIsDropActive] = useState(false);
   const dragDepthRef = useRef(0);
+
+  useEffect(() => {
+    const preventDefault = (event) => event.preventDefault();
+    window.addEventListener('dragover', preventDefault);
+    window.addEventListener('drop', preventDefault);
+    return () => {
+      window.removeEventListener('dragover', preventDefault);
+      window.removeEventListener('drop', preventDefault);
+    };
+  }, []);
 
   const handleDragEnter = (event) => {
     if (disabled) {

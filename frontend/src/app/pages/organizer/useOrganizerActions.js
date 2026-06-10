@@ -67,6 +67,8 @@ export function useOrganizerActions({
     const wasActive = previousScanActiveRef.current;
     if (wasActive && !isScanActive) {
       const finalizeScan = async () => {
+        const currentVisibleDiscovery = queryClient.getQueryData(['discovery']) || EMPTY_DISCOVERY;
+
         queryClient.invalidateQueries({ queryKey: ['discovery'] });
         queryClient.invalidateQueries({ queryKey: ['discovery-count'] });
         queryClient.invalidateQueries({ queryKey: ['stats'] });
@@ -74,7 +76,6 @@ export function useOrganizerActions({
         try {
           const result = await discoveryQuery.refetch();
           const nextDiscovery = result.data || EMPTY_DISCOVERY;
-          const currentVisibleDiscovery = queryClient.getQueryData(['discovery']) || EMPTY_DISCOVERY;
           const scanSubset = lastScanPathsRef.current.length > 0
             ? filterDiscoveryByPaths(nextDiscovery, lastScanPathsRef.current)
             : nextDiscovery;
@@ -147,6 +148,7 @@ export function useOrganizerActions({
         onResultsReady?.(result.data);
       }
       await discoveryCountQuery.refetch();
+      toast(t('organizer.toasts.loadAllSuccess'), 'success');
     } finally {
       setIsLoadingAll(false);
     }
@@ -157,9 +159,25 @@ export function useOrganizerActions({
       return;
     }
 
+    const currentDiscovery = discoveryQuery.data || EMPTY_DISCOVERY;
+    const allItems = [
+      ...(currentDiscovery.manual || []),
+      ...(currentDiscovery.movies || []),
+      ...(currentDiscovery.series || []),
+      ...(currentDiscovery.collisions || []),
+    ];
+    const matchedItemIds = allItems
+      .filter((item) => String(item.status || '').toLowerCase() === 'matched')
+      .map((item) => item.id);
+
+    if (matchedItemIds.length === 0) {
+      toast(t('organizer.toasts.noMatchedItems'), 'danger');
+      return;
+    }
+
     setIsRenameStarting(true);
     try {
-      await renameMutation.mutateAsync();
+      await renameMutation.mutateAsync({ item_ids: matchedItemIds });
       queryClient.invalidateQueries({ queryKey: ['scan-status'] });
     } catch (error) {
       toast(error.message || t('organizer.toasts.renameStartFailed'), 'danger');

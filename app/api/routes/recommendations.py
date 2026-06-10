@@ -38,17 +38,31 @@ def _preferred_metadata_language(db) -> str:
     return "en-US"
 
 
+_IMAGE_EXISTENCE_CACHE = {}
+
 def _public_image_path(path: Optional[str], subfolder: str) -> Optional[str]:
     if not path or path.startswith("http://") or path.startswith("https://"):
         return None
+
+    import time
+    cache_key = (path, subfolder)
+    now = time.time()
+    if cache_key in _IMAGE_EXISTENCE_CACHE:
+        val, expiry = _IMAGE_EXISTENCE_CACHE[cache_key]
+        if now < expiry:
+            return val
 
     clean_path = path.replace("\\", "/")
     marker = f"media/images/{subfolder}/"
     filename = clean_path.split(marker, 1)[1] if marker in clean_path else clean_path.lstrip("/")
     local_file = MEDIA_IMAGE_ROOT / subfolder / filename
+    
+    res = None
     if local_file.exists() and local_file.stat().st_size > 100:
-        return f"/{filename}"
-    return None
+        res = f"/{filename}"
+        
+    _IMAGE_EXISTENCE_CACHE[cache_key] = (res, now + 15)
+    return res
 
 
 def _resolve_local_media_item_id(db, tmdb_id: int | None, media_type: str | None):

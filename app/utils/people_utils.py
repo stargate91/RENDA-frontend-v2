@@ -335,6 +335,8 @@ def _is_remote_image_path(path: Optional[str]) -> bool:
     return bool(path and (path.startswith("http://") or path.startswith("https://")))
 
 
+_IMAGE_EXISTENCE_CACHE = {}
+
 def _public_image_path(path: Optional[str], subfolder: str) -> Optional[str]:
     """Returns the /filename form the frontend expects, if the local file exists."""
     if not path:
@@ -342,13 +344,25 @@ def _public_image_path(path: Optional[str], subfolder: str) -> Optional[str]:
     if _is_remote_image_path(path):
         return path
 
+    import time
+    cache_key = (path, subfolder)
+    now = time.time()
+    if cache_key in _IMAGE_EXISTENCE_CACHE:
+        val, expiry = _IMAGE_EXISTENCE_CACHE[cache_key]
+        if now < expiry:
+            return val
+
     clean_path = path.replace("\\", "/")
     marker = f"media/images/{subfolder}/"
     filename = clean_path.split(marker, 1)[1] if marker in clean_path else clean_path.lstrip("/")
     local_file = MEDIA_IMAGE_ROOT / subfolder / filename
+    
+    res = None
     if local_file.exists() and local_file.stat().st_size > 100:
-        return f"/{filename}"
-    return None
+        res = f"/{filename}"
+        
+    _IMAGE_EXISTENCE_CACHE[cache_key] = (res, now + 15)
+    return res
 
 
 def _has_local_image(path: Optional[str], subfolder: str) -> bool:

@@ -1,3 +1,5 @@
+from typing import List, Optional
+from pydantic import BaseModel
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from app.db.base import Session
 from app.db.models import MediaItem, ItemStatus, ExtraFile
@@ -11,7 +13,10 @@ import logging
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-def run_organize_task():
+class RenameRequest(BaseModel):
+    item_ids: Optional[List[int]] = None
+
+def run_organize_task(item_ids: Optional[List[int]] = None):
     """Background task for physical renaming and organization."""
     db = Session()
     global scan_status
@@ -20,9 +25,12 @@ def run_organize_task():
         formatter = Formatter(FormatterConfig.from_db(db))
         
         # Get all identified items that are NOT yet renamed
-        items = db.query(MediaItem).filter(
+        query = db.query(MediaItem).filter(
             MediaItem.status == ItemStatus.MATCHED
-        ).all()
+        )
+        if item_ids is not None:
+            query = query.filter(MediaItem.id.in_(item_ids))
+        items = query.all()
         
         if not items:
             scan_status["active"] = False
@@ -86,11 +94,17 @@ def run_organize_task():
         db.close()
 
 @router.post("/rename/start")
-def start_rename(background_tasks: BackgroundTasks):
-    """Triggers the organization process for all matched items."""
+def start_rename(background_tasks: BackgroundTasks, request: Optional[RenameRequest] = None):
+    """Triggers the organization process for matched items."""
     db = Session()
     try:
-        matched_count = db.query(MediaItem).filter(MediaItem.status == ItemStatus.MATCHED).count()
+        item_ids = request.item_ids if request else None
+        
+        query = db.query(MediaItem).filter(MediaItem.status == ItemStatus.MATCHED)
+        if item_ids is not None:
+            query = query.filter(MediaItem.id.in_(item_ids))
+            
+        matched_count = query.count()
         if matched_count == 0:
             return {"status": "error", "message": "No matched items to organize"}
 
@@ -107,7 +121,7 @@ def start_rename(background_tasks: BackgroundTasks):
                 "stop_requested": False,
             })
 
-        background_tasks.add_task(run_organize_task)
+        background_tasks.add_task(run_organize_task, item_ids)
         return {"status": "success", "message": f"Organizing {matched_count} items"}
     finally:
         db.close()

@@ -242,6 +242,10 @@ export default function useMatchModalViewModel({
       await handleBrowseSeries(candidate);
       return;
     }
+    if (candidate.is_active) {
+      toast(t('organizer.toasts.matchAlreadyActive'), 'info');
+      return;
+    }
     await handleResolve(candidate);
   };
 

@@ -1,6 +1,6 @@
-import { ArrowLeft } from 'lucide-react';
 import Button from '../../../ui/Button';
 import MetaRow from '../../../ui/MetaRow';
+import NavButton from '../../../ui/NavButton';
 
 export default function MatchModalBrowserToolbar({
   view,
@@ -20,14 +20,9 @@ export default function MatchModalBrowserToolbar({
 
   return (
     <div className="organizer-match-modal__browser-toolbar">
-      <button
-        type="button"
-        className="organizer-match-modal__browser-back"
-        onClick={onBack}
-      >
-        <ArrowLeft size={14} />
+      <NavButton onClick={onBack}>
         {t('organizer.details.matchModal.back')}
-      </button>
+      </NavButton>
       <div className="organizer-match-modal__browser-copy">
         <strong className="organizer-match-modal__browser-title">{browserTitle}</strong>
         <MetaRow className="organizer-match-modal__browser-meta" items={browserMetaItems} />

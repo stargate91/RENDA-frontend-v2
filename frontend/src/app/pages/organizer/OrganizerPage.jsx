@@ -332,7 +332,10 @@ export default function OrganizerPage() {
         }),
       });
       await refreshOrganizerDiscovery();
-      toast(t('organizer.toasts.deleteActionSuccess'), 'success');
+      const toastKey = mode === 'ignore' ? 'organizer.toasts.deleteIgnoreSuccess'
+        : mode === 'trash' ? 'organizer.toasts.deleteTrashSuccess'
+        : 'organizer.toasts.deleteDbOnlySuccess';
+      toast(t(toastKey), 'success');
     } catch (error) {
       if (previousDiscovery) {
         queryClient.setQueryData(['discovery'], previousDiscovery);
@@ -366,7 +369,11 @@ export default function OrganizerPage() {
         }),
       });
       await refreshOrganizerDiscovery();
-      toast(t('organizer.toasts.deleteActionSuccess'), 'success');
+      const count = rows.length;
+      const toastKey = count === 1
+        ? (mode === 'ignore' ? 'organizer.toasts.deleteIgnoreSuccess' : mode === 'trash' ? 'organizer.toasts.deleteTrashSuccess' : 'organizer.toasts.deleteDbOnlySuccess')
+        : (mode === 'ignore' ? 'organizer.toasts.deleteIgnoreSuccessPlural' : mode === 'trash' ? 'organizer.toasts.deleteTrashSuccessPlural' : 'organizer.toasts.deleteDbOnlySuccessPlural');
+      toast(t(toastKey).replace('{count}', count), 'success');
     } catch (error) {
       if (previousDiscovery) {
         queryClient.setQueryData(['discovery'], previousDiscovery);

@@ -43,7 +43,6 @@ export default function MatchSeasonCard({
         <MetaRow
           className="organizer-match-modal__browser-card-meta"
           items={[
-            `S${seasonEntry.season_number}`,
             seasonEntry.episode_count ? `${seasonEntry.episode_count} eps` : null,
           ]}
         />

@@ -611,7 +611,7 @@
 .organizer-match-modal__poster-card-meta {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   color: var(--color-muted);
   font-size: var(--font-size-2xs);
   line-height: 1.4;
@@ -700,7 +700,7 @@
 .organizer-match-modal__result-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 4px;
   color: var(--color-muted);
   font-size: var(--font-size-xs);
 }
@@ -730,18 +730,6 @@
   align-items: center;
 }
 
-.organizer-match-modal__browser-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 34px;
-  padding: 0 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--color-ink);
-  cursor: pointer;
-}
 
 .organizer-match-modal__browser-copy {
   min-width: 0;
@@ -1004,7 +992,7 @@
   position: relative;
   display: block;
   width: 100%;
-  padding: 12px 14px;
+  padding: 0;
   border: 0;
   background: transparent;
   box-shadow: none;

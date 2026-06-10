@@ -163,36 +163,43 @@ export default function OrganizerDetailsPanel({
           {activeRow ? (
             <div className="organizer-details__content">
               {shouldShowDetailsPoster ? (
-                <MediaCard
-                  as="button"
-                  className={`organizer-details__poster-card${activeImage ? ' has-image' : ''}`}
-                  onClick={onAdvanceImage}
-                  disabled={!activeImage || activeImages.length <= 1}
-                >
-                  {activeImage ? (
-                    <>
+                activeImages.length > 1 ? (
+                  <button
+                    type="button"
+                    className="organizer-details__poster-card has-image"
+                    onClick={onAdvanceImage}
+                  >
+                    <img
+                      src={resolveOrganizerImageUrl(activeImage.path)}
+                      alt={getImageLabel(activeImage, t)}
+                      className="organizer-details__poster-image"
+                    />
+                    {shouldShowDetailsCarousel ? (
+                      <div className="organizer-details__poster-dots" aria-hidden="true">
+                        {activeImages.map((image, index) => (
+                          <span
+                            key={`${image.path}-${index}`}
+                            className={`organizer-details__poster-dot${index === activeImageIndex ? ' is-active' : ''}`}
+                          />
+                        ))}
+                      </div>
+                    ) : null}
+                  </button>
+                ) : (
+                  <div className="organizer-details__poster-card">
+                    {activeImage ? (
                       <img
                         src={resolveOrganizerImageUrl(activeImage.path)}
                         alt={getImageLabel(activeImage, t)}
                         className="organizer-details__poster-image"
                       />
-                      {shouldShowDetailsCarousel ? (
-                        <div className="organizer-details__poster-dots" aria-hidden="true">
-                          {activeImages.map((image, index) => (
-                            <span
-                              key={`${image.path}-${index}`}
-                              className={`organizer-details__poster-dot${index === activeImageIndex ? ' is-active' : ''}`}
-                            />
-                          ))}
-                        </div>
-                      ) : null}
-                    </>
-                  ) : (
-                    <div className="organizer-details__poster-placeholder">
-                      {t('organizer.details.posterPlaceholder')}
-                    </div>
-                  )}
-                </MediaCard>
+                    ) : (
+                      <div className="organizer-details__poster-placeholder">
+                        {t('organizer.details.posterPlaceholder')}
+                      </div>
+                    )}
+                  </div>
+                )
               ) : null}
               <MediaCard className="organizer-details__field">
                 <span className="organizer-details__label">{t('organizer.details.fields.source')}</span>

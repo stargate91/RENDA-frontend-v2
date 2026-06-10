@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useContext, useMemo, useState, useCallback } from 'react';
 import ToastViewport from '../ui/ToastViewport';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
@@ -9,22 +9,26 @@ export const UiProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
   const [modal, setModal] = useState(null);
 
+  const removeToast = useCallback((id) => {
+    setToasts((current) => current.filter((toast) => toast.id !== id));
+  }, []);
+
   const value = useMemo(() => ({
     toast: (title, tone = 'default') => {
       const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      setToasts((current) => [...current, { id, title, tone }]);
-      window.setTimeout(() => {
-        setToasts((current) => current.filter((toast) => toast.id !== id));
-      }, 3200);
+      const wordCount = String(title || '').split(/\s+/).filter(Boolean).length;
+      const duration = Math.max(3000, 2000 + (wordCount * 300));
+      setToasts((current) => [...current, { id, title, tone, duration }]);
     },
+    removeToast,
     openModal: (nextModal) => setModal(nextModal),
     closeModal: () => setModal(null),
-  }), []);
+  }), [removeToast]);
 
   return (
     <UiContext.Provider value={value}>
       {children}
-      <ToastViewport toasts={toasts} />
+      <ToastViewport toasts={toasts} onRemoveToast={removeToast} />
       <Modal
         open={Boolean(modal)}
         title={modal?.title}

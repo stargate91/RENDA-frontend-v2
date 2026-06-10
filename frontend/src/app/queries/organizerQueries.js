@@ -40,5 +40,5 @@ export const useScanMutation = () => useMutation({
 });
 
 export const useRenameMutation = () => useMutation({
-  mutationFn: () => api.rename.start(),
+  mutationFn: (payload) => api.rename.start(payload),
 });

@@ -25,7 +25,9 @@ class Analyzer:
         Extracts language codes (e.g., 'hu', 'en') from text.
         Checks both 'language' and 'subtitle_language' fields.
         """
-        data = self.analyze_text(text)
+        import os
+        filename = os.path.basename(text)
+        data = self.analyze_text(filename)
         langs = data.get('language') or data.get('subtitle_language')
         
         if isinstance(langs, list) and langs:

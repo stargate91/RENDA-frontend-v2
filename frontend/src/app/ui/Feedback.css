@@ -151,6 +151,11 @@
   background: transparent;
   color: var(--color-subtle);
   cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.ui-toast__close:hover {
+  color: var(--color-state-danger);
 }
 
 .ui-toast__description {
