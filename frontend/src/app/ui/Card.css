@@ -44,9 +44,7 @@
   backdrop-filter: blur(24px) saturate(118%);
 }
 
-.ui-card__header,
-.ui-modal__header,
-.ui-modal__footer {
+.ui-card__header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;

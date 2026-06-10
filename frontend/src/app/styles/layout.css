@@ -200,14 +200,14 @@
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--color-state-danger) 34%, transparent),
     0 0 22px color-mix(in srgb, var(--color-state-danger) 18%, transparent);
-  color: #ffe1ea;
+  color: var(--color-accent-red-soft);
 }
 
 .shell__nav-link--danger:focus-visible {
   outline: none;
   background: linear-gradient(180deg, color-mix(in srgb, var(--color-state-danger) 20%, transparent), color-mix(in srgb, var(--color-state-danger) 12%, transparent));
   box-shadow: inset 0 0 0 2px var(--color-state-danger);
-  color: #ffe1ea;
+  color: var(--color-accent-red-soft);
 }
 
 .shell.is-sidebar-collapsed .shell__sidebar {

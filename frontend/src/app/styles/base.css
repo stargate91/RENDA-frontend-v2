@@ -70,6 +70,10 @@
   --text-section: var(--app-shell-text-section);
   --text-body: var(--app-shell-text-body);
   --text-caption: var(--app-shell-text-caption);
+
+  /* Status Badge Tokens */
+  --status-badge-bottom: 12px;
+  --status-badge-overlay-bg: rgba(0, 136, 255, 0.88);
 }
 
 * {

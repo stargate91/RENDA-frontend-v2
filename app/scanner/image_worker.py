@@ -348,7 +348,7 @@ class ImageWorker:
             # Only mark COMPLETED if everything downloaded; PENDING if some failed
             if has_pending:
                 match.image_status = ImageStatus.PENDING
-            elif success:
+            elif success or not has_any_path:
                 match.image_status = ImageStatus.COMPLETED
             else:
                 match.image_status = ImageStatus.FAILED
@@ -398,18 +398,17 @@ class ImageWorker:
             match = local_db.query(MediaMatch).filter(MediaMatch.id == match_id).first()
             if not match: return
                 
-            success = False
+            success = True # assume success if no paths exist
             for loc in match.localizations:
                 if loc.backdrop_path:
                     if not loc.local_backdrop_path:
                         local_b = self.download_image(loc.backdrop_path, "backdrops", size="w1280")
                         if local_b:
                             loc.local_backdrop_path = local_b
-                            success = True
-                    else:
-                        success = True
+                        else:
+                            success = False
                 else:
-                    success = True
+                    pass
 
             match.backdrop_status = ImageStatus.COMPLETED if success else ImageStatus.FAILED
             local_db.commit()

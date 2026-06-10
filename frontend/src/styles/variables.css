@@ -225,7 +225,7 @@
   --button-padding-sm: 0 14px;
   --button-padding-md: 0 20px;
   --button-padding-lg: 0 24px;
-  --button-focus-ring: 0 0 0 4px rgba(0, 136, 255, 0.12);
+  --button-focus-ring: 0 0 0 2px var(--color-accent-blue);
   --button-primary-bg: linear-gradient(135deg, #1493ff, #0064d1);
   --button-primary-color: #ffffff;
   --button-primary-shadow: 0 10px 26px rgba(0, 136, 255, 0.24);
@@ -251,7 +251,7 @@
   --button-danger-color: var(--color-accent-red-soft);
   --button-danger-border: color-mix(in srgb, var(--color-state-danger) 34%, transparent);
   --button-danger-hover-bg: color-mix(in srgb, var(--color-state-danger) 26%, transparent);
-  --button-danger-focus-ring: 0 0 0 4px color-mix(in srgb, var(--color-state-danger) 28%, transparent);
+  --button-danger-focus-ring: 0 0 0 2px var(--color-state-danger);
 
   /* Tooltip Tokens */
   --tooltip-max-width: 220px;

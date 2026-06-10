@@ -54,7 +54,7 @@
 .ui-tab--sub:focus-visible {
   position: relative;
   z-index: 1;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 32%, transparent);
+  box-shadow: 0 0 0 2px var(--color-accent-blue);
 }
 
 .ui-tab__label {

@@ -1,3 +1,5 @@
+import './Feedback.css';
+
 export default function ProgressBar({ taskName, progress = 0, timeRemaining = '--:--', active = true, variant = 'primary' }) {
   const isSub = variant === 'sub';
   const containerClass = `ui-progress-bar-container ${isSub ? 'ui-progress-bar-container--sub' : ''}`.trim();

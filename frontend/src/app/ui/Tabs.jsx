@@ -1,3 +1,5 @@
+import './Tabs.css';
+
 export function Tabs({ tabs, value, onChange, variant }) {
   const isSub = variant === 'sub';
   const containerClass = isSub ? 'ui-tabs--sub' : 'ui-tabs';

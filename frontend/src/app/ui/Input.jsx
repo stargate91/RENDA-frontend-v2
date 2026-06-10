@@ -1,3 +1,5 @@
+import './Input.css';
+
 export default function Input({ label, hint, className = '', ...props }) {
   return (
     <label className={`ui-field ${className}`.trim()}>

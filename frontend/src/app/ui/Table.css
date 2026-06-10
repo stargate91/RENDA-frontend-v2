@@ -73,7 +73,7 @@
 .ui-sort-button:focus-visible {
   outline: none;
   border-radius: var(--radius-xs);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 32%, transparent);
+  box-shadow: 0 0 0 2px var(--color-accent-blue);
 }
 
 .ui-table tbody tr {
@@ -170,5 +170,5 @@
 
 .ui-table__row-action:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 38%, transparent);
+  box-shadow: 0 0 0 2px var(--color-accent-blue);
 }

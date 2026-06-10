@@ -1,3 +1,5 @@
+import './Card.css';
+
 export default function Card({ title, eyebrow, actions, children, className = '' }) {
   return (
     <section className={`ui-card ${className}`.trim()}>

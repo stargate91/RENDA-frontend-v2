@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Tooltip from './Tooltip';
 import IconButton from './IconButton';
+import './Table.css';
 
 export default function Table({ columns, rows = [], onRowClick, activeRowId = null, emptyText = 'No data available', rowActions = [] }) {
   const [hoveredRowId, setHoveredRowId] = useState(null);

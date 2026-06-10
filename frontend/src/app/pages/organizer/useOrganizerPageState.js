@@ -223,6 +223,18 @@ export function useOrganizerPageState({ discovery, t }) {
   };
 
   const focusFirstAvailableResult = (nextDiscovery = discovery) => {
+    if (activeRowId) {
+      const allIds = new Set([
+        ...(nextDiscovery.manual || []).map((i) => `item-${i.id}`),
+        ...(nextDiscovery.movies || []).map((i) => `item-${i.id}`),
+        ...(nextDiscovery.series || []).map((i) => `item-${i.id}`),
+        ...(nextDiscovery.collisions || []).map((i) => `item-${i.id}`),
+        ...(nextDiscovery.extras || []).map((i) => `extra-${i.id}`),
+      ]);
+      if (allIds.has(activeRowId)) {
+        return;
+      }
+    }
     const reviewMedia = [
       ...(nextDiscovery.manual || []),
       ...(nextDiscovery.movies || []),
@@ -257,6 +269,20 @@ export function useOrganizerPageState({ discovery, t }) {
       { mainTab: 'manual', rows: manualRows },
       { mainTab: 'extras', rows: extraRows, extrasTab: firstExtraTab },
     ].find((entry) => entry.rows.length > 0);
+
+    const currentTabRows = activeMainTab === 'movies' ? movieRows
+      : activeMainTab === 'episodes' ? episodeRows
+      : activeMainTab === 'manual' ? manualRows
+      : activeMainTab === 'extras'
+        ? (nextDiscovery.extras || [])
+            .filter((item) => item.category === EXTRA_CATEGORY_BY_TAB[activeExtrasTab])
+            .map((item) => mapExtraRow(item, t))
+        : [];
+
+    if (currentTabRows.length > 0) {
+      setActiveRowId(currentTabRows[0].id);
+      return;
+    }
 
     if (!firstTarget) {
       setActiveRowId(null);

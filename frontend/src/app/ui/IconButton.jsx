@@ -13,7 +13,7 @@ export default function IconButton({
     <button
       className={`ui-icon-button ui-icon-button--${variant} ui-icon-button--${size} ${className}`.trim()}
       aria-label={accessibleLabel}
-      title={title || accessibleLabel}
+      title={title === null ? undefined : (title || accessibleLabel)}
       {...props}
     >
       {children}

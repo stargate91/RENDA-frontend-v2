@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import Button from '../ui/Button';
-import Card from '../ui/Card';
-import Inline from '../ui/Inline';
-import Input from '../ui/Input';
-import Page from '../ui/Page';
-import Stack from '../ui/Stack';
-import { fetchJson } from '../lib/http';
-import { selectFile, selectFolder } from '../lib/ipc';
-import { useSettingsQuery } from '../queries/appQueries';
-import { useUi } from '../providers/UiProvider';
+import Button from '@/ui/Button';
+import Card from '@/ui/Card';
+import Inline from '@/ui/Inline';
+import Input from '@/ui/Input';
+import Page from '@/ui/Page';
+import Stack from '@/ui/Stack';
+import { useSettingsQuery, useUpdateSettingsMutation } from '@/queries/appQueries';
+import { useUi } from '@/providers/UiProvider';
+import { selectFile, selectFolder } from '@/lib/ipc';
 
 const COLLISION_OPTIONS = [
   { value: 'keep_both', label: 'Keep Both' },
@@ -30,6 +29,7 @@ export default function SettingsPage() {
   const queryClient = useQueryClient();
   const { toast } = useUi();
   const [isSaving, setIsSaving] = useState(false);
+  const updateSettingsMutation = useUpdateSettingsMutation();
   const [form, setForm] = useState({
     default_scan_dir: '',
     folder_library_path: '',
@@ -115,28 +115,24 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await fetchJson('/api/settings', {
-        method: 'POST',
-        body: JSON.stringify({
-          default_scan_dir: form.default_scan_dir.trim(),
-          folder_library_path: form.folder_library_path.trim(),
-          collision_strategy: form.collision_strategy,
-          collision_duration_tolerance_seconds: String(form.collision_duration_tolerance_seconds || '10').trim(),
-          extras_video_action: form.extras_video_action,
-          extras_sub_action: form.extras_sub_action,
-          extras_audio_action: form.extras_audio_action,
-          extras_img_action: form.extras_img_action,
-          extras_meta_action: form.extras_meta_action,
-          vlc_path: form.vlc_path.trim(),
-          mpc_path: form.mpc_path.trim(),
-          tmdb_api_key: form.tmdb_api_key.trim(),
-          tmdb_bearer_token: form.tmdb_bearer_token.trim(),
-          omdb_api_key: form.omdb_api_key.trim(),
-        }),
+      await updateSettingsMutation.mutateAsync({
+        default_scan_dir: form.default_scan_dir.trim(),
+        folder_library_path: form.folder_library_path.trim(),
+        collision_strategy: form.collision_strategy,
+        collision_duration_tolerance_seconds: String(form.collision_duration_tolerance_seconds || '10').trim(),
+        extras_video_action: form.extras_video_action,
+        extras_sub_action: form.extras_sub_action,
+        extras_audio_action: form.extras_audio_action,
+        extras_img_action: form.extras_img_action,
+        extras_meta_action: form.extras_meta_action,
+        vlc_path: form.vlc_path.trim(),
+        mpc_path: form.mpc_path.trim(),
+        tmdb_api_key: form.tmdb_api_key.trim(),
+        tmdb_bearer_token: form.tmdb_bearer_token.trim(),
+        omdb_api_key: form.omdb_api_key.trim(),
       });
 
-      const refreshedDiscovery = await fetchJson('/api/discovery');
-      queryClient.setQueryData(['discovery'], refreshedDiscovery);
+      await queryClient.refetchQueries({ queryKey: ['discovery'] });
       await queryClient.invalidateQueries({ queryKey: ['settings'] });
       await queryClient.invalidateQueries({ queryKey: ['discovery-count'] });
       await queryClient.invalidateQueries({ queryKey: ['stats'] });

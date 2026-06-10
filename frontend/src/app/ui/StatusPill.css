@@ -1,0 +1,35 @@
+/* Status Pill */
+.ui-status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2px 8px;
+  padding-left: calc(8px + 0.04em);
+  border-radius: var(--radius-xs);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+.ui-status-pill--success {
+  background: var(--color-state-success-bg);
+  color: var(--color-state-success);
+}
+
+.ui-status-pill--danger {
+  background: var(--color-state-danger-bg);
+  color: var(--color-state-danger);
+}
+
+.ui-status-pill--warning {
+  background: var(--color-state-warning-bg);
+  color: var(--color-state-warning);
+}
+
+.ui-status-pill--default {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-muted);
+}

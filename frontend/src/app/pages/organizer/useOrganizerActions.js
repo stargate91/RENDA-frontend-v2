@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { fetchJson } from '../../lib/http';
 import { selectFolder } from '../../lib/ipc';
 import { scrollOrganizerToTop } from './organizerScroll';
+import { useScanMutation, useRenameMutation } from '../../queries/organizerQueries';
 
 const EMPTY_DISCOVERY = {
   manual: [],
@@ -60,6 +60,9 @@ export function useOrganizerActions({
   const previousScanActiveRef = useRef(false);
   const lastScanPathsRef = useRef([]);
 
+  const scanMutation = useScanMutation();
+  const renameMutation = useRenameMutation();
+
   useEffect(() => {
     const wasActive = previousScanActiveRef.current;
     if (wasActive && !isScanActive) {
@@ -69,7 +72,8 @@ export function useOrganizerActions({
         queryClient.invalidateQueries({ queryKey: ['stats'] });
 
         try {
-          const nextDiscovery = await fetchJson('/api/discovery');
+          const result = await discoveryQuery.refetch();
+          const nextDiscovery = result.data || EMPTY_DISCOVERY;
           const currentVisibleDiscovery = queryClient.getQueryData(['discovery']) || EMPTY_DISCOVERY;
           const scanSubset = lastScanPathsRef.current.length > 0
             ? filterDiscoveryByPaths(nextDiscovery, lastScanPathsRef.current)
@@ -107,11 +111,8 @@ export function useOrganizerActions({
     try {
       lastScanPathsRef.current = uniquePaths;
 
-      await fetchJson('/api/scan', {
-        method: 'POST',
-        body: JSON.stringify({
-          paths: uniquePaths,
-        }),
+      await scanMutation.mutateAsync({
+        paths: uniquePaths,
       });
 
       queryClient.invalidateQueries({ queryKey: ['scan-status'] });
@@ -158,7 +159,7 @@ export function useOrganizerActions({
 
     setIsRenameStarting(true);
     try {
-      await fetchJson('/api/rename/start', { method: 'POST' });
+      await renameMutation.mutateAsync();
       queryClient.invalidateQueries({ queryKey: ['scan-status'] });
     } catch (error) {
       toast(error.message || t('organizer.toasts.renameStartFailed'), 'danger');

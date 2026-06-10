@@ -1,3 +1,5 @@
+import './StatusBadge.css';
+
 export default function StatusBadge({
   children,
   tone = 'accent',

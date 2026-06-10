@@ -1,3 +1,5 @@
+import './Checkbox.css';
+
 export default function Checkbox({ checked, onChange, disabled, className = '', ...props }) {
   return (
     <label className={`ui-checkbox-wrap ${disabled ? 'is-disabled' : ''} ${className}`.trim()}>

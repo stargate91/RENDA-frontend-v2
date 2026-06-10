@@ -64,7 +64,7 @@
 }
 
 .organizer-panel__browse-btn:focus-visible {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 22%, transparent);
+  box-shadow: 0 0 0 2px var(--color-accent-blue);
 }
 
 .organizer-panel__actions {
@@ -333,7 +333,7 @@
 
 .ui-floating-bar__action:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 22%, transparent);
+  box-shadow: 0 0 0 2px var(--color-accent-blue);
 }
 
 .ui-floating-bar__action.is-danger {
@@ -490,42 +490,7 @@
   min-width: 72px;
 }
 
-.organizer-match-modal__mode-toggle {
-  display: inline-flex;
-  align-items: center;
-  min-height: 48px;
-  padding: 3px;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-md);
-  background: rgba(9, 12, 16, 0.98);
-}
 
-.organizer-match-modal__mode-option {
-  min-height: 40px;
-  padding: 0 12px;
-  border: 0;
-  border-radius: calc(var(--radius-md) - 3px);
-  background: transparent;
-  color: var(--color-muted);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  cursor: pointer;
-  transition: background 160ms ease, color 160ms ease;
-}
-
-.organizer-match-modal__mode-option:hover:not(.is-active) {
-  color: var(--color-ink);
-}
-
-.organizer-match-modal__mode-option.is-active {
-  background: color-mix(in srgb, var(--color-accent) 18%, rgba(255, 255, 255, 0.06));
-  color: var(--color-ink);
-}
-
-.organizer-match-modal__mode-option:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 22%, transparent);
-}
 
 .organizer-match-modal__search-actions {
   display: flex;
@@ -568,7 +533,7 @@
   gap: var(--space-3);
   max-height: 360px;
   overflow: auto;
-  padding-right: 2px;
+  padding: 4px 4px 4px 2px;
 }
 
 .organizer-match-modal__poster-results {
@@ -578,8 +543,7 @@
   gap: var(--space-3);
   overflow-x: auto;
   overflow-y: visible;
-  padding-top: 3px;
-  padding-bottom: 3px;
+  padding: 3px;
 }
 
 .organizer-match-modal__poster-card {
@@ -613,7 +577,7 @@
 
 .organizer-match-modal__poster-card:hover:not(:disabled) .organizer-match-modal__poster-card-image,
 .organizer-match-modal__poster-card:focus-visible .organizer-match-modal__poster-card-image {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 18%, transparent);
+  box-shadow: 0 0 0 2px var(--color-accent-blue);
 }
 
 .organizer-match-modal__poster-card.is-active .organizer-match-modal__poster-card-image {
@@ -623,6 +587,10 @@
 .organizer-match-modal__poster-card-image .organizer-match-modal__poster-image,
 .organizer-match-modal__poster-card-image .organizer-match-modal__poster-placeholder {
   height: 100%;
+}
+
+.organizer-match-modal .ui-status-badge--overlay {
+  background: rgba(0, 136, 255, 0.60);
 }
 
 .organizer-match-modal__poster-card-copy {
@@ -672,8 +640,8 @@
 
 .organizer-match-modal__result-card:focus-visible {
   outline: none;
-  border-color: color-mix(in srgb, var(--color-accent) 55%, white);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 18%, transparent);
+  border-color: var(--color-accent-blue);
+  box-shadow: 0 0 0 2px var(--color-accent-blue);
 }
 
 .organizer-match-modal__result-card.is-active {
@@ -754,13 +722,6 @@
   font-weight: var(--font-weight-semibold);
 }
 
-.organizer-match-modal__empty {
-  padding: var(--space-4);
-  border: 1px dashed rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-md);
-  color: var(--color-muted);
-  text-align: center;
-}
 
 .organizer-match-modal__browser-toolbar {
   display: grid;
@@ -832,8 +793,7 @@
 }
 
 .organizer-match-modal__browser-card.is-selected .organizer-match-modal__browser-card-image {
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 42%, transparent),
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 42%, transparent),
     0 0 0 2px color-mix(in srgb, var(--color-accent) 16%, transparent);
 }
 
@@ -906,7 +866,7 @@
     width: 100%;
   }
 
-  .organizer-match-modal__mode-option {
+  .organizer-match-modal__mode-toggle .ui-segmented-control__option {
     flex: 1 1 0;
   }
 
@@ -959,8 +919,7 @@
   right: 0;
   bottom: 0;
   width: 320px;
-  background:
-    linear-gradient(180deg, rgba(18, 22, 28, 0.98), rgba(10, 12, 16, 0.95)),
+  background: linear-gradient(180deg, rgba(18, 22, 28, 0.98), rgba(10, 12, 16, 0.95)),
     rgba(255, 255, 255, 0.018);
   border-left: 1px solid var(--color-line);
   backdrop-filter: blur(22px) saturate(120%);
@@ -1004,8 +963,7 @@
   display: flex;
   flex-direction: column;
   margin-top: var(--sidebar-nav-offset-y);
-  transition:
-    opacity 120ms ease,
+  transition: opacity 120ms ease,
     max-width 160ms ease,
     transform 160ms ease;
 }
@@ -1032,8 +990,7 @@
   color: var(--color-muted);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
-  transition:
-    opacity 120ms ease,
+  transition: opacity 120ms ease,
     max-width 160ms ease;
 }
 
@@ -1056,8 +1013,7 @@
   opacity: 1;
   transform: translateX(0) scale(1);
   transform-origin: right center;
-  transition:
-    opacity 160ms ease,
+  transition: opacity 160ms ease,
     transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -1067,9 +1023,8 @@
 
 .organizer-details__poster-card:focus-visible {
   outline: none;
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 46%, transparent),
-    0 0 0 3px color-mix(in srgb, var(--color-accent) 18%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 46%, transparent),
+    0 0 0 2px var(--color-accent-blue);
 }
 
 .organizer-details__poster-image {
@@ -1098,8 +1053,7 @@
   backdrop-filter: blur(10px);
   opacity: 1;
   transform: translateX(-50%) translateY(0);
-  transition:
-    opacity 140ms ease,
+  transition: opacity 140ms ease,
     transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -1121,8 +1075,7 @@
   aspect-ratio: 2 / 3;
   width: 100%;
   border-radius: calc(var(--radius-md) - 2px);
-  background:
-    radial-gradient(circle at top, rgba(34, 42, 54, 0.24), transparent 45%),
+  background: radial-gradient(circle at top, rgba(34, 42, 54, 0.24), transparent 45%),
     linear-gradient(180deg, rgba(12, 16, 24, 0.92), rgba(7, 9, 12, 0.96));
   color: var(--color-muted);
   font-size: var(--font-size-xs);

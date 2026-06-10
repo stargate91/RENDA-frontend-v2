@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Button from './Button';
+import './PaginationBar.css';
 
 function PaginationPageSizes({ pageSize, pageSizeOptions, onPageSizeChange, ariaLabel }) {
   return (

@@ -4,9 +4,10 @@ export default function EmptyState({
   icon: Icon = null,
   actions = null,
   className = '',
+  variant = 'default',
 }) {
   return (
-    <div className={`ui-empty-state ${className}`.trim()}>
+    <div className={`ui-empty-state ui-empty-state--${variant} ${className}`.trim()}>
       {Icon ? (
         <div className="ui-empty-state__icon" aria-hidden="true">
           <Icon size={22} />

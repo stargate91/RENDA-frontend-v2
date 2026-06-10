@@ -1,3 +1,5 @@
+import './Feedback.css';
+
 export default function Spinner({
   label = 'Loading',
   description = '',

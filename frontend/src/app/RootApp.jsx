@@ -8,11 +8,11 @@ import { LanguageProvider } from './providers/LanguageProvider';
 export default function RootApp() {
   return (
     <QueryClientProvider client={queryClient}>
-      <UiProvider>
-        <LanguageProvider>
+      <LanguageProvider>
+        <UiProvider>
           <RouterProvider router={router} />
-        </LanguageProvider>
-      </UiProvider>
+        </UiProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }

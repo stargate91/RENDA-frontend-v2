@@ -287,9 +287,28 @@ export default function OrganizerPage() {
     });
   };
 
-  const handleResolveDiscoveryRow = async () => {
-    await refreshOrganizerDiscovery();
+  const handleResolveDiscoveryRow = async (row) => {
     closeModal();
+    const previousDiscovery = queryClient.getQueryData(['discovery']);
+    const nextDiscovery = removeDiscoveryRow(previousDiscovery, row);
+    if (nextDiscovery) {
+      queryClient.setQueryData(['discovery'], nextDiscovery);
+      focusFirstAvailableResult(nextDiscovery);
+      queryClient.invalidateQueries({ queryKey: ['discovery-count'] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
+    }
+
+    try {
+      await refreshOrganizerDiscovery();
+    } catch (error) {
+      if (previousDiscovery) {
+        queryClient.setQueryData(['discovery'], previousDiscovery);
+        focusFirstAvailableResult(previousDiscovery);
+      }
+      queryClient.invalidateQueries({ queryKey: ['discovery-count'] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
+      throw error;
+    }
   };
 
   const handleDeleteDiscoveryRow = async (row, mode) => {
@@ -489,7 +508,7 @@ export default function OrganizerPage() {
           row={row}
           t={t}
           toast={toast}
-          onResolved={handleResolveDiscoveryRow}
+          onResolved={() => handleResolveDiscoveryRow(row)}
         />
       ),
       footer: (
@@ -523,7 +542,7 @@ export default function OrganizerPage() {
     },
     {
       key: 'show-in-folder',
-      label: 'Show in Folder',
+      label: t('organizer.actions.showInFolder'),
       icon: FolderOpen,
       onClick: async (row) => {
         const result = await showItemInFolder(row.sourcePath);

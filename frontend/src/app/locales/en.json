@@ -6,6 +6,7 @@
     "undoHistory": "Undo History",
     "myRatings": "My Ratings",
     "watchedHistory": "Watched History",
+    "lists": "Lists",
     "settings": "Settings",
     "about": "About",
     "quit": "Quit"
@@ -13,7 +14,7 @@
   "organizer": {
     "title": "Media Organizer",
     "tabs": {
-      "manual": "Manual Review",
+      "manual": "Review Needed",
       "movies": "Movies",
       "episodes": "Episodes",
       "extras": "Extras"
@@ -23,7 +24,7 @@
       "subtitles": "Subtitles",
       "audio": "Audio Tracks",
       "images": "Images",
-      "metadata": "Metadatas"
+      "metadata": "Metadata"
     },
     "buttons": {
       "loadAll": "Load All",
@@ -38,11 +39,11 @@
     "emptyStates": {
       "notLoaded": {
         "title": "Nothing loaded yet",
-        "description": "Load items from the database or run a scan to start reviewing media here."
+        "description": "Load items from the database or run a quick scan to start organizing your media!"
       },
       "emptyDatabase": {
-        "title": "No organizer items yet",
-        "description": "Scan a folder first, then matched and review items will show up here."
+        "title": "Looking clean!",
+        "description": "Scan a folder first, and the items that need a match or review will show up right here."
       }
     },
     "loadingStates": {
@@ -56,32 +57,33 @@
       },
       "loadAll": {
         "label": "Loading organizer items",
-        "description": "Fetching the full organizer list from the database. This can take a bit on larger libraries."
+        "description": "Fetching everything from the database. This might take a moment if you have a massive library!"
       }
     },
     "dropzone": {
       "label": "Drop files or folders to scan",
-      "description": "You can drop one or more files and folders here to add them to the organizer."
+      "description": "Just drop your files or folders right here to add them to the organizer."
     },
     "searchPlaceholder": "Search discovery...",
     "toasts": {
-      "scanComplete": "Scan complete. {count} matched, ready to rename.",
-      "scanCompleteFallback": "Scan complete.",
-      "scanStartFailed": "Failed to start scan",
-      "renameStartFailed": "Failed to start rename",
-      "matchSearchMissingQuery": "Enter a title to search",
-      "matchSearchFailed": "Couldn't search TMDB",
-      "matchResolveSuccess": "Match updated.",
-      "matchResolveFailed": "Couldn't update the match",
-      "previewFailed": "Couldn't open the media preview",
-      "showInFolderFailed": "Couldn't open the folder",
-      "deleteActionSuccess": "Done.",
-      "deleteActionFailed": "That didn't work"
+      "scanComplete": "Scan complete! {count} matched and ready to rename.",
+      "scanCompleteFallback": "Scan complete!",
+      "scanStartFailed": "Oops, failed to start the scan",
+      "renameStartFailed": "Oops, failed to start renaming",
+      "matchSearchMissingQuery": "Please enter a title to search for!",
+      "matchSearchFailed": "We couldn't search the database. Let's try again!",
+      "matchResolveSuccess": "Awesome, match updated!",
+      "matchResolveFailed": "Oops, we couldn't update the match. Try again?",
+      "previewFailed": "Oops, we couldn't open the media preview",
+      "showInFolderFailed": "Oops, we couldn't open that folder",
+      "deleteActionSuccess": "Done!",
+      "deleteActionFailed": "Oops, that didn't work"
     },
     "actions": {
       "match": "Match",
       "preview": "Preview",
-      "delete": "Delete"
+      "delete": "Delete",
+      "showInFolder": "Show in Folder"
     },
     "table": {
       "originalFilename": "Original Filename",
@@ -102,24 +104,24 @@
       "title": "Details",
       "collapse": "Collapse details",
       "expand": "Expand details",
-      "empty": "Select an item to see more details.",
+      "empty": "Select an item from the list to see more details here!",
       "delete": {
         "title": "What should happen to this file?",
-        "descriptionMedia": "Pick what you want to do with it. If it has linked extras, they'll follow along where it makes sense.",
-        "descriptionExtra": "Pick what you want to do with this extra file.",
+        "descriptionMedia": "Choose what you'd like to do with this file. Any linked extras will follow along automatically where it makes sense.",
+        "descriptionExtra": "Choose what you'd like to do with this extra file.",
         "cancel": "Cancel",
         "ignore": {
           "label": "Ignore It",
-          "description": "Hide it from the organizer for now and remember where it was, so it can be restored later."
+          "description": "Hide it from the organizer for now. We'll remember where it was so you can restore it later."
         },
         "dbOnly": {
           "label": "Forget It Here",
-          "descriptionMedia": "Remove it from RENDA only. The files stay where they are, and a future scan can find them again.",
-          "descriptionExtra": "Remove just this extra from RENDA. The file stays where it is, and a future scan can find it again."
+          "descriptionMedia": "Only remove it from RENDA. Your files will stay exactly where they are, and you can always scan them again later.",
+          "descriptionExtra": "Only remove this extra from RENDA. The file stays exactly where it is, and you can scan it again later."
         },
         "trash": {
           "label": "Move to Trash",
-          "descriptionMedia": "Send the file to the trash and remove it from RENDA. Linked extras go with it too.",
+          "descriptionMedia": "Send the file to the trash and remove it from RENDA. All linked extras will go with it.",
           "descriptionExtra": "Send this extra file to the trash and remove it from RENDA."
         }
       },
@@ -147,7 +149,7 @@
       },
       "matchModal": {
         "title": "Find the right match",
-        "description": "Search TMDB and apply a different movie or series match for this item.",
+        "description": "Search the database and apply a different movie or series match for this item.",
         "query": "Title",
         "queryPlaceholder": "Search movie or series title",
         "type": "Type",
@@ -158,17 +160,17 @@
         "seasonShort": "S",
         "episodeShort": "E",
         "numericPlaceholder": "Optional",
-        "search": "Search TMDB",
+        "search": "Search",
         "searching": "Searching...",
         "detectedMatches": "Detected matches",
-        "detectedMatchesHint": "Use one of the stored candidates or search for something else.",
+        "detectedMatchesHint": "You can use one of the automatically detected matches below, or search for something else!",
         "searchResults": "Search results",
-        "searchResultsHint": "Pick a result below to replace the current match.",
+        "searchResultsHint": "Choose a result below to replace the current match.",
         "seasons": "Seasons",
-        "seasonsHint": "Pick a season to browse its episodes, or use the whole series.",
+        "seasonsHint": "Choose a season to browse its episodes, or simply match the whole series.",
         "episodes": "Episodes",
-        "episodesHint": "Pick an episode still to resolve directly, or use the whole season.",
-        "noResults": "No TMDB results found for this search.",
+        "episodesHint": "Choose an episode to match it directly, or match the whole season.",
+        "noResults": "We couldn't find any results for this search. Try adjusting the title!",
         "noSeasons": "No seasons found for this series.",
         "noEpisodes": "No episodes found for this season.",
         "back": "Back",
@@ -182,7 +184,11 @@
         "loading": "Loading...",
         "useMatch": "Use this match",
         "applying": "Applying...",
-        "current": "Current"
+        "current": "Current",
+        "unknownSeries": "Unknown Series",
+        "unknownMovie": "Unknown Movie",
+        "seasonNum": "Season {number}",
+        "episodeNum": "Episode {number}"
       },
       "posterPlaceholder": "Poster preview",
       "imageKinds": {

@@ -15,7 +15,7 @@ export const router = createHashRouter([
     path: '/',
     element: <AppShell />,
     children: [
-      { index: true, element: <Navigate to="/organizer" replace /> },
+      { index: true, element: <Navigate to="/dashboard" replace /> },
       { path: 'dashboard', element: <DashboardPage /> },
       { path: 'organizer', element: <OrganizerPage /> },
       { path: 'library', element: <LibraryPage /> },
@@ -67,6 +67,16 @@ export const router = createHashRouter([
       {
         path: 'watched-history',
         element: <WatchedHistoryPage />,
+      },
+      {
+        path: 'lists',
+        element: (
+          <PlaceholderPage
+            eyebrow="Planned page"
+            title="Lists"
+            description="Manage your custom watchlists and collections."
+          />
+        ),
       },
       { path: 'settings', element: <SettingsPage /> },
       { path: '*', element: <NotFoundPage /> },

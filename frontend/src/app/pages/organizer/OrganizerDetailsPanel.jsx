@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, FileJson } from 'lucide-react';
 import { API_BASE } from '../../lib/backend';
 import { useTranslation } from '../../providers/LanguageProvider';
 import { useUi } from '../../providers/UiProvider';
-import { fetchJson } from '../../lib/http';
+import { useFullMetadataQuery } from '../../queries/organizerQueries';
 
 const getImageLabel = (image, t) => t(`organizer.details.imageKinds.${image?.label || 'poster'}`);
 
@@ -33,6 +33,10 @@ export default function OrganizerDetailsPanel({
   const { t } = useTranslation();
   const { openModal, toast } = useUi();
 
+  const { refetch: refetchFullMetadata } = useFullMetadataQuery(activeRow?.itemId, {
+    enabled: false,
+  });
+
   const buildInspectPayload = async () => {
     if (!activeRow) {
       return '';
@@ -52,7 +56,11 @@ export default function OrganizerDetailsPanel({
       }, null, 2);
     }
 
-    const metadata = await fetchJson(`/api/metadata/item/${activeRow.itemId}/full-metadata`);
+    const { data: metadata, error } = await refetchFullMetadata();
+    if (error) {
+      throw error;
+    }
+
     return JSON.stringify({
       kind: activeRow.rawType,
       summary: {

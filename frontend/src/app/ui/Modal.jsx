@@ -1,4 +1,6 @@
 import IconButton from './IconButton';
+import Tooltip from './Tooltip';
+import './Modal.css';
 
 export default function Modal({ open, title, description, children, footer, onClose, variant, icon: Icon, className }) {
   if (!open) return null;
@@ -16,9 +18,11 @@ export default function Modal({ open, title, description, children, footer, onCl
             ) : null}
             {description ? <p className="ui-modal__description">{description}</p> : null}
           </div>
-          <IconButton type="button" className="ui-modal__close" onClick={onClose} label="Close" size="sm">
-            x
-          </IconButton>
+          <Tooltip content="Close" side="top" delay={250}>
+            <IconButton type="button" className="ui-modal__close" onClick={onClose} label="Close" title={null} size="sm">
+              x
+            </IconButton>
+          </Tooltip>
         </header>
         <div className="ui-modal__body">{children}</div>
         {footer ? <footer className="ui-modal__footer">{footer}</footer> : null}

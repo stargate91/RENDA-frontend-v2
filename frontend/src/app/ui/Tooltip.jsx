@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import './Tooltip.css';
 
 const TOOLTIP_GAP = 10;
 

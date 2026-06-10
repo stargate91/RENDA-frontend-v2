@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { CircleHelp, Power, ChevronLeft, ChevronRight, LayoutDashboard, FolderSearch2, Library, History, Star, Clapperboard, Settings } from 'lucide-react';
+import { CircleHelp, Power, ChevronLeft, ChevronRight, LayoutDashboard, FolderSearch2, Library, Star, Clapperboard, Settings, ListTodo, RotateCcw } from 'lucide-react';
 import UtilityButton from '../ui/UtilityButton';
 import { sendWindowEvent } from '../lib/ipc';
 import { useTranslation } from '../providers/LanguageProvider';
@@ -8,9 +8,10 @@ const navItems = [
   { to: '/dashboard', translationKey: 'sidebar.dashboard', icon: LayoutDashboard },
   { to: '/organizer', translationKey: 'sidebar.organizer', icon: FolderSearch2 },
   { to: '/library', translationKey: 'sidebar.library', icon: Library },
-  { to: '/undo-history', translationKey: 'sidebar.undoHistory', icon: History },
-  { to: '/my-ratings', translationKey: 'sidebar.myRatings', icon: Star },
+  { to: '/lists', translationKey: 'sidebar.lists', icon: ListTodo },
   { to: '/watched-history', translationKey: 'sidebar.watchedHistory', icon: Clapperboard },
+  { to: '/my-ratings', translationKey: 'sidebar.myRatings', icon: Star },
+  { to: '/undo-history', translationKey: 'sidebar.undoHistory', icon: RotateCcw },
   { to: '/settings', translationKey: 'sidebar.settings', icon: Settings },
 ];
 

@@ -53,6 +53,20 @@
   text-align: center;
 }
 
+.ui-empty-state--simple {
+  min-height: auto;
+  padding: var(--space-4);
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  background: transparent;
+}
+
+.ui-empty-state--simple .ui-empty-state__title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-muted);
+}
+
 .ui-empty-state__icon {
   display: inline-flex;
   align-items: center;
