@@ -1,0 +1,28 @@
+import IconButton from './IconButton';
+
+export default function Modal({ open, title, description, children, footer, onClose, variant, icon: Icon, className }) {
+  if (!open) return null;
+
+  return (
+    <div className="ui-modal-backdrop" onClick={onClose}>
+      <div className={`ui-modal ${variant ? `ui-modal--${variant}` : ''} ${className || ''}`.trim()} onClick={(event) => event.stopPropagation()}>
+        <header className="ui-modal__header">
+          <div>
+            {title ? (
+              <h3 className="ui-modal__title">
+                {Icon ? <Icon className="ui-modal__title-icon" size={20} /> : null}
+                <span>{title}</span>
+              </h3>
+            ) : null}
+            {description ? <p className="ui-modal__description">{description}</p> : null}
+          </div>
+          <IconButton type="button" className="ui-modal__close" onClick={onClose} label="Close" size="sm">
+            x
+          </IconButton>
+        </header>
+        <div className="ui-modal__body">{children}</div>
+        {footer ? <footer className="ui-modal__footer">{footer}</footer> : null}
+      </div>
+    </div>
+  );
+}

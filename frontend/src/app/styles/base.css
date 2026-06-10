@@ -1,0 +1,149 @@
+:root {
+  --font-sans: var(--font-family-sans);
+  --font-display: var(--font-family-display);
+
+  --color-canvas: var(--app-shell-color-canvas);
+  --color-panel: var(--app-shell-color-panel);
+  --color-panel-strong: var(--app-shell-color-panel-strong);
+  --color-panel-soft: var(--app-shell-color-panel-soft);
+  --color-ink: var(--app-shell-color-ink);
+  --color-muted: var(--app-shell-color-muted);
+  --color-subtle: var(--app-shell-color-subtle);
+  --color-line: var(--app-shell-color-line);
+  --color-line-strong: var(--app-shell-color-line-strong);
+  --color-accent: var(--app-shell-color-accent);
+  --color-accent-strong: var(--app-shell-color-accent-strong);
+  --color-accent-soft: var(--app-shell-color-accent-soft);
+  --color-accent-glow: var(--app-shell-color-accent-glow);
+  --color-signal: var(--app-shell-color-signal);
+  --color-signal-soft: var(--app-shell-color-signal-soft);
+  --color-info: var(--app-shell-color-info);
+  --scrollbar-size: var(--app-shell-scrollbar-size);
+  --scrollbar-radius: var(--app-shell-scrollbar-radius);
+  --scrollbar-track: var(--app-shell-scrollbar-track);
+  --scrollbar-track-hover: var(--app-shell-scrollbar-track-hover);
+  --scrollbar-thumb: var(--app-shell-scrollbar-thumb);
+  --scrollbar-thumb-hover: var(--app-shell-scrollbar-thumb-hover);
+  --scrollbar-thumb-active: var(--app-shell-scrollbar-thumb-active);
+  --scrollbar-border: var(--app-shell-scrollbar-border);
+
+  --space-1: var(--app-shell-space-1);
+  --space-2: var(--app-shell-space-2);
+  --space-3: var(--app-shell-space-3);
+  --space-4: var(--app-shell-space-4);
+  --space-5: var(--app-shell-space-5);
+  --space-6: var(--app-shell-space-6);
+  --space-7: var(--app-shell-space-7);
+  --space-8: var(--app-shell-space-8);
+  --space-9: var(--app-shell-space-9);
+  --space-10: var(--app-shell-space-10);
+  --sidebar-padding-top: var(--sidebar-first-nav-y);
+  --sidebar-padding-bottom: 24px;
+  --sidebar-padding-x: 18px;
+  --sidebar-toggle-size: 28px;
+  --sidebar-nav-link-padding-y: 11px;
+  --sidebar-nav-icon-size: 18px;
+  --sidebar-pre-nav-gap: 0px;
+  --shell-top-band-height: calc(var(--utility-bar-top) + var(--utility-bar-min-height));
+  --sidebar-nav-offset-y: 6px;
+  --sidebar-first-nav-y: var(--shell-top-band-height);
+  --sidebar-nav-icon-start-y: calc(var(--sidebar-first-nav-y) + var(--sidebar-nav-offset-y) + var(--sidebar-nav-link-padding-y));
+  --page-top-offset: var(--sidebar-nav-icon-start-y);
+  --utility-bar-top: 18px;
+  --utility-bar-min-height: 40px;
+
+  --radius-sm: var(--app-shell-radius-sm);
+  --radius-md: var(--app-shell-radius-md);
+  --radius-lg: var(--app-shell-radius-lg);
+  --radius-xl: var(--app-shell-radius-xl);
+  --radius-xs: 8px;
+  --radius-input: var(--app-shell-radius-md);
+  --radius-pill: var(--app-shell-radius-pill);
+  --radius-full: var(--app-shell-radius-pill);
+
+  --shadow-sm: var(--app-shell-shadow-sm);
+  --shadow-md: var(--app-shell-shadow-md);
+  --shadow-lg: var(--app-shell-shadow-lg);
+
+  --text-hero: var(--app-shell-text-hero);
+  --text-title: var(--app-shell-text-title);
+  --text-section: var(--app-shell-text-section);
+  --text-body: var(--app-shell-text-body);
+  --text-caption: var(--app-shell-text-caption);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: var(--font-family-base);
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  font: var(--text-body);
+  color: var(--color-ink);
+  background:
+    radial-gradient(circle at top, rgba(32, 40, 52, 0.22), transparent 38%),
+    linear-gradient(180deg, #0b0d10 0%, #07090c 46%, #040507 100%);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+
+
+*::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: var(--scrollbar-radius);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(0, 136, 255, 0.18);
+  border-radius: var(--scrollbar-radius);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 136, 255, 0.5);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:active {
+  background: rgba(0, 136, 255, 0.85);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-track:hover {
+  background: var(--scrollbar-track-hover);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+.link-reset {
+  text-decoration: none;
+}

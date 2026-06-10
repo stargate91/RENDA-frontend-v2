@@ -1,0 +1,174 @@
+/* Tables */
+.ui-table-wrap {
+  overflow: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-line);
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.ui-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.ui-table th,
+.ui-table td {
+  padding: var(--space-2) var(--space-4);
+  text-align: left;
+  border-bottom: 1px solid var(--color-line);
+  transition: background 0.12s ease;
+  white-space: nowrap;
+}
+
+.ui-table__cell-content {
+  position: relative;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+}
+
+.ui-table td.text-center .ui-table__cell-content {
+  justify-content: center;
+}
+
+.ui-table__cell-value {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  min-width: 0;
+}
+
+.ui-table__cell-value.is-hidden {
+  visibility: hidden;
+}
+
+.ui-table th {
+  font: var(--text-caption);
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: var(--font-weight-semibold);
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.ui-sort-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: inherit;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.ui-sort-button.is-active {
+  color: var(--color-ink);
+}
+
+.ui-sort-button:focus-visible {
+  outline: none;
+  border-radius: var(--radius-xs);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 32%, transparent);
+}
+
+.ui-table tbody tr {
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ui-table tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--color-line) 12%, transparent);
+}
+
+.ui-table tbody tr:hover {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--color-accent-blue) 8%, transparent), transparent 22%),
+    color-mix(in srgb, var(--color-panel) 88%, rgba(255, 255, 255, 0.035));
+  box-shadow: inset 1px 0 0 color-mix(in srgb, var(--color-accent-blue) 22%, transparent);
+}
+
+.ui-table tbody tr.is-clickable {
+  cursor: pointer;
+}
+
+.ui-table tbody tr.is-active {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--color-accent-blue) 14%, transparent), transparent 28%),
+    color-mix(in srgb, var(--color-panel-strong) 90%, rgba(255, 255, 255, 0.03));
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--color-accent-blue) 82%, white);
+}
+
+.ui-table tbody tr.is-active:hover {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--color-accent-blue) 18%, transparent), transparent 28%),
+    color-mix(in srgb, var(--color-panel-strong) 86%, rgba(255, 255, 255, 0.04));
+}
+
+.ui-table .text-left {
+  text-align: left;
+}
+
+.ui-table .text-center {
+  text-align: center;
+}
+
+.ui-table .text-right {
+  text-align: right;
+}
+
+.ui-table__empty {
+  text-align: center !important;
+  color: var(--color-muted);
+  padding: var(--space-2) var(--space-4) !important;
+  font-style: italic;
+}
+
+.ui-table__row-actions {
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  width: 100%;
+}
+
+.ui-table__row-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-xs);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: 140ms ease;
+}
+
+.ui-table__row-action:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-ink);
+}
+
+.ui-table__row-action.is-danger {
+  border-color: color-mix(in srgb, var(--color-state-danger) 22%, transparent);
+  color: var(--color-accent-red-soft);
+  background: color-mix(in srgb, var(--color-state-danger) 6%, transparent);
+}
+
+.ui-table__row-action.is-danger:hover {
+  background: color-mix(in srgb, var(--color-state-danger) 14%, transparent);
+  border-color: color-mix(in srgb, var(--color-state-danger) 36%, transparent);
+  color: var(--color-text-primary);
+}
+
+.ui-table__row-action:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 38%, transparent);
+}

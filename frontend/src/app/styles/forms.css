@@ -1,0 +1,24 @@
+/* Fields & Inputs */
+.ui-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ui-input,
+.ui-select {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-line);
+  background: rgba(9, 12, 16, 0.98);
+  color: var(--color-ink);
+  outline: none;
+}
+
+.ui-input:focus,
+.ui-select:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 4px rgba(0, 136, 255, 0.08), 0 0 24px rgba(0, 136, 255, 0.1);
+}

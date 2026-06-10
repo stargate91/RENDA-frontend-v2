@@ -1,0 +1,253 @@
+{
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "organizer": "Organizer",
+    "library": "Library",
+    "undoHistory": "Undo History",
+    "myRatings": "My Ratings",
+    "watchedHistory": "Watched History",
+    "settings": "Settings",
+    "about": "About",
+    "quit": "Quit"
+  },
+  "organizer": {
+    "title": "Media Organizer",
+    "tabs": {
+      "manual": "Manual Review",
+      "movies": "Movies",
+      "episodes": "Episodes",
+      "extras": "Extras"
+    },
+    "extrasTabs": {
+      "bonus": "Bonus Videos",
+      "subtitles": "Subtitles",
+      "audio": "Audio Tracks",
+      "images": "Images",
+      "metadata": "Metadatas"
+    },
+    "buttons": {
+      "loadAll": "Load All",
+      "loadTheRest": "Load the Rest",
+      "loadingAll": "Loading...",
+      "browseAndScan": "Browse & Scan",
+      "opening": "Opening...",
+      "scanning": "Scanning...",
+      "rename": "Rename",
+      "organizing": "Organizing..."
+    },
+    "emptyStates": {
+      "notLoaded": {
+        "title": "Nothing loaded yet",
+        "description": "Load items from the database or run a scan to start reviewing media here."
+      },
+      "emptyDatabase": {
+        "title": "No organizer items yet",
+        "description": "Scan a folder first, then matched and review items will show up here."
+      }
+    },
+    "loadingStates": {
+      "scan": {
+        "label": "Scanning media",
+        "description": "Reading files and building organizer results for the current folder."
+      },
+      "rename": {
+        "label": "Renaming matched items",
+        "description": "Applying the planned paths and organizing matched media now."
+      },
+      "loadAll": {
+        "label": "Loading organizer items",
+        "description": "Fetching the full organizer list from the database. This can take a bit on larger libraries."
+      }
+    },
+    "dropzone": {
+      "label": "Drop files or folders to scan",
+      "description": "You can drop one or more files and folders here to add them to the organizer."
+    },
+    "searchPlaceholder": "Search discovery...",
+    "toasts": {
+      "scanComplete": "Scan complete. {count} matched, ready to rename.",
+      "scanCompleteFallback": "Scan complete.",
+      "scanStartFailed": "Failed to start scan",
+      "renameStartFailed": "Failed to start rename",
+      "matchSearchMissingQuery": "Enter a title to search",
+      "matchSearchFailed": "Couldn't search TMDB",
+      "matchResolveSuccess": "Match updated.",
+      "matchResolveFailed": "Couldn't update the match",
+      "previewFailed": "Couldn't open the media preview",
+      "showInFolderFailed": "Couldn't open the folder",
+      "deleteActionSuccess": "Done.",
+      "deleteActionFailed": "That didn't work"
+    },
+    "actions": {
+      "match": "Match",
+      "preview": "Preview",
+      "delete": "Delete"
+    },
+    "table": {
+      "originalFilename": "Original Filename",
+      "proposedFilename": "Proposed Filename",
+      "targetNotes": {
+        "skip": "Skipped by extras rule",
+        "delete": "Will be deleted by extras rule"
+      },
+      "subcategory": "Subcategory",
+      "language": "Language",
+      "extension": "Extension",
+      "type": "Type",
+      "status": "Status",
+      "emptyLoading": "Loading organizer items...",
+      "emptyDefault": "No organizer items yet"
+    },
+    "details": {
+      "title": "Details",
+      "collapse": "Collapse details",
+      "expand": "Expand details",
+      "empty": "Select an item to see more details.",
+      "delete": {
+        "title": "What should happen to this file?",
+        "descriptionMedia": "Pick what you want to do with it. If it has linked extras, they'll follow along where it makes sense.",
+        "descriptionExtra": "Pick what you want to do with this extra file.",
+        "cancel": "Cancel",
+        "ignore": {
+          "label": "Ignore It",
+          "description": "Hide it from the organizer for now and remember where it was, so it can be restored later."
+        },
+        "dbOnly": {
+          "label": "Forget It Here",
+          "descriptionMedia": "Remove it from RENDA only. The files stay where they are, and a future scan can find them again.",
+          "descriptionExtra": "Remove just this extra from RENDA. The file stays where it is, and a future scan can find it again."
+        },
+        "trash": {
+          "label": "Move to Trash",
+          "descriptionMedia": "Send the file to the trash and remove it from RENDA. Linked extras go with it too.",
+          "descriptionExtra": "Send this extra file to the trash and remove it from RENDA."
+        }
+      },
+      "bulkDelete": {
+        "title": "What should happen to the selected files?",
+        "description": "{count} selected items are queued for the same action.",
+        "dbOnly": {
+          "descriptionMedia": "Remove the selected items from RENDA only. The files stay where they are, and a future scan can find them again.",
+          "descriptionExtra": "Remove the selected extras from RENDA only. The files stay where they are, and a future scan can find them again.",
+          "descriptionMixed": "Remove the selected media and extras from RENDA only. The files stay where they are, and a future scan can find them again."
+        },
+        "trash": {
+          "descriptionMedia": "Send the selected media files to the trash and remove them from RENDA. Linked extras go with them too.",
+          "descriptionExtra": "Send the selected extra files to the trash and remove them from RENDA.",
+          "descriptionMixed": "Send the selected media and extra files to the trash and remove them from RENDA."
+        }
+      },
+      "inspect": {
+        "open": "View Full Data",
+        "title": "Organizer Inspection Data",
+        "description": "Combined discovery, extracted, and matched metadata for the selected item.",
+        "copy": "Copy",
+        "download": "Download JSON",
+        "loading": "Loading inspection data..."
+      },
+      "matchModal": {
+        "title": "Find the right match",
+        "description": "Search TMDB and apply a different movie or series match for this item.",
+        "query": "Title",
+        "queryPlaceholder": "Search movie or series title",
+        "type": "Type",
+        "movie": "Movie",
+        "series": "Series",
+        "year": "Year",
+        "yearPlaceholder": "Optional",
+        "seasonShort": "S",
+        "episodeShort": "E",
+        "numericPlaceholder": "Optional",
+        "search": "Search TMDB",
+        "searching": "Searching...",
+        "detectedMatches": "Detected matches",
+        "detectedMatchesHint": "Use one of the stored candidates or search for something else.",
+        "searchResults": "Search results",
+        "searchResultsHint": "Pick a result below to replace the current match.",
+        "seasons": "Seasons",
+        "seasonsHint": "Pick a season to browse its episodes, or use the whole series.",
+        "episodes": "Episodes",
+        "episodesHint": "Pick an episode still to resolve directly, or use the whole season.",
+        "noResults": "No TMDB results found for this search.",
+        "noSeasons": "No seasons found for this series.",
+        "noEpisodes": "No episodes found for this season.",
+        "back": "Back",
+        "browseSeasons": "Browse seasons",
+        "useSeries": "Use series",
+        "useSeason": "Use season",
+        "useBucket": "Use selected episodes",
+        "bucketTitle": "Episode bucket",
+        "addToBucket": "Add to bucket",
+        "removeFromBucket": "Remove from bucket",
+        "loading": "Loading...",
+        "useMatch": "Use this match",
+        "applying": "Applying...",
+        "current": "Current"
+      },
+      "posterPlaceholder": "Poster preview",
+      "imageKinds": {
+        "poster": "Poster",
+        "still": "Still",
+        "seasonPoster": "Season Poster",
+        "seriesPoster": "Series Poster"
+      },
+      "fields": {
+        "source": "Original Path",
+        "target": "Planned Path",
+        "type": "Type",
+        "status": "Status",
+        "subcategory": "Subcategory",
+        "language": "Language",
+        "extension": "Extension"
+      }
+    },
+    "bulkBar": {
+      "title": "{count} selected",
+      "clear": "Clear"
+    },
+    "pagination": {
+      "pageSizesAriaLabel": "Rows per page",
+      "first": "First",
+      "prev": "Prev",
+      "next": "Next",
+      "last": "Last"
+    },
+    "status": {
+      "ready": "Ready",
+      "collision": "Collision",
+      "noMatch": "No Match",
+      "uncertain": "Uncertain",
+      "multiple": "Multiple",
+      "error": "Error",
+      "pending": "Pending",
+      "delete": "Delete"
+    },
+    "collisionStrategy": {
+      "skip": "Skip",
+      "keepBoth": "Keep both",
+      "replaceIfBetter": "Replace if better",
+      "replace": "Replace"
+    },
+    "typeLabels": {
+      "episode": "Episode",
+      "movie": "Movie",
+      "series": "Series",
+      "media": "Media",
+      "extra": "Extra"
+    }
+  },
+  "progress": {
+    "ready": "Ready",
+    "working": "Working...",
+    "scan": {
+      "collecting": "Scanning files...",
+      "probing": "Probing media...",
+      "enriching": "Formatting names...",
+      "resolving": "Resolving metadata...",
+      "organizing": "Organizing matched media..."
+    },
+    "images": {
+      "downloading": "Downloading images..."
+    }
+  }
+}

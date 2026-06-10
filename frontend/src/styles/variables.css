@@ -1,0 +1,355 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Outfit:wght@300;400;600;800&family=Sora:wght@500;600;700;800&display=swap');
+
+:root, [data-theme="dark"] {
+  /* Foundation */
+  --font-family-base: 'Outfit', sans-serif;
+  --font-family-sans: 'IBM Plex Sans', sans-serif;
+  --font-family-display: 'Sora', sans-serif;
+  --font-size-2xs: 11px;
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+  --letter-spacing-tight: -0.01em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.04em;
+  --line-height-tight: 1.2;
+  --line-height-base: 1.5;
+  --line-height-relaxed: 1.65;
+
+  /* Color Tokens */
+  --color-bg-canvas: #0a0a0c;
+  --color-bg-elevated: #111114;
+  --color-surface-card: rgba(255, 255, 255, 0.03);
+  --color-surface-glass: rgba(255, 255, 255, 0.05);
+  --color-surface-glass-strong: rgba(255, 255, 255, 0.1);
+  --color-surface-glass-heavy: rgba(255, 255, 255, 0.15);
+  --color-surface-overlay: rgba(0, 0, 0, 0.4);
+  --color-surface-overlay-strong: rgba(0, 0, 0, 0.5);
+  --color-surface-overlay-heavy: rgba(0, 0, 0, 0.9);
+
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #88888b;
+  --color-text-muted: #555558;
+  --color-text-disabled: rgba(255, 255, 255, 0.4);
+  --color-text-faint: rgba(255, 255, 255, 0.3);
+  --color-text-inverse: #000000;
+
+  --color-border-subtle: rgba(255, 255, 255, 0.08);
+  --color-border-default: rgba(255, 255, 255, 0.1);
+  --color-border-strong: rgba(255, 255, 255, 0.12);
+  --color-border-heavy: rgba(255, 255, 255, 0.15);
+
+  --color-accent-blue: #0088ff;
+  --color-accent-blue-soft: #3b82f6;
+  --color-accent-blue-pale: #93c5fd;
+  --color-accent-purple: #8b5cf6;
+  --color-accent-pink: #e91e63;
+  --color-accent-yellow: #ffc107;
+  --color-accent-yellow-soft: #fcd34d;
+  --color-accent-green: #2fe07c;
+  --color-accent-green-soft: #8ff0b7;
+  --color-accent-red-soft: #fda4af;
+
+  --color-state-info: #0088ff;
+  --color-state-danger: #ef4444;
+  --color-state-success: #2fe07c;
+  --color-state-warning: #ffc832;
+  --color-state-amber: #ff8c32;
+
+  --color-state-info-bg: rgba(0, 136, 255, 0.1);
+  --color-state-danger-bg: rgba(239, 68, 68, 0.14);
+  --color-state-danger-bg-strong: rgba(239, 68, 68, 0.24);
+  --color-state-success-bg: rgba(47, 224, 124, 0.14);
+  --color-state-warning-bg: rgba(255, 200, 50, 0.1);
+  --color-state-amber-bg: rgba(255, 140, 50, 0.1);
+
+  --color-accent-glow: rgba(0, 136, 255, 0.25);
+  --color-danger-glow: rgba(239, 68, 68, 0.24);
+  --color-accent-gradient: linear-gradient(180deg, #1a94ff 0%, #007cf0 100%);
+  --floating-batch-bar-bg: var(--color-bg-elevated);
+  --floating-batch-bar-border: var(--color-border-strong);
+  --floating-batch-bar-border-top: var(--color-border-strong);
+  --floating-batch-bar-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--color-surface-overlay-strong);
+  --floating-batch-bar-accent-bg: var(--color-accent-blue);
+  --floating-batch-bar-accent-border: var(--color-accent-blue);
+  --floating-batch-bar-accent-color: var(--color-text-primary);
+  --floating-batch-bar-accent-hover-bg: color-mix(in srgb, var(--color-accent-blue) 88%, white 12%);
+  --floating-batch-bar-accent-hover-border: color-mix(in srgb, var(--color-accent-blue) 88%, white 12%);
+  --floating-batch-bar-accent-hover-color: var(--color-text-primary);
+  --floating-batch-bar-accent-hover-shadow: 0 8px 20px color-mix(in srgb, var(--color-accent-blue) 24%, transparent);
+  --danger-action-bg: color-mix(in srgb, var(--color-state-danger) 12%, transparent);
+  --danger-action-border: color-mix(in srgb, var(--color-state-danger) 28%, transparent);
+  --danger-action-color: var(--color-accent-red-soft);
+  --danger-action-hover-bg: color-mix(in srgb, var(--color-state-danger) 20%, transparent);
+  --danger-action-hover-border: color-mix(in srgb, var(--color-state-danger) 38%, transparent);
+  --danger-action-hover-color: var(--color-text-primary);
+  --danger-action-hover-shadow: 0 8px 24px color-mix(in srgb, var(--color-state-danger) 18%, transparent);
+  --floating-batch-bar-danger-bg: var(--danger-action-bg);
+  --floating-batch-bar-danger-border: var(--danger-action-border);
+  --floating-batch-bar-danger-color: var(--danger-action-color);
+  --floating-batch-bar-danger-hover-bg: var(--danger-action-hover-bg);
+  --floating-batch-bar-danger-hover-border: var(--danger-action-hover-border);
+  --floating-batch-bar-danger-hover-color: var(--danger-action-hover-color);
+  --floating-batch-bar-danger-hover-shadow: var(--danger-action-hover-shadow);
+  --floating-batch-bar-neutral-bg: color-mix(in srgb, var(--color-text-primary) 6%, transparent);
+  --floating-batch-bar-neutral-border: var(--color-border-strong);
+  --floating-batch-bar-neutral-color: var(--color-text-primary);
+  --floating-batch-bar-neutral-hover-bg: var(--color-border-strong);
+  --floating-batch-bar-neutral-hover-border: color-mix(in srgb, var(--color-text-primary) 18%, transparent);
+  --floating-batch-bar-neutral-hover-color: var(--color-text-primary);
+
+  /* Modal Tokens */
+  --modal-surface-base: var(--color-bg-elevated);
+  --modal-surface-header: color-mix(in srgb, var(--color-bg-elevated) 96%, var(--color-bg-canvas) 4%);
+  --modal-surface-footer: color-mix(in srgb, var(--color-bg-elevated) 88%, var(--color-bg-canvas) 12%);
+  --modal-surface-card: color-mix(in srgb, var(--color-bg-elevated) 82%, var(--color-bg-canvas) 18%);
+  --modal-surface-card-strong: color-mix(in srgb, var(--color-bg-elevated) 74%, var(--color-bg-canvas) 26%);
+  --modal-field-bg: color-mix(in srgb, var(--color-bg-elevated) 76%, var(--color-bg-canvas) 24%);
+  --modal-field-hover: color-mix(in srgb, var(--color-bg-elevated) 69%, var(--color-bg-canvas) 31%);
+  --modal-field-active: color-mix(in srgb, var(--color-bg-elevated) 64%, var(--color-bg-canvas) 36%);
+  --modal-dropdown-bg: color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-canvas) 8%);
+  --modal-dropdown-search-bg: color-mix(in srgb, var(--color-bg-elevated) 84%, var(--color-bg-canvas) 16%);
+
+  /* Dropdown Tokens */
+  --dropdown-field-bg: rgba(0, 0, 0, 0.3);
+  --dropdown-field-hover: var(--color-surface-glass);
+  --dropdown-field-active: var(--color-surface-overlay-strong);
+  --dropdown-field-border: var(--color-border-subtle);
+  --dropdown-field-hover-border: color-mix(in srgb, var(--color-text-primary) 20%, transparent);
+  --dropdown-field-active-border: var(--color-accent-blue);
+  --dropdown-field-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  --dropdown-menu-bg: color-mix(in srgb, var(--color-bg-canvas) 95%, transparent);
+  --dropdown-menu-border: var(--color-border-subtle);
+  --dropdown-menu-border-top: var(--color-surface-glass-heavy);
+  --dropdown-menu-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(0,0,0,0.6);
+  --dropdown-search-bg: rgba(0, 0, 0, 0.2);
+  --dropdown-search-border: var(--color-surface-glass);
+  --dropdown-scroll-bg: transparent;
+  --dropdown-scroll-track: rgba(0, 0, 0, 0.2);
+  --dropdown-option-bg: transparent;
+  --dropdown-option-hover-bg: var(--color-surface-glass);
+  --dropdown-option-hover-color: var(--color-text-primary);
+  --dropdown-option-selected-bg: var(--color-state-info-bg);
+  --dropdown-option-selected-color: var(--color-accent-blue);
+
+  /* Picker Popup Tokens */
+  --picker-popup-bg: var(--dropdown-menu-bg);
+  --picker-popup-border: var(--dropdown-menu-border);
+  --picker-popup-border-top: var(--dropdown-menu-border-top);
+  --picker-popup-shadow: var(--dropdown-menu-shadow);
+  --picker-popup-header-bg: var(--dropdown-search-bg);
+  --picker-popup-header-border: var(--dropdown-search-border);
+  --picker-popup-item-hover-bg: var(--dropdown-option-hover-bg);
+  --picker-popup-item-hover-color: var(--dropdown-option-hover-color);
+  --picker-popup-input-bg: var(--dropdown-field-bg);
+  --picker-popup-input-border: var(--dropdown-field-border);
+  --picker-popup-input-focus-bg: var(--dropdown-field-active);
+  --picker-popup-input-focus-border: var(--dropdown-field-active-border);
+
+  /* Layout Tokens */
+  --layout-sidebar-width-expanded: 220px;
+  --layout-sidebar-width-collapsed: 78px;
+  --layout-inspector-width: 350px;
+  --layout-main-content-padding-x: 60px;
+  --layout-window-titlebar-height: 46px;
+  --layout-main-content-padding-top: 84px;
+  --layout-main-content-padding-bottom: 0px;
+  --layout-main-content-padding: var(--layout-main-content-padding-top) var(--layout-main-content-padding-x) var(--layout-main-content-padding-bottom);
+  --layout-top-control-anchor: calc(var(--layout-window-titlebar-height) + 22px);
+  --layout-top-control-height: 38px;
+  --layout-side-toggle-size: 24px;
+  --layout-top-control-center-y: calc(var(--layout-top-control-anchor) + (var(--layout-top-control-height) / 2));
+  --layout-modal-padding-md: 24px;
+  --layout-modal-padding-lg: 32px;
+
+  /* App Shell Tokens */
+  --app-shell-color-canvas: #06080b;
+  --app-shell-color-panel: rgba(16, 19, 24, 0.9);
+  --app-shell-color-panel-strong: rgba(20, 24, 30, 0.98);
+  --app-shell-color-panel-soft: rgba(255, 255, 255, 0.045);
+  --app-shell-color-ink: #f4f8fc;
+  --app-shell-color-muted: #96a4b4;
+  --app-shell-color-subtle: #66717d;
+  --app-shell-color-line: rgba(255, 255, 255, 0.085);
+  --app-shell-color-line-strong: rgba(255, 255, 255, 0.16);
+  --app-shell-color-accent: var(--color-accent-blue);
+  --app-shell-color-accent-strong: #0064d1;
+  --app-shell-color-accent-soft: rgba(0, 136, 255, 0.12);
+  --app-shell-color-accent-glow: rgba(0, 136, 255, 0.24);
+  --app-shell-color-signal: #63b7ff;
+  --app-shell-color-signal-soft: rgba(99, 183, 255, 0.16);
+  --app-shell-color-info: #69a2ff;
+  --app-shell-scrollbar-size: 10px;
+  --app-shell-scrollbar-radius: 999px;
+  --app-shell-scrollbar-track: rgba(255, 255, 255, 0.025);
+  --app-shell-scrollbar-track-hover: rgba(255, 255, 255, 0.04);
+  --app-shell-scrollbar-thumb: rgba(255, 255, 255, 0.12);
+  --app-shell-scrollbar-thumb-hover: rgba(0, 136, 255, 0.34);
+  --app-shell-scrollbar-thumb-active: rgba(0, 136, 255, 0.48);
+  --app-shell-scrollbar-border: rgba(255, 255, 255, 0.04);
+  --app-shell-space-1: 4px;
+  --app-shell-space-2: 8px;
+  --app-shell-space-3: 12px;
+  --app-shell-space-4: 16px;
+  --app-shell-space-5: 20px;
+  --app-shell-space-6: 24px;
+  --app-shell-space-7: 32px;
+  --app-shell-space-8: 40px;
+  --app-shell-space-9: 56px;
+  --app-shell-space-10: 72px;
+  --app-shell-radius-sm: 10px;
+  --app-shell-radius-md: 12px;
+  --app-shell-radius-lg: 16px;
+  --app-shell-radius-xl: 20px;
+  --app-shell-radius-pill: 999px;
+  --app-shell-shadow-sm: 0 14px 30px rgba(0, 0, 0, 0.32);
+  --app-shell-shadow-md: 0 24px 52px rgba(0, 0, 0, 0.42);
+  --app-shell-shadow-lg: 0 36px 82px rgba(0, 0, 0, 0.56);
+  --app-shell-text-hero: 800 clamp(2.2rem, 3vw, 3.6rem) / 0.96 var(--font-family-display);
+  --app-shell-text-title: 700 clamp(1.45rem, 1.6vw, 2rem) / 1.05 var(--font-family-display);
+  --app-shell-text-section: 600 1rem / 1.2 var(--font-family-display);
+  --app-shell-text-body: 400 0.98rem / 1.6 var(--font-family-sans);
+  --app-shell-text-caption: 500 0.78rem / 1.35 var(--font-family-sans);
+
+  /* Button Tokens */
+  --button-height-sm: 36px;
+  --button-height-md: 44px;
+  --button-height-lg: 52px;
+  --button-padding-sm: 0 14px;
+  --button-padding-md: 0 20px;
+  --button-padding-lg: 0 24px;
+  --button-focus-ring: 0 0 0 4px rgba(0, 136, 255, 0.12);
+  --button-primary-bg: linear-gradient(135deg, #1493ff, #0064d1);
+  --button-primary-color: #ffffff;
+  --button-primary-shadow: 0 10px 26px rgba(0, 136, 255, 0.24);
+  --button-primary-hover-filter: brightness(1.05);
+  --button-primary-neutral-bg: rgba(255, 255, 255, 0.08);
+  --button-primary-neutral-color: #f4f8fc;
+  --button-primary-neutral-border: rgba(255, 255, 255, 0.12);
+  --button-primary-neutral-hover-bg: rgba(255, 255, 255, 0.12);
+  --button-secondary-bg: linear-gradient(180deg, rgba(16, 78, 132, 0.28), rgba(7, 35, 63, 0.3));
+  --button-secondary-color: #8fd0ff;
+  --button-secondary-border: rgba(71, 163, 255, 0.34);
+  --button-secondary-hover-bg: linear-gradient(180deg, rgba(23, 102, 171, 0.34), rgba(10, 45, 79, 0.38));
+  --button-secondary-neutral-bg: rgba(255, 255, 255, 0.03);
+  --button-secondary-neutral-color: #f4f8fc;
+  --button-secondary-neutral-border: rgba(255, 255, 255, 0.14);
+  --button-secondary-neutral-hover-bg: rgba(255, 255, 255, 0.06);
+  --button-ghost-bg: transparent;
+  --button-ghost-color: #96a4b4;
+  --button-ghost-border: rgba(255, 255, 255, 0.08);
+  --button-ghost-hover-bg: rgba(255, 255, 255, 0.04);
+  --button-ghost-hover-color: #f4f8fc;
+  --button-danger-bg: color-mix(in srgb, var(--color-state-danger) 16%, transparent);
+  --button-danger-color: var(--color-accent-red-soft);
+  --button-danger-border: color-mix(in srgb, var(--color-state-danger) 34%, transparent);
+  --button-danger-hover-bg: color-mix(in srgb, var(--color-state-danger) 26%, transparent);
+  --button-danger-focus-ring: 0 0 0 4px color-mix(in srgb, var(--color-state-danger) 28%, transparent);
+
+  /* Tooltip Tokens */
+  --tooltip-max-width: 220px;
+  --tooltip-padding: 8px 10px;
+  --tooltip-radius: 12px;
+  --tooltip-offset: 10px;
+  --tooltip-bg:
+    linear-gradient(180deg, rgba(24, 28, 35, 0.78), rgba(10, 12, 16, 0.68)),
+    rgba(255, 255, 255, 0.04);
+  --tooltip-border: rgba(255, 255, 255, 0.12);
+  --tooltip-color: #f4f8fc;
+  --tooltip-shadow: 0 16px 38px rgba(0, 0, 0, 0.34);
+  --tooltip-blur: blur(16px) saturate(135%);
+
+  /* Toast Tokens */
+  --toast-bg:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.04), transparent 28%),
+    linear-gradient(180deg, rgba(12, 16, 24, 0.98), rgba(5, 7, 12, 0.94));
+  --toast-border: rgba(255, 255, 255, 0.12);
+  --toast-shadow:
+    0 24px 56px rgba(0, 0, 0, 0.52),
+    0 0 0 1px rgba(9, 19, 36, 0.94),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --toast-blur: blur(12px) saturate(145%);
+  --toast-success-bg:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--color-state-success) 12%, transparent), transparent 42%),
+    linear-gradient(180deg, rgba(18, 22, 28, 0.98), rgba(10, 12, 16, 0.95));
+  --toast-success-border: color-mix(in srgb, var(--color-state-success) 24%, rgba(255, 255, 255, 0.1));
+  --toast-danger-bg:
+    linear-gradient(135deg, color-mix(in srgb, var(--color-state-danger) 22%, transparent), transparent 28%),
+    linear-gradient(180deg, color-mix(in srgb, var(--color-state-danger) 12%, rgba(12, 16, 24, 0.98)), rgba(5, 7, 12, 0.94));
+  --toast-danger-border: color-mix(in srgb, var(--color-state-danger) 36%, rgba(255, 255, 255, 0.1));
+
+  /* Backwards-compatible aliases (prefer canonical --color-* / --layout-* tokens) */
+  --bg-main: var(--color-bg-canvas);
+  --bg-sidebar: var(--color-bg-elevated);
+  --bg-card: var(--color-surface-card);
+  --bg-glass: var(--color-surface-glass);
+  --accent-blue: var(--color-accent-blue);
+  --accent-glow: var(--color-accent-glow);
+  --accent-gradient: var(--color-accent-gradient);
+  --text-main: var(--color-text-primary);
+  --text-dim: var(--color-text-secondary);
+  --text-muted: var(--color-text-muted);
+  --border-card: var(--color-border-subtle);
+  --border-glass: var(--color-border-strong);
+  --danger: var(--color-state-danger);
+  --danger-bg: var(--color-state-danger-bg);
+  --success: var(--color-state-success);
+  --success-bg: var(--color-state-success-bg);
+  --warning: var(--color-state-warning);
+  --warning-bg: var(--color-state-warning-bg);
+  --amber: var(--color-state-amber);
+  --amber-bg: var(--color-state-amber-bg);
+  --info: var(--color-state-info);
+
+  /* Spacing */
+  --space-2xs: 4px;
+  --space-xs: 6px;
+  --space-sm: 8px;
+  --space-md: 10px;
+  --space-lg: 12px;
+  --space-xl: 14px;
+  --space-2xl: 16px;
+  --space-3xl: 20px;
+  --space-4xl: 24px;
+  --space-5xl: 32px;
+  --space-6xl: 40px;
+
+  /* Radius */
+  --radius-xs: 8px;
+  --radius-input: 12px;
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 32px;
+  --radius-full: 999px;
+
+  /* Shadow */
+  --shadow-sm: 0 4px 10px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.5);
+  --shadow-focus-blue: 0 8px 20px rgba(59, 130, 246, 0.2);
+
+  /* Motion */
+  --motion-duration-fast: 0.2s;
+  --motion-duration-base: 0.3s;
+  --motion-duration-slow: 0.45s;
+  --motion-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-ease-expressive: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --motion-fast: var(--motion-duration-fast) var(--motion-ease-standard);
+  --motion-base: var(--motion-duration-base) var(--motion-ease-standard);
+  --motion-expressive: var(--motion-duration-base) var(--motion-ease-expressive);
+
+  /* Effects */
+  --glass-blur: blur(12px);
+  --glass-blur-sm: blur(8px);
+  --glass-blur-md: blur(10px);
+}

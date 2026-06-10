@@ -1,0 +1,210 @@
+@import './tooltip.css';
+@import './cards.css';
+@import './buttons.css';
+@import './pagination.css';
+@import './forms.css';
+@import './tabs.css';
+@import './tables.css';
+@import './modals.css';
+@import './feedback.css';
+
+/* Grids & Common Layout Helpers */
+.metric-grid,
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-5);
+}
+
+.metric-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid rgba(31, 37, 45, 0.08);
+}
+
+.metric-row:last-child {
+  border-bottom: 0;
+}
+
+.ui-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.ui-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+/* Type Ramp */
+.type-ramp {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.type-ramp__hero {
+  font: var(--text-hero);
+}
+
+.type-ramp__title {
+  font: var(--text-title);
+}
+
+.type-ramp__caption {
+  font: var(--text-caption);
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Status Pill */
+.ui-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-xs);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ui-status-pill--success {
+  background: rgba(46, 204, 113, 0.15);
+  color: #2ecc71;
+}
+
+.ui-status-pill--danger {
+  background: rgba(231, 76, 60, 0.15);
+  color: #e74c3c;
+}
+
+.ui-status-pill--warning {
+  background: rgba(241, 196, 15, 0.15);
+  color: #f1c40f;
+}
+
+.ui-status-pill--default {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-muted);
+}
+
+.ui-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ui-status-badge--accent {
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  color: var(--color-accent);
+}
+
+.ui-status-badge--inline {
+  position: static;
+}
+
+.ui-status-badge--overlay {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  min-height: 22px;
+  background: rgba(0, 136, 255, 0.88);
+  color: white;
+}
+
+.ui-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.ui-meta-row__item {
+  display: inline-flex;
+  align-items: center;
+}
+
+.ui-meta-row__item + .ui-meta-row__item::before {
+  content: "\2022";
+  margin-right: 6px;
+  opacity: 0.7;
+}
+
+/* Checkbox Styles */
+.ui-checkbox-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+}
+
+.ui-checkbox-wrap.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.ui-checkbox-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.ui-checkbox {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+  position: relative;
+  transition: all 140ms ease;
+}
+
+.ui-checkbox-wrap:hover .ui-checkbox {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ui-checkbox-input:focus-visible + .ui-checkbox {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 38%, transparent);
+}
+
+.ui-checkbox-input:checked + .ui-checkbox {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.ui-checkbox::after {
+  content: '';
+  position: absolute;
+  display: none;
+  left: 5px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.ui-checkbox-input:checked + .ui-checkbox::after {
+  display: block;
+}

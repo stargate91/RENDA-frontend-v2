@@ -1,0 +1,22 @@
+@media (max-width: 1080px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .shell__sidebar {
+    gap: var(--space-5);
+    border-right: 0;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .metric-grid,
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .shell__utility-bar,
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
