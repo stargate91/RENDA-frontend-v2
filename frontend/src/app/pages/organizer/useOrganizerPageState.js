@@ -347,6 +347,7 @@ export function useOrganizerPageState({ discovery, t }) {
     dismissRows,
     restoreDismissedRows,
     dismissedCount,
+    dismissedRowIds,
     activeExtrasTab,
     activeImage,
     activeImageIndex,

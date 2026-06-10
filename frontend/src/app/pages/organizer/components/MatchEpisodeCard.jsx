@@ -2,6 +2,7 @@ import { Clapperboard, Check } from 'lucide-react';
 import MediaCard from '../../../ui/MediaCard';
 import MetaRow from '../../../ui/MetaRow';
 import StatusBadge from '../../../ui/StatusBadge';
+import Button from '../../../ui/Button';
 
 const TMDB_IMAGE_SIZE_STILL = 'w300';
 
@@ -22,8 +23,6 @@ export default function MatchEpisodeCard({
   t,
 }) {
   const stillUrl = getImageUrl(episodeEntry.still_path, TMDB_IMAGE_SIZE_STILL);
-
-
 
   return (
     <div
@@ -67,14 +66,16 @@ export default function MatchEpisodeCard({
               episodeEntry.air_date ? String(episodeEntry.air_date).slice(0, 10) : null,
             ]}
           />
-          <button
+          <Button
             type="button"
-            className="organizer-match-modal__result-action organizer-match-modal__result-action--primary"
+            variant="ghost"
+            size="sm"
+            style={{ color: 'var(--color-accent)' }}
             onClick={() => onSelect(episodeEntry)}
             disabled={isDisabled}
           >
             {t('organizer.details.matchModal.select')}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

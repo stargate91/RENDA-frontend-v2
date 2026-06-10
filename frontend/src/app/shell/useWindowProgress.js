@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from '../providers/LanguageProvider';
 import { useImageStatusQuery, useScanStatusQuery } from '../queries/appQueries';
 
@@ -127,29 +127,31 @@ export default function useWindowProgress() {
   const startTime = scanStatus?.active ? (scanStatus.start_time || 0) : null;
   const rawProgress = scanStatus?.active ? getScanProgress(scanStatus) : 0;
 
-  let currentMaxScanProgress = scanState.maxScanProgress;
-
-  if (!isScanActive) {
-    if (scanState.lastScanStartTime !== null || scanState.maxScanProgress !== 0) {
+  useEffect(() => {
+    if (!isScanActive) {
+      if (scanState.lastScanStartTime !== null || scanState.maxScanProgress !== 0) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setScanState({
+          lastScanStartTime: null,
+          maxScanProgress: 0,
+        });
+      }
+    } else if (startTime !== scanState.lastScanStartTime) {
       setScanState({
-        lastScanStartTime: null,
-        maxScanProgress: 0,
+        lastScanStartTime: startTime,
+        maxScanProgress: rawProgress,
       });
-      currentMaxScanProgress = 0;
+    } else if (rawProgress > scanState.maxScanProgress) {
+      setScanState((prev) => ({
+        ...prev,
+        maxScanProgress: rawProgress,
+      }));
     }
-  } else if (startTime !== scanState.lastScanStartTime) {
-    setScanState({
-      lastScanStartTime: startTime,
-      maxScanProgress: rawProgress,
-    });
-    currentMaxScanProgress = rawProgress;
-  } else if (rawProgress > scanState.maxScanProgress) {
-    setScanState((prev) => ({
-      ...prev,
-      maxScanProgress: rawProgress,
-    }));
-    currentMaxScanProgress = rawProgress;
-  }
+  }, [isScanActive, startTime, rawProgress, scanState.lastScanStartTime, scanState.maxScanProgress]);
+
+  const currentMaxScanProgress = isScanActive
+    ? Math.max(scanState.maxScanProgress, rawProgress)
+    : 0;
 
   const scanProgressData = isScanActive
     ? {

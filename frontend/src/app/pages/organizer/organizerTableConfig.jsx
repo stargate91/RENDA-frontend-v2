@@ -39,11 +39,10 @@ export function buildOrganizerColumns({
         </div>
       ),
     },
-    { key: 'source', label: renderSortableLabel(t('organizer.table.originalFilename'), 'source'), width: '500px' },
+    { key: 'source', label: renderSortableLabel(t('organizer.table.originalFilename'), 'source') },
     {
       key: 'target',
       label: renderSortableLabel(t('organizer.table.proposedFilename'), 'target'),
-      width: '500px',
       render: (value, row) => {
         const isManualReview = activeMainTab === 'manual';
 
@@ -142,6 +141,14 @@ export function buildOrganizerColumns({
         </span>
       ),
     });
+  }
+
+  const contentColumnsCount = columns.length - 1;
+  if (contentColumnsCount > 0) {
+    const equalWidth = `${(100 / contentColumnsCount).toFixed(2)}%`;
+    for (let i = 1; i < columns.length; i++) {
+      columns[i].width = equalWidth;
+    }
   }
 
   return columns;

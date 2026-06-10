@@ -92,6 +92,7 @@ export default function OrganizerPage() {
     dismissRows,
     restoreDismissedRows,
     dismissedCount,
+    dismissedRowIds,
   } = useOrganizerPageState({ discovery, t });
 
   const {
@@ -113,6 +114,8 @@ export default function OrganizerPage() {
     toast,
     openModal,
     closeModal,
+    dismissedRowIds,
+    scanStatusQuery,
   });
   const { dropzoneProps, isDropActive } = useOrganizerDropzone({
     disabled: isScanActive || isBrowseStarting || isLoadingAll || isRenameStarting,

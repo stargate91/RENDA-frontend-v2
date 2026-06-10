@@ -71,6 +71,8 @@
       "scanCompleteFallback": "Scan complete!",
       "scanStartFailed": "Oops, failed to start the scan",
       "renameStartFailed": "Oops, failed to start renaming",
+      "renameComplete": "Renaming complete! All matched files organized.",
+      "renameAborted": "Renaming aborted. {count} files were renamed, the rest remained untouched.",
       "noMatchedItems": "No matched items currently loaded to rename",
       "matchSearchMissingQuery": "Please enter a title to search for!",
       "matchSearchFailed": "We couldn't search the database. Let's try again!",

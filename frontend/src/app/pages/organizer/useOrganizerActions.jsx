@@ -80,20 +80,45 @@ export function useOrganizerActions({
   toast,
   openModal,
   closeModal,
+  dismissedRowIds,
+  scanStatusQuery,
 }) {
   const [isBrowseStarting, setIsBrowseStarting] = useState(false);
   const [isLoadingAll, setIsLoadingAll] = useState(false);
   const [isRenameStarting, setIsRenameStarting] = useState(false);
   const previousScanActiveRef = useRef(false);
   const lastScanPathsRef = useRef([]);
+  const renameStartedRef = useRef(false);
 
   const scanMutation = useScanMutation();
   const renameMutation = useRenameMutation();
+  const wasStopRequestedRef = useRef(false);
+  const lastProcessedCountRef = useRef(0);
+  const scanStatus = scanStatusQuery?.data || null;
+
+  useEffect(() => {
+    if (isScanActive && scanStatus) {
+      if (scanStatus.stop_requested) {
+        wasStopRequestedRef.current = true;
+      }
+      if (scanStatus.current !== undefined) {
+        lastProcessedCountRef.current = scanStatus.current;
+      }
+    }
+  }, [isScanActive, scanStatus]);
 
   useEffect(() => {
     const wasActive = previousScanActiveRef.current;
     if (wasActive && !isScanActive) {
       const finalizeScan = async () => {
+        const wasRename = renameStartedRef.current;
+        renameStartedRef.current = false;
+
+        const wasAborted = wasStopRequestedRef.current;
+        wasStopRequestedRef.current = false;
+        const processedCount = lastProcessedCountRef.current;
+        lastProcessedCountRef.current = 0;
+
         const currentVisibleDiscovery = queryClient.getQueryData(['discovery']) || EMPTY_DISCOVERY;
 
         queryClient.invalidateQueries({ queryKey: ['discovery'] });
@@ -103,18 +128,29 @@ export function useOrganizerActions({
         try {
           const result = await discoveryQuery.refetch();
           const nextDiscovery = result.data || EMPTY_DISCOVERY;
-          const scanSubset = lastScanPathsRef.current.length > 0
-            ? filterDiscoveryByPaths(nextDiscovery, lastScanPathsRef.current)
-            : nextDiscovery;
-          const mergedDiscovery = mergeDiscoveryGroups(currentVisibleDiscovery, scanSubset);
-          queryClient.setQueryData(['discovery'], mergedDiscovery);
-          onResultsReady?.(mergedDiscovery);
-          const matchedMovies = (nextDiscovery.movies || []).length;
-          const matchedEpisodes = (nextDiscovery.series || []).filter((item) => item.type === 'episode').length;
-          const matchedReady = matchedMovies + matchedEpisodes;
-          toast(t('organizer.toasts.scanComplete').replace('{count}', matchedReady), 'success');
+
+          if (wasRename) {
+            queryClient.setQueryData(['discovery'], nextDiscovery);
+            onResultsReady?.(nextDiscovery);
+            if (wasAborted) {
+              toast(t('organizer.toasts.renameAborted').replace('{count}', processedCount), 'warning');
+            } else {
+              toast(t('organizer.toasts.renameComplete') || 'Renaming complete!', 'success');
+            }
+          } else {
+            const scanSubset = lastScanPathsRef.current.length > 0
+              ? filterDiscoveryByPaths(nextDiscovery, lastScanPathsRef.current)
+              : nextDiscovery;
+            const mergedDiscovery = mergeDiscoveryGroups(currentVisibleDiscovery, scanSubset);
+            queryClient.setQueryData(['discovery'], mergedDiscovery);
+            onResultsReady?.(mergedDiscovery);
+            const matchedMovies = (nextDiscovery.movies || []).length;
+            const matchedEpisodes = (nextDiscovery.series || []).filter((item) => item.type === 'episode').length;
+            const matchedReady = matchedMovies + matchedEpisodes;
+            toast(t('organizer.toasts.scanComplete').replace('{count}', matchedReady), 'success');
+          }
         } catch {
-          toast(t('organizer.toasts.scanCompleteFallback'), 'success');
+          toast(wasRename ? t('organizer.toasts.renameStartFailed') : t('organizer.toasts.scanCompleteFallback'), 'success');
         }
         lastScanPathsRef.current = [];
       };
@@ -193,7 +229,11 @@ export function useOrganizerActions({
       ...(currentDiscovery.series || []),
       ...(currentDiscovery.collisions || []),
     ];
-    const matchedItems = allItems.filter((item) => String(item.status || '').toLowerCase() === 'matched');
+    const matchedItems = allItems.filter((item) => {
+      const isMatched = String(item.status || '').toLowerCase() === 'matched';
+      const isDismissed = dismissedRowIds?.has(`item-${item.id}`);
+      return isMatched && !isDismissed;
+    });
 
     if (matchedItems.length === 0) {
       toast(t('organizer.toasts.noMatchedItems'), 'danger');
@@ -201,9 +241,11 @@ export function useOrganizerActions({
     }
 
     const matchedItemIds = new Set(matchedItems.map((item) => item.id));
-    const matchedExtras = (currentDiscovery.extras || []).filter(
-      (extra) => matchedItemIds.has(extra.parent_id || extra.parent_item_id)
-    );
+    const matchedExtras = (currentDiscovery.extras || []).filter((extra) => {
+      const parentIsMatched = matchedItemIds.has(extra.parent_id || extra.parent_item_id);
+      const isDismissed = dismissedRowIds?.has(`extra-${extra.id}`);
+      return parentIsMatched && !isDismissed;
+    });
 
     const mappedItems = [
       ...matchedItems.map((item) => mapDiscoveryItemRow(item, t)),
@@ -215,9 +257,11 @@ export function useOrganizerActions({
       setIsRenameStarting(true);
       try {
         const ids = matchedItems.map((item) => item.id);
+        renameStartedRef.current = true;
         await renameMutation.mutateAsync({ item_ids: ids });
         queryClient.invalidateQueries({ queryKey: ['scan-status'] });
       } catch (error) {
+        renameStartedRef.current = false;
         toast(error.message || t('organizer.toasts.renameStartFailed'), 'danger');
       } finally {
         setIsRenameStarting(false);
