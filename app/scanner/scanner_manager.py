@@ -96,6 +96,7 @@ class ScannerManager:
             # Identify which potential media candidates need technical probing to determine duration
             probe_targets = []
             probe_durations = {}
+            probe_infos = {}
 
             for p in potential_media:
                 p_str = str(p)
@@ -133,6 +134,7 @@ class ScannerManager:
                             self.preprobed_data[path_str] = raw_data
                             info = self.prober.extract_info(raw_data)
                             probe_durations[path_str] = info.get("duration")
+                            probe_infos[path_str] = info
                         except Exception as e:
                             logger.error(f"FFprobe failed for {path_str}: {e}")
                             probe_durations[path_str] = None
@@ -151,7 +153,18 @@ class ScannerManager:
                 p_str = str(p)
                 duration = probe_durations.get(p_str)
                 
-                if duration is not None and duration < limit_seconds:
+                info = probe_infos.get(p_str)
+                is_audio_only = False
+                if info:
+                    has_video = bool(info.get("video_codec"))
+                    has_audio = len(info.get("audio_streams") or []) > 0
+                    if not has_video and has_audio:
+                        is_audio_only = True
+
+                if is_audio_only:
+                    logger.info(f"Demoting {p.name} to extra because it has no video stream (audio-only container).")
+                    extra_paths.append(p)
+                elif duration is not None and duration < limit_seconds:
                     logger.info(f"Demoting {p.name} to extra because duration {duration:.1f}s is less than {limit_seconds}s.")
                     extra_paths.append(p)
                 else:
@@ -274,6 +287,23 @@ class ScannerManager:
                     continue
                     
                 category, subtype = res
+                
+                # Check if it was probed as audio-only
+                info = probe_infos.get(p_str)
+                if not info and p_str in self.preprobed_data:
+                    try:
+                        info = self.prober.extract_info(self.preprobed_data[p_str])
+                    except:
+                        pass
+                
+                if info:
+                    has_video = bool(info.get("video_codec"))
+                    has_audio = len(info.get("audio_streams") or []) > 0
+                    if not has_video and has_audio:
+                        category = ExtraCategory.AUDIO
+                        if not subtype:
+                            subtype = ExtraSubtype.ORIGINAL
+
                 parent_path = links.get(p)
                 parent_item = path_to_item.get(parent_path)
                 

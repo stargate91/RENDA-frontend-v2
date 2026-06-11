@@ -31,7 +31,7 @@ def _preferred_metadata_language(db) -> str:
 
 def _preferred_metadata_languages(db) -> list[str]:
     langs: list[str] = []
-    for key in ("fallback_metadata_language", "ui_language", "primary_metadata_language"):
+    for key in ("default_target_language", "fallback_metadata_language", "ui_language", "primary_metadata_language"):
         setting = db.query(UserSetting).filter(UserSetting.key == key).first()
         if not setting or not setting.value:
             continue

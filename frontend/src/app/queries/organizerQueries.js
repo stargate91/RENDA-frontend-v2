@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 
 export const useSearchMetadataQuery = (query, itemType, year, options = {}) => useQuery({
@@ -42,3 +42,20 @@ export const useScanMutation = () => useMutation({
 export const useRenameMutation = () => useMutation({
   mutationFn: (payload) => api.rename.start(payload),
 });
+
+export const useUpdateMediaMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload) => api.media.update(payload),
+    onSuccess: async () => {
+      try {
+        const data = await api.discovery.get();
+        queryClient.setQueryData(['discovery'], data);
+      } catch {
+        await queryClient.refetchQueries({ queryKey: ['discovery'] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['discovery-count'] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
+    },
+  });
+};

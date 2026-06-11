@@ -106,6 +106,14 @@ def _get_or_create_virtual_episode_state(db, series_tmdb_id: int, season_number:
 
 def _apply_media_updates(item, updates):
     try:
+        if "item_type" in updates:
+            new_type = ItemType(updates["item_type"])
+            if item.item_type != new_type:
+                item.item_type = new_type
+                item.matches = []
+                item.status = ItemStatus.NEW
+                item.planned_path = None
+
         if "target_language" in updates:
             item.target_language = updates["target_language"]
         if "edition" in updates:
@@ -114,8 +122,6 @@ def _apply_media_updates(item, updates):
             item.source = MediaSource(updates["source"])
         if "audio_type" in updates:
             item.audio_type = MediaAudioType(updates["audio_type"])
-        if "item_type" in updates:
-            item.item_type = ItemType(updates["item_type"])
 
         if "part" in updates:
             item.part = int(updates["part"]) if updates["part"] else None
@@ -176,7 +182,7 @@ def _convert_extra_to_media(db, extra, target_item_type: str):
     return item
 
 
-def _convert_media_to_bonus_extra(db, item, parent_id: Optional[str]):
+def _convert_media_to_bonus_extra(db, item, parent_id: Optional[str], subtype: Optional[str] = None):
     if not parent_id:
         raise ValueError("parent_id is required for bonus video conversion")
     if item.extras:
@@ -188,10 +194,17 @@ def _convert_media_to_bonus_extra(db, item, parent_id: Optional[str]):
     if parent.id == item.id:
         raise ValueError("A media item cannot be its own parent")
 
+    target_subtype = ExtraSubtype.OTHER
+    if subtype:
+        try:
+            target_subtype = ExtraSubtype(subtype)
+        except ValueError:
+            pass
+
     extra = ExtraFile(
         parent_item_id=parent.id,
         category=ExtraCategory.VIDEO,
-        subtype=ExtraSubtype.OTHER,
+        subtype=target_subtype,
         original_path=item.original_path,
         current_path=item.current_path,
         extension=item.extension,
@@ -328,7 +341,7 @@ def update_media_item(payload: dict):
                 return JSONResponse(status_code=404, content={"error": "Media item not found"})
             requested_main_type = updates.get("main_type")
             if requested_main_type == "bonus":
-                item = _convert_media_to_bonus_extra(db, item, updates.get("parent_id"))
+                item = _convert_media_to_bonus_extra(db, item, updates.get("parent_id"), updates.get("subtype"))
             else:
                 if requested_main_type in {"movie", "episode"}:
                     updates = {**deepcopy(updates), "item_type": requested_main_type}
@@ -396,7 +409,7 @@ def bulk_update_media_items(payload: dict):
             requested_main_type = updates.get("main_type")
             if requested_main_type == "bonus":
                 for item in items:
-                    parent = _convert_media_to_bonus_extra(db, item, updates.get("parent_id"))
+                    parent = _convert_media_to_bonus_extra(db, item, updates.get("parent_id"), updates.get("subtype"))
                     _refresh_planned_path(db, parent)
                     updated_ids.append(item.id)
                 db.commit()

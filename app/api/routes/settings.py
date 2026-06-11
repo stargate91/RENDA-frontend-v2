@@ -384,7 +384,7 @@ def _apply_settings(db, settings: dict):
         db.commit()
     
     # If naming settings OR language settings changed, we should refresh planned paths.
-    if any(k.startswith(("naming_", "folder_", "extras_", "collision_")) for k in settings.keys()) or "primary_metadata_language" in settings:
+    if any(k.startswith(("naming_", "folder_", "extras_", "collision_")) for k in settings.keys()) or "primary_metadata_language" in settings or "default_target_language" in settings:
         try:
             from app.formatter.formatter import Formatter, FormatterConfig
             from app.db.models import MediaItem, ItemStatus

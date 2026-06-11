@@ -9,7 +9,7 @@ media_item_tags = Table(
     "media_item_tags",
     Base.metadata,
     Column("media_item_id", Integer, ForeignKey("media_items.id", ondelete="CASCADE"), primary_key=True),
-    Column("tag_id", Integer, ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True)
+    Column("tag_id", Integer, ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True, index=True)
 )
 
 class Tag(Base):
@@ -23,7 +23,7 @@ class Tag(Base):
 class MediaItem(Base):
     """Level 1: The physical file on the disk."""
     __tablename__ = "media_items"
-    id: Mapped[int] = mapped_column(primary_key=True); item_type: Mapped[ItemType] = mapped_column(SQLEnum(ItemType))
+    id: Mapped[int] = mapped_column(primary_key=True); item_type: Mapped[ItemType] = mapped_column(SQLEnum(ItemType), index=True)
     original_path: Mapped[str] = mapped_column(String, nullable=False, index=True)
     current_path: Mapped[str] = mapped_column(String, nullable=False, index=True)
     filename: Mapped[str] = mapped_column(String, index=True); extension: Mapped[str] = mapped_column(String); size: Mapped[int] = mapped_column(BigInteger, default=0, index=True)
@@ -57,7 +57,7 @@ class MediaItem(Base):
     ignored_previous_status: Mapped[Optional[ItemStatus]] = mapped_column(SQLEnum(ItemStatus), nullable=True)
     ignored_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True, index=True)
     planned_path: Mapped[Optional[str]] = mapped_column(String) # The path proposed by the Formatter
-    category: Mapped[str] = mapped_column(String, default="video", index=True); created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    category: Mapped[str] = mapped_column(String, default="video", index=True); created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
     is_favorite: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0", index=True)
     user_rating: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     user_rating_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True, index=True)
@@ -67,7 +67,7 @@ class MediaItem(Base):
     resume_position: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, default=0)
     watch_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0", index=True)
     is_watched: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0", index=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, index=True)
     matches: Mapped[List["MediaMatch"]] = relationship(back_populates="media_item", cascade="all, delete-orphan")
     extras: Mapped[List["ExtraFile"]] = relationship(back_populates="parent_item", cascade="all, delete-orphan")
     action_logs: Mapped[List["ActionLog"]] = relationship(back_populates="media_item")

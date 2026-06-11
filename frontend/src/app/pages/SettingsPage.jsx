@@ -6,6 +6,7 @@ import Inline from '@/ui/Inline';
 import Input from '@/ui/Input';
 import Page from '@/ui/Page';
 import Stack from '@/ui/Stack';
+import Checkbox from '@/ui/Checkbox';
 import { useSettingsQuery, useUpdateSettingsMutation } from '@/queries/appQueries';
 import { useUi } from '@/providers/UiProvider';
 import { selectFile, selectFolder } from '@/lib/ipc';
@@ -21,6 +22,36 @@ const EXTRA_ACTION_OPTIONS = [
   { value: 'rename', label: 'Rename' },
   { value: 'ignore', label: 'Skip' },
   { value: 'delete', label: 'Delete' },
+];
+
+const METADATA_LANGUAGE_OPTIONS = [
+  { value: 'en-US', label: 'English (US)' },
+  { value: 'hu-HU', label: 'Hungarian (HU)' },
+  { value: 'de-DE', label: 'German (DE)' },
+  { value: 'fr-FR', label: 'French (FR)' },
+  { value: 'es-ES', label: 'Spanish (ES)' },
+  { value: 'it-IT', label: 'Italian (IT)' },
+  { value: 'zh-CN', label: 'Chinese (CN)' },
+  { value: 'ko-KR', label: 'Korean (KR)' },
+  { value: 'ru-RU', label: 'Russian (RU)' },
+  { value: 'ja-JP', label: 'Japanese (JP)' },
+  { value: 'pt-PT', label: 'Portuguese (PT)' },
+  { value: 'pl-PL', label: 'Polish (PL)' },
+];
+
+const TARGET_LANGUAGE_OPTIONS = [
+  { value: 'en', label: 'English (EN)' },
+  { value: 'hu', label: 'Hungarian (HU)' },
+  { value: 'de', label: 'German (DE)' },
+  { value: 'fr', label: 'French (FR)' },
+  { value: 'es', label: 'Spanish (ES)' },
+  { value: 'it', label: 'Italian (IT)' },
+  { value: 'zh', label: 'Chinese (ZH)' },
+  { value: 'ko', label: 'Korean (KO)' },
+  { value: 'ru', label: 'Russian (RU)' },
+  { value: 'ja', label: 'Japanese (JA)' },
+  { value: 'pt', label: 'Portuguese (PT)' },
+  { value: 'pl', label: 'Polish (PL)' },
 ];
 
 export default function SettingsPage() {
@@ -45,6 +76,11 @@ export default function SettingsPage() {
     tmdb_api_key: '',
     tmdb_bearer_token: '',
     omdb_api_key: '',
+    ui_language: 'en',
+    metadata_follows_ui: true,
+    target_follows_ui: true,
+    primary_metadata_language: 'en-US',
+    default_target_language: 'en',
   });
 
   const [prevSettings, setPrevSettings] = useState(settings);
@@ -63,7 +99,12 @@ export default function SettingsPage() {
     settings.omdb_api_key !== prevSettings.omdb_api_key ||
     settings.tmdb_api_key !== prevSettings.tmdb_api_key ||
     settings.tmdb_bearer_token !== prevSettings.tmdb_bearer_token ||
-    settings.vlc_path !== prevSettings.vlc_path
+    settings.vlc_path !== prevSettings.vlc_path ||
+    settings.ui_language !== prevSettings.ui_language ||
+    settings.metadata_follows_ui !== prevSettings.metadata_follows_ui ||
+    settings.target_follows_ui !== prevSettings.target_follows_ui ||
+    settings.primary_metadata_language !== prevSettings.primary_metadata_language ||
+    settings.default_target_language !== prevSettings.default_target_language
   ) {
     setPrevSettings(settings);
     setForm({
@@ -81,6 +122,11 @@ export default function SettingsPage() {
       tmdb_api_key: settings.tmdb_api_key || '',
       tmdb_bearer_token: settings.tmdb_bearer_token || '',
       omdb_api_key: settings.omdb_api_key || '',
+      ui_language: settings.ui_language || 'en',
+      metadata_follows_ui: settings.metadata_follows_ui !== undefined ? settings.metadata_follows_ui : true,
+      target_follows_ui: settings.target_follows_ui !== undefined ? settings.target_follows_ui : true,
+      primary_metadata_language: settings.primary_metadata_language || 'en-US',
+      default_target_language: settings.default_target_language || 'en',
     });
   }
 
@@ -88,6 +134,13 @@ export default function SettingsPage() {
     setForm((current) => ({
       ...current,
       [key]: event.target.value,
+    }));
+  };
+
+  const handleCheckboxChange = (key) => (event) => {
+    setForm((current) => ({
+      ...current,
+      [key]: event.target.checked,
     }));
   };
 
@@ -118,7 +171,7 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await updateSettingsMutation.mutateAsync({
+      const payload = {
         default_scan_dir: form.default_scan_dir.trim(),
         folder_library_path: form.folder_library_path.trim(),
         collision_strategy: form.collision_strategy,
@@ -133,7 +186,18 @@ export default function SettingsPage() {
         tmdb_api_key: form.tmdb_api_key.trim(),
         tmdb_bearer_token: form.tmdb_bearer_token.trim(),
         omdb_api_key: form.omdb_api_key.trim(),
-      });
+        ui_language: form.ui_language,
+        metadata_follows_ui: form.metadata_follows_ui,
+        target_follows_ui: form.target_follows_ui,
+        primary_metadata_language: form.metadata_follows_ui
+          ? (form.ui_language === 'en' ? 'en-US' : form.ui_language)
+          : form.primary_metadata_language,
+        default_target_language: form.target_follows_ui
+          ? form.ui_language
+          : form.default_target_language,
+      };
+
+      await updateSettingsMutation.mutateAsync(payload);
 
       await queryClient.refetchQueries({ queryKey: ['discovery'] });
       await queryClient.invalidateQueries({ queryKey: ['settings'] });
@@ -149,6 +213,57 @@ export default function SettingsPage() {
 
   return (
     <Page title="Settings" description="Quick API key entry for scan prerequisites.">
+      <Card title="Language" eyebrow="Application">
+        <Stack>
+          <label className="ui-field">
+            <span className="ui-field__label">App Language</span>
+            <select className="ui-select" value={form.ui_language} onChange={handleChange('ui_language')}>
+              <option value="en">English (Angol)</option>
+            </select>
+            <span className="ui-field__hint">RENDA uses English by default. More languages are coming soon!</span>
+          </label>
+          <Checkbox
+            checked={form.metadata_follows_ui}
+            onChange={handleCheckboxChange('metadata_follows_ui')}
+          >
+            Metadata should follow the App Language
+          </Checkbox>
+          <span className="ui-field__hint" style={{ marginTop: '-8px', marginBottom: '8px' }}>
+            If checked, RENDA will fetch movie/episode titles and descriptions matching your App Language (e.g. English details from TMDB).
+          </span>
+          {!form.metadata_follows_ui && (
+            <label className="ui-field" style={{ marginLeft: '24px', marginBottom: '12px' }}>
+              <span className="ui-field__label">Metadata Language</span>
+              <select className="ui-select" value={form.primary_metadata_language} onChange={handleChange('primary_metadata_language')}>
+                {METADATA_LANGUAGE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+              <span className="ui-field__hint">Choose which language to query TMDB and OMDb metadata in.</span>
+            </label>
+          )}
+          <Checkbox
+            checked={form.target_follows_ui}
+            onChange={handleCheckboxChange('target_follows_ui')}
+          >
+            Target Language should follow the App Language
+          </Checkbox>
+          <span className="ui-field__hint" style={{ marginTop: '-8px', marginBottom: '8px' }}>
+            If checked, the final renamed files and folders on your disk will be formatted in your App Language.
+          </span>
+          {!form.target_follows_ui && (
+            <label className="ui-field" style={{ marginLeft: '24px' }}>
+              <span className="ui-field__label">Target Language (Renaming)</span>
+              <select className="ui-select" value={form.default_target_language} onChange={handleChange('default_target_language')}>
+                {TARGET_LANGUAGE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+              <span className="ui-field__hint">Choose which language to rename physical files and folders in.</span>
+            </label>
+          )}
+        </Stack>
+      </Card>
       <Card title="Folders" eyebrow="Organizer">
         <Stack>
           <Input

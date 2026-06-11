@@ -2,6 +2,7 @@ import { FolderOpen, Play, Search, Sliders, Trash2, X } from 'lucide-react';
 import Button from '../../ui/Button';
 import FloatingActionBar from '../../ui/FloatingActionBar';
 import OrganizerMatchModalContent from './OrganizerMatchModalContent';
+import OrganizerOverrideModalContent from './components/OrganizerOverrideModalContent';
 import api from '../../lib/api';
 import { showItemInFolder } from '../../lib/ipc';
 import {
@@ -200,43 +201,22 @@ export function useOrganizerModals({
       description: t('organizer.overrideModal.description'),
       icon: Sliders,
       content: (
-        <div className="organizer-override-modal">
-          <div className="organizer-override-modal__section">
-            <h4 className="organizer-override-modal__section-title">Common Settings</h4>
-            <p className="organizer-override-modal__item">• Target Language (custom language for localization variables)</p>
-            <p className="organizer-override-modal__item">• Main Type Override</p>
-          </div>
-
-          {row.rawType === 'movie' && (
-            <div className="organizer-override-modal__section">
-              <h4 className="organizer-override-modal__section-title">Movie Settings</h4>
-              <p className="organizer-override-modal__item">• Edition (e.g. Extended, Director's Cut)</p>
-              <p className="organizer-override-modal__item">• Source (e.g. BluRay, WebDL)</p>
-            </div>
-          )}
-
-          {row.rawType === 'episode' && (
-            <div className="organizer-override-modal__section">
-              <h4 className="organizer-override-modal__section-title">Episode Settings</h4>
-              <p className="organizer-override-modal__item">• Season Number Override</p>
-              <p className="organizer-override-modal__item">• Episode Number Override</p>
-            </div>
-          )}
-
-          {row.rawType === 'extra' && (
-            <div className="organizer-override-modal__section">
-              <h4 className="organizer-override-modal__section-title">Extra Settings</h4>
-              <p className="organizer-override-modal__item">• Subcategory (e.g. Trailer, Behind the Scenes)</p>
-              <p className="organizer-override-modal__item">• Language Override</p>
-              <p className="organizer-override-modal__item">• Audio Type</p>
-            </div>
-          )}
-        </div>
+        <OrganizerOverrideModalContent
+          row={row}
+          onClose={closeModal}
+          toast={toast}
+          api={api}
+        />
       ),
       footer: (
-        <Button variant="secondary-neutral" onClick={closeModal}>
-          {t('organizer.details.delete.cancel')}
-        </Button>
+        <>
+          <Button variant="secondary-neutral" type="button" onClick={closeModal}>
+            Cancel
+          </Button>
+          <Button variant="primary" type="submit" form="organizer-override-form">
+            Apply Overrides
+          </Button>
+        </>
       ),
     });
   };
