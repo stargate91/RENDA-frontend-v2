@@ -2,6 +2,42 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import './Dropdown.css';
 
+function DropdownMenu({
+  isOpen,
+  menuCoords,
+  options,
+  value,
+  onOptionClick,
+}) {
+  if (!isOpen) {
+    return null;
+  }
+
+  return createPortal(
+    <div
+      className="ui-dropdown__menu"
+      style={{
+        position: 'absolute',
+        top: `${menuCoords.top}px`,
+        left: `${menuCoords.left}px`,
+        width: `${menuCoords.width}px`,
+      }}
+    >
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          className={`ui-dropdown__item ${opt.value === value ? 'is-active' : ''}`}
+          onClick={() => onOptionClick(opt.value)}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>,
+    document.body
+  );
+}
+
 export default function Dropdown({ label, options = [], value, onChange, hint, className = '', placeholder = 'Select...' }) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
@@ -68,30 +104,13 @@ export default function Dropdown({ label, options = [], value, onChange, hint, c
           <span className={`ui-dropdown__chevron ${isOpen ? 'is-open' : ''}`}>▼</span>
         </button>
 
-        {isOpen &&
-          createPortal(
-            <div
-              className="ui-dropdown__menu"
-              style={{
-                position: 'absolute',
-                top: `${menuCoords.top}px`,
-                left: `${menuCoords.left}px`,
-                width: `${menuCoords.width}px`,
-              }}
-            >
-              {options.map((opt) => (
-                <button
-                   key={opt.value}
-                  type="button"
-                  className={`ui-dropdown__item ${opt.value === value ? 'is-active' : ''}`}
-                  onClick={() => handleOptionClick(opt.value)}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>,
-            document.body
-          )}
+        <DropdownMenu
+          isOpen={isOpen}
+          menuCoords={menuCoords}
+          options={options}
+          value={value}
+          onOptionClick={handleOptionClick}
+        />
       </div>
     </div>
   );

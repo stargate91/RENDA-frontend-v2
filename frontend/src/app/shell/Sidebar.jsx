@@ -1,23 +1,10 @@
 import { NavLink } from 'react-router-dom';
-import { CircleHelp, Power, ChevronLeft, ChevronRight, LayoutDashboard, FolderSearch2, Library, Star, Clapperboard, Settings, ListTodo, RotateCcw } from 'lucide-react';
+import { CircleHelp, Power, ChevronLeft, ChevronRight } from 'lucide-react';
 import UtilityButton from '../ui/UtilityButton';
-import { sendWindowEvent } from '../lib/ipc';
-import { useTranslation } from '../providers/LanguageProvider';
-
-const navItems = [
-  { to: '/dashboard', translationKey: 'sidebar.dashboard', icon: LayoutDashboard },
-  { to: '/organizer', translationKey: 'sidebar.organizer', icon: FolderSearch2 },
-  { to: '/library', translationKey: 'sidebar.library', icon: Library },
-  { to: '/lists', translationKey: 'sidebar.lists', icon: ListTodo },
-  { to: '/watched-history', translationKey: 'sidebar.watchedHistory', icon: Clapperboard },
-  { to: '/my-ratings', translationKey: 'sidebar.myRatings', icon: Star },
-  { to: '/undo-history', translationKey: 'sidebar.undoHistory', icon: RotateCcw },
-  { to: '/settings', translationKey: 'sidebar.settings', icon: Settings },
-];
+import { useSidebar } from './useSidebar';
 
 export default function Sidebar({ isCollapsed, onToggle }) {
-  const { t } = useTranslation();
-  const toggleAriaLabel = isCollapsed ? 'Expand navigation' : 'Collapse navigation';
+  const { t, navItems, toggleAriaLabel, quitApp } = useSidebar(isCollapsed);
 
   return (
     <aside className="shell__sidebar">
@@ -56,7 +43,7 @@ export default function Sidebar({ isCollapsed, onToggle }) {
         <button
           type="button"
           className="shell__nav-link shell__nav-link--footer shell__nav-link--danger"
-          onClick={() => sendWindowEvent('app-quit')}
+          onClick={quitApp}
         >
           <Power size={18} />
           <span className="shell__nav-link-label">{t('sidebar.quit')}</span>

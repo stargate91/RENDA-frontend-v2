@@ -2,16 +2,17 @@ import { Minus, Square, X, AlertTriangle } from 'lucide-react';
 import UtilityButton from '../ui/UtilityButton';
 import ProgressBar from '../ui/ProgressBar';
 import Button from '../ui/Button';
-import { sendWindowEvent } from '../lib/ipc';
 import api from '../lib/api';
 import { useUi } from '../providers/UiProvider';
 import { useTranslation } from '../providers/LanguageProvider';
 import useWindowProgress from './useWindowProgress';
+import useWindowControls from './useWindowControls';
 
 export default function WindowTitlebar() {
   const { hasProgress, scanProgress, imageProgress } = useWindowProgress();
   const { openModal, closeModal } = useUi();
   const { t } = useTranslation();
+  const { minimize, toggleMaximize, close, resizeToMinimum } = useWindowControls();
 
   const handleAbort = () => {
     openModal({
@@ -51,7 +52,7 @@ export default function WindowTitlebar() {
     <header className="window-titlebar">
       <div
         className="window-titlebar__drag-region"
-        onDoubleClick={() => sendWindowEvent('window-resize-to-minimum')}
+        onDoubleClick={resizeToMinimum}
       >
         <span className="window-titlebar__brand-shell">
           <img src="/favicon/32x32.png" alt="RENDA" className="window-titlebar__brand-icon" />
@@ -72,7 +73,7 @@ export default function WindowTitlebar() {
           size="titlebar"
           tabIndex={-1}
           aria-label="Minimize window"
-          onClick={() => sendWindowEvent('window-minimize')}
+          onClick={minimize}
         >
           <Minus size={16} />
         </UtilityButton>
@@ -82,7 +83,7 @@ export default function WindowTitlebar() {
           size="titlebar"
           tabIndex={-1}
           aria-label="Maximize window"
-          onClick={() => sendWindowEvent('window-maximize-toggle')}
+          onClick={toggleMaximize}
         >
           <Square size={14} />
         </UtilityButton>
@@ -93,7 +94,7 @@ export default function WindowTitlebar() {
           danger
           tabIndex={-1}
           aria-label="Close window"
-          onClick={() => sendWindowEvent('app-quit')}
+          onClick={close}
         >
           <X size={16} />
         </UtilityButton>

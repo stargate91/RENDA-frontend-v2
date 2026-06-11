@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import AppClosePrompt from './AppClosePrompt';
 import WindowTitlebar from './WindowTitlebar';
 import Sidebar from './Sidebar';
+import Spinner from '../ui/Spinner';
 
 export default function AppShell() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
@@ -36,7 +37,13 @@ export default function AppShell() {
           <header className="shell__utility-bar">
             <div className="shell__utility-bar-left" aria-label="Context actions placeholder" />
           </header>
-          <Outlet />
+          <Suspense fallback={
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', padding: '40px' }}>
+              <Spinner label="Loading page..." />
+            </div>
+          }>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
       <AppClosePrompt />

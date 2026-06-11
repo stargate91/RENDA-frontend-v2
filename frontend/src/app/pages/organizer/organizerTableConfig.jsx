@@ -4,6 +4,97 @@ import StatusPill from '../../ui/StatusPill';
 import Tooltip from '../../ui/Tooltip';
 import { mapCollisionStrategyLabel, shouldShowCollisionStrategy } from './organizerMappers';
 
+const renderSelectColumn = (paginatedRows, selectedRowIds, handleToggleAll, handleToggleRow) => ({
+  key: 'select',
+  label: (
+    <div onClick={(event) => event.stopPropagation()}>
+      <Checkbox
+        checked={paginatedRows.length > 0 && paginatedRows.every((row) => selectedRowIds.has(row.id))}
+        onChange={handleToggleAll}
+      />
+    </div>
+  ),
+  width: '48px',
+  align: 'center',
+  render: (value, row) => (
+    <div onClick={(event) => event.stopPropagation()}>
+      <Checkbox
+        checked={selectedRowIds.has(row.id)}
+        onChange={() => handleToggleRow(row.id)}
+      />
+    </div>
+  ),
+});
+
+const renderProposedFilename = (value, row, activeMainTab, onOpenMatch, t) => {
+  const isManualReview = activeMainTab === 'manual';
+
+  const content = (() => {
+    if (row.rawType === 'extra') {
+      const unmatchedParentStatuses = ['new', 'uncertain', 'no_match', 'multiple', 'error'];
+      if (row.parentStatus && unmatchedParentStatuses.includes(row.parentStatus.toLowerCase())) {
+        return <span className="organizer-target-note organizer-target-note--warning">{t('organizer.table.targetNotes.fixParentFirst')}</span>;
+      }
+      if (row.rawAction === 'skip') {
+        return <span className="organizer-target-note organizer-target-note--muted">{t('organizer.table.targetNotes.skip')}</span>;
+      }
+      if (row.rawAction === 'delete') {
+        return <span className="organizer-target-note organizer-target-note--danger">{t('organizer.table.targetNotes.delete')}</span>;
+      }
+    }
+    return (
+      <span className="organizer-target-proposed">
+        <ArrowRight size={14} className="organizer-target-arrow" />
+        {value}
+      </span>
+    );
+  })();
+
+  if (isManualReview && row.rawType !== 'extra') {
+    return (
+      <div className="organizer-target-cell">
+        <button
+          type="button"
+          className="organizer-target-action"
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenMatch(row);
+          }}
+        >
+          {t('organizer.actions.fixMatch')}
+        </button>
+      </div>
+    );
+  }
+
+  return content;
+};
+
+const renderStatusCell = (value, row, collisionStrategy, normalizeStatusTone, t) => (
+  <span className="organizer-status-cell">
+    <StatusPill tone={normalizeStatusTone(value, t)}>{value}</StatusPill>
+    {(row.rawType === 'movie' || row.rawType === 'episode') && shouldShowCollisionStrategy(row) ? (
+      <StatusPill className="organizer-status-cell__policy" tone="default">
+        {mapCollisionStrategyLabel(row.rawAction || collisionStrategy, t)}
+      </StatusPill>
+    ) : null}
+    {row.rawStatus === 'uncertain' && row.rawType === 'series' ? (
+      <Tooltip content={t('organizer.status.missingSeasonTooltip')} side="top" delay={250}>
+        <StatusPill className="organizer-status-cell__policy" tone="default">
+          {t('organizer.status.missingSeason')}
+        </StatusPill>
+      </Tooltip>
+    ) : null}
+    {row.rawStatus === 'uncertain' && (row.rawType === 'series' || row.rawType === 'season') ? (
+      <Tooltip content={t('organizer.status.missingEpisodeTooltip')} side="top" delay={250}>
+        <StatusPill className="organizer-status-cell__policy" tone="default">
+          {t('organizer.status.missingEpisode')}
+        </StatusPill>
+      </Tooltip>
+    ) : null}
+  </span>
+);
+
 export function buildOrganizerColumns({
   activeExtrasTab,
   activeMainTab,
@@ -18,76 +109,14 @@ export function buildOrganizerColumns({
   onOpenMatch,
 }) {
   const columns = [
-    {
-      key: 'select',
-      label: (
-        <div onClick={(event) => event.stopPropagation()}>
-          <Checkbox
-            checked={paginatedRows.length > 0 && paginatedRows.every((row) => selectedRowIds.has(row.id))}
-            onChange={handleToggleAll}
-          />
-        </div>
-      ),
-      width: '48px',
-      align: 'center',
-      render: (value, row) => (
-        <div onClick={(event) => event.stopPropagation()}>
-          <Checkbox
-            checked={selectedRowIds.has(row.id)}
-            onChange={() => handleToggleRow(row.id)}
-          />
-        </div>
-      ),
-    },
+    renderSelectColumn(paginatedRows, selectedRowIds, handleToggleAll, handleToggleRow),
     { key: 'source', label: renderSortableLabel(t('organizer.table.originalFilename'), 'source') },
     {
       key: 'target',
       label: activeMainTab === 'manual'
         ? t('organizer.table.proposedFilename')
         : renderSortableLabel(t('organizer.table.proposedFilename'), 'target'),
-      render: (value, row) => {
-        const isManualReview = activeMainTab === 'manual';
-
-        const content = (() => {
-          if (row.rawType === 'extra') {
-            const unmatchedParentStatuses = ['new', 'uncertain', 'no_match', 'multiple', 'error'];
-            if (row.parentStatus && unmatchedParentStatuses.includes(row.parentStatus.toLowerCase())) {
-              return <span className="organizer-target-note organizer-target-note--warning">{t('organizer.table.targetNotes.fixParentFirst')}</span>;
-            }
-            if (row.rawAction === 'skip') {
-              return <span className="organizer-target-note organizer-target-note--muted">{t('organizer.table.targetNotes.skip')}</span>;
-            }
-            if (row.rawAction === 'delete') {
-              return <span className="organizer-target-note organizer-target-note--danger">{t('organizer.table.targetNotes.delete')}</span>;
-            }
-          }
-          return (
-            <span className="organizer-target-proposed">
-              <ArrowRight size={14} className="organizer-target-arrow" />
-              {value}
-            </span>
-          );
-        })();
-
-        if (isManualReview && row.rawType !== 'extra') {
-          return (
-            <div className="organizer-target-cell">
-              <button
-                type="button"
-                className="organizer-target-action"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenMatch(row);
-                }}
-              >
-                {t('organizer.actions.fixMatch')}
-              </button>
-            </div>
-          );
-        }
-
-        return content;
-      },
+      render: (value, row) => renderProposedFilename(value, row, activeMainTab, onOpenMatch, t),
     },
   ];
 
@@ -107,36 +136,12 @@ export function buildOrganizerColumns({
       columns.push({ key: 'extension', label: renderSortableLabel(t('organizer.table.extension'), 'extension'), align: 'center', width: '12%' });
     }
   } else {
-
     columns.push({
       key: 'status',
       label: activeMainTab === 'manual' ? renderSortableLabel(t('organizer.table.status'), 'status') : t('organizer.table.status'),
       align: 'center',
       width: '20%',
-      render: (value, row) => (
-        <span className="organizer-status-cell">
-          <StatusPill tone={normalizeStatusTone(value, t)}>{value}</StatusPill>
-          {(row.rawType === 'movie' || row.rawType === 'episode') && shouldShowCollisionStrategy(row) ? (
-            <StatusPill className="organizer-status-cell__policy" tone="default">
-              {mapCollisionStrategyLabel(row.rawAction || collisionStrategy, t)}
-            </StatusPill>
-          ) : null}
-          {row.rawStatus === 'uncertain' && row.rawType === 'series' ? (
-            <Tooltip content={t('organizer.status.missingSeasonTooltip')} side="top" delay={250}>
-              <StatusPill className="organizer-status-cell__policy" tone="default">
-                {t('organizer.status.missingSeason')}
-              </StatusPill>
-            </Tooltip>
-          ) : null}
-          {row.rawStatus === 'uncertain' && (row.rawType === 'series' || row.rawType === 'season') ? (
-            <Tooltip content={t('organizer.status.missingEpisodeTooltip')} side="top" delay={250}>
-              <StatusPill className="organizer-status-cell__policy" tone="default">
-                {t('organizer.status.missingEpisode')}
-              </StatusPill>
-            </Tooltip>
-          ) : null}
-        </span>
-      ),
+      render: (value, row) => renderStatusCell(value, row, collisionStrategy, normalizeStatusTone, t),
     });
   }
 

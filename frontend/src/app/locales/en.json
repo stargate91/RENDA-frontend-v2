@@ -103,7 +103,9 @@
     },
     "renameModal": {
       "title": "Confirm Rename",
-      "description": "Review the files that will be renamed."
+      "description": "Review the files that will be renamed.",
+      "showing": "Showing {count} of {total} items to rename",
+      "noMatching": "No matching items found"
     },
     "overrideModal": {
       "title": "Override {type}",

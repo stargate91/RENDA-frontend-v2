@@ -51,7 +51,9 @@ export default function OrganizerRenameModalContent({ items = [], t }) {
 
       <div className="organizer-rename-modal__summary">
         <span>
-          Showing {sortedItems.length} of {items.length} items to rename
+          {t('organizer.renameModal.showing')
+            .replace('{count}', sortedItems.length)
+            .replace('{total}', items.length)}
         </span>
       </div>
 
@@ -103,7 +105,7 @@ export default function OrganizerRenameModalContent({ items = [], t }) {
         </table>
         {sortedItems.length === 0 && (
           <div className="organizer-rename-modal__empty">
-            No matching items found
+            {t('organizer.renameModal.noMatching')}
           </div>
         )}
       </div>
