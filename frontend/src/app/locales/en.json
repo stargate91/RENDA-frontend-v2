@@ -108,6 +108,7 @@
       "delete": "Delete",
       "showInFolder": "Show in Folder",
       "dismiss": "Remove from list",
+      "dismissBulk": "Remove",
       "override": "Override",
       "rename": "Rename"
     },

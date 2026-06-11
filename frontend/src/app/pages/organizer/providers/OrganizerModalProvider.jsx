@@ -1,5 +1,5 @@
 import { createContext, useMemo } from 'react';
-import { FolderOpen, Play, Search, Sliders, Trash2, X } from 'lucide-react';
+import { FolderOpen, Play, Search, Sliders, Trash2, X, EyeOff } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import Button from '../../../ui/Button';
 import FloatingActionBar from '../../../ui/FloatingActionBar';
@@ -299,7 +299,7 @@ export function OrganizerModalProvider({
     {
       key: 'dismiss',
       label: t('organizer.actions.dismiss'),
-      icon: X,
+      icon: EyeOff,
       isVisible: (row) => row.rawType !== 'extra',
       onClick: (row) => dismissRows([row.id]),
     },
@@ -320,27 +320,14 @@ export function OrganizerModalProvider({
       title={t('organizer.bulkBar.title').replace('{count}', String(selectedRows.length))}
       actions={[
         !selectedRows.some((row) => row.rawType === 'extra') ? {
-          key: 'match',
-          label: t('organizer.actions.match') || 'Match',
-          icon: Search,
-          onClick: () => openMatchModal(null, selectedRows),
-          disabled: selectedRows.length === 0,
-        } : null,
-        !selectedRows.some((row) => row.rawType === 'extra') ? {
           key: 'dismiss',
-          label: t('organizer.actions.dismiss'),
-          icon: X,
+          label: t('organizer.actions.dismissBulk'),
+          icon: EyeOff,
           onClick: () => {
             dismissRows(selectedRows.map((r) => r.id));
             clearSelectedRows();
           },
           disabled: selectedRows.length === 0,
-        } : null,
-        selectedRows.length > 0 && selectedRows.every((r) => r.rawType === selectedRows[0].rawType) ? {
-          key: 'override',
-          label: t('organizer.actions.override') || 'Override',
-          icon: Sliders,
-          onClick: () => openBulkOverrideModal(selectedRows),
         } : null,
         {
           key: 'delete',
@@ -350,6 +337,19 @@ export function OrganizerModalProvider({
           onClick: () => openBulkDeleteModal(selectedRows),
           disabled: selectedRows.length === 0,
         },
+        !selectedRows.some((row) => row.rawType === 'extra') ? {
+          key: 'match',
+          label: t('organizer.actions.match') || 'Match',
+          icon: Search,
+          onClick: () => openMatchModal(null, selectedRows),
+          disabled: selectedRows.length === 0,
+        } : null,
+        selectedRows.length > 0 && selectedRows.every((r) => r.rawType === selectedRows[0].rawType) ? {
+          key: 'override',
+          label: t('organizer.actions.override') || 'Override',
+          icon: Sliders,
+          onClick: () => openBulkOverrideModal(selectedRows),
+        } : null,
         {
           key: 'clear',
           label: t('organizer.bulkBar.clear'),
