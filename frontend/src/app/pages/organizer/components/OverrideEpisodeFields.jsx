@@ -17,32 +17,32 @@ export default function OverrideEpisodeFields({
   return (
     <>
       <Dropdown
-        label="Target Language"
+        label={t('organizer.overrideModal.labels.targetLanguage')}
         value={targetLanguage}
         onChange={(e) => setTargetLanguage(e.target.value)}
         options={LANGUAGE_OPTIONS}
         hint={t('organizer.overrideModal.hints.targetLanguage')}
       />
       <Dropdown
-        label="Audio Type"
+        label={t('organizer.overrideModal.labels.audioType')}
         value={audioType}
         onChange={(e) => setAudioType(e.target.value)}
         options={AUDIO_TYPE_OPTIONS}
         hint={t('organizer.overrideModal.hints.audioType')}
       />
       <Input
-        label="Season Number"
+        label={t('organizer.overrideModal.labels.seasonNumber')}
         type="number"
         value={seasonNum}
         onChange={(e) => setSeasonNum(e.target.value)}
-        placeholder="e.g. 1"
+        placeholder={t('organizer.overrideModal.placeholders.seasonNumber')}
         hint={t('organizer.overrideModal.hints.seasonNum')}
       />
       <Input
-        label="Episode Number"
+        label={t('organizer.overrideModal.labels.episodeNumber')}
         value={episodeNum}
         onChange={(e) => setEpisodeNum(e.target.value)}
-        placeholder="e.g. 3 or 3-4"
+        placeholder={t('organizer.overrideModal.placeholders.episodeNumber')}
         hint={t('organizer.overrideModal.hints.episodeNum')}
       />
     </>

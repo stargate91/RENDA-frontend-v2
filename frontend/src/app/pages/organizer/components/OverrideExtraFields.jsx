@@ -17,7 +17,7 @@ export default function OverrideExtraFields({
   return (
     <>
       <Dropdown
-        label="Parent Item"
+        label={t('organizer.overrideModal.labels.parentMovieOrEpisode')}
         value={parentId}
         onChange={(e) => setParentId(e.target.value)}
         options={parentCandidates}
@@ -27,7 +27,7 @@ export default function OverrideExtraFields({
 
       {category !== 'metadata' && (
         <Dropdown
-          label="Subcategory"
+          label={t('organizer.overrideModal.labels.extraSubcategory')}
           value={subcategory}
           onChange={(e) => setSubcategory(e.target.value)}
           options={subcategoryList}
@@ -37,7 +37,7 @@ export default function OverrideExtraFields({
 
       {isExtra && (category === 'subtitle' || category === 'audio') && (
         <Dropdown
-          label="Language"
+          label={t('organizer.overrideModal.labels.language')}
           value={language}
           onChange={(e) => setLanguage(e.target.value)}
           options={LANGUAGE_OPTIONS}

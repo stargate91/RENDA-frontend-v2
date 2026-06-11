@@ -257,7 +257,7 @@ export default function OrganizerPage() {
     }
 
     refreshOrganizerDiscovery().catch(() => {
-      toast('Failed to refresh organizer rules', 'danger');
+      toast(t('organizer.toasts.refreshRulesFailed'), 'danger');
     });
   }, [
     discoveryQuery.data,
@@ -267,6 +267,7 @@ export default function OrganizerPage() {
     queryClient,
     toast,
     refreshOrganizerDiscovery,
+    t,
   ]);
 
   return (

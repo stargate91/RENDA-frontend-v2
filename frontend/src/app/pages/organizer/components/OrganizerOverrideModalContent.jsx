@@ -118,7 +118,7 @@ export default function OrganizerOverrideModalContent({ row, onClose, toast }) {
       const isSeasonEmpty = !String(seasonNum ?? '').trim();
       const isEpisodeEmpty = !String(episodeNum ?? '').trim();
       if (isSeasonEmpty || isEpisodeEmpty) {
-        toast('Season and Episode numbers are required for episodes', 'danger');
+        toast(t('organizer.toasts.overrideSeasonEpisodeRequired'), 'danger');
         return;
       }
     }
@@ -170,10 +170,10 @@ export default function OrganizerOverrideModalContent({ row, onClose, toast }) {
         type: isExtra ? 'extra' : 'media',
         updates,
       });
-      toast('Overrides saved successfully', 'success');
+      toast(t('organizer.toasts.overrideSuccess'), 'success');
       onClose();
     } catch (err) {
-      toast(err.message || 'Failed to save overrides', 'danger');
+      toast(err.message || t('organizer.toasts.overrideSaveFailed'), 'danger');
     }
   };
 
@@ -182,7 +182,7 @@ export default function OrganizerOverrideModalContent({ row, onClose, toast }) {
       {/* 1. Main Category Choice */}
       {(!isExtra || category === 'video') && (
         <Dropdown
-          label="Main Category"
+          label={t('organizer.overrideModal.labels.mainCategory')}
           value={mainType}
           onChange={(e) => setMainType(e.target.value)}
           options={translatedMainTypeOptions}

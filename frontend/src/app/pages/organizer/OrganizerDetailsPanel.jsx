@@ -91,9 +91,9 @@ export default function OrganizerDetailsPanel({
       const handleCopyInspect = async () => {
         try {
           await navigator.clipboard.writeText(inspectJson);
-          toast('JSON copied to clipboard', 'success');
+          toast(t('organizer.toasts.inspectCopySuccess'), 'success');
         } catch {
-          toast('Failed to copy JSON', 'danger');
+          toast(t('organizer.toasts.inspectCopyFailed'), 'danger');
         }
       };
 
@@ -138,7 +138,7 @@ export default function OrganizerDetailsPanel({
         ),
       });
     } catch (error) {
-      toast(error.message || 'Failed to load inspection data', 'danger');
+      toast(error.message || t('organizer.toasts.inspectLoadFailed'), 'danger');
     }
   };
 

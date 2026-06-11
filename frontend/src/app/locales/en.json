@@ -96,7 +96,19 @@
       "deleteTrashSuccess": "Sent to Trash!",
       "deleteTrashSuccessPlural": "{count} items sent to Trash!",
       "loadAllSuccess": "All loaded successfully!",
-      "deleteActionFailed": "Oops! That didn't work."
+      "deleteActionFailed": "Oops! That didn't work.",
+      "inspectLoadFailed": "Oops! We couldn't load the inspection data.",
+      "inspectCopySuccess": "JSON copied to clipboard.",
+      "inspectCopyFailed": "Oops! We couldn't copy the JSON.",
+      "refreshRulesFailed": "Oops! We couldn't refresh the organizer rules.",
+      "bulkOverrideSeasonRequired": "Season number is required when converting items to episodes.",
+      "bulkOverrideAutoNumberRequired": "Auto-numbering is required when converting items to episodes.",
+      "bulkOverrideStartEpisodeInvalid": "Starting episode number must be a valid number.",
+      "bulkOverrideSuccess": "Bulk overrides saved successfully!",
+      "overrideSeasonEpisodeRequired": "Season and Episode numbers are required for episodes.",
+      "overrideSuccess": "Overrides saved successfully!",
+      "bulkOverrideSaveFailed": "Oops! We couldn't save the bulk overrides.",
+      "overrideSaveFailed": "Oops! We couldn't save the overrides."
     },
     "actions": {
       "match": "Match",
@@ -123,6 +135,8 @@
       "titleBulk": "Bulk Override {type}s",
       "description": "Pick different options or names for this item.",
       "descriptionBulk": "Apply settings or numberings to all selected items.",
+      "apply": "Apply Overrides",
+      "applyBulk": "Apply Bulk Overrides",
       "hints": {
         "mainType": "Change whether this file is a Movie, an Episode, or an Extra/Bonus video.",
         "parentId": "Pick the main movie or episode that this extra file belongs to.",
@@ -142,12 +156,17 @@
         "edition": "Release Edition",
         "audioType": "Audio Style",
         "seasonNumber": "Season Number",
+        "episodeNumber": "Episode Number",
         "extraSubcategory": "Extra Subcategory",
         "parentMovieOrEpisode": "Parent Movie or Episode",
         "language": "Language",
         "autoNumberCheck": "Auto-number episodes sequentially",
         "startNumbering": "Start numbering from:",
         "dragAndDropHint": "Drag and drop the items below to arrange them in sequential order (top to bottom)."
+      },
+      "placeholders": {
+        "seasonNumber": "e.g. 1",
+        "episodeNumber": "e.g. 3 or 3-4"
       },
       "options": {
         "sources": {

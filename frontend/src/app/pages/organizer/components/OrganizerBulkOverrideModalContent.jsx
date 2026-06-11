@@ -210,11 +210,11 @@ export default function OrganizerBulkOverrideModalContent({ rows, onClose, toast
 
     if (initialMainType !== 'episode' && mainType === 'episode') {
       if (!applySeasonNum || !String(seasonNum ?? '').trim()) {
-        toast('Season number is required when converting items to episodes', 'danger');
+        toast(t('organizer.toasts.bulkOverrideSeasonRequired'), 'danger');
         return;
       }
       if (!applyAutoNumbering || !String(startEpisodeNum ?? '').trim()) {
-        toast('Auto-numbering is required when converting items to episodes', 'danger');
+        toast(t('organizer.toasts.bulkOverrideAutoNumberRequired'), 'danger');
         return;
       }
     }
@@ -255,7 +255,7 @@ export default function OrganizerBulkOverrideModalContent({ rows, onClose, toast
     if (mainType === 'episode' && applyAutoNumbering) {
       const startNum = parseInt(startEpisodeNum, 10);
       if (Number.isNaN(startNum)) {
-        toast('Starting episode number must be a valid number', 'danger');
+        toast(t('organizer.toasts.bulkOverrideStartEpisodeInvalid'), 'danger');
         return;
       }
       orderedItems.forEach((item, index) => {
@@ -275,10 +275,10 @@ export default function OrganizerBulkOverrideModalContent({ rows, onClose, toast
         updates,
         item_updates: itemUpdates,
       });
-      toast('Bulk overrides saved successfully', 'success');
+      toast(t('organizer.toasts.bulkOverrideSuccess'), 'success');
       onClose();
     } catch (err) {
-      toast(err.message || 'Failed to save bulk overrides', 'danger');
+      toast(err.message || t('organizer.toasts.bulkOverrideSaveFailed'), 'danger');
     }
   };
 
@@ -378,7 +378,7 @@ export default function OrganizerBulkOverrideModalContent({ rows, onClose, toast
             type="text"
             value={seasonNum}
             onChange={(e) => setSeasonNum(e.target.value)}
-            placeholder="e.g. 1"
+            placeholder={t('organizer.overrideModal.placeholders.seasonNumber')}
             disabled={!applySeasonNum}
           />
         )}
