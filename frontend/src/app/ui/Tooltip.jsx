@@ -23,11 +23,18 @@ const getPosition = (rect, side) => {
   return { left: centerX, top: rect.top - TOOLTIP_GAP };
 };
 
+const TOOLTIP_DELAYS = {
+  instant: 0,
+  fast: 250,
+  normal: 600,
+  slow: 1000,
+};
+
 export default function Tooltip({
   content,
   className = '',
   side = 'top',
-  delay = 800,
+  delay = TOOLTIP_DELAYS.normal,
   children,
 }) {
   const triggerRef = useRef(null);

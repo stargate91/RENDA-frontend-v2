@@ -18,7 +18,7 @@ export default function Modal({ open, title, description, children, footer, onCl
             ) : null}
             {description ? <p className="ui-modal__description">{description}</p> : null}
           </div>
-          <Tooltip content="Close" side="top" delay={250}>
+          <Tooltip content="Close" side="top">
             <IconButton type="button" className="ui-modal__close" onClick={onClose} label="Close" title={null} size="sm">
               x
             </IconButton>

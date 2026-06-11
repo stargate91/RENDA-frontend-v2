@@ -66,7 +66,6 @@ export default function MatchModalSearchForm({
           <Tooltip
             content={isSearching ? t('organizer.details.matchModal.searching') : t('organizer.details.matchModal.search')}
             side="top"
-            delay={250}
           >
             <IconButton
               type="submit"

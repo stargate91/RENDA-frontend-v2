@@ -59,12 +59,13 @@ const TableRow = memo(function TableRow({
               {hasActionsInCell ? (
                 <div className="ui-table__row-actions" onClick={(event) => event.stopPropagation()}>
                   {visibleRowActions.map((action) => (
-                    <Tooltip key={action.key} content={action.tooltip || action.label} side="top" delay={250}>
+                    <Tooltip key={action.key} content={action.tooltip || action.label} side="top">
                       <IconButton
                         type="button"
                         className={`ui-table__row-action ${action.className || ''}`.trim()}
                         onClick={() => action.onClick(row)}
                         label={action.tooltip || action.label}
+                        title={null}
                         size="sm"
                       >
                         <action.icon size={15} />

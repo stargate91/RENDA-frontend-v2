@@ -79,14 +79,14 @@ const renderStatusCell = (value, row, collisionStrategy, normalizeStatusTone, t)
       </StatusPill>
     ) : null}
     {row.rawStatus === 'uncertain' && row.rawType === 'series' ? (
-      <Tooltip content={t('organizer.status.missingSeasonTooltip')} side="top" delay={250}>
+      <Tooltip content={t('organizer.status.missingSeasonTooltip')} side="top">
         <StatusPill className="organizer-status-cell__policy" tone="default">
           {t('organizer.status.missingSeason')}
         </StatusPill>
       </Tooltip>
     ) : null}
     {row.rawStatus === 'uncertain' && (row.rawType === 'series' || row.rawType === 'season') ? (
-      <Tooltip content={t('organizer.status.missingEpisodeTooltip')} side="top" delay={250}>
+      <Tooltip content={t('organizer.status.missingEpisodeTooltip')} side="top">
         <StatusPill className="organizer-status-cell__policy" tone="default">
           {t('organizer.status.missingEpisode')}
         </StatusPill>

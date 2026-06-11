@@ -2,6 +2,7 @@ import { Minus, Square, X, AlertTriangle } from 'lucide-react';
 import UtilityButton from '../ui/UtilityButton';
 import ProgressBar from '../ui/ProgressBar';
 import Button from '../ui/Button';
+import Tooltip from '../ui/Tooltip';
 import api from '../lib/api';
 import { useUi } from '../providers/UiProvider';
 import { useTranslation } from '../providers/LanguageProvider';
@@ -67,37 +68,43 @@ export default function WindowTitlebar() {
       ) : null}
 
       <div className="window-titlebar__actions">
-        <UtilityButton
-          type="button"
-          className="window-titlebar__button"
-          size="titlebar"
-          tabIndex={-1}
-          aria-label="Minimize window"
-          onClick={minimize}
-        >
-          <Minus size={16} />
-        </UtilityButton>
-        <UtilityButton
-          type="button"
-          className="window-titlebar__button"
-          size="titlebar"
-          tabIndex={-1}
-          aria-label="Maximize window"
-          onClick={toggleMaximize}
-        >
-          <Square size={14} />
-        </UtilityButton>
-        <UtilityButton
-          type="button"
-          className="window-titlebar__button window-titlebar__button--close"
-          size="titlebar"
-          danger
-          tabIndex={-1}
-          aria-label="Close window"
-          onClick={close}
-        >
-          <X size={16} />
-        </UtilityButton>
+        <Tooltip content={t('titlebar.minimize')} side="bottom">
+          <UtilityButton
+            type="button"
+            className="window-titlebar__button"
+            size="titlebar"
+            tabIndex={-1}
+            aria-label="Minimize window"
+            onClick={minimize}
+          >
+            <Minus size={16} />
+          </UtilityButton>
+        </Tooltip>
+        <Tooltip content={t('titlebar.maximize')} side="bottom">
+          <UtilityButton
+            type="button"
+            className="window-titlebar__button"
+            size="titlebar"
+            tabIndex={-1}
+            aria-label="Maximize window"
+            onClick={toggleMaximize}
+          >
+            <Square size={14} />
+          </UtilityButton>
+        </Tooltip>
+        <Tooltip content={t('titlebar.close')} side="bottom">
+          <UtilityButton
+            type="button"
+            className="window-titlebar__button window-titlebar__button--close"
+            size="titlebar"
+            danger
+            tabIndex={-1}
+            aria-label="Close window"
+            onClick={close}
+          >
+            <X size={16} />
+          </UtilityButton>
+        </Tooltip>
       </div>
     </header>
   );

@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import IconButton from './IconButton';
+import Tooltip from './Tooltip';
 import './Feedback.css';
 
 export default function ProgressBar({ taskName, progress = 0, timeRemaining = '--:--', active = true, variant = 'primary', onAbort }) {
@@ -21,14 +22,16 @@ export default function ProgressBar({ taskName, progress = 0, timeRemaining = '-
         {progress}% | {timeRemaining}
       </span>
       {onAbort && (
-        <IconButton
-          variant="danger"
-          size="xs"
-          onClick={onAbort}
-          title="Abort task"
-        >
-          <X size={10} strokeWidth={2.5} />
-        </IconButton>
+        <Tooltip content="Abort task" side="top">
+          <IconButton
+            variant="danger"
+            size="xs"
+            onClick={onAbort}
+            title={null}
+          >
+            <X size={10} strokeWidth={2.5} />
+          </IconButton>
+        </Tooltip>
       )}
     </div>
   );

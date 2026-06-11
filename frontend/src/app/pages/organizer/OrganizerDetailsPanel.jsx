@@ -1,5 +1,6 @@
 import UtilityButton from '../../ui/UtilityButton';
 import Button from '../../ui/Button';
+import Tooltip from '../../ui/Tooltip';
 import MediaCard from '../../ui/MediaCard';
 import { ChevronLeft, ChevronRight, FileJson, Info } from 'lucide-react';
 import { API_BASE } from '../../lib/backend';
@@ -145,15 +146,17 @@ export default function OrganizerDetailsPanel({
     <aside className="organizer-details" aria-label={t('organizer.details.title')}>
       <div className="organizer-details__sticky-container">
         <div className="organizer-details__toggle-row">
-          <UtilityButton
-            type="button"
-            className="organizer-details__toggle"
-            size="sm"
-            aria-label={isDetailsCollapsed ? t('organizer.details.expand') : t('organizer.details.collapse')}
-            onClick={onToggleDetails}
-          >
-            {isDetailsCollapsed ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
-          </UtilityButton>
+          <Tooltip content={isDetailsCollapsed ? t('organizer.details.expand') : t('organizer.details.collapse')} side="left">
+            <UtilityButton
+              type="button"
+              className="organizer-details__toggle"
+              size="sm"
+              aria-label={isDetailsCollapsed ? t('organizer.details.expand') : t('organizer.details.collapse')}
+              onClick={onToggleDetails}
+            >
+              {isDetailsCollapsed ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
+            </UtilityButton>
+          </Tooltip>
         </div>
 
         <div className="organizer-details__panel">

@@ -9,7 +9,14 @@
     "lists": "Lists",
     "settings": "Settings",
     "about": "About",
-    "quit": "Quit"
+    "quit": "Quit",
+    "expand": "Expand",
+    "collapse": "Collapse"
+  },
+  "titlebar": {
+    "minimize": "Minimize",
+    "maximize": "Maximize",
+    "close": "Close"
   },
   "organizer": {
     "title": "Media Organizer",

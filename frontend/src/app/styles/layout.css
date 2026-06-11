@@ -66,6 +66,13 @@
   -webkit-app-region: no-drag;
 }
 
+.window-titlebar__actions .ui-tooltip {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  -webkit-app-region: no-drag;
+}
+
 .shell {
   display: grid;
   grid-template-columns: 236px minmax(0, 1fr);
