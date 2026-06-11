@@ -129,6 +129,7 @@ export default function OrganizerPage() {
     discoveryExtras: discovery.extras,
     t,
     tabCounts,
+    dismissedRowIds,
   });
 
   const {

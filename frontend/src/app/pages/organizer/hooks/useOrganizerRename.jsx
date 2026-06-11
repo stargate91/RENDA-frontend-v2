@@ -12,7 +12,7 @@ const EMPTY_DISCOVERY = {
   collisions: [],
 };
 
-export function useOrganizerRenameAction({
+export function useOrganizerRename({
   discoveryQuery,
   dismissedRowIds,
   isScanActive,

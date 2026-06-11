@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import Input from '../../../ui/Input';
 import Dropdown from '../../../ui/Dropdown';
 import { useTranslation } from '../../../providers/LanguageProvider';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUpdateMediaMutation } from '../../../queries';
+import OverrideMovieFields from './OverrideMovieFields';
+import OverrideEpisodeFields from './OverrideEpisodeFields';
+import OverrideExtraFields from './OverrideExtraFields';
 
 const SUBCATEGORIES_BY_CATEGORY = {
   video: [
@@ -218,109 +220,58 @@ export default function OrganizerOverrideModalContent({ row, onClose, toast }) {
         />
       )}
 
-      {/* 2. Parent Selection */}
+      {/* 2. Extra/Bonus Selection */}
       {(mainType === 'bonus' || (isExtra && mainType !== 'movie' && mainType !== 'episode')) && (
-        <Dropdown
-          label="Parent Item"
-          value={parentId}
-          onChange={(e) => setParentId(e.target.value)}
-          options={parentCandidates}
-          hint={t('organizer.overrideModal.hints.parentId')}
+        <OverrideExtraFields
+          parentId={parentId}
+          setParentId={setParentId}
+          subcategory={subcategory}
+          setSubcategory={setSubcategory}
+          language={language}
+          setLanguage={setLanguage}
+          parentCandidates={parentCandidates}
+          category={category}
+          subcategoryList={subcategoryList}
+          isExtra={isExtra}
+          LANGUAGE_OPTIONS={LANGUAGE_OPTIONS}
+          t={t}
         />
       )}
 
-      {/* 3. Subcategory and Language for Extras / Bonus */}
-      {(mainType === 'bonus' || (isExtra && mainType !== 'movie' && mainType !== 'episode')) && (
-        <>
-          {category !== 'metadata' && (
-            <Dropdown
-              label="Subcategory"
-              value={subcategory}
-              onChange={(e) => setSubcategory(e.target.value)}
-              options={subcategoryList}
-              hint={t('organizer.overrideModal.hints.subcategory')}
-            />
-          )}
-
-           {isExtra && (category === 'subtitle' || category === 'audio') && (
-            <Dropdown
-              label="Language"
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              options={LANGUAGE_OPTIONS}
-              hint={t('organizer.overrideModal.hints.language')}
-            />
-          )}
-        </>
-      )}
-
-      {/* 4. Movie settings */}
+      {/* 3. Movie settings */}
       {mainType === 'movie' && (
-        <>
-          <Dropdown
-            label="Target Language"
-            value={targetLanguage}
-            onChange={(e) => setTargetLanguage(e.target.value)}
-            options={LANGUAGE_OPTIONS}
-            hint={t('organizer.overrideModal.hints.targetLanguage')}
-          />
-          <Dropdown
-            label="Source"
-            value={source}
-            onChange={(e) => setSource(e.target.value)}
-            options={SOURCE_OPTIONS}
-            hint={t('organizer.overrideModal.hints.source')}
-          />
-          <Dropdown
-            label="Edition"
-            value={edition}
-            onChange={(e) => setEdition(e.target.value)}
-            options={EDITION_OPTIONS}
-            hint={t('organizer.overrideModal.hints.edition')}
-          />
-          <Dropdown
-            label="Audio Type"
-            value={audioType}
-            onChange={(e) => setAudioType(e.target.value)}
-            options={AUDIO_TYPE_OPTIONS}
-            hint={t('organizer.overrideModal.hints.audioType')}
-          />
-        </>
+        <OverrideMovieFields
+          targetLanguage={targetLanguage}
+          setTargetLanguage={setTargetLanguage}
+          source={source}
+          setSource={setSource}
+          edition={edition}
+          setEdition={setEdition}
+          audioType={audioType}
+          setAudioType={setAudioType}
+          LANGUAGE_OPTIONS={LANGUAGE_OPTIONS}
+          SOURCE_OPTIONS={SOURCE_OPTIONS}
+          EDITION_OPTIONS={EDITION_OPTIONS}
+          AUDIO_TYPE_OPTIONS={AUDIO_TYPE_OPTIONS}
+          t={t}
+        />
       )}
 
-      {/* 5. Episode settings */}
+      {/* 4. Episode settings */}
       {mainType === 'episode' && (
-        <>
-          <Dropdown
-            label="Target Language"
-            value={targetLanguage}
-            onChange={(e) => setTargetLanguage(e.target.value)}
-            options={LANGUAGE_OPTIONS}
-            hint={t('organizer.overrideModal.hints.targetLanguage')}
-          />
-          <Dropdown
-            label="Audio Type"
-            value={audioType}
-            onChange={(e) => setAudioType(e.target.value)}
-            options={AUDIO_TYPE_OPTIONS}
-            hint={t('organizer.overrideModal.hints.audioType')}
-          />
-          <Input
-            label="Season Number"
-            type="number"
-            value={seasonNum}
-            onChange={(e) => setSeasonNum(e.target.value)}
-            placeholder="e.g. 1"
-            hint={t('organizer.overrideModal.hints.seasonNum')}
-          />
-          <Input
-            label="Episode Number"
-            value={episodeNum}
-            onChange={(e) => setEpisodeNum(e.target.value)}
-            placeholder="e.g. 3 or 3-4"
-            hint={t('organizer.overrideModal.hints.episodeNum')}
-          />
-        </>
+        <OverrideEpisodeFields
+          targetLanguage={targetLanguage}
+          setTargetLanguage={setTargetLanguage}
+          audioType={audioType}
+          setAudioType={setAudioType}
+          seasonNum={seasonNum}
+          setSeasonNum={setSeasonNum}
+          episodeNum={episodeNum}
+          setEpisodeNum={setEpisodeNum}
+          LANGUAGE_OPTIONS={LANGUAGE_OPTIONS}
+          AUDIO_TYPE_OPTIONS={AUDIO_TYPE_OPTIONS}
+          t={t}
+        />
       )}
     </form>
   );

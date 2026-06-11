@@ -1,17 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
-import {
-  EXTRA_CATEGORY_BY_TAB,
-  MANUAL_REVIEW_STATUSES,
-  mapDiscoveryItemRow,
-  mapExtraRow,
-  MATCHED_STATUSES,
-  normalizeItemStatus,
-} from './organizerMappers';
-import { scrollOrganizerToTop } from './organizerScroll';
+import { useEffect } from 'react';
 import { useOrganizerTabState } from './hooks/useOrganizerTabState';
 import { useOrganizerPaginationSort } from './hooks/useOrganizerPaginationSort';
 import { useOrganizerDetailsState } from './hooks/useOrganizerDetailsState';
 import { useFileSelection } from './hooks/useFileSelection';
+import { useOrganizerDismissState } from './hooks/useOrganizerDismissState';
+import { useOrganizerFilteredRows } from './hooks/useOrganizerFilteredRows';
+import { useOrganizerFocus } from './hooks/useOrganizerFocus';
 
 export function useOrganizerPageState({ discovery, t }) {
   const {
@@ -23,95 +17,24 @@ export function useOrganizerPageState({ discovery, t }) {
     setActiveManualTab,
   } = useOrganizerTabState();
 
-  const [dismissedRowIds, setDismissedRowIds] = useState(new Set());
+  const {
+    dismissedRowIds,
+    dismissedCount,
+    dismissRows,
+    restoreDismissedRows,
+  } = useOrganizerDismissState({ discovery });
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setDismissedRowIds(new Set());
-  }, [discovery]);
-
-  const reviewDiscoveryMedia = useMemo(
-    () => [
-      ...(discovery.manual || []),
-      ...(discovery.movies || []),
-      ...(discovery.series || []),
-    ],
-    [discovery],
-  );
-
-  const matchedDiscoveryMedia = useMemo(
-    () => [
-      ...(discovery.movies || []),
-      ...(discovery.series || []),
-      ...(discovery.collisions || []),
-    ],
-    [discovery],
-  );
-
-  const tabCounts = useMemo(() => {
-    const manualCount = reviewDiscoveryMedia.filter((item) => {
-      const id = `item-${item.id}`;
-      return !dismissedRowIds.has(id) && MANUAL_REVIEW_STATUSES.has(normalizeItemStatus(item.status));
-    }).length;
-
-    const manualMoviesCount = reviewDiscoveryMedia.filter((item) => {
-      const id = `item-${item.id}`;
-      return !dismissedRowIds.has(id) && item.type === 'movie' && MANUAL_REVIEW_STATUSES.has(normalizeItemStatus(item.status));
-    }).length;
-
-    const manualEpisodesCount = reviewDiscoveryMedia.filter((item) => {
-      const id = `item-${item.id}`;
-      return !dismissedRowIds.has(id) && item.type !== 'movie' && MANUAL_REVIEW_STATUSES.has(normalizeItemStatus(item.status));
-    }).length;
-
-    const moviesCount = matchedDiscoveryMedia.filter((item) => {
-      const id = `item-${item.id}`;
-      return !dismissedRowIds.has(id) && item.type === 'movie' && MATCHED_STATUSES.has(normalizeItemStatus(item.status));
-    }).length;
-
-    const episodesCount = matchedDiscoveryMedia.filter((item) => {
-      const id = `item-${item.id}`;
-      return !dismissedRowIds.has(id) && item.type === 'episode' && MATCHED_STATUSES.has(normalizeItemStatus(item.status));
-    }).length;
-
-    const extrasCount = (discovery.extras || []).filter((item) => {
-      const id = `extra-${item.id}`;
-      const parentId = `item-${item.parent_id || item.parent_item_id}`;
-      return !dismissedRowIds.has(id) && !dismissedRowIds.has(parentId);
-    }).length;
-
-    return { manualCount, manualMoviesCount, manualEpisodesCount, moviesCount, episodesCount, extrasCount };
-  }, [discovery, matchedDiscoveryMedia, reviewDiscoveryMedia, dismissedRowIds]);
-
-  const tabFilteredRows = useMemo(() => {
-    let rows = [];
-    if (activeMainTab === 'manual') {
-      rows = reviewDiscoveryMedia
-        .filter((item) => {
-          const isTargetType = activeManualTab === 'movies' ? item.type === 'movie' : item.type !== 'movie';
-          return isTargetType && MANUAL_REVIEW_STATUSES.has(normalizeItemStatus(item.status));
-        })
-        .map((item) => mapDiscoveryItemRow(item, t));
-    } else if (activeMainTab === 'movies') {
-      rows = matchedDiscoveryMedia
-        .filter((item) => item.type === 'movie' && MATCHED_STATUSES.has(normalizeItemStatus(item.status)))
-        .map((item) => mapDiscoveryItemRow(item, t));
-    } else if (activeMainTab === 'episodes') {
-      rows = matchedDiscoveryMedia
-        .filter((item) => item.type === 'episode' && MATCHED_STATUSES.has(normalizeItemStatus(item.status)))
-        .map((item) => mapDiscoveryItemRow(item, t));
-    } else if (activeMainTab === 'extras') {
-      rows = (discovery.extras || [])
-        .filter((item) => item.category === EXTRA_CATEGORY_BY_TAB[activeExtrasTab])
-        .map((item) => mapExtraRow(item, t));
-    }
-
-    return rows.filter(
-      (row) =>
-        !dismissedRowIds.has(row.id) &&
-        (row.rawType !== 'extra' || !dismissedRowIds.has(`item-${row.parent_id}`))
-    );
-  }, [activeExtrasTab, activeManualTab, activeMainTab, discovery, matchedDiscoveryMedia, reviewDiscoveryMedia, t, dismissedRowIds]);
+  const {
+    tabCounts,
+    tabFilteredRows,
+  } = useOrganizerFilteredRows({
+    discovery,
+    t,
+    activeMainTab,
+    activeExtrasTab,
+    activeManualTab,
+    dismissedRowIds,
+  });
 
   const {
     searchQuery,
@@ -174,98 +97,19 @@ export function useOrganizerPageState({ discovery, t }) {
     });
   }, [paginatedRows, setSelectedRowIds]);
 
-  const focusFirstAvailableResult = (nextDiscovery = discovery) => {
-    if (activeRowId) {
-      const allIds = new Set([
-        ...(nextDiscovery.manual || []).map((i) => `item-${i.id}`),
-        ...(nextDiscovery.movies || []).map((i) => `item-${i.id}`),
-        ...(nextDiscovery.series || []).map((i) => `item-${i.id}`),
-        ...(nextDiscovery.collisions || []).map((i) => `item-${i.id}`),
-        ...(nextDiscovery.extras || []).map((i) => `extra-${i.id}`),
-      ]);
-      if (allIds.has(activeRowId)) {
-        return;
-      }
-    }
-    const reviewMedia = [
-      ...(nextDiscovery.manual || []),
-      ...(nextDiscovery.movies || []),
-      ...(nextDiscovery.series || []),
-    ];
-    const matchedMedia = [
-      ...(nextDiscovery.movies || []),
-      ...(nextDiscovery.series || []),
-      ...(nextDiscovery.collisions || []),
-    ];
-    const movieRows = matchedMedia
-      .filter((item) => item.type === 'movie' && MATCHED_STATUSES.has(normalizeItemStatus(item.status)))
-      .map((item) => mapDiscoveryItemRow(item, t));
-    const episodeRows = matchedMedia
-      .filter((item) => item.type === 'episode' && MATCHED_STATUSES.has(normalizeItemStatus(item.status)))
-      .map((item) => mapDiscoveryItemRow(item, t));
-    const manualMovieRows = reviewMedia
-      .filter((item) => item.type === 'movie' && MANUAL_REVIEW_STATUSES.has(normalizeItemStatus(item.status)))
-      .map((item) => mapDiscoveryItemRow(item, t));
-    const manualEpisodeRows = reviewMedia
-      .filter((item) => item.type !== 'movie' && MANUAL_REVIEW_STATUSES.has(normalizeItemStatus(item.status)))
-      .map((item) => mapDiscoveryItemRow(item, t));
-    const extraTabPriority = ['bonus', 'subtitles', 'audio', 'images', 'metadata'];
-    const firstExtraTab = extraTabPriority.find((tab) =>
-      (nextDiscovery.extras || []).some((item) => item.category === EXTRA_CATEGORY_BY_TAB[tab]));
-    const extraRows = firstExtraTab
-      ? (nextDiscovery.extras || [])
-          .filter((item) => item.category === EXTRA_CATEGORY_BY_TAB[firstExtraTab])
-          .map((item) => mapExtraRow(item, t))
-      : [];
-
-    const firstTarget = [
-      { mainTab: 'movies', rows: movieRows },
-      { mainTab: 'episodes', rows: episodeRows },
-      { mainTab: 'manual', rows: manualMovieRows, manualTab: 'movies' },
-      { mainTab: 'manual', rows: manualEpisodeRows, manualTab: 'episodes' },
-      { mainTab: 'extras', rows: extraRows, extrasTab: firstExtraTab },
-    ].find((entry) => entry.rows.length > 0);
-
-    if (!firstTarget) {
-      setActiveRowId(null);
-      return;
-    }
-
-    setActiveMainTab(firstTarget.mainTab);
-    if (firstTarget.extrasTab) {
-      setActiveExtrasTab(firstTarget.extrasTab);
-    }
-    if (firstTarget.manualTab) {
-      setActiveManualTab(firstTarget.manualTab);
-    }
-    setSearchQuery('');
-    setSelectedRowIds(new Set());
-    setCurrentPage(1);
-    setActiveRowId(firstTarget.rows[0].id);
-    setIsDetailsCollapsed(false);
-    try {
-      localStorage.setItem('organizer_details_collapsed', JSON.stringify(false));
-    } catch {
-      // Ignore storage access errors.
-    }
-    scrollOrganizerToTop();
-  };
-
-  const dismissRows = (rowIds) => {
-    const parentRowIds = rowIds.filter((id) => id.startsWith('item-'));
-    if (parentRowIds.length === 0) return;
-    setDismissedRowIds((current) => {
-      const next = new Set(current);
-      parentRowIds.forEach((id) => next.add(id));
-      return next;
-    });
-  };
-
-  const restoreDismissedRows = () => {
-    setDismissedRowIds(new Set());
-  };
-
-  const dismissedCount = dismissedRowIds.size;
+  const { focusFirstAvailableResult } = useOrganizerFocus({
+    discovery,
+    t,
+    activeRowId,
+    setActiveRowId,
+    setActiveMainTab,
+    setActiveExtrasTab,
+    setActiveManualTab,
+    setSearchQuery,
+    setSelectedRowIds,
+    setCurrentPage,
+    setIsDetailsCollapsed,
+  });
 
   return {
     dismissRows,
