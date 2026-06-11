@@ -8,14 +8,33 @@ function DropdownMenu({
   options,
   value,
   onOptionClick,
+  searchable,
 }) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const searchInputRef = useRef(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => {
+        if (searchInputRef.current) {
+          searchInputRef.current.focus();
+        }
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
   if (!isOpen) {
     return null;
   }
 
+  const filteredOptions = options.filter((opt) =>
+    String(opt.label || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return createPortal(
     <div
-      className="ui-dropdown__menu"
+      className={`ui-dropdown__menu ${searchable ? 'has-search' : ''}`}
       style={{
         position: 'absolute',
         top: `${menuCoords.top}px`,
@@ -23,22 +42,43 @@ function DropdownMenu({
         width: `${menuCoords.width}px`,
       }}
     >
-      {options.map((opt) => (
-        <button
-          key={opt.value}
-          type="button"
-          className={`ui-dropdown__item ${opt.value === value ? 'is-active' : ''}`}
-          onClick={() => onOptionClick(opt.value)}
-        >
-          {opt.label}
-        </button>
-      ))}
+      {searchable ? (
+        <div className="ui-dropdown__search-container">
+          <input
+            ref={searchInputRef}
+            type="text"
+            className="ui-dropdown__search-input"
+            placeholder="Search..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      ) : null}
+      <div className="ui-dropdown__items-wrapper">
+        {filteredOptions.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            className={`ui-dropdown__item ${opt.value === value ? 'is-active' : ''}`}
+            onClick={() => onOptionClick(opt.value)}
+            title={opt.label}
+          >
+            {opt.label}
+          </button>
+        ))}
+        {filteredOptions.length === 0 ? (
+          <div className="ui-dropdown__no-results">
+            No results found
+          </div>
+        ) : null}
+      </div>
     </div>,
     document.body
   );
 }
 
-export default function Dropdown({ label, options = [], value, onChange, hint, className = '', placeholder = 'Select...' }) {
+export default function Dropdown({ label, options = [], value, onChange, hint, className = '', placeholder = 'Select...', searchable = false }) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
   const triggerRef = useRef(null);
@@ -110,6 +150,7 @@ export default function Dropdown({ label, options = [], value, onChange, hint, c
           options={options}
           value={value}
           onOptionClick={handleOptionClick}
+          searchable={searchable}
         />
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Dropdown from '../../../ui/Dropdown';
 import { useTranslation } from '../../../providers/LanguageProvider';
 import { useQueryClient } from '@tanstack/react-query';
@@ -61,18 +61,18 @@ const SUBCATEGORIES_BY_CATEGORY = {
 };
 
 const LANGUAGE_OPTIONS = [
-  { value: 'en', label: 'English (EN)' },
-  { value: 'hu', label: 'Hungarian (HU)' },
-  { value: 'de', label: 'German (DE)' },
-  { value: 'fr', label: 'French (FR)' },
-  { value: 'es', label: 'Spanish (ES)' },
-  { value: 'it', label: 'Italian (IT)' },
-  { value: 'zh', label: 'Chinese (ZH)' },
-  { value: 'ko', label: 'Korean (KO)' },
-  { value: 'ru', label: 'Russian (RU)' },
-  { value: 'ja', label: 'Japanese (JA)' },
-  { value: 'pt', label: 'Portuguese (PT)' },
-  { value: 'pl', label: 'Polish (PL)' },
+  { value: 'en', label: 'English (English)' },
+  { value: 'hu', label: 'Hungarian (Magyar)' },
+  { value: 'de', label: 'German (Deutsch)' },
+  { value: 'fr', label: 'French (Français)' },
+  { value: 'es', label: 'Spanish (Español)' },
+  { value: 'it', label: 'Italian (Italiano)' },
+  { value: 'zh', label: 'Chinese (中文)' },
+  { value: 'ko', label: 'Korean (한국어)' },
+  { value: 'ru', label: 'Russian (Русский)' },
+  { value: 'ja', label: 'Japanese (日本語)' },
+  { value: 'pt', label: 'Portuguese (Português)' },
+  { value: 'pl', label: 'Polish (Polski)' },
 ];
 
 const SOURCE_OPTIONS = [
@@ -115,9 +115,61 @@ const MAIN_TYPE_OPTIONS = [
 export default function OrganizerOverrideModalContent({ row, onClose, toast }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+
+  const translatedLanguageOptions = useMemo(() =>
+    LANGUAGE_OPTIONS.map((opt) => ({
+      ...opt,
+      label: t(`languages.${opt.value}`) || opt.label,
+    })),
+    [t]
+  );
   const isExtra = row.rawType === 'extra';
   const category = isExtra ? (row.rawPayload?.category || 'video') : 'video';
-  const subcategoryList = SUBCATEGORIES_BY_CATEGORY[category] || [];
+
+  const translatedSubcategoriesByCategory = useMemo(() => {
+    const result = {};
+    Object.keys(SUBCATEGORIES_BY_CATEGORY).forEach((catKey) => {
+      result[catKey] = SUBCATEGORIES_BY_CATEGORY[catKey].map((opt) => ({
+        ...opt,
+        label: t(`organizer.overrideModal.options.subcategories.${opt.value}`) || opt.label,
+      }));
+    });
+    return result;
+  }, [t]);
+
+  const translatedSourceOptions = useMemo(() =>
+    SOURCE_OPTIONS.map((opt) => ({
+      ...opt,
+      label: t(`organizer.overrideModal.options.sources.${opt.value}`) || opt.label,
+    })),
+    [t]
+  );
+
+  const translatedEditionOptions = useMemo(() =>
+    EDITION_OPTIONS.map((opt) => ({
+      ...opt,
+      label: t(`organizer.overrideModal.options.editions.${opt.value}`) || opt.label,
+    })),
+    [t]
+  );
+
+  const translatedAudioTypeOptions = useMemo(() =>
+    AUDIO_TYPE_OPTIONS.map((opt) => ({
+      ...opt,
+      label: t(`organizer.overrideModal.options.audioTypes.${opt.value}`) || opt.label,
+    })),
+    [t]
+  );
+
+  const translatedMainTypeOptions = useMemo(() =>
+    MAIN_TYPE_OPTIONS.map((opt) => ({
+      ...opt,
+      label: t(`organizer.overrideModal.options.mainTypes.${opt.value}`) || opt.label,
+    })),
+    [t]
+  );
+
+  const subcategoryList = translatedSubcategoriesByCategory[category] || [];
 
   // Get parent candidates (movies + series) from cache
   const discovery = queryClient.getQueryData(['discovery']) || {};
@@ -215,7 +267,7 @@ export default function OrganizerOverrideModalContent({ row, onClose, toast }) {
           label="Main Category"
           value={mainType}
           onChange={(e) => setMainType(e.target.value)}
-          options={MAIN_TYPE_OPTIONS}
+          options={translatedMainTypeOptions}
           hint={t('organizer.overrideModal.hints.mainType')}
         />
       )}
@@ -233,7 +285,7 @@ export default function OrganizerOverrideModalContent({ row, onClose, toast }) {
           category={category}
           subcategoryList={subcategoryList}
           isExtra={isExtra}
-          LANGUAGE_OPTIONS={LANGUAGE_OPTIONS}
+          LANGUAGE_OPTIONS={translatedLanguageOptions}
           t={t}
         />
       )}
@@ -249,10 +301,10 @@ export default function OrganizerOverrideModalContent({ row, onClose, toast }) {
           setEdition={setEdition}
           audioType={audioType}
           setAudioType={setAudioType}
-          LANGUAGE_OPTIONS={LANGUAGE_OPTIONS}
-          SOURCE_OPTIONS={SOURCE_OPTIONS}
-          EDITION_OPTIONS={EDITION_OPTIONS}
-          AUDIO_TYPE_OPTIONS={AUDIO_TYPE_OPTIONS}
+          LANGUAGE_OPTIONS={translatedLanguageOptions}
+          SOURCE_OPTIONS={translatedSourceOptions}
+          EDITION_OPTIONS={translatedEditionOptions}
+          AUDIO_TYPE_OPTIONS={translatedAudioTypeOptions}
           t={t}
         />
       )}
@@ -268,8 +320,8 @@ export default function OrganizerOverrideModalContent({ row, onClose, toast }) {
           setSeasonNum={setSeasonNum}
           episodeNum={episodeNum}
           setEpisodeNum={setEpisodeNum}
-          LANGUAGE_OPTIONS={LANGUAGE_OPTIONS}
-          AUDIO_TYPE_OPTIONS={AUDIO_TYPE_OPTIONS}
+          LANGUAGE_OPTIONS={translatedLanguageOptions}
+          AUDIO_TYPE_OPTIONS={translatedAudioTypeOptions}
           t={t}
         />
       )}

@@ -22,6 +22,7 @@ export default function OverrideExtraFields({
         onChange={(e) => setParentId(e.target.value)}
         options={parentCandidates}
         hint={t('organizer.overrideModal.hints.parentId')}
+        searchable={true}
       />
 
       {category !== 'metadata' && (

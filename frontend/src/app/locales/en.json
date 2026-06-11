@@ -128,6 +128,67 @@
         "audioType": "Define the audio configuration (e.g., Stereo, Surround Sound) for name formatting.",
         "seasonNum": "Assign the season number that this episode belongs to.",
         "episodeNum": "Assign episode numbers. Use '3' for single, '3,4' for multiple, or '3-5' to automatically expand ranges."
+      },
+      "options": {
+        "sources": {
+          "none": "None",
+          "bluray": "Blu-Ray",
+          "web": "WEB-DL",
+          "dvd": "DVD",
+          "tv": "TV HDTV",
+          "cam": "CAM"
+        },
+        "editions": {
+          "none": "None",
+          "theatrical": "Theatrical Edition",
+          "directors_cut": "Director's Cut",
+          "extended": "Extended Edition",
+          "unrated": "Unrated",
+          "remastered": "Remastered",
+          "special": "Special Edition",
+          "ultimate": "Ultimate",
+          "collectors_edition": "Collector's Edition",
+          "fan_edit": "Fan Edit"
+        },
+        "audioTypes": {
+          "none": "None",
+          "mono": "Mono",
+          "stereo": "Stereo",
+          "surround": "Surround Sound",
+          "dual_audio": "Dual Audio",
+          "multi_audio": "Multi Audio"
+        },
+        "mainTypes": {
+          "movie": "Movie",
+          "episode": "Episode",
+          "bonus": "Bonus Video"
+        },
+        "subcategories": {
+          "trailer": "Trailer",
+          "sample": "Sample",
+          "behind_the_scenes": "Behind the Scenes",
+          "featurette": "Featurette",
+          "deleted_scenes": "Deleted Scenes",
+          "interview": "Interview",
+          "scene_comparison": "Scene Comparison",
+          "short": "Short",
+          "promo": "Promo",
+          "clip": "Clip",
+          "poster": "Poster",
+          "backdrop": "Backdrop",
+          "banner": "Banner",
+          "logo": "Logo",
+          "thumbnail": "Thumbnail",
+          "fanart": "Fanart",
+          "theme_song": "Theme Song",
+          "theme_video": "Theme Video",
+          "nfo": "NFO",
+          "xml": "XML",
+          "json": "JSON",
+          "txt": "TXT",
+          "url": "URL",
+          "other": "Other"
+        }
       }
     },
     "table": {
@@ -358,6 +419,32 @@
       "success": "Database successfully wiped",
       "failed": "Failed to wipe database"
     }
+  },
+  "languages": {
+    "en": "English (English)",
+    "hu": "Hungarian (Magyar)",
+    "de": "German (Deutsch)",
+    "fr": "French (Français)",
+    "es": "Spanish (Español)",
+    "it": "Italian (Italiano)",
+    "zh": "Chinese (中文)",
+    "ko": "Korean (한국어)",
+    "ru": "Russian (Русский)",
+    "ja": "Japanese (日本語)",
+    "pt": "Portuguese (Português)",
+    "pl": "Polish (Polski)",
+    "en-US": "English (English)",
+    "hu-HU": "Hungarian (Magyar)",
+    "de-DE": "German (Deutsch)",
+    "fr-FR": "French (Français)",
+    "es-ES": "Spanish (Español)",
+    "it-IT": "Italian (Italiano)",
+    "zh-CN": "Chinese (中文)",
+    "ko-KR": "Korean (한국어)",
+    "ru-RU": "Russian (Русский)",
+    "ja-JP": "Japanese (日本語)",
+    "pt-PT": "Portuguese (Português)",
+    "pl-PL": "Polish (Polski)"
   }
 }
 

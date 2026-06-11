@@ -28,33 +28,33 @@ const EXTRA_ACTION_OPTIONS = [
 ];
 
 const METADATA_LANGUAGE_OPTIONS = [
-  { value: 'en-US', label: 'English (US)' },
-  { value: 'hu-HU', label: 'Hungarian (HU)' },
-  { value: 'de-DE', label: 'German (DE)' },
-  { value: 'fr-FR', label: 'French (FR)' },
-  { value: 'es-ES', label: 'Spanish (ES)' },
-  { value: 'it-IT', label: 'Italian (IT)' },
-  { value: 'zh-CN', label: 'Chinese (CN)' },
-  { value: 'ko-KR', label: 'Korean (KR)' },
-  { value: 'ru-RU', label: 'Russian (RU)' },
-  { value: 'ja-JP', label: 'Japanese (JP)' },
-  { value: 'pt-PT', label: 'Portuguese (PT)' },
-  { value: 'pl-PL', label: 'Polish (PL)' },
+  { value: 'en-US', label: 'English (English)' },
+  { value: 'hu-HU', label: 'Hungarian (Magyar)' },
+  { value: 'de-DE', label: 'German (Deutsch)' },
+  { value: 'fr-FR', label: 'French (Français)' },
+  { value: 'es-ES', label: 'Spanish (Español)' },
+  { value: 'it-IT', label: 'Italian (Italiano)' },
+  { value: 'zh-CN', label: 'Chinese (中文)' },
+  { value: 'ko-KR', label: 'Korean (한국어)' },
+  { value: 'ru-RU', label: 'Russian (Русский)' },
+  { value: 'ja-JP', label: 'Japanese (日本語)' },
+  { value: 'pt-PT', label: 'Portuguese (Português)' },
+  { value: 'pl-PL', label: 'Polish (Polski)' },
 ];
 
 const TARGET_LANGUAGE_OPTIONS = [
-  { value: 'en', label: 'English (EN)' },
-  { value: 'hu', label: 'Hungarian (HU)' },
-  { value: 'de', label: 'German (DE)' },
-  { value: 'fr', label: 'French (FR)' },
-  { value: 'es', label: 'Spanish (ES)' },
-  { value: 'it', label: 'Italian (IT)' },
-  { value: 'zh', label: 'Chinese (ZH)' },
-  { value: 'ko', label: 'Korean (KO)' },
-  { value: 'ru', label: 'Russian (RU)' },
-  { value: 'ja', label: 'Japanese (JA)' },
-  { value: 'pt', label: 'Portuguese (PT)' },
-  { value: 'pl', label: 'Polish (PL)' },
+  { value: 'en', label: 'English (English)' },
+  { value: 'hu', label: 'Hungarian (Magyar)' },
+  { value: 'de', label: 'German (Deutsch)' },
+  { value: 'fr', label: 'French (Français)' },
+  { value: 'es', label: 'Spanish (Español)' },
+  { value: 'it', label: 'Italian (Italiano)' },
+  { value: 'zh', label: 'Chinese (中文)' },
+  { value: 'ko', label: 'Korean (한국어)' },
+  { value: 'ru', label: 'Russian (Русский)' },
+  { value: 'ja', label: 'Japanese (日本語)' },
+  { value: 'pt', label: 'Portuguese (Português)' },
+  { value: 'pl', label: 'Polish (Polski)' },
 ];
 
 export default function SettingsPage() {
@@ -291,7 +291,7 @@ export default function SettingsPage() {
               <span className="ui-field__label">Metadata Language</span>
               <select className="ui-select" value={form.primary_metadata_language} onChange={handleChange('primary_metadata_language')}>
                 {METADATA_LANGUAGE_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
+                  <option key={o.value} value={o.value}>{t(`languages.${o.value}`) || o.label}</option>
                 ))}
               </select>
               <span className="ui-field__hint">Choose which language to query TMDB and OMDb metadata in.</span>
@@ -311,7 +311,7 @@ export default function SettingsPage() {
               <span className="ui-field__label">Target Language (Renaming)</span>
               <select className="ui-select" value={form.default_target_language} onChange={handleChange('default_target_language')}>
                 {TARGET_LANGUAGE_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
+                  <option key={o.value} value={o.value}>{t(`languages.${o.value}`) || o.label}</option>
                 ))}
               </select>
               <span className="ui-field__hint">Choose which language to rename physical files and folders in.</span>
