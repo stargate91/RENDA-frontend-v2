@@ -28,7 +28,7 @@ export function OrganizerModalProvider({
 
   const {
     refreshOrganizerDiscovery,
-    handleResolveDiscoveryRow,
+    handleResolveDiscoveryRows,
     handleDeleteDiscoveryRow,
     handleDeleteDiscoveryRows,
   } = useOrganizerDeleteActions({
@@ -173,18 +173,27 @@ export function OrganizerModalProvider({
     });
   };
 
-  const openMatchModal = (row) => {
+  const openMatchModal = (row, rows = null) => {
+    const targetRows = rows || [row];
+    const isBulk = targetRows.length > 1;
     openModal({
-      title: t('organizer.details.matchModal.title'),
-      description: t('organizer.details.matchModal.description'),
+      title: isBulk
+        ? t('organizer.details.matchModal.titleBulk') || 'Match Selected Items'
+        : t('organizer.details.matchModal.title'),
+      description: isBulk
+        ? t('organizer.details.matchModal.descriptionBulk') || 'Search and apply a match for the selected items.'
+        : t('organizer.details.matchModal.description'),
       className: 'ui-modal--wide',
       icon: Search,
       content: (
         <OrganizerMatchModalContent
           row={row}
+          rows={targetRows}
           t={t}
           toast={toast}
-          onResolved={() => handleResolveDiscoveryRow(row)}
+          onResolved={() => {
+            handleResolveDiscoveryRows(targetRows);
+          }}
         />
       ),
       footer: (
@@ -282,6 +291,13 @@ export function OrganizerModalProvider({
       visible={selectedRows.length > 0}
       title={t('organizer.bulkBar.title').replace('{count}', String(selectedRows.length))}
       actions={[
+        !selectedRows.some((row) => row.rawType === 'extra') ? {
+          key: 'match',
+          label: t('organizer.actions.match') || 'Match',
+          icon: Search,
+          onClick: () => openMatchModal(null, selectedRows),
+          disabled: selectedRows.length === 0,
+        } : null,
         !selectedRows.some((row) => row.rawType === 'extra') ? {
           key: 'dismiss',
           label: t('organizer.actions.dismiss'),

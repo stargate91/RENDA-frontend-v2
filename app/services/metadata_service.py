@@ -477,6 +477,7 @@ class MetadataService:
                 match.item_type = resolved_item_type
                 match.series_tmdb_id = target.get("tmdb_id")
                 match.episode_number = target.get("episode")
+                match.confidence_score = 1.0
 
             active_match = match
 
@@ -511,6 +512,7 @@ class MetadataService:
                 match.episode_number = target_episode
                 match.season_number = season
                 match.series_tmdb_id = tmdb_id
+                match.confidence_score = 1.0
             
             active_match = match
 
@@ -536,6 +538,7 @@ class MetadataService:
                 db.add(match)
             else:
                 match.is_active = True
+                match.confidence_score = 1.0
             
             active_match = match
 

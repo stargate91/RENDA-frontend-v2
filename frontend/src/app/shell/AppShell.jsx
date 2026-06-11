@@ -29,6 +29,22 @@ export default function AppShell() {
 
   return (
     <div className={`shell ${isSidebarCollapsed ? 'is-sidebar-collapsed' : ''}`}>
+      <button
+        type="button"
+        tabIndex={0}
+        autoFocus
+        style={{
+          position: 'absolute',
+          width: '1px',
+          height: '1px',
+          padding: 0,
+          margin: '-1px',
+          overflow: 'hidden',
+          clip: 'rect(0, 0, 0, 0)',
+          border: 0,
+        }}
+        aria-hidden="true"
+      />
       <WindowTitlebar />
       <Sidebar isCollapsed={isSidebarCollapsed} onToggle={handleToggleSidebar} />
 

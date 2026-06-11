@@ -18,19 +18,24 @@ export default function MatchModalSearchForm({
   isSearching,
   onSearch,
   onModeChange,
+  isBulk = false,
   t,
 }) {
   return (
     <form className="organizer-match-modal__search" onSubmit={onSearch}>
       <div className="organizer-match-modal__search-layout">
         <div
-          className={`organizer-match-modal__search-grid${isSeriesMode ? ' is-series' : ' is-movie'}`}
+          className={`organizer-match-modal__search-grid${isSeriesMode && !isBulk ? ' is-series' : ' is-movie'}`}
         >
           <Input
             className="organizer-match-modal__field organizer-match-modal__field--query"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder={t('organizer.details.matchModal.queryPlaceholder')}
+            placeholder={
+              isSeriesMode
+                ? t('organizer.details.matchModal.queryPlaceholderSeries')
+                : t('organizer.details.matchModal.queryPlaceholderMovie')
+            }
             aria-label={t('organizer.details.matchModal.query')}
           />
           <Input
@@ -41,7 +46,7 @@ export default function MatchModalSearchForm({
             aria-label={t('organizer.details.matchModal.year')}
             inputMode="numeric"
           />
-          {isSeriesMode ? (
+          {isSeriesMode && !isBulk ? (
             <Input
               className="organizer-match-modal__field organizer-match-modal__field--compact"
               value={season}
@@ -51,7 +56,7 @@ export default function MatchModalSearchForm({
               inputMode="numeric"
             />
           ) : null}
-          {isSeriesMode ? (
+          {isSeriesMode && !isBulk ? (
             <Input
               className="organizer-match-modal__field organizer-match-modal__field--compact"
               value={episode}
@@ -79,16 +84,18 @@ export default function MatchModalSearchForm({
             </IconButton>
           </Tooltip>
         </div>
-        <SegmentedControl
-          className="organizer-match-modal__mode-toggle"
-          options={[
-            { value: 'movie', label: t('organizer.details.matchModal.movie') },
-            { value: 'tv', label: t('organizer.details.matchModal.series') },
-          ]}
-          value={mode}
-          onChange={onModeChange}
-          ariaLabel={t('organizer.details.matchModal.type')}
-        />
+        {!isBulk ? (
+          <SegmentedControl
+            className="organizer-match-modal__mode-toggle"
+            options={[
+              { value: 'movie', label: t('organizer.details.matchModal.movie') },
+              { value: 'tv', label: t('organizer.details.matchModal.series') },
+            ]}
+            value={mode}
+            onChange={onModeChange}
+            ariaLabel={t('organizer.details.matchModal.type')}
+          />
+        ) : null}
       </div>
     </form>
   );

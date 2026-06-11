@@ -16,7 +16,7 @@ export function useOrganizerColumns({
   sortConfig,
   t,
 }) {
-  const { openMatchModal } = useOrganizerModals();
+  const { openMatchModal, openOverrideModal } = useOrganizerModals();
 
   const columns = useMemo(() => {
     const renderSortableLabel = (label, key) => (
@@ -40,6 +40,7 @@ export function useOrganizerColumns({
       selectedRowIds,
       t,
       onOpenMatch: (row) => openMatchModal(row),
+      onOpenOverride: (row) => openOverrideModal(row),
     });
   }, [
     activeExtrasTab,
@@ -52,6 +53,7 @@ export function useOrganizerColumns({
     selectedRowIds,
     t,
     openMatchModal,
+    openOverrideModal,
     sortConfig.key,
     sortConfig.direction,
     handleSortToggle,

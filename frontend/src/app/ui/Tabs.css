@@ -76,6 +76,16 @@
   line-height: 1;
 }
 
+.ui-tab__count--warning {
+  background: var(--color-state-warning-bg) !important;
+  color: var(--color-state-warning) !important;
+}
+
+.ui-tab__count--success {
+  background: var(--color-state-success-bg) !important;
+  color: var(--color-state-success) !important;
+}
+
 /* Sub / Secondary Tabs */
 .ui-tabs--sub {
   display: flex;

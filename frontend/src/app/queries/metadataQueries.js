@@ -29,6 +29,10 @@ export const useResolveMetadataMutation = () => useMutation({
   mutationFn: (payload) => api.metadata.resolve(payload),
 });
 
+export const useBulkResolveMetadataMutation = () => useMutation({
+  mutationFn: (payload) => api.metadata.bulkResolve(payload),
+});
+
 export const useFullMetadataQuery = (itemId, options = {}) => useQuery({
   queryKey: ['full-metadata', itemId],
   queryFn: () => api.metadata.getItemFullMetadata(itemId),

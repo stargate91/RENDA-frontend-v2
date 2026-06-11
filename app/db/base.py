@@ -65,6 +65,13 @@ session_factory = sessionmaker(
 )
 Session = scoped_session(session_factory)
 
+cache_session_factory = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=cache_engine
+)
+CacheSession = scoped_session(cache_session_factory)
+
 def get_db():
     """
     Dependency helper for session management.

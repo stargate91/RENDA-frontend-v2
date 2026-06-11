@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useResolveMetadataMutation } from '@/queries';
+import { useResolveMetadataMutation, useBulkResolveMetadataMutation } from '@/queries';
 
 const normalizeCandidateType = (value) => {
   const normalized = String(value || '').toLowerCase();
@@ -56,10 +56,11 @@ const getDefaultEpisode = (row) => {
   return payload.episode ?? payload.fn_episode ?? payload.fd_episode ?? payload.it_episode ?? '';
 };
 
-export function useMatchResolve({ row, t, toast, onResolved, mode, season, episode }) {
+export function useMatchResolve({ rows = [], t, toast, onResolved, mode, season, episode }) {
   const [confirmState, setConfirmState] = useState(null);
   const [isResolvingId, setIsResolvingId] = useState(null);
   const resolveMutation = useResolveMetadataMutation();
+  const bulkResolveMutation = useBulkResolveMetadataMutation();
 
   const requestConfirm = (type, skipKey, onConfirm) => {
     if (localStorage.getItem(skipKey) === 'true') {
@@ -67,23 +68,27 @@ export function useMatchResolve({ row, t, toast, onResolved, mode, season, episo
       return;
     }
 
-    const defaultSeasonVal = getDefaultSeason(row);
-    const defaultEpisodeVal = getDefaultEpisode(row);
     let hasExisting = false;
     let existingDetails = '';
 
-    if (type === 'series') {
-      if (defaultSeasonVal != null || defaultEpisodeVal != null) {
-        hasExisting = true;
-        const parts = [];
-        if (defaultSeasonVal != null) parts.push(`S${defaultSeasonVal}`);
-        if (defaultEpisodeVal != null) parts.push(`E${defaultEpisodeVal}`);
-        existingDetails = parts.join(' ');
-      }
-    } else if (type === 'season') {
-      if (defaultEpisodeVal != null) {
-        hasExisting = true;
-        existingDetails = `E${defaultEpisodeVal}`;
+    for (const r of rows) {
+      const defaultSeasonVal = getDefaultSeason(r);
+      const defaultEpisodeVal = getDefaultEpisode(r);
+      if (type === 'series') {
+        if (defaultSeasonVal != null || defaultEpisodeVal != null) {
+          hasExisting = true;
+          const parts = [];
+          if (defaultSeasonVal != null) parts.push(`S${defaultSeasonVal}`);
+          if (defaultEpisodeVal != null) parts.push(`E${defaultEpisodeVal}`);
+          existingDetails = parts.join(' ');
+          break;
+        }
+      } else if (type === 'season') {
+        if (defaultEpisodeVal != null) {
+          hasExisting = true;
+          existingDetails = `E${defaultEpisodeVal}`;
+          break;
+        }
       }
     }
 
@@ -107,7 +112,38 @@ export function useMatchResolve({ row, t, toast, onResolved, mode, season, episo
     const performResolve = async () => {
       setIsResolvingId(candidateId);
       try {
-        await resolveMutation.mutateAsync(buildResolvePayload(row, candidate, mode, effectiveSeason, effectiveEpisode));
+        if (rows.length > 1) {
+          const episodeList = Array.isArray(candidate?.episodes) ? candidate.episodes : [];
+          const mediaType = normalizeCandidateType(candidate?.type || candidate?.media_type || mode);
+          const seasonVal = toOptionalNumber(effectiveSeason);
+          const episodeVal = toOptionalNumber(effectiveEpisode);
+
+          const target = {
+            tmdb_id: candidate.tmdb_id || candidate.id,
+            item_type: mediaType,
+          };
+
+          if (mediaType === 'tv' && seasonVal != null) {
+            target.season = seasonVal;
+          }
+
+          if (mediaType === 'tv' && episodeVal != null) {
+            target.episode = episodeVal;
+          }
+
+          if (mediaType === 'tv' && episodeList.length > 0) {
+            target.episodes = episodeList;
+          }
+
+          await bulkResolveMutation.mutateAsync({
+            item_ids: rows.map((r) => r.itemId),
+            targets: [target],
+          });
+        } else {
+          await resolveMutation.mutateAsync(
+            buildResolvePayload(rows[0], candidate, mode, effectiveSeason, effectiveEpisode)
+          );
+        }
         await onResolved();
         toast(t('organizer.toasts.matchResolveSuccess'), 'success');
       } catch (error) {

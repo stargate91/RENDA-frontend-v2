@@ -37,16 +37,21 @@ class TMDBClient:
     def _get_cache(self, cache_key: str) -> Optional[Dict[str, Any]]:
         """Retrieves non-expired cache from the database."""
         from datetime import datetime, timedelta
+        from ..db.base import CacheSession
         
-        # Check cache
-        cache_item = self.db.query(TMDBCache).filter(TMDBCache.cache_key == cache_key).first()
-        if cache_item:
-            # Dynamic cache expiration based on request endpoint
-            is_dynamic = "trending" in cache_key or "discover" in cache_key
-            expire_days = 1 if is_dynamic else 30
-            
-            if datetime.utcnow() - cache_item.updated_at < timedelta(days=expire_days):
-                return cache_item.raw_data
+        # Check cache using dedicated session
+        cache_db = CacheSession()
+        try:
+            cache_item = cache_db.query(TMDBCache).filter(TMDBCache.cache_key == cache_key).first()
+            if cache_item:
+                # Dynamic cache expiration based on request endpoint
+                is_dynamic = "trending" in cache_key or "discover" in cache_key
+                expire_days = 1 if is_dynamic else 30
+                
+                if datetime.utcnow() - cache_item.updated_at < timedelta(days=expire_days):
+                    return cache_item.raw_data
+        finally:
+            CacheSession.remove()
         return None
 
     def _cache_language_from_request(self, cache_key: str, params: Optional[Dict[str, Any]] = None) -> str:
@@ -63,42 +68,47 @@ class TMDBClient:
 
     def _set_cache(self, cache_key: str, data: Dict[str, Any], params: Optional[Dict[str, Any]] = None):
         """Stores API response in the persistent cache."""
+        from ..db.base import CacheSession
         target_language = self._cache_language_from_request(cache_key, params)
-        for attempt in range(3):
-            try:
-                # Manual upsert so the code keeps working across the app's regular
-                # SQLAlchemy sessions and remains tolerant of parallel resolvers.
-                cache_item = self.db.query(TMDBCache).filter(TMDBCache.cache_key == cache_key).first()
-                if not cache_item:
-                    cache_item = TMDBCache(cache_key=cache_key)
-                    self.db.add(cache_item)
-
-                cache_item.raw_data = data
-                cache_item.tmdb_id = data.get('id') if isinstance(data, dict) else None
-                cache_item.target_language = target_language
-                cache_item.updated_at = datetime.utcnow()
-                self.db.commit()
-                return
-            except IntegrityError:
-                self.db.rollback()
+        cache_db = CacheSession()
+        try:
+            for attempt in range(3):
                 try:
-                    cache_item = self.db.query(TMDBCache).filter(TMDBCache.cache_key == cache_key).first()
-                    if cache_item:
-                        cache_item.raw_data = data
-                        cache_item.tmdb_id = data.get('id') if isinstance(data, dict) else None
-                        cache_item.target_language = target_language
-                        cache_item.updated_at = datetime.utcnow()
-                        self.db.commit()
-                        return
+                    # Manual upsert so the code keeps working across the app's regular
+                    # SQLAlchemy sessions and remains tolerant of parallel resolvers.
+                    cache_item = cache_db.query(TMDBCache).filter(TMDBCache.cache_key == cache_key).first()
+                    if not cache_item:
+                        cache_item = TMDBCache(cache_key=cache_key)
+                        cache_db.add(cache_item)
+
+                    cache_item.raw_data = data
+                    cache_item.tmdb_id = data.get('id') if isinstance(data, dict) else None
+                    cache_item.target_language = target_language
+                    cache_item.updated_at = datetime.utcnow()
+                    cache_db.commit()
+                    return
+                except IntegrityError:
+                    cache_db.rollback()
+                    try:
+                        cache_item = cache_db.query(TMDBCache).filter(TMDBCache.cache_key == cache_key).first()
+                        if cache_item:
+                            cache_item.raw_data = data
+                            cache_item.tmdb_id = data.get('id') if isinstance(data, dict) else None
+                            cache_item.target_language = target_language
+                            cache_item.updated_at = datetime.utcnow()
+                            cache_db.commit()
+                            return
+                    except Exception:
+                        cache_db.rollback()
+                except OperationalError:
+                    cache_db.rollback()
+                    sleep(0.15 * (attempt + 1))
                 except Exception:
-                    self.db.rollback()
-            except OperationalError:
-                self.db.rollback()
-                sleep(0.15 * (attempt + 1))
-            except Exception:
-                self.db.rollback()
-                # We don't want cache failures to break the app.
-                return
+                    cache_db.rollback()
+                    # We don't want cache failures to break the app.
+                    return
+        finally:
+            CacheSession.remove()
 
     def _call_api(self, endpoint: str, params: Dict[str, Any], max_retries: int = 3) -> Dict[str, Any]:
         """

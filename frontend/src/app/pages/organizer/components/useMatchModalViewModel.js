@@ -11,10 +11,14 @@ const normalizeCandidateType = (value) => {
 
 export default function useMatchModalViewModel({
   row,
+  rows = [],
   t,
   toast,
   onResolved,
 }) {
+  const targetRows = rows.length > 0 ? rows : (row ? [row] : []);
+  const isBulk = targetRows.length > 1;
+
   const {
     query,
     setQuery,
@@ -32,7 +36,7 @@ export default function useMatchModalViewModel({
     isSeriesMode,
     existingCandidates,
     performSearch,
-  } = useMatchSearch({ row, t, toast });
+  } = useMatchSearch({ rows: targetRows, t, toast });
 
   const {
     browserState,
@@ -53,7 +57,7 @@ export default function useMatchModalViewModel({
     isResolvingId,
     handleResolve,
   } = useMatchResolve({
-    row,
+    rows: targetRows,
     t,
     toast,
     onResolved,
@@ -61,6 +65,17 @@ export default function useMatchModalViewModel({
     season,
     episode,
   });
+
+  const handleBrowseSeasonClick = async (seasonEntry) => {
+    if (isBulk) {
+      await handleResolve(browserState.seriesCandidate, {
+        season: seasonEntry.season_number,
+        episode: null,
+      });
+    } else {
+      await handleBrowseSeason(seasonEntry);
+    }
+  };
 
   const handleSearch = async (event) => {
     event?.preventDefault();
@@ -154,7 +169,7 @@ export default function useMatchModalViewModel({
     handleSearch,
     handleModeChange,
     handleResolve,
-    handleBrowseSeason,
+    handleBrowseSeason: handleBrowseSeasonClick,
     handleCandidateSelect,
     handleBrowserBack,
     toggleBucketEpisode,

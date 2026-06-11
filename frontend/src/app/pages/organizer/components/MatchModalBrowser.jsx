@@ -61,9 +61,9 @@ export default function MatchModalBrowser({
           <div className="organizer-match-modal__browser-grid organizer-match-modal__browser-grid--seasons">
             {browserState.seasons.map((seasonEntry) => {
               const candidateId = Number(browserState.seriesCandidate?.tmdb_id || browserState.seriesCandidate?.id || 0);
-              const rowSeriesId = Number(row.rawPayload?.series_tmdb_id || row.rawPayload?.tmdb_id || 0);
+              const rowSeriesId = Number(row?.rawPayload?.series_tmdb_id || row?.rawPayload?.tmdb_id || 0);
               const isCurrentSeries = candidateId > 0 && rowSeriesId > 0 && candidateId === rowSeriesId;
-              const isActiveSeason = isCurrentSeries && Number(seasonEntry.season_number) === Number(row.rawPayload?.season);
+              const isActiveSeason = isCurrentSeries && Number(seasonEntry.season_number) === Number(row?.rawPayload?.season);
               return (
                 <MatchSeasonCard
                   key={`season-${seasonEntry.season_number}`}
@@ -90,14 +90,14 @@ export default function MatchModalBrowser({
             <div className="organizer-match-modal__browser-grid organizer-match-modal__browser-grid--episodes">
               {visibleEpisodes.map((episodeEntry) => {
                 const candidateId = Number(browserState.seriesCandidate?.tmdb_id || browserState.seriesCandidate?.id || 0);
-                const rowSeriesId = Number(row.rawPayload?.series_tmdb_id || row.rawPayload?.tmdb_id || 0);
+                const rowSeriesId = Number(row?.rawPayload?.series_tmdb_id || row?.rawPayload?.tmdb_id || 0);
                 const isCurrentSeries = candidateId > 0 && rowSeriesId > 0 && candidateId === rowSeriesId;
-                const isActiveSeason = isCurrentSeries && Number(browserState.selectedSeason?.season_number) === Number(row.rawPayload?.season);
-                const currentEpisodes = Array.isArray(row.rawPayload?.episode)
+                const isActiveSeason = isCurrentSeries && Number(browserState.selectedSeason?.season_number) === Number(row?.rawPayload?.season);
+                const currentEpisodes = row ? (Array.isArray(row.rawPayload?.episode)
                     ? row.rawPayload.episode.map(Number)
                     : row.rawPayload?.episode != null
                       ? [Number(row.rawPayload.episode)]
-                      : [];
+                      : []) : [];
                 const isActiveEpisode = isActiveSeason && currentEpisodes.includes(Number(episodeEntry.episode_number));
                 return (
                   <MatchEpisodeCard

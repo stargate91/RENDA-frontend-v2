@@ -57,6 +57,29 @@ export function useOrganizerDeleteActions({
 
     try {
       await refreshOrganizerDiscovery();
+    } catch {
+      if (previousDiscovery) {
+        queryClient.setQueryData(['discovery'], previousDiscovery);
+        focusFirstAvailableResult(previousDiscovery);
+      }
+      queryClient.invalidateQueries({ queryKey: ['discovery-count'] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
+    }
+  };
+
+  const handleResolveDiscoveryRows = async (rows) => {
+    closeModal();
+    const previousDiscovery = queryClient.getQueryData(['discovery']);
+    const nextDiscovery = removeDiscoveryRows(previousDiscovery, rows);
+    if (nextDiscovery) {
+      queryClient.setQueryData(['discovery'], nextDiscovery);
+      focusFirstAvailableResult(nextDiscovery);
+      queryClient.invalidateQueries({ queryKey: ['discovery-count'] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
+    }
+
+    try {
+      await refreshOrganizerDiscovery();
     } catch (error) {
       if (previousDiscovery) {
         queryClient.setQueryData(['discovery'], previousDiscovery);
@@ -139,6 +162,7 @@ export function useOrganizerDeleteActions({
   return {
     refreshOrganizerDiscovery,
     handleResolveDiscoveryRow,
+    handleResolveDiscoveryRows,
     handleDeleteDiscoveryRow,
     handleDeleteDiscoveryRows,
   };

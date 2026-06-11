@@ -22,7 +22,7 @@ export default function ProgressBar({ taskName, progress = 0, timeRemaining = '-
         {progress}% | {timeRemaining}
       </span>
       {onAbort && (
-        <Tooltip content="Abort task" side="top">
+        <Tooltip content="Abort task" side="bottom">
           <IconButton
             variant="danger"
             size="xs"

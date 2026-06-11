@@ -248,9 +248,8 @@ class ImageWorker:
                 
             success = False
             has_pending = False
+            has_any_path = False
             for loc in match.localizations:
-                has_any_path = False
-                
                 # A. POSTERS & THUMBNAILS
                 if loc.poster_path:
                     has_any_path = True

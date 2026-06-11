@@ -47,7 +47,7 @@ class MetadataEnricher:
         # --- TYPE ENFORCEMENT (BASED ON API RESPONSE) ---
         # Only enforce the type if we don't already know the exact type (e.g., auto-match case)
         # If manually set (e.g., to SERIES), don't override to EPISODE.
-        if active_match.item_type not in [ItemType.SERIES, ItemType.SEASON]:
+        if active_match.confidence_score < 1.0 and active_match.item_type not in [ItemType.SERIES, ItemType.SEASON]:
             imdb_id = getattr(active_match, 'imdb_id', None) or item.nfo_imdb_id
             if imdb_id and imdb_id.startswith("tt"):
                 find_res = self.api.find_by_imdb(imdb_id, language=language)
@@ -472,18 +472,26 @@ class MetadataEnricher:
     def _get_details_cached(self, tmdb_id: int, item_type: str, language: str) -> Dict[str, Any]:
         cache_key = (item_type, tmdb_id, language)
         if cache_key not in self._details_cache:
-            self._details_cache[cache_key] = self.api.get_details(tmdb_id, item_type=item_type, language=language) or {}
+            try:
+                self._details_cache[cache_key] = self.api.get_details(tmdb_id, item_type=item_type, language=language) or {}
+            except Exception as e:
+                logger.error(f"Failed to fetch details for {item_type} {tmdb_id}: {e}")
+                self._details_cache[cache_key] = {}
         return self._details_cache[cache_key]
 
     def _get_episode_details_cached(self, series_id: int, season_number: int, episode_number: int, language: str) -> Dict[str, Any]:
         cache_key = (series_id, season_number, episode_number, language)
         if cache_key not in self._episode_cache:
-            self._episode_cache[cache_key] = self.api.get_episode_details(
-                series_id,
-                season_number,
-                episode_number,
-                language=language,
-            ) or {}
+            try:
+                self._episode_cache[cache_key] = self.api.get_episode_details(
+                    series_id,
+                    season_number,
+                    episode_number,
+                    language=language,
+                ) or {}
+            except Exception as e:
+                logger.error(f"Failed to fetch episode details for TV {series_id} S{season_number}E{episode_number}: {e}")
+                self._episode_cache[cache_key] = {}
         return self._episode_cache[cache_key]
 
     def _get_omdb_ratings_cached(self, imdb_id: str) -> Dict[str, Any]:

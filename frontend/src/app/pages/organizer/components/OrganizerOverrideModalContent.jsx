@@ -190,8 +190,8 @@ export default function OrganizerOverrideModalContent({ row, onClose, toast }) {
   const [source, setSource] = useState(row.rawPayload?.source || 'none');
   const [edition, setEdition] = useState(row.rawPayload?.edition || 'none');
   const [audioType, setAudioType] = useState(row.rawPayload?.audio_type || 'none');
-  const [seasonNum, setSeasonNum] = useState(row.rawPayload?.fn_season || '');
-  const [episodeNum, setEpisodeNum] = useState(row.rawPayload?.fn_episode || '');
+  const [seasonNum, setSeasonNum] = useState(row.rawPayload?.season ?? row.rawPayload?.fn_season ?? row.rawPayload?.fd_season ?? row.rawPayload?.it_season ?? '');
+  const [episodeNum, setEpisodeNum] = useState(row.rawPayload?.episode ?? row.rawPayload?.fn_episode ?? row.rawPayload?.fd_episode ?? row.rawPayload?.it_episode ?? '');
   const [subcategory, setSubcategory] = useState(row.rawPayload?.subtype || 'other');
   const [language, setLanguage] = useState((row.rawPayload?.language || 'en').toLowerCase());
   const [parentId, setParentId] = useState(row.parent_id || (parentCandidates[0]?.value || ''));

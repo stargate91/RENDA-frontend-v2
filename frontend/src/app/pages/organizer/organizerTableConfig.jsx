@@ -26,7 +26,7 @@ const renderSelectColumn = (paginatedRows, selectedRowIds, handleToggleAll, hand
   ),
 });
 
-const renderProposedFilename = (value, row, activeMainTab, onOpenMatch, t) => {
+const renderProposedFilename = (value, row, activeMainTab, onOpenMatch, onOpenOverride, t) => {
   const isManualReview = activeMainTab === 'manual';
 
   const content = (() => {
@@ -51,6 +51,37 @@ const renderProposedFilename = (value, row, activeMainTab, onOpenMatch, t) => {
   })();
 
   if (isManualReview && row.rawType !== 'extra') {
+    const isEpisode = row.rawType === 'episode';
+    const isMissingSeason = isEpisode && (row.season === null || row.season === undefined || row.season === '');
+    const isMissingEpisode = isEpisode && (row.episode === null || row.episode === undefined || row.episode === '');
+
+    if (isEpisode && (isMissingSeason || isMissingEpisode)) {
+      const label = (() => {
+        if (isMissingSeason && isMissingEpisode) {
+          return t('organizer.actions.fixSeasonAndEpisode') || 'Fix S & E';
+        }
+        if (isMissingSeason) {
+          return t('organizer.actions.fixSeason') || 'Fix S';
+        }
+        return t('organizer.actions.fixEpisode') || 'Fix E';
+      })();
+
+      return (
+        <div className="organizer-target-cell">
+          <button
+            type="button"
+            className="organizer-target-action organizer-target-action--warning"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenOverride(row);
+            }}
+          >
+            {label}
+          </button>
+        </div>
+      );
+    }
+
     return (
       <div className="organizer-target-cell">
         <button
@@ -78,14 +109,14 @@ const renderStatusCell = (value, row, collisionStrategy, normalizeStatusTone, t)
         {mapCollisionStrategyLabel(row.rawAction || collisionStrategy, t)}
       </StatusPill>
     ) : null}
-    {row.rawStatus === 'uncertain' && row.rawType === 'series' ? (
+    {row.rawStatus === 'uncertain' && row.rawType !== 'movie' && (row.season === null || row.season === undefined || row.season === '') ? (
       <Tooltip content={t('organizer.status.missingSeasonTooltip')} side="top">
         <StatusPill className="organizer-status-cell__policy" tone="default">
           {t('organizer.status.missingSeason')}
         </StatusPill>
       </Tooltip>
     ) : null}
-    {row.rawStatus === 'uncertain' && (row.rawType === 'series' || row.rawType === 'season') ? (
+    {row.rawStatus === 'uncertain' && row.rawType !== 'movie' && (row.episode === null || row.episode === undefined || row.episode === '') ? (
       <Tooltip content={t('organizer.status.missingEpisodeTooltip')} side="top">
         <StatusPill className="organizer-status-cell__policy" tone="default">
           {t('organizer.status.missingEpisode')}
@@ -107,6 +138,7 @@ export function buildOrganizerColumns({
   selectedRowIds,
   t,
   onOpenMatch,
+  onOpenOverride,
 }) {
   const columns = [
     renderSelectColumn(paginatedRows, selectedRowIds, handleToggleAll, handleToggleRow),
@@ -116,7 +148,7 @@ export function buildOrganizerColumns({
       label: activeMainTab === 'manual'
         ? t('organizer.table.proposedFilename')
         : renderSortableLabel(t('organizer.table.proposedFilename'), 'target'),
-      render: (value, row) => renderProposedFilename(value, row, activeMainTab, onOpenMatch, t),
+      render: (value, row) => renderProposedFilename(value, row, activeMainTab, onOpenMatch, onOpenOverride, t),
     },
   ];
 

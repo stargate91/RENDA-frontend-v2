@@ -20,7 +20,11 @@ export function Tabs({ tabs, value, onChange, variant }) {
           >
             {Icon && <Icon size={isSub ? 12 : 14} className="ui-tab-icon" />}
             <span className="ui-tab__label">{tab.label}</span>
-            {typeof tab.count === 'number' ? <strong className="ui-tab__count">{tab.count}</strong> : null}
+            {typeof tab.count === 'number' ? (
+              <strong className={`ui-tab__count ${tab.count > 0 && tab.tone ? `ui-tab__count--${tab.tone}` : ''}`}>
+                {tab.count}
+              </strong>
+            ) : null}
           </button>
         );
       })}

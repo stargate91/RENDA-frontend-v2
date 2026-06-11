@@ -82,6 +82,8 @@ export const mapDiscoveryItemRow = (item, t) => ({
   category: '-',
   language: item.target_language ? prettifyToken(item.target_language) : '-',
   extension: String(item.extension || '').replace(/^\./, ''),
+  season: item.season !== undefined ? item.season : null,
+  episode: item.episode !== undefined ? item.episode : null,
   images: item.images || [],
   rawPayload: item,
 });
