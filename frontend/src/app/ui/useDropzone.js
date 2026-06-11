@@ -37,6 +37,10 @@ export function useDropzone({ disabled = false, onDropPaths }) {
     if (disabled) {
       return;
     }
+    const types = Array.from(event.dataTransfer?.types || []);
+    if (!types.includes('Files')) {
+      return;
+    }
     event.preventDefault();
     event.stopPropagation();
     dragDepthRef.current += 1;
@@ -47,6 +51,10 @@ export function useDropzone({ disabled = false, onDropPaths }) {
     if (disabled) {
       return;
     }
+    const types = Array.from(event.dataTransfer?.types || []);
+    if (!types.includes('Files')) {
+      return;
+    }
     event.preventDefault();
     event.stopPropagation();
     event.dataTransfer.dropEffect = 'copy';
@@ -54,6 +62,10 @@ export function useDropzone({ disabled = false, onDropPaths }) {
 
   const handleDragLeave = (event) => {
     if (disabled) {
+      return;
+    }
+    const types = Array.from(event.dataTransfer?.types || []);
+    if (!types.includes('Files')) {
       return;
     }
     event.preventDefault();
@@ -66,6 +78,10 @@ export function useDropzone({ disabled = false, onDropPaths }) {
 
   const handleDrop = async (event) => {
     if (disabled) {
+      return;
+    }
+    const types = Array.from(event.dataTransfer?.types || []);
+    if (!types.includes('Files')) {
       return;
     }
     event.preventDefault();

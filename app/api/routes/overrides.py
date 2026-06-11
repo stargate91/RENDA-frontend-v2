@@ -153,6 +153,11 @@ def _parse_episode_input(val):
 
 def _apply_media_updates(item, updates):
     try:
+        if updates.get("reset_match"):
+            item.matches = []
+            item.status = ItemStatus.NEW
+            item.planned_path = None
+
         if "item_type" in updates:
             new_type = ItemType(updates["item_type"])
             if item.item_type != new_type:
@@ -180,6 +185,18 @@ def _apply_media_updates(item, updates):
         raise ValueError(f"Invalid value for field: {exc}") from exc
 
     if "season" in updates or "episode" in updates:
+        if "season" in updates:
+            item.it_season = int(updates["season"]) if updates["season"] else None
+        if "episode" in updates:
+            ep_val = updates["episode"]
+            if isinstance(ep_val, list):
+                import json
+                item.it_episode = json.dumps(ep_val)
+            elif ep_val is not None:
+                item.it_episode = str(ep_val).strip()
+            else:
+                item.it_episode = None
+
         active_match = next((m for m in item.matches if m.is_active), None)
         if active_match:
             if "season" in updates:

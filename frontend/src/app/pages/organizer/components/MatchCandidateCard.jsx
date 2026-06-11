@@ -141,11 +141,9 @@ export default function MatchCandidateCard({
         {candidate.overview ? (
           <p className="organizer-match-modal__result-overview">{candidate.overview}</p>
         ) : null}
-        {mediaType !== 'tv' && (
+        {isResolvingId === candidateId && (
           <span className="organizer-match-modal__result-action">
-            {isResolvingId === candidateId
-              ? t('organizer.details.matchModal.applying')
-              : t('organizer.details.matchModal.useMatch')}
+            {t('organizer.details.matchModal.applying')}
           </span>
         )}
       </div>

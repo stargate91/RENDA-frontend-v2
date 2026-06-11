@@ -200,6 +200,8 @@ class MetadataEnrichmentService:
                     if enum == ep_nums[0]:
                         match.rating_tmdb = ep.vote_average
                         match.runtime = ep.runtime or match.runtime
+                else:
+                    titles.append(f"Episode {enum}")
             
             if titles:
                 loc.episode_title = " / ".join(titles)

@@ -223,6 +223,14 @@
           "isolated_score": "Isolated Score",
           "other": "Other"
         }
+      },
+      "matchAction": {
+        "title": "Match Action",
+        "description": "Choose what to do with the current series match since season or episode changed:",
+        "keep": "Keep current series match",
+        "keepDesc": "Update season/episode under the series.",
+        "reset": "Reset match (Pending)",
+        "resetDesc": "Remove match and return to Review Needed."
       }
     },
     "table": {
