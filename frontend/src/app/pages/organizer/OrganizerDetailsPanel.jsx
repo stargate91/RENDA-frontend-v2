@@ -1,7 +1,7 @@
 import UtilityButton from '../../ui/UtilityButton';
 import Button from '../../ui/Button';
 import MediaCard from '../../ui/MediaCard';
-import { ChevronLeft, ChevronRight, FileJson } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FileJson, Info } from 'lucide-react';
 import { API_BASE } from '../../lib/backend';
 import { useTranslation } from '../../providers/LanguageProvider';
 import { useUi } from '../../providers/UiProvider';
@@ -157,13 +157,13 @@ export default function OrganizerDetailsPanel({
         </div>
 
         <div className="organizer-details__panel">
-          <div className="organizer-details__header">
-            <span className="organizer-details__title">{t('organizer.details.title')}</span>
-          </div>
-
           {activeRow ? (
-            <div className="organizer-details__content">
-              {shouldShowDetailsPoster ? (
+            <>
+              <div className="organizer-details__header">
+                <span className="organizer-details__title">{t('organizer.details.title')}</span>
+              </div>
+              <div className="organizer-details__content">
+                {shouldShowDetailsPoster ? (
                 activeImages.length > 1 ? (
                   <button
                     type="button"
@@ -234,8 +234,19 @@ export default function OrganizerDetailsPanel({
                 </Button>
               </div>
             </div>
+          </>
           ) : (
-            <div className="organizer-details__empty">{t('organizer.details.empty')}</div>
+            <div className="organizer-details__empty-state">
+              <div className="organizer-details__empty-icon-wrapper">
+                <Info className="organizer-details__empty-icon" size={24} />
+              </div>
+              <h3 className="organizer-details__empty-title">
+                {t('organizer.details.title')}
+              </h3>
+              <p className="organizer-details__empty-text">
+                {t('organizer.details.empty')}
+              </p>
+            </div>
           )}
         </div>
       </div>
