@@ -4,11 +4,14 @@ import Input from '../../ui/Input';
 
 export default function OrganizerHeaderPanel({
   activeExtrasTab,
+  activeManualTab,
   activeMainTab,
   actions,
   computedExtrasTabs,
+  computedManualTabs,
   computedMainTabs,
   onChangeExtrasTab,
+  onChangeManualTab,
   onChangeMainTab,
   searchPlaceholder,
   searchQuery,
@@ -40,6 +43,17 @@ export default function OrganizerHeaderPanel({
           />
         </div>
       </div>
+
+      {activeMainTab === 'manual' ? (
+        <div className="organizer-panel__row">
+          <Tabs
+            tabs={computedManualTabs}
+            value={activeManualTab}
+            onChange={onChangeManualTab}
+            variant="sub"
+          />
+        </div>
+      ) : null}
 
       {activeMainTab === 'extras' ? (
         <div className="organizer-panel__row">

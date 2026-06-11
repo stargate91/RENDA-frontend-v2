@@ -93,9 +93,10 @@ class CollectionService:
                     target_language=language,
                     name=resolved_name,
                 )
-                self.db.add(loc)
                 try:
+                    self.db.flush()
                     with self.db.begin_nested():
+                        self.db.add(loc)
                         self.db.flush([loc])
                 except IntegrityError:
                     if loc in self.db:

@@ -7,6 +7,11 @@ export const MAIN_TABS = [
   { value: 'extras', labelKey: 'organizer.tabs.extras', icon: FolderPlus },
 ];
 
+export const MANUAL_TABS = [
+  { value: 'movies', labelKey: 'organizer.tabs.movies', icon: Film },
+  { value: 'episodes', labelKey: 'organizer.tabs.episodes', icon: Tv },
+];
+
 export const EXTRAS_TABS = [
   { value: 'bonus', labelKey: 'organizer.extrasTabs.bonus', icon: PlayCircle },
   { value: 'subtitles', labelKey: 'organizer.extrasTabs.subtitles', icon: Captions },

@@ -13,7 +13,7 @@ from .probe import TechnicalProber
 from .analyzer import Analyzer
 from .decision_engine import DecisionEngine
 from ..formatter.formatter import Formatter, FormatterConfig
-from ..db.models import MediaItem, ExtraFile, ItemType, ItemStatus, ExtraCategory, PartType
+from ..db.models import MediaItem, ExtraFile, ItemType, ItemStatus, ExtraCategory, PartType, MediaSource, MovieEdition, MediaAudioType
 from ..resolver.resolver import Resolver
 from ..db.base import Session as DbSession
 from ..utils.logger import logger
@@ -23,6 +23,62 @@ import hashlib
 import threading
 
 from .status import scan_status, scan_status_lock, update_scan_status, increment_scan_status_current, is_scan_stop_requested
+
+def map_guessit_source(source_str: Optional[str]) -> MediaSource:
+    if not source_str:
+        return MediaSource.NONE
+    s = str(source_str).lower()
+    if "bluray" in s or "blu-ray" in s or "bd" in s or "bdr" in s:
+        return MediaSource.BLURAY
+    if "web" in s or "dl" in s:
+        return MediaSource.WEB
+    if "dvd" in s:
+        return MediaSource.DVD
+    if "tv" in s or "hdtv" in s:
+        return MediaSource.TV
+    if "cam" in s or "ts" in s or "telesync" in s:
+        return MediaSource.CAM
+    return MediaSource.NONE
+
+def map_guessit_edition(edition_str: Optional[str]) -> MovieEdition:
+    if not edition_str:
+        return MovieEdition.NONE
+    e = str(edition_str).lower()
+    if "theatrical" in e:
+        return MovieEdition.THEATRICAL
+    if "director" in e:
+        return MovieEdition.DIRECTORS_CUT
+    if "extended" in e:
+        return MovieEdition.EXTENDED
+    if "unrated" in e:
+        return MovieEdition.UNRATED
+    if "remastered" in e:
+        return MovieEdition.REMASTERED
+    if "special" in e:
+        return MovieEdition.SPECIAL
+    if "ultimate" in e:
+        return MovieEdition.ULTIMATE
+    if "collector" in e:
+        return MovieEdition.COLLECTORS_EDITION
+    if "fan" in e:
+        return MovieEdition.FAN_EDIT
+    return MovieEdition.NONE
+
+def map_guessit_audio_type(other_list: Optional[list], languages: Optional[list]) -> MediaAudioType:
+    if other_list:
+        for val in other_list:
+            if not isinstance(val, str): continue
+            val_lower = val.lower()
+            if "dual" in val_lower:
+                return MediaAudioType.DUAL_AUDIO
+            if "multi" in val_lower:
+                return MediaAudioType.MULTI_AUDIO
+    if languages:
+        if len(languages) == 2:
+            return MediaAudioType.DUAL_AUDIO
+        if len(languages) >= 3:
+            return MediaAudioType.MULTI_AUDIO
+    return MediaAudioType.NONE
 
 class ScannerManager:
     """
@@ -528,6 +584,36 @@ class ScannerManager:
 
                     result["updates"]["fn_item_type"] = fn.get('type')
                     result["updates"]["fd_item_type"] = fd.get('type')
+
+                    # Extract Guessit source, edition, audio_type with priority: fn > it > fd
+                    guessit_source = fn.get("source")
+                    guessit_edition = fn.get("edition")
+                    guessit_other = fn.get("other")
+                    guessit_languages = fn.get("language")
+
+                    if not guessit_source: guessit_source = it.get("source")
+                    if not guessit_edition: guessit_edition = it.get("edition")
+                    if not guessit_other: guessit_other = it.get("other")
+                    if not guessit_languages: guessit_languages = it.get("language")
+
+                    if not guessit_source: guessit_source = fd.get("source")
+                    if not guessit_edition: guessit_edition = fd.get("edition")
+                    if not guessit_other: guessit_other = fd.get("other")
+                    if not guessit_languages: guessit_languages = fd.get("language")
+
+                    if isinstance(guessit_edition, list) and guessit_edition:
+                        guessit_edition = guessit_edition[0]
+                    if isinstance(guessit_source, list) and guessit_source:
+                        guessit_source = guessit_source[0]
+
+                    if guessit_other and not isinstance(guessit_other, list):
+                        guessit_other = [guessit_other]
+                    if guessit_languages and not isinstance(guessit_languages, list):
+                        guessit_languages = [guessit_languages]
+
+                    result["updates"]["source"] = map_guessit_source(guessit_source)
+                    result["updates"]["edition"] = map_guessit_edition(guessit_edition)
+                    result["updates"]["audio_type"] = map_guessit_audio_type(guessit_other, guessit_languages)
                     
                     # Part Detection
                     raw_part = fn.get('part') or fn.get('cd') or fn.get('disc') or fn.get('volume')

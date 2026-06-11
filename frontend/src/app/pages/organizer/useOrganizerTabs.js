@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { EXTRA_CATEGORY_BY_TAB } from './organizerMappers';
-import { EXTRAS_TABS, MAIN_TABS } from './organizerConstants';
+import { EXTRAS_TABS, MAIN_TABS, MANUAL_TABS } from './organizerConstants';
 
 export function useOrganizerTabs({ discoveryExtras, t, tabCounts }) {
   const computedMainTabs = useMemo(() => MAIN_TABS.map((tab) => ({
@@ -15,6 +15,14 @@ export function useOrganizerTabs({ discoveryExtras, t, tabCounts }) {
           : tabCounts.extrasCount,
   })), [t, tabCounts]);
 
+  const computedManualTabs = useMemo(() => MANUAL_TABS.map((tab) => ({
+    ...tab,
+    label: t(tab.labelKey),
+    count: tab.value === 'movies'
+      ? tabCounts.manualMoviesCount
+      : tabCounts.manualEpisodesCount,
+  })), [t, tabCounts]);
+
   const computedExtrasTabs = useMemo(() => EXTRAS_TABS.map((tab) => ({
     ...tab,
     label: t(tab.labelKey),
@@ -23,6 +31,7 @@ export function useOrganizerTabs({ discoveryExtras, t, tabCounts }) {
 
   return {
     computedExtrasTabs,
+    computedManualTabs,
     computedMainTabs,
   };
 }

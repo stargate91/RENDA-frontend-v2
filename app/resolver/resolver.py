@@ -167,6 +167,17 @@ class Resolver:
             if normalized_query_words and candidate_word_value.startswith(f"{normalized_query_words} "):
                 return 1
 
+        # Fallback for minor variations (e.g. "Hachiko A Dogs Story" vs "Hachi: A Dog's Tale")
+        import difflib
+        for title in candidate_titles:
+            if not title:
+                continue
+            normalized_candidate = self._normalize_title(title)
+            if not normalized_candidate:
+                continue
+            if difflib.SequenceMatcher(None, normalized_query, normalized_candidate).ratio() >= 0.6:
+                return 1
+
         return 0
 
     def _candidate_noise_penalty(self, parsed_title: str, candidate_titles: Set[str]) -> int:

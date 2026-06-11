@@ -14,6 +14,7 @@ import { useOrganizerSort } from './useOrganizerSort';
 export function useOrganizerPageState({ discovery, t }) {
   const [activeMainTab, setActiveMainTab] = useState('manual');
   const [activeExtrasTab, setActiveExtrasTab] = useState('bonus');
+  const [activeManualTab, setActiveManualTab] = useState('movies');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRowIds, setSelectedRowIds] = useState(new Set());
   const [activeRowId, setActiveRowId] = useState(null);
@@ -60,6 +61,16 @@ export function useOrganizerPageState({ discovery, t }) {
       return !dismissedRowIds.has(id) && MANUAL_REVIEW_STATUSES.has(normalizeItemStatus(item.status));
     }).length;
 
+    const manualMoviesCount = reviewDiscoveryMedia.filter((item) => {
+      const id = `item-${item.id}`;
+      return !dismissedRowIds.has(id) && item.type === 'movie' && MANUAL_REVIEW_STATUSES.has(normalizeItemStatus(item.status));
+    }).length;
+
+    const manualEpisodesCount = reviewDiscoveryMedia.filter((item) => {
+      const id = `item-${item.id}`;
+      return !dismissedRowIds.has(id) && item.type !== 'movie' && MANUAL_REVIEW_STATUSES.has(normalizeItemStatus(item.status));
+    }).length;
+
     const moviesCount = matchedDiscoveryMedia.filter((item) => {
       const id = `item-${item.id}`;
       return !dismissedRowIds.has(id) && item.type === 'movie' && MATCHED_STATUSES.has(normalizeItemStatus(item.status));
@@ -76,14 +87,17 @@ export function useOrganizerPageState({ discovery, t }) {
       return !dismissedRowIds.has(id) && !dismissedRowIds.has(parentId);
     }).length;
 
-    return { manualCount, moviesCount, episodesCount, extrasCount };
+    return { manualCount, manualMoviesCount, manualEpisodesCount, moviesCount, episodesCount, extrasCount };
   }, [discovery, matchedDiscoveryMedia, reviewDiscoveryMedia, dismissedRowIds]);
 
   const tabFilteredRows = useMemo(() => {
     let rows = [];
     if (activeMainTab === 'manual') {
       rows = reviewDiscoveryMedia
-        .filter((item) => MANUAL_REVIEW_STATUSES.has(normalizeItemStatus(item.status)))
+        .filter((item) => {
+          const isTargetType = activeManualTab === 'movies' ? item.type === 'movie' : item.type !== 'movie';
+          return isTargetType && MANUAL_REVIEW_STATUSES.has(normalizeItemStatus(item.status));
+        })
         .map((item) => mapDiscoveryItemRow(item, t));
     } else if (activeMainTab === 'movies') {
       rows = matchedDiscoveryMedia
@@ -104,7 +118,7 @@ export function useOrganizerPageState({ discovery, t }) {
         !dismissedRowIds.has(row.id) &&
         (row.rawType !== 'extra' || !dismissedRowIds.has(`item-${row.parent_id}`))
     );
-  }, [activeExtrasTab, activeMainTab, discovery, matchedDiscoveryMedia, reviewDiscoveryMedia, t, dismissedRowIds]);
+  }, [activeExtrasTab, activeManualTab, activeMainTab, discovery, matchedDiscoveryMedia, reviewDiscoveryMedia, t, dismissedRowIds]);
 
   const filteredRows = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -158,11 +172,11 @@ export function useOrganizerPageState({ discovery, t }) {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentPage(1);
-  }, [activeMainTab, activeExtrasTab, searchQuery]);
+  }, [activeMainTab, activeExtrasTab, activeManualTab, searchQuery]);
 
   useEffect(() => {
     setSortConfig({ key: 'source', direction: 'asc' });
-  }, [activeExtrasTab, activeMainTab, setSortConfig]);
+  }, [activeExtrasTab, activeMainTab, activeManualTab, setSortConfig]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -272,8 +286,11 @@ export function useOrganizerPageState({ discovery, t }) {
     const episodeRows = matchedMedia
       .filter((item) => item.type === 'episode' && MATCHED_STATUSES.has(normalizeItemStatus(item.status)))
       .map((item) => mapDiscoveryItemRow(item, t));
-    const manualRows = reviewMedia
-      .filter((item) => MANUAL_REVIEW_STATUSES.has(normalizeItemStatus(item.status)))
+    const manualMovieRows = reviewMedia
+      .filter((item) => item.type === 'movie' && MANUAL_REVIEW_STATUSES.has(normalizeItemStatus(item.status)))
+      .map((item) => mapDiscoveryItemRow(item, t));
+    const manualEpisodeRows = reviewMedia
+      .filter((item) => item.type !== 'movie' && MANUAL_REVIEW_STATUSES.has(normalizeItemStatus(item.status)))
       .map((item) => mapDiscoveryItemRow(item, t));
     const extraTabPriority = ['bonus', 'subtitles', 'audio', 'images', 'metadata'];
     const firstExtraTab = extraTabPriority.find((tab) =>
@@ -287,18 +304,20 @@ export function useOrganizerPageState({ discovery, t }) {
     const firstTarget = [
       { mainTab: 'movies', rows: movieRows },
       { mainTab: 'episodes', rows: episodeRows },
-      { mainTab: 'manual', rows: manualRows },
+      { mainTab: 'manual', rows: manualMovieRows, manualTab: 'movies' },
+      { mainTab: 'manual', rows: manualEpisodeRows, manualTab: 'episodes' },
       { mainTab: 'extras', rows: extraRows, extrasTab: firstExtraTab },
     ].find((entry) => entry.rows.length > 0);
 
     const currentTabRows = activeMainTab === 'movies' ? movieRows
       : activeMainTab === 'episodes' ? episodeRows
-      : activeMainTab === 'manual' ? manualRows
-      : activeMainTab === 'extras'
-        ? (nextDiscovery.extras || [])
-            .filter((item) => item.category === EXTRA_CATEGORY_BY_TAB[activeExtrasTab])
-            .map((item) => mapExtraRow(item, t))
-        : [];
+      : activeMainTab === 'manual'
+        ? (activeManualTab === 'movies' ? manualMovieRows : manualEpisodeRows)
+        : activeMainTab === 'extras'
+          ? (nextDiscovery.extras || [])
+              .filter((item) => item.category === EXTRA_CATEGORY_BY_TAB[activeExtrasTab])
+              .map((item) => mapExtraRow(item, t))
+          : [];
 
     if (currentTabRows.length > 0) {
       setActiveRowId(currentTabRows[0].id);
@@ -313,6 +332,9 @@ export function useOrganizerPageState({ discovery, t }) {
     setActiveMainTab(firstTarget.mainTab);
     if (firstTarget.extrasTab) {
       setActiveExtrasTab(firstTarget.extrasTab);
+    }
+    if (firstTarget.manualTab) {
+      setActiveManualTab(firstTarget.manualTab);
     }
     setSearchQuery('');
     setSelectedRowIds(new Set());
@@ -349,6 +371,7 @@ export function useOrganizerPageState({ discovery, t }) {
     dismissedCount,
     dismissedRowIds,
     activeExtrasTab,
+    activeManualTab,
     activeImage,
     activeImageIndex,
     activeImages,
@@ -370,6 +393,7 @@ export function useOrganizerPageState({ discovery, t }) {
     selectedRowIds,
     clearSelectedRows,
     setActiveExtrasTab,
+    setActiveManualTab,
     setActiveMainTab,
     setActiveRowId,
     setPageAndScrollToTop,

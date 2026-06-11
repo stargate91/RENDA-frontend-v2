@@ -58,6 +58,19 @@ export default function OrganizerMatchModalContent({
   const [dontShowAgain, setDontShowAgain] = useState(false);
   const [visibleCount, setVisibleCount] = useState(30);
   const [prevViewSeason, setPrevViewSeason] = useState('');
+  const posterResultsRef = useRef(null);
+
+  useEffect(() => {
+    const el = posterResultsRef.current;
+    if (!el) return;
+    const handleWheel = (e) => {
+      if (e.deltaY === 0) return;
+      e.preventDefault();
+      el.scrollLeft += e.deltaY;
+    };
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, [shouldShowPosterResults]);
 
   const currentViewSeason = `${browserState.view}-${browserState.selectedSeason?.id || browserState.selectedSeason?.season_number || ''}`;
   if (prevViewSeason !== currentViewSeason) {
@@ -185,7 +198,7 @@ export default function OrganizerMatchModalContent({
         ) : null}
 
         {shouldShowPosterResults ? (
-          <div className="organizer-match-modal__poster-results">
+          <div ref={posterResultsRef} className="organizer-match-modal__poster-results">
             {visibleResultCandidates.map((candidate) => (
               <MatchCandidateCard
                 key={`existing-${candidate.tmdb_id || candidate.id}`}

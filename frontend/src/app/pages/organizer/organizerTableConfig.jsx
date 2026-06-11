@@ -105,20 +105,7 @@ export function buildOrganizerColumns({
       columns.push({ key: 'extension', label: renderSortableLabel(t('organizer.table.extension'), 'extension'), align: 'center', width: '12%' });
     }
   } else {
-    if (activeMainTab === 'manual') {
-      columns.push({
-        key: 'type',
-        label: renderSortableLabel(t('organizer.table.type'), 'type'),
-        align: 'center',
-        hideOnHover: true,
-        width: '12%',
-        render: (value) => (
-          <span className="organizer-type-text">
-            {value}
-          </span>
-        ),
-      });
-    }
+
     columns.push({
       key: 'status',
       label: activeMainTab === 'manual' ? renderSortableLabel(t('organizer.table.status'), 'status') : t('organizer.table.status'),

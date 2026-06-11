@@ -141,8 +141,8 @@
   justify-content: flex-end;
   gap: 6px;
   width: max-content;
-  padding: 0 var(--space-4) 0 24px;
-  background: linear-gradient(90deg, transparent 0%, rgba(10, 12, 16, 0.98) 20px);
+  padding: 0 var(--space-4);
+  background: transparent;
 }
 
 .ui-table__row-action {

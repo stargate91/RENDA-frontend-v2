@@ -56,6 +56,7 @@ export default function OrganizerPage() {
   const previousRuleSignatureRef = useRef(organizerRuleSignature);
   const {
     activeExtrasTab,
+    activeManualTab,
     activeImage,
     activeImageIndex,
     activeImages,
@@ -78,6 +79,7 @@ export default function OrganizerPage() {
     selectedRowIds,
     clearSelectedRows,
     setActiveExtrasTab,
+    setActiveManualTab,
     setActiveMainTab,
     setActiveRowId,
     setPageAndScrollToTop,
@@ -122,7 +124,7 @@ export default function OrganizerPage() {
     onDropPaths: handleScanPaths,
   });
 
-  const { computedExtrasTabs, computedMainTabs } = useOrganizerTabs({
+  const { computedExtrasTabs, computedManualTabs, computedMainTabs } = useOrganizerTabs({
     discoveryExtras: discovery.extras,
     t,
     tabCounts,
@@ -299,11 +301,14 @@ export default function OrganizerPage() {
         <div className="organizer-main__content">
           <OrganizerHeaderPanel
             activeExtrasTab={activeExtrasTab}
+            activeManualTab={activeManualTab}
             activeMainTab={activeMainTab}
             actions={headerActions}
             computedExtrasTabs={computedExtrasTabs}
+            computedManualTabs={computedManualTabs}
             computedMainTabs={computedMainTabs}
             onChangeExtrasTab={setActiveExtrasTab}
+            onChangeManualTab={setActiveManualTab}
             onChangeMainTab={setActiveMainTab}
             searchPlaceholder={t('organizer.searchPlaceholder')}
             searchQuery={searchQuery}
