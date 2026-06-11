@@ -42,7 +42,9 @@ export function buildOrganizerColumns({
     { key: 'source', label: renderSortableLabel(t('organizer.table.originalFilename'), 'source') },
     {
       key: 'target',
-      label: renderSortableLabel(t('organizer.table.proposedFilename'), 'target'),
+      label: activeMainTab === 'manual'
+        ? t('organizer.table.proposedFilename')
+        : renderSortableLabel(t('organizer.table.proposedFilename'), 'target'),
       render: (value, row) => {
         const isManualReview = activeMainTab === 'manual';
 
