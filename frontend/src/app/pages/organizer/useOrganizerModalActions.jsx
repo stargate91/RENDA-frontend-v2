@@ -11,6 +11,7 @@ import { showItemInFolder } from '../../lib/ipc';
 import { useUi } from '../../providers/UiProvider';
 import { useTranslation } from '../../providers/LanguageProvider';
 import { useOrganizerDeleteActions } from './useOrganizerDeleteActions';
+import { useSettingsQuery } from '../../queries';
 
 export function useOrganizerModalActions({
   focusFirstAvailableResult,
@@ -21,6 +22,8 @@ export function useOrganizerModalActions({
   const { t } = useTranslation();
   const { closeModal, openModal, toast } = useUi();
   const queryClient = useQueryClient();
+  const settingsQuery = useSettingsQuery();
+  const settings = settingsQuery.data;
 
   const {
     refreshOrganizerDiscovery,
@@ -47,6 +50,9 @@ export function useOrganizerModalActions({
   };
 
   const handlePreviewRow = async (row) => {
+    if (!settings?.vlc_path && !settings?.mpc_path) {
+      throw new Error(t('organizer.toasts.noMediaPlayerConfigured'));
+    }
     await api.media.preview(row.sourcePath);
   };
 

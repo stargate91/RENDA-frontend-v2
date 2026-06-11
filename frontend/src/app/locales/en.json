@@ -87,6 +87,8 @@
       "matchResolveFailed": "Oops! We couldn't update the match. Try again?",
       "matchAlreadyActive": "This match is already selected!",
       "previewFailed": "Oops! We couldn't open the preview.",
+      "noMediaPlayerConfigured": "No media player configured. Please set the VLC or MPC-HC path in Settings.",
+      "abortTaskFailed": "Oops! We couldn't stop the active process.",
       "showInFolderFailed": "Oops! We couldn't open that folder.",
       "deleteActionSuccess": "Done!",
       "deleteIgnoreSuccess": "Hidden from list!",

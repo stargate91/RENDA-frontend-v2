@@ -11,7 +11,7 @@ import useWindowControls from './useWindowControls';
 
 export default function WindowTitlebar() {
   const { hasProgress, scanProgress, imageProgress } = useWindowProgress();
-  const { openModal, closeModal } = useUi();
+  const { openModal, closeModal, toast } = useUi();
   const { t } = useTranslation();
   const { minimize, toggleMaximize, close, resizeToMinimum } = useWindowControls();
 
@@ -39,6 +39,7 @@ export default function WindowTitlebar() {
                 await api.task.stop();
               } catch (err) {
                 console.error('Failed to stop background task:', err);
+                toast(err.message || t('organizer.toasts.abortTaskFailed'), 'danger');
               }
             }}
           >

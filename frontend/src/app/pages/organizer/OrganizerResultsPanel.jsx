@@ -40,7 +40,7 @@ export default function OrganizerResultsPanel({
     dismissRows,
     clearSelectedRows,
   } = useOrganizerModals();
-  const shouldShowPagination = totalItems > 20;
+  const shouldShowPagination = totalItems > pageSize;
 
   return (
     <FileDropZone

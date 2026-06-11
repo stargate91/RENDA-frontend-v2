@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle } from 'lucide-react';
 import Button from '@/ui/Button';
 import Card from '@/ui/Card';
@@ -61,7 +60,6 @@ export default function SettingsPage() {
   const { t } = useTranslation();
   const settingsQuery = useSettingsQuery();
   const settings = settingsQuery.data;
-  const queryClient = useQueryClient();
   const { toast, openModal, closeModal } = useUi();
   const [isSaving, setIsSaving] = useState(false);
   const [isWiping, setIsWiping] = useState(false);
@@ -215,11 +213,6 @@ export default function SettingsPage() {
       };
 
       await updateSettingsMutation.mutateAsync(payload);
-
-      await queryClient.refetchQueries({ queryKey: ['discovery'] });
-      await queryClient.invalidateQueries({ queryKey: ['settings'] });
-      await queryClient.invalidateQueries({ queryKey: ['discovery-count'] });
-      await queryClient.invalidateQueries({ queryKey: ['stats'] });
       toast('Settings saved', 'success');
     } catch (error) {
       toast(error.message || 'Failed to save settings', 'danger');
@@ -250,7 +243,6 @@ export default function SettingsPage() {
               setIsWiping(true);
               try {
                 await clearDbMutation.mutateAsync({ wipe: true });
-                await queryClient.resetQueries();
                 toast(t('settingsPage.dangerZone.success'), 'success');
               } catch (error) {
                 toast(error.message || t('settingsPage.dangerZone.failed'), 'danger');
