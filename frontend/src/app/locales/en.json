@@ -46,57 +46,57 @@
     },
     "emptyStates": {
       "notLoaded": {
-        "title": "Nothing loaded yet",
-        "description": "Load items from the database or run a quick scan to start organizing your media!"
+        "title": "Your screen is empty!",
+        "description": "Load some files from your computer or run a quick scan to start naming them nicely!"
       },
       "emptyDatabase": {
-        "title": "Looking clean!",
-        "description": "Scan a folder first, and the items that need a match or review will show up right here."
+        "title": "All clean and tidy!",
+        "description": "Scan a folder first, and anything we need to match or check will pop up right here!"
       }
     },
     "loadingStates": {
       "scan": {
-        "label": "Scanning media",
-        "description": "Reading files and building organizer results for the current folder."
+        "label": "Looking for files",
+        "description": "We are reading your files and figuring out what they are."
       },
       "rename": {
-        "label": "Renaming matched items",
-        "description": "Applying the planned paths and organizing matched media now."
+        "label": "Renaming files",
+        "description": "Putting everything in the right place with the new names."
       },
       "loadAll": {
-        "label": "Loading organizer items",
-        "description": "Fetching everything from the database. This might take a moment if you have a massive library!"
+        "label": "Loading files",
+        "description": "Getting everything ready from the database. Hang tight!"
       }
     },
     "dropzone": {
-      "label": "Drop files or folders to scan",
-      "description": "Just drop your files or folders right here to add them to the organizer."
+      "label": "Drop files or folders here",
+      "description": "Drag and drop your media files right here to scan them."
     },
     "searchPlaceholder": "Search discovery...",
     "toasts": {
-      "scanComplete": "Scan complete! {count} matched and ready to rename.",
-      "scanCompleteFallback": "Scan complete!",
-      "scanStartFailed": "Oops, failed to start the scan",
-      "renameStartFailed": "Oops, failed to start renaming",
-      "renameComplete": "Renaming complete! All matched files organized.",
-      "renameAborted": "Renaming aborted. {count} files were renamed, the rest remained untouched.",
-      "noMatchedItems": "No matched items currently loaded to rename",
-      "matchSearchMissingQuery": "Please enter a title to search for!",
+      "scanComplete": "All done! Found {count} files ready for new names.",
+      "scanCompleteFallback": "Finished scanning!",
+      "scanStartFailed": "Oops! We couldn't start scanning.",
+      "renameStartFailed": "Oops! We couldn't start renaming.",
+      "renameComplete": "All done! Your files are renamed and organized.",
+      "renameAborted": "Renaming stopped. {count} files were renamed, and the rest were left alone.",
+      "noMatchedItems": "No matched items to rename yet!",
+      "matchSearchMissingQuery": "Type a title to search!",
       "matchSearchFailed": "We couldn't search the database. Let's try again!",
       "matchResolveSuccess": "Awesome, match updated!",
-      "matchResolveFailed": "Oops, we couldn't update the match. Try again?",
-      "matchAlreadyActive": "This match is already active!",
-      "previewFailed": "Oops, we couldn't open the media preview",
-      "showInFolderFailed": "Oops, we couldn't open that folder",
+      "matchResolveFailed": "Oops! We couldn't update the match. Try again?",
+      "matchAlreadyActive": "This match is already selected!",
+      "previewFailed": "Oops! We couldn't open the preview.",
+      "showInFolderFailed": "Oops! We couldn't open that folder.",
       "deleteActionSuccess": "Done!",
-      "deleteIgnoreSuccess": "Item ignored!",
-      "deleteIgnoreSuccessPlural": "{count} items ignored!",
-      "deleteDbOnlySuccess": "Forgotten from RENDA!",
-      "deleteDbOnlySuccessPlural": "{count} items forgotten from RENDA!",
-      "deleteTrashSuccess": "Moved to Trash!",
-      "deleteTrashSuccessPlural": "{count} items moved to Trash!",
-      "loadAllSuccess": "Database loaded successfully!",
-      "deleteActionFailed": "Oops, that didn't work"
+      "deleteIgnoreSuccess": "Hidden from list!",
+      "deleteIgnoreSuccessPlural": "{count} items hidden!",
+      "deleteDbOnlySuccess": "Forgotten!",
+      "deleteDbOnlySuccessPlural": "{count} items forgotten!",
+      "deleteTrashSuccess": "Sent to Trash!",
+      "deleteTrashSuccessPlural": "{count} items sent to Trash!",
+      "loadAllSuccess": "All loaded successfully!",
+      "deleteActionFailed": "Oops! That didn't work."
     },
     "actions": {
       "match": "Match",
@@ -110,24 +110,24 @@
     },
     "renameModal": {
       "title": "Confirm Rename",
-      "description": "Review the files that will be renamed.",
-      "showing": "Showing {count} of {total} items to rename",
-      "noMatching": "No matching items found"
+      "description": "Double-check the files before we rename them.",
+      "showing": "Showing {count} of {total} files to rename",
+      "noMatching": "No matching files found!"
     },
     "overrideModal": {
-      "title": "Override {type}",
-      "description": "Customize naming or organization overrides for this item.",
+      "title": "Change settings for this {type}",
+      "description": "Pick different options or names for this item.",
       "hints": {
-        "mainType": "Change how this file is categorized (Movie, Episode, or Bonus Video/Extra).",
-        "parentId": "Select the main movie or series that this extra file belongs to.",
-        "subcategory": "Classify the specific type of this extra file (e.g., trailer, deleted scene, poster).",
-        "language": "Set the audio track or subtitle language for this extra file.",
-        "targetLanguage": "Override the main target language for this specific movie or episode.",
-        "source": "Specify where the video comes from (e.g., Blu-Ray, Web, DVD) to customize naming.",
-        "edition": "Specify if this is a special version (e.g., Extended Edition, Director's Cut).",
-        "audioType": "Define the audio configuration (e.g., Stereo, Surround Sound) for name formatting.",
-        "seasonNum": "Assign the season number that this episode belongs to.",
-        "episodeNum": "Assign episode numbers. Use '3' for single, '3,4' for multiple, or '3-5' to automatically expand ranges."
+        "mainType": "Change whether this file is a Movie, an Episode, or an Extra/Bonus video.",
+        "parentId": "Pick the main movie or series that this extra file belongs to.",
+        "subcategory": "Choose what kind of extra this is (like a trailer, poster, or deleted scene).",
+        "language": "Choose the language for this subtitle or audio file.",
+        "targetLanguage": "Choose the main language for this movie or episode.",
+        "source": "Choose where this video comes from (like Blu-Ray or DVD) to help name it.",
+        "edition": "Choose if this is a special version (like Director's Cut or Extended).",
+        "audioType": "Choose the audio style (like Stereo or Surround) to help format the name.",
+        "seasonNum": "Enter the season number for this episode.",
+        "episodeNum": "Enter the episode numbers. Use '3' for single, '3,4' for multiple, or '3-5' to automatically expand ranges."
       },
       "options": {
         "sources": {
@@ -213,18 +213,18 @@
       "expand": "Expand details",
       "empty": "Select an item from the list to see more details here!",
       "delete": {
-        "title": "What should happen to this file?",
+        "title": "What should we do with this file?",
         "descriptionMedia": "Choose what you'd like to do with this file. Any linked extras will follow along automatically where it makes sense.",
         "descriptionExtra": "Choose what you'd like to do with this extra file.",
         "cancel": "Cancel",
         "ignore": {
-          "label": "Ignore It",
-          "description": "Hide it from the organizer for now. We'll remember where it was so you can restore it later."
+          "label": "Hide It",
+          "description": "Hide it from the organizer for now. We will remember where it was so you can bring it back later."
         },
         "dbOnly": {
           "label": "Forget It Here",
-          "descriptionMedia": "Only remove it from RENDA. Your files will stay exactly where they are, and you can always scan them again later.",
-          "descriptionExtra": "Only remove this extra from RENDA. The file stays exactly where it is, and you can scan it again later."
+          "descriptionMedia": "Only remove it from RENDA. Your files will stay exactly where they are on your disk, and you can always scan them again later.",
+          "descriptionExtra": "Only remove this extra from RENDA. The file stays exactly where it is on your disk, and you can scan it again later."
         },
         "trash": {
           "label": "Move to Trash",
@@ -233,30 +233,30 @@
         }
       },
       "bulkDelete": {
-        "title": "What should happen to the selected files?",
-        "description": "{count} selected items are queued for the same action.",
+        "title": "What should we do with the selected files?",
+        "description": "{count} selected items are ready for the same action.",
         "dbOnly": {
-          "descriptionMedia": "Remove the selected items from RENDA only. The files stay where they are, and a future scan can find them again.",
-          "descriptionExtra": "Remove the selected extras from RENDA only. The files stay where they are, and a future scan can find them again.",
-          "descriptionMixed": "Remove the selected media and extras from RENDA only. The files stay where they are, and a future scan can find them again."
+          "descriptionMedia": "Remove the selected items from RENDA only. The files stay where they are, and you can scan them again later.",
+          "descriptionExtra": "Remove the selected extras from RENDA only. The files stay where they are, and you can scan them again later.",
+          "descriptionMixed": "Remove the selected media and extras from RENDA only. The files stay where they are, and you can scan them again later."
         },
         "trash": {
-          "descriptionMedia": "Send the selected media files to the trash and remove them from RENDA. Linked extras go with them too.",
+          "descriptionMedia": "Send the selected media files to the trash and remove them from RENDA. Linked extras will go with them too.",
           "descriptionExtra": "Send the selected extra files to the trash and remove them from RENDA.",
           "descriptionMixed": "Send the selected media and extra files to the trash and remove them from RENDA."
         }
       },
       "inspect": {
         "open": "View Full Data",
-        "title": "Organizer Inspection Data",
-        "description": "Combined discovery, extracted, and matched metadata for the selected item.",
+        "title": "Inspection Data",
+        "description": "Combined discovery data, extracted info, and matched metadata for the selected item.",
         "copy": "Copy",
         "download": "Download JSON",
-        "loading": "Loading inspection data..."
+        "loading": "Loading data..."
       },
       "matchModal": {
         "title": "Find the right match",
-        "description": "Search the database and apply a different movie or series match for this item.",
+        "description": "Search and apply a different movie or series match for this item.",
         "query": "Title",
         "queryPlaceholder": "Search movie or series title",
         "type": "Type",
@@ -447,4 +447,3 @@
     "pl-PL": "Polish (Polski)"
   }
 }
-

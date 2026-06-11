@@ -34,7 +34,7 @@ function DropdownMenu({
 
   return createPortal(
     <div
-      className={`ui-dropdown__menu ${searchable ? 'has-search' : ''}`}
+      className={`ui-dropdown__menu ${searchable ? 'has-search' : ''} ${menuCoords.openUpwards ? 'is-upwards' : ''}`}
       style={{
         position: 'absolute',
         top: `${menuCoords.top}px`,
@@ -89,10 +89,17 @@ export default function Dropdown({ label, options = [], value, onChange, hint, c
   const updateMenuCoords = () => {
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
+      const threshold = 280; // height threshold of our dropdown menu
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const openUpwards = spaceBelow < threshold && rect.top > spaceBelow;
+
       setMenuCoords({
-        top: rect.bottom + window.scrollY + 6,
+        top: openUpwards
+          ? rect.top + window.scrollY - 6
+          : rect.bottom + window.scrollY + 6,
         left: rect.left + window.scrollX,
         width: rect.width,
+        openUpwards,
       });
     }
   };
