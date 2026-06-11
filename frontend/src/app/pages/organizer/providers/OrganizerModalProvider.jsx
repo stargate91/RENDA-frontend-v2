@@ -370,6 +370,9 @@ export function OrganizerModalProvider({
     rowActions,
     bulkActionBar,
     refreshOrganizerDiscovery,
+    selectedRows,
+    dismissRows,
+    clearSelectedRows,
   };
 
   return (

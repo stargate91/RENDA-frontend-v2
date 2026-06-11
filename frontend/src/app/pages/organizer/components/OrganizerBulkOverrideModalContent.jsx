@@ -149,7 +149,7 @@ export default function OrganizerBulkOverrideModalContent({ rows, onClose, toast
   const hasMatched = useMemo(() => rows.some((row) => row.rawStatus === 'matched'), [rows]);
   const isEpisode = mainType === 'episode';
   const isModifyingSeasonOrEpisode = applySeasonNum || applyAutoNumbering;
-  const showMatchActionSelector = hasMatched && isEpisode && isModifyingSeasonOrEpisode;
+  const showMatchActionSelector = hasMatched && initialMainType === 'episode' && isEpisode && isModifyingSeasonOrEpisode;
 
   const bulkUpdateMutation = useBulkUpdateMediaMutation();
 
@@ -207,6 +207,17 @@ export default function OrganizerBulkOverrideModalContent({ rows, onClose, toast
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (initialMainType !== 'episode' && mainType === 'episode') {
+      if (!applySeasonNum || !String(seasonNum ?? '').trim()) {
+        toast('Season number is required when converting items to episodes', 'danger');
+        return;
+      }
+      if (!applyAutoNumbering || !String(startEpisodeNum ?? '').trim()) {
+        toast('Auto-numbering is required when converting items to episodes', 'danger');
+        return;
+      }
+    }
 
     const updates = {};
     if (showMatchActionSelector && matchAction === 'reset') {

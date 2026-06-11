@@ -1,6 +1,9 @@
-import { memo } from 'react';
+import { memo, useState, useMemo } from 'react';
+import { EyeOff, Trash2, Search, Sliders, X } from 'lucide-react';
+import { useTranslation } from '../providers/LanguageProvider';
 import Tooltip from './Tooltip';
 import IconButton from './IconButton';
+import ContextMenu from './ContextMenu';
 import './Table.css';
 
 function TableHeader({ columns }) {
@@ -25,6 +28,7 @@ const TableRow = memo(function TableRow({
   row,
   columns,
   onRowClick,
+  onContextMenu,
   activeRowId,
   rowActions = [],
 }) {
@@ -37,6 +41,7 @@ const TableRow = memo(function TableRow({
   return (
     <tr
       onClick={onRowClick ? () => onRowClick(row) : undefined}
+      onContextMenu={onContextMenu ? (e) => onContextMenu(e, row) : undefined}
       className={`${onRowClick ? 'is-clickable' : ''} ${activeRowId === row.id ? 'is-active' : ''}`.trim()}
     >
       {columns.map((col) => {
@@ -89,7 +94,108 @@ export default function Table({
   activeRowId = null,
   emptyText = 'No data available',
   rowActions = [],
+  selectedRows = [],
+  openBulkDeleteModal,
+  openMatchModal,
+  openBulkOverrideModal,
+  dismissRows,
+  clearSelectedRows,
 }) {
+  const [contextMenu, setContextMenu] = useState(null);
+
+  const handleRowContextMenu = (event, row) => {
+    event.preventDefault();
+    setContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      row,
+    });
+  };
+
+  const { t } = useTranslation();
+
+  const activeRow = contextMenu?.row;
+  const isClickedRowSelected = activeRow && selectedRows.some((r) => r.id === activeRow.id);
+  const useBulkActions = isClickedRowSelected && selectedRows.length > 0;
+
+  const contextMenuItems = useMemo(() => {
+    const items = [];
+    if (!activeRow) return items;
+
+    if (useBulkActions) {
+      const hasExtras = selectedRows.some((r) => r.rawType === 'extra');
+      const allSameType = selectedRows.every((r) => r.rawType === selectedRows[0].rawType);
+
+      if (!hasExtras && dismissRows && clearSelectedRows) {
+        items.push({
+          key: 'bulk-dismiss',
+          label: t('organizer.actions.dismissBulk') || 'Remove',
+          icon: EyeOff,
+          onClick: () => {
+            dismissRows(selectedRows.map((r) => r.id));
+            clearSelectedRows();
+          },
+        });
+      }
+
+      if (openBulkDeleteModal) {
+        items.push({
+          key: 'bulk-delete',
+          label: t('organizer.actions.delete') || 'Delete',
+          icon: Trash2,
+          className: 'is-danger',
+          onClick: () => openBulkDeleteModal(selectedRows),
+        });
+      }
+
+      if (!hasExtras && openMatchModal) {
+        items.push({
+          key: 'bulk-match',
+          label: t('organizer.actions.match') || 'Match',
+          icon: Search,
+          onClick: () => openMatchModal(null, selectedRows),
+        });
+      }
+
+      if (allSameType && openBulkOverrideModal) {
+        items.push({
+          key: 'bulk-override',
+          label: t('organizer.actions.override') || 'Override',
+          icon: Sliders,
+          onClick: () => openBulkOverrideModal(selectedRows),
+        });
+      }
+
+      if (clearSelectedRows) {
+        items.push({ divider: true });
+        items.push({
+          key: 'bulk-clear',
+          label: t('organizer.bulkBar.clear') || 'Clear selection',
+          icon: X,
+          onClick: clearSelectedRows,
+        });
+      }
+    } else if (rowActions.length > 0) {
+      const visibleActions = rowActions.filter((action) => (action.isVisible ? action.isVisible(activeRow) : true));
+      
+      visibleActions.forEach((action) => {
+        if ((action.key === 'dismiss' || action.key === 'delete') && items.length > 0 && !items[items.length - 1].divider) {
+          items.push({ divider: true });
+        }
+        
+        items.push({
+          key: action.key,
+          label: action.tooltip || action.label,
+          icon: action.icon,
+          className: action.className || '',
+          onClick: () => action.onClick(activeRow),
+        });
+      });
+    }
+
+    return items;
+  }, [activeRow, useBulkActions, selectedRows, dismissRows, clearSelectedRows, openBulkDeleteModal, openMatchModal, openBulkOverrideModal, rowActions, t]);
+
   return (
     <div className="ui-table-wrap">
       <table className="ui-table">
@@ -108,6 +214,7 @@ export default function Table({
                 row={row}
                 columns={columns}
                 onRowClick={onRowClick}
+                onContextMenu={handleRowContextMenu}
                 activeRowId={activeRowId}
                 rowActions={rowActions}
               />
@@ -115,6 +222,15 @@ export default function Table({
           )}
         </tbody>
       </table>
+
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={contextMenuItems}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
     </div>
   );
 }

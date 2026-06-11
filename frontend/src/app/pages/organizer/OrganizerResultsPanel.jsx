@@ -29,7 +29,16 @@ export default function OrganizerResultsPanel({
   totalItems = 0,
   totalPages,
 }) {
-  const { bulkActionBar, rowActions } = useOrganizerModals();
+  const {
+    bulkActionBar,
+    rowActions,
+    selectedRows,
+    openBulkDeleteModal,
+    openMatchModal,
+    openBulkOverrideModal,
+    dismissRows,
+    clearSelectedRows,
+  } = useOrganizerModals();
   const shouldShowPagination = totalItems > 20;
 
   return (
@@ -88,6 +97,12 @@ export default function OrganizerResultsPanel({
                 onRowClick={onRowClick}
                 emptyText={emptyText}
                 rowActions={rowActions}
+                selectedRows={selectedRows}
+                openBulkDeleteModal={openBulkDeleteModal}
+                openMatchModal={openMatchModal}
+                openBulkOverrideModal={openBulkOverrideModal}
+                dismissRows={dismissRows}
+                clearSelectedRows={clearSelectedRows}
               />
             </div>
 
