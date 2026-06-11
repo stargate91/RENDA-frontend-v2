@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import api from '../../lib/api';
 
 export const removeDiscoveryRow = (currentDiscovery, row) => {
@@ -36,15 +37,15 @@ export function useOrganizerDeleteActions({
   focusFirstAvailableResult,
   clearSelectedRows,
 }) {
-  const refreshOrganizerDiscovery = async () => {
+  const refreshOrganizerDiscovery = useCallback(async () => {
     const data = await api.discovery.get();
     queryClient.setQueryData(['discovery'], data);
     focusFirstAvailableResult(data);
     queryClient.invalidateQueries({ queryKey: ['discovery-count'] });
     queryClient.invalidateQueries({ queryKey: ['stats'] });
-  };
+  }, [queryClient, focusFirstAvailableResult]);
 
-  const handleResolveDiscoveryRow = async (row) => {
+  const handleResolveDiscoveryRow = useCallback(async (row) => {
     closeModal();
     const previousDiscovery = queryClient.getQueryData(['discovery']);
     const nextDiscovery = removeDiscoveryRow(previousDiscovery, row);
@@ -65,9 +66,9 @@ export function useOrganizerDeleteActions({
       queryClient.invalidateQueries({ queryKey: ['discovery-count'] });
       queryClient.invalidateQueries({ queryKey: ['stats'] });
     }
-  };
+  }, [closeModal, queryClient, focusFirstAvailableResult, refreshOrganizerDiscovery]);
 
-  const handleResolveDiscoveryRows = async (rows) => {
+  const handleResolveDiscoveryRows = useCallback(async (rows) => {
     closeModal();
     const previousDiscovery = queryClient.getQueryData(['discovery']);
     const nextDiscovery = removeDiscoveryRows(previousDiscovery, rows);
@@ -89,9 +90,9 @@ export function useOrganizerDeleteActions({
       queryClient.invalidateQueries({ queryKey: ['stats'] });
       throw error;
     }
-  };
+  }, [closeModal, queryClient, focusFirstAvailableResult, refreshOrganizerDiscovery]);
 
-  const handleDeleteDiscoveryRow = async (row, mode) => {
+  const handleDeleteDiscoveryRow = useCallback(async (row, mode) => {
     closeModal();
     const previousDiscovery = queryClient.getQueryData(['discovery']);
     const nextDiscovery = removeDiscoveryRow(previousDiscovery, row);
@@ -122,9 +123,9 @@ export function useOrganizerDeleteActions({
       queryClient.invalidateQueries({ queryKey: ['stats'] });
       throw error;
     }
-  };
+  }, [closeModal, queryClient, focusFirstAvailableResult, refreshOrganizerDiscovery, toast, t]);
 
-  const handleDeleteDiscoveryRows = async (rows, mode) => {
+  const handleDeleteDiscoveryRows = useCallback(async (rows, mode) => {
     closeModal();
     clearSelectedRows();
     const previousDiscovery = queryClient.getQueryData(['discovery']);
@@ -157,7 +158,7 @@ export function useOrganizerDeleteActions({
       queryClient.invalidateQueries({ queryKey: ['stats'] });
       throw error;
     }
-  };
+  }, [closeModal, clearSelectedRows, queryClient, focusFirstAvailableResult, refreshOrganizerDiscovery, toast, t]);
 
   return {
     refreshOrganizerDiscovery,
