@@ -332,6 +332,23 @@
       "tray": "Minimize to Tray",
       "quit": "Quit App"
     }
+  },
+  "settingsPage": {
+    "loading": "Connecting to backend database...",
+    "errorTitle": "Error Loading Settings",
+    "errorText": "Could not communicate with the RENDA backend database. Please check if the backend is running.",
+    "retry": "Retry Loading",
+    "dangerZone": {
+      "title": "Database Maintenance",
+      "eyebrow": "Danger Zone",
+      "desc": "Wiping the database will clear all media libraries, matched items, custom lists, and playback logs. Your user settings and API key configurations will be preserved, and cache.db will not be touched. This action is permanent and cannot be undone.",
+      "button": "Wipe Database",
+      "buttonWiping": "Wiping...",
+      "confirmTitle": "Wipe Database",
+      "confirm": "Are you sure you want to wipe the entire database? This will clear all media libraries, matches, lists, and playback logs. Your user settings and API cache will be preserved. This cannot be undone.",
+      "success": "Database successfully wiped",
+      "failed": "Failed to wipe database"
+    }
   }
 }
 

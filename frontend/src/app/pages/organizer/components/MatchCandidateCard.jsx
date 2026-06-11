@@ -43,6 +43,7 @@ export default function MatchCandidateCard({
   isBrowserLoading,
   onSelect,
   t,
+  rowStatus,
 }) {
   const mediaType = normalizeCandidateType(candidate.type || candidate.media_type, mode);
   const displayTitle = getDisplayTitle(candidate, mediaType, t);
@@ -72,9 +73,15 @@ export default function MatchCandidateCard({
               </div>
             )}
             {candidate.is_active ? (
-              <StatusBadge variant="overlay">
-                {t('organizer.details.matchModal.current')}
-              </StatusBadge>
+              rowStatus === 'uncertain' ? (
+                <StatusBadge variant="overlay" tone="warning">
+                  {t('organizer.status.uncertain')}
+                </StatusBadge>
+              ) : (
+                <StatusBadge variant="overlay">
+                  {t('organizer.details.matchModal.current')}
+                </StatusBadge>
+              )
             ) : null}
           </MediaCard>
         </button>
@@ -113,9 +120,15 @@ export default function MatchCandidateCard({
         <div className="organizer-match-modal__result-topline">
           <strong className="organizer-match-modal__result-title">{displayTitle}</strong>
           {candidate.is_active ? (
-            <StatusBadge>
-              {t('organizer.details.matchModal.current')}
-            </StatusBadge>
+            rowStatus === 'uncertain' ? (
+              <StatusBadge tone="warning">
+                {t('organizer.status.uncertain')}
+              </StatusBadge>
+            ) : (
+              <StatusBadge>
+                {t('organizer.details.matchModal.current')}
+              </StatusBadge>
+            )
           ) : null}
         </div>
         <MetaRow

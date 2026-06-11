@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { AlertTriangle } from 'lucide-react';
 import Button from '@/ui/Button';
 import Card from '@/ui/Card';
 import Inline from '@/ui/Inline';
@@ -7,9 +8,11 @@ import Input from '@/ui/Input';
 import Page from '@/ui/Page';
 import Stack from '@/ui/Stack';
 import Checkbox from '@/ui/Checkbox';
-import { useSettingsQuery, useUpdateSettingsMutation } from '@/queries/appQueries';
+import { useSettingsQuery, useUpdateSettingsMutation, useClearDatabaseMutation } from '@/queries/appQueries';
 import { useUi } from '@/providers/UiProvider';
 import { selectFile, selectFolder } from '@/lib/ipc';
+import Spinner from '@/ui/Spinner';
+import { useTranslation } from '@/providers/LanguageProvider';
 
 const COLLISION_OPTIONS = [
   { value: 'keep_both', label: 'Keep Both' },
@@ -55,12 +58,15 @@ const TARGET_LANGUAGE_OPTIONS = [
 ];
 
 export default function SettingsPage() {
+  const { t } = useTranslation();
   const settingsQuery = useSettingsQuery();
-  const settings = settingsQuery.data || {};
+  const settings = settingsQuery.data;
   const queryClient = useQueryClient();
-  const { toast } = useUi();
+  const { toast, openModal, closeModal } = useUi();
   const [isSaving, setIsSaving] = useState(false);
+  const [isWiping, setIsWiping] = useState(false);
   const updateSettingsMutation = useUpdateSettingsMutation();
+  const clearDbMutation = useClearDatabaseMutation();
   const [form, setForm] = useState({
     default_scan_dir: '',
     folder_library_path: '',
@@ -83,51 +89,62 @@ export default function SettingsPage() {
     default_target_language: 'en',
   });
 
-  const [prevSettings, setPrevSettings] = useState(settings);
+  useEffect(() => {
+    if (settings) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setForm({
+        default_scan_dir: settings.default_scan_dir || '',
+        folder_library_path: settings.folder_library_path || '',
+        collision_strategy: settings.collision_strategy || 'keep_both',
+        collision_duration_tolerance_seconds: String(settings.collision_duration_tolerance_seconds || '10'),
+        extras_video_action: settings.extras_video_action || 'rename',
+        extras_sub_action: settings.extras_sub_action || 'rename',
+        extras_audio_action: settings.extras_audio_action || 'rename',
+        extras_img_action: settings.extras_img_action || 'rename',
+        extras_meta_action: settings.extras_meta_action || 'rename',
+        vlc_path: settings.vlc_path || '',
+        mpc_path: settings.mpc_path || '',
+        tmdb_api_key: settings.tmdb_api_key || '',
+        tmdb_bearer_token: settings.tmdb_bearer_token || '',
+        omdb_api_key: settings.omdb_api_key || '',
+        ui_language: settings.ui_language || 'en',
+        metadata_follows_ui: settings.metadata_follows_ui !== undefined ? settings.metadata_follows_ui : true,
+        target_follows_ui: settings.target_follows_ui !== undefined ? settings.target_follows_ui : true,
+        primary_metadata_language: settings.primary_metadata_language || 'en-US',
+        default_target_language: settings.default_target_language || 'en',
+      });
+    }
+  }, [settings]);
 
-  if (
-    settings.collision_strategy !== prevSettings.collision_strategy ||
-    settings.collision_duration_tolerance_seconds !== prevSettings.collision_duration_tolerance_seconds ||
-    settings.default_scan_dir !== prevSettings.default_scan_dir ||
-    settings.extras_audio_action !== prevSettings.extras_audio_action ||
-    settings.extras_img_action !== prevSettings.extras_img_action ||
-    settings.extras_meta_action !== prevSettings.extras_meta_action ||
-    settings.extras_sub_action !== prevSettings.extras_sub_action ||
-    settings.extras_video_action !== prevSettings.extras_video_action ||
-    settings.folder_library_path !== prevSettings.folder_library_path ||
-    settings.mpc_path !== prevSettings.mpc_path ||
-    settings.omdb_api_key !== prevSettings.omdb_api_key ||
-    settings.tmdb_api_key !== prevSettings.tmdb_api_key ||
-    settings.tmdb_bearer_token !== prevSettings.tmdb_bearer_token ||
-    settings.vlc_path !== prevSettings.vlc_path ||
-    settings.ui_language !== prevSettings.ui_language ||
-    settings.metadata_follows_ui !== prevSettings.metadata_follows_ui ||
-    settings.target_follows_ui !== prevSettings.target_follows_ui ||
-    settings.primary_metadata_language !== prevSettings.primary_metadata_language ||
-    settings.default_target_language !== prevSettings.default_target_language
-  ) {
-    setPrevSettings(settings);
-    setForm({
-      default_scan_dir: settings.default_scan_dir || '',
-      folder_library_path: settings.folder_library_path || '',
-      collision_strategy: settings.collision_strategy || 'keep_both',
-      collision_duration_tolerance_seconds: String(settings.collision_duration_tolerance_seconds || '10'),
-      extras_video_action: settings.extras_video_action || 'rename',
-      extras_sub_action: settings.extras_sub_action || 'rename',
-      extras_audio_action: settings.extras_audio_action || 'rename',
-      extras_img_action: settings.extras_img_action || 'rename',
-      extras_meta_action: settings.extras_meta_action || 'rename',
-      vlc_path: settings.vlc_path || '',
-      mpc_path: settings.mpc_path || '',
-      tmdb_api_key: settings.tmdb_api_key || '',
-      tmdb_bearer_token: settings.tmdb_bearer_token || '',
-      omdb_api_key: settings.omdb_api_key || '',
-      ui_language: settings.ui_language || 'en',
-      metadata_follows_ui: settings.metadata_follows_ui !== undefined ? settings.metadata_follows_ui : true,
-      target_follows_ui: settings.target_follows_ui !== undefined ? settings.target_follows_ui : true,
-      primary_metadata_language: settings.primary_metadata_language || 'en-US',
-      default_target_language: settings.default_target_language || 'en',
-    });
+  if (settingsQuery.isLoading) {
+    return (
+      <Page title={t('sidebar.settings')} description={t('settingsPage.loading')}>
+        <Card>
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}>
+            <Spinner label={t('settingsPage.loading')} />
+          </div>
+        </Card>
+      </Page>
+    );
+  }
+
+  if (settingsQuery.isError) {
+    return (
+      <Page title={t('sidebar.settings')} description={t('settingsPage.errorTitle')}>
+        <Card title={t('settingsPage.errorTitle')}>
+          <Stack>
+            <span className="ui-field__hint">
+              {t('settingsPage.errorText')}
+            </span>
+            <Inline>
+              <Button variant="primary" onClick={() => settingsQuery.refetch()}>
+                {t('settingsPage.retry')}
+              </Button>
+            </Inline>
+          </Stack>
+        </Card>
+      </Page>
+    );
   }
 
   const handleChange = (key) => (event) => {
@@ -209,6 +226,44 @@ export default function SettingsPage() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleWipeDatabase = () => {
+    openModal({
+      title: t('settingsPage.dangerZone.confirmTitle'),
+      icon: AlertTriangle,
+      variant: 'danger',
+      content: (
+        <p className="ui-modal__body-text">
+          {t('settingsPage.dangerZone.confirm')}
+        </p>
+      ),
+      footer: (
+        <Inline gap="md">
+          <Button variant="secondary-neutral" onClick={closeModal}>
+            Cancel
+          </Button>
+          <Button
+            variant="danger"
+            onClick={async () => {
+              closeModal();
+              setIsWiping(true);
+              try {
+                await clearDbMutation.mutateAsync({ wipe: true });
+                await queryClient.resetQueries();
+                toast(t('settingsPage.dangerZone.success'), 'success');
+              } catch (error) {
+                toast(error.message || t('settingsPage.dangerZone.failed'), 'danger');
+              } finally {
+                setIsWiping(false);
+              }
+            }}
+          >
+            {t('settingsPage.dangerZone.button')}
+          </Button>
+        </Inline>
+      ),
+    });
   };
 
   return (
@@ -399,6 +454,18 @@ export default function SettingsPage() {
           <Inline>
             <Button variant="primary" onClick={handleSave} disabled={isSaving}>
               {isSaving ? 'Saving...' : 'Save Settings'}
+            </Button>
+          </Inline>
+        </Stack>
+      </Card>
+      <Card title={t('settingsPage.dangerZone.title')} eyebrow={t('settingsPage.dangerZone.eyebrow')}>
+        <Stack>
+          <span className="ui-field__hint">
+            {t('settingsPage.dangerZone.desc')}
+          </span>
+          <Inline>
+            <Button variant="danger" onClick={handleWipeDatabase} disabled={isWiping || isSaving}>
+              {isWiping ? t('settingsPage.dangerZone.buttonWiping') : t('settingsPage.dangerZone.button')}
             </Button>
           </Inline>
         </Stack>

@@ -210,6 +210,7 @@ export default function OrganizerMatchModalContent({
                 isBrowserLoading={isBrowserLoading}
                 onSelect={handleCandidateSelect}
                 t={t}
+                rowStatus={row?.rawStatus}
               />
             ))}
           </div>
@@ -228,6 +229,7 @@ export default function OrganizerMatchModalContent({
                 isBrowserLoading={isBrowserLoading}
                 onSelect={handleCandidateSelect}
                 t={t}
+                rowStatus={row?.rawStatus}
               />
             ))}
           </div>

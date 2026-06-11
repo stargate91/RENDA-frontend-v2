@@ -167,6 +167,11 @@
   background: rgba(0, 136, 255, 0.60);
 }
 
+.organizer-match-modal .ui-status-badge--overlay.ui-status-badge--warning {
+  background: color-mix(in srgb, var(--color-state-warning) 75%, transparent);
+  color: var(--color-text-inverse);
+}
+
 .organizer-match-modal__poster-card-copy {
   display: grid;
   gap: 4px;
@@ -433,6 +438,7 @@
   from {
     transform: scale(0);
   }
+
   to {
     transform: scale(1);
   }

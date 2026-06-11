@@ -599,7 +599,15 @@ def clear_database(options: dict = None):
             db.query(ActionBatch).delete(synchronize_session=False)
             db.query(PlaybackLog).delete(synchronize_session=False)
 
-        if options.get("all"):
+        if options.get("wipe"):
+            from sqlalchemy import text
+            from app.db.base import Base
+            db.execute(text("PRAGMA foreign_keys = OFF"))
+            for table in reversed(Base.metadata.sorted_tables):
+                if table.name != "user_settings":
+                    db.execute(table.delete())
+            db.execute(text("PRAGMA foreign_keys = ON"))
+        elif options.get("all"):
             clear_discovery_data()
             clear_library_data()
         else:

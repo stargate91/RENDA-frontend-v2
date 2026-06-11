@@ -133,13 +133,28 @@ process.on('unhandledRejection', (reason) => {
   writeElectronLog('ERROR', 'Unhandled promise rejection in Electron main process', reason);
 });
 
+let heartbeatTimer = null;
+function resetHeartbeatWatchdog() {
+  if (heartbeatTimer) {
+    clearTimeout(heartbeatTimer);
+  }
+  // Heartbeats are sent every 30 seconds. Warning triggers if missed for 45 seconds.
+  heartbeatTimer = setTimeout(() => {
+    writeElectronLog('WARN', 'Watchdog: Renderer heartbeat missed (45s). Renderer might be frozen.', {
+      metrics: app.getAppMetrics(),
+    });
+  }, 45000);
+}
+
 // Handler for folder selection dialog
 ipcMain.handle('select-folder', async (event, defaultPath) => {
   writeElectronLog('INFO', 'Folder picker opened', { defaultPath: defaultPath || app.getPath('home') });
-  const result = await dialog.showOpenDialog({
+  const targetWindow = BrowserWindow.fromWebContents(event.sender) || mainWindow;
+  const result = await dialog.showOpenDialog(targetWindow, {
     properties: ['openDirectory'],
     defaultPath: defaultPath || app.getPath('home')
   });
+  writeElectronLog('INFO', 'Folder picker closed', { canceled: result.canceled, selected: result.filePaths[0] || null });
   if (result.canceled) {
     return null;
   } else {
@@ -150,10 +165,12 @@ ipcMain.handle('select-folder', async (event, defaultPath) => {
 // Handler for file selection dialog
 ipcMain.handle('select-file', async (event, defaultPath) => {
   writeElectronLog('INFO', 'File picker opened', { defaultPath: defaultPath || app.getPath('home') });
-  const result = await dialog.showOpenDialog({
+  const targetWindow = BrowserWindow.fromWebContents(event.sender) || mainWindow;
+  const result = await dialog.showOpenDialog(targetWindow, {
     properties: ['openFile'],
     defaultPath: defaultPath || app.getPath('home')
   });
+  writeElectronLog('INFO', 'File picker closed', { canceled: result.canceled, selected: result.filePaths[0] || null });
   if (result.canceled) {
     return null;
   } else {
@@ -227,6 +244,9 @@ ipcMain.on('window-resize-to-minimum', (event) => {
 
 ipcMain.on('renderer-log', (_event, payload) => {
   writeElectronLog(payload?.level || 'INFO', payload?.message || 'Renderer log', payload?.details || null);
+  if (payload?.message === 'Renderer heartbeat') {
+    resetHeartbeatWatchdog();
+  }
 });
 
 ipcMain.on('app-close-response', (_event, payload) => {
@@ -444,7 +464,9 @@ function createWindow() {
   });
 
   win.on('unresponsive', () => {
-    writeElectronLog('WARN', 'Window became unresponsive');
+    writeElectronLog('WARN', 'Window became unresponsive', {
+      metrics: app.getAppMetrics(),
+    });
     if (!win.isDestroyed()) {
       win.reload();
     }

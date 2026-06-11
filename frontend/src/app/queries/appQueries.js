@@ -42,3 +42,7 @@ export const useHistoryQuery = () => useQuery({
   queryKey: ['history'],
   queryFn: () => api.history.get(),
 });
+
+export const useClearDatabaseMutation = () => useMutation({
+  mutationFn: (options) => api.settings.clearDatabase(options),
+});

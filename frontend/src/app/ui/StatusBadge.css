@@ -19,6 +19,21 @@
   color: var(--color-accent);
 }
 
+.ui-status-badge--success {
+  background: var(--color-state-success-bg);
+  color: var(--color-state-success);
+}
+
+.ui-status-badge--danger {
+  background: var(--color-state-danger-bg);
+  color: var(--color-state-danger);
+}
+
+.ui-status-badge--warning {
+  background: var(--color-state-warning-bg);
+  color: var(--color-state-warning);
+}
+
 .ui-status-badge--inline {
   position: static;
 }
