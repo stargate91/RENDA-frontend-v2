@@ -588,3 +588,165 @@
   font-size: 13px;
   color: var(--color-muted);
 }
+
+/* Bulk Overrides */
+.organizer-override-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+}
+
+.organizer-override-field__checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  user-select: none;
+}
+
+.organizer-override-field__label-text {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+}
+
+.organizer-override-field__input {
+  transition: opacity 0.15s ease;
+}
+
+.organizer-override-field__input.is-disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.organizer-override-bulk-episodes {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-line);
+}
+
+.organizer-override-bulk-episodes__header-check {
+  margin-bottom: var(--space-2);
+}
+
+.organizer-override-bulk-episodes__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+}
+
+.organizer-override-bulk-episodes__hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-muted);
+}
+
+.organizer-override-bulk-episodes__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: var(--space-1);
+}
+
+.organizer-override-bulk-episodes__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  cursor: grab;
+  user-select: none;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.organizer-override-bulk-episodes__item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.organizer-override-bulk-episodes__item.is-dragging {
+  opacity: 0.5;
+  border-style: dashed;
+  background: transparent;
+}
+
+.organizer-override-bulk-episodes__item-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.organizer-override-bulk-episodes__grip {
+  color: var(--color-muted);
+  cursor: grab;
+}
+
+.organizer-override-bulk-episodes__index {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-accent);
+  min-width: 24px;
+}
+
+.organizer-override-bulk-episodes__filename {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.organizer-override-bulk-episodes__item-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* Bulk Overrides Side Panel Expansion */
+.ui-modal--bulk-override {
+  width: min(580px, 100%);
+  transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ui-modal.has-side-panel {
+  width: min(1040px, 100%) !important;
+}
+
+.bulk-override-layout {
+  display: flex;
+  flex-direction: row;
+  gap: var(--space-6);
+  align-items: stretch;
+}
+
+.bulk-override-layout__form {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.bulk-override-layout__side-panel {
+  width: 400px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--color-line);
+  padding-left: var(--space-6);
+  animation: slideInRight 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

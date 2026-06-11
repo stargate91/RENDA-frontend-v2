@@ -119,10 +119,12 @@
     },
     "overrideModal": {
       "title": "Change settings for this {type}",
+      "titleBulk": "Bulk Override {type}s",
       "description": "Pick different options or names for this item.",
+      "descriptionBulk": "Apply settings or numberings to all selected items.",
       "hints": {
         "mainType": "Change whether this file is a Movie, an Episode, or an Extra/Bonus video.",
-        "parentId": "Pick the main movie or series that this extra file belongs to.",
+        "parentId": "Pick the main movie or episode that this extra file belongs to.",
         "subcategory": "Choose what kind of extra this is (like a trailer, poster, or deleted scene).",
         "language": "Choose the language for this subtitle or audio file.",
         "targetLanguage": "Choose the main language for this movie or episode.",
@@ -131,6 +133,20 @@
         "audioType": "Choose the audio style (like Stereo or Surround) to help format the name.",
         "seasonNum": "Enter the season number for this episode.",
         "episodeNum": "Enter the episode numbers. Use '3' for single, '3,4' for multiple, or '3-5' to automatically expand ranges."
+      },
+      "labels": {
+        "mainCategory": "Main Category",
+        "targetLanguage": "Main Metadata Language",
+        "source": "Media Source",
+        "edition": "Release Edition",
+        "audioType": "Audio Style",
+        "seasonNumber": "Season Number",
+        "extraSubcategory": "Extra Subcategory",
+        "parentMovieOrEpisode": "Parent Movie or Episode",
+        "language": "Language",
+        "autoNumberCheck": "Auto-number episodes sequentially",
+        "startNumbering": "Start numbering from:",
+        "dragAndDropHint": "Drag and drop the items below to arrange them in sequential order (top to bottom)."
       },
       "options": {
         "sources": {
@@ -193,6 +209,17 @@
           "json": "JSON",
           "txt": "TXT",
           "url": "URL",
+          "full": "Full",
+          "forced": "Forced",
+          "sdh": "SDH",
+          "hearing_impaired": "Hearing Impaired",
+          "commentary_sub": "Commentary Sub",
+          "lyrics": "Lyrics",
+          "dubbed": "Dubbed",
+          "original": "Original",
+          "commentary_audio": "Commentary Audio",
+          "descriptive": "Descriptive",
+          "isolated_score": "Isolated Score",
           "other": "Other"
         }
       }

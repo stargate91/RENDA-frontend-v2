@@ -492,8 +492,23 @@ def bulk_update_media_items(payload: dict):
                 return JSONResponse(status_code=404, content={"error": "No matching extra files found"})
             requested_main_type = updates.get("main_type")
             if requested_main_type in {"movie", "episode"}:
+                item_updates_map = {}
+                for entry in item_updates:
+                    try:
+                        entry_id = int(entry.get("id"))
+                    except (TypeError, ValueError):
+                        continue
+                    per_item_updates = entry.get("updates") or {}
+                    item_updates_map[entry_id] = {**updates, **per_item_updates}
+
                 for extra in extras:
                     item = _convert_extra_to_media(db, extra, requested_main_type)
+                    effective_updates = item_updates_map.get(extra.id, updates)
+                    if effective_updates.get("main_type") in {"movie", "episode"}:
+                        effective_updates = {**deepcopy(effective_updates), "item_type": effective_updates["main_type"]}
+                    _apply_media_updates(item, effective_updates)
+                    if "target_language" in effective_updates:
+                        _sync_target_language_metadata(db, item)
                     _refresh_planned_path(db, item)
                     updated_ids.append(item.id)
                 db.commit()

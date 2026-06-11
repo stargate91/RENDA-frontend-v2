@@ -5,6 +5,7 @@ import Button from '../../../ui/Button';
 import FloatingActionBar from '../../../ui/FloatingActionBar';
 import OrganizerMatchModalContent from '../OrganizerMatchModalContent';
 import OrganizerOverrideModalContent from '../components/OrganizerOverrideModalContent';
+import OrganizerBulkOverrideModalContent from '../components/OrganizerBulkOverrideModalContent';
 import api from '../../../lib/api';
 import { showItemInFolder } from '../../../lib/ipc';
 import { useUi } from '../../../providers/UiProvider';
@@ -230,6 +231,33 @@ export function OrganizerModalProvider({
     });
   };
 
+  const openBulkOverrideModal = (rows) => {
+    const type = rows[0]?.rawType || '';
+    openModal({
+      title: (t('organizer.overrideModal.titleBulk') || 'Bulk Override {type}s').replace('{type}', type),
+      description: t('organizer.overrideModal.descriptionBulk') || 'Apply settings or numberings to all selected items.',
+      icon: Sliders,
+      className: 'ui-modal--bulk-override',
+      content: (
+        <OrganizerBulkOverrideModalContent
+          rows={rows}
+          onClose={closeModal}
+          toast={toast}
+        />
+      ),
+      footer: (
+        <>
+          <Button variant="secondary-neutral" type="button" onClick={closeModal}>
+            Cancel
+          </Button>
+          <Button variant="primary" type="submit" form="organizer-bulk-override-form">
+            Apply Bulk Overrides
+          </Button>
+        </>
+      ),
+    });
+  };
+
   const rowActions = useMemo(() => [
     {
       key: 'match',
@@ -308,6 +336,12 @@ export function OrganizerModalProvider({
           },
           disabled: selectedRows.length === 0,
         } : null,
+        selectedRows.length > 0 && selectedRows.every((r) => r.rawType === selectedRows[0].rawType) ? {
+          key: 'override',
+          label: t('organizer.actions.override') || 'Override',
+          icon: Sliders,
+          onClick: () => openBulkOverrideModal(selectedRows),
+        } : null,
         {
           key: 'delete',
           label: t('organizer.actions.delete'),
@@ -332,6 +366,7 @@ export function OrganizerModalProvider({
     openBulkDeleteModal,
     openMatchModal,
     openOverrideModal,
+    openBulkOverrideModal,
     rowActions,
     bulkActionBar,
     refreshOrganizerDiscovery,

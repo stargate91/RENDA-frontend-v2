@@ -169,8 +169,6 @@ export default function OrganizerOverrideModalContent({ row, onClose, toast }) {
     [t]
   );
 
-  const subcategoryList = translatedSubcategoriesByCategory[category] || [];
-
   // Get parent candidates (movies + series) from cache
   const discovery = queryClient.getQueryData(['discovery']) || {};
   const movies = discovery.movies || [];
@@ -186,6 +184,9 @@ export default function OrganizerOverrideModalContent({ row, onClose, toast }) {
     : row.rawType;
 
   const [mainType, setMainType] = useState(initialMainType);
+
+  const subcategoryList = translatedSubcategoriesByCategory[mainType === 'bonus' ? 'video' : category] || [];
+
   const [targetLanguage, setTargetLanguage] = useState(row.rawPayload?.target_language || 'en');
   const [source, setSource] = useState(row.rawPayload?.source || 'none');
   const [edition, setEdition] = useState(row.rawPayload?.edition || 'none');
