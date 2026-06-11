@@ -136,13 +136,21 @@
   right: 0;
   top: 0;
   bottom: 0;
-  display: inline-flex;
+  display: none;
   align-items: center;
   justify-content: flex-end;
   gap: 6px;
   width: max-content;
   padding: 0 var(--space-4);
   background: transparent;
+}
+
+.ui-table tbody tr:hover .ui-table__row-actions {
+  display: inline-flex;
+}
+
+.ui-table tbody tr:hover .ui-table__cell-value.hide-on-hover {
+  visibility: hidden;
 }
 
 .ui-table__row-action {

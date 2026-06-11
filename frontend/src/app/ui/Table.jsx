@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo } from 'react';
 import Tooltip from './Tooltip';
 import IconButton from './IconButton';
 import './Table.css';
@@ -21,14 +21,13 @@ function TableHeader({ columns }) {
   );
 }
 
-function TableRow({
+const TableRow = memo(function TableRow({
   row,
   columns,
   onRowClick,
   activeRowId,
   rowActions = [],
 }) {
-  const [isHovered, setIsHovered] = useState(false);
   const lastColumnKey = columns[columns.length - 1]?.key;
   const hasRowActions = rowActions.length > 0;
   const visibleRowActions = hasRowActions
@@ -39,14 +38,12 @@ function TableRow({
     <tr
       onClick={onRowClick ? () => onRowClick(row) : undefined}
       className={`${onRowClick ? 'is-clickable' : ''} ${activeRowId === row.id ? 'is-active' : ''}`.trim()}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
       {columns.map((col) => {
         const rawValue = row[col.key];
         const renderedValue = col.render ? col.render(rawValue, row) : rawValue;
-        const shouldShowActions = visibleRowActions.length > 0 && isHovered && col.key === lastColumnKey;
-        const shouldHideValue = shouldShowActions || (col.hideOnHover && isHovered && visibleRowActions.length > 0);
+        const hasActionsInCell = visibleRowActions.length > 0 && col.key === lastColumnKey;
+        const hideOnHoverClass = (hasActionsInCell || col.hideOnHover) ? 'hide-on-hover' : '';
         const isEmpty = renderedValue === undefined || renderedValue === null || renderedValue === '';
 
         return (
@@ -56,10 +53,10 @@ function TableRow({
             style={col.width ? { width: col.width, maxWidth: col.width, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } : undefined}
           >
             <div className="ui-table__cell-content">
-              <span className={`ui-table__cell-value${shouldHideValue ? ' is-hidden' : ''}`.trim()}>
+              <span className={`ui-table__cell-value ${hideOnHoverClass}`.trim()}>
                 {isEmpty ? '-' : renderedValue}
               </span>
-              {shouldShowActions ? (
+              {hasActionsInCell ? (
                 <div className="ui-table__row-actions" onClick={(event) => event.stopPropagation()}>
                   {visibleRowActions.map((action) => (
                     <Tooltip key={action.key} content={action.tooltip || action.label} side="top" delay={250}>
@@ -82,7 +79,7 @@ function TableRow({
       })}
     </tr>
   );
-}
+});
 
 export default function Table({
   columns,

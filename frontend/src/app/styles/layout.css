@@ -340,12 +340,17 @@
 .page-header__title {
   margin: 0;
   font: var(--text-hero);
+  font-family: var(--font-display);
 }
 
 .page-header__eyebrow {
   display: block;
   line-height: 1;
   margin: 0;
+  color: var(--color-muted);
+  font: var(--text-caption);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .page-header__description,

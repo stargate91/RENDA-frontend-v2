@@ -1,4 +1,4 @@
-import { createContext } from 'react';
+import { createContext, useMemo } from 'react';
 import { FolderOpen, Play, Search, Sliders, Trash2, X } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import Button from '../../../ui/Button';
@@ -221,7 +221,7 @@ export function OrganizerModalProvider({
     });
   };
 
-  const rowActions = [
+  const rowActions = useMemo(() => [
     {
       key: 'match',
       label: t('organizer.actions.match'),
@@ -274,7 +274,8 @@ export function OrganizerModalProvider({
       className: 'is-danger',
       onClick: (row) => openDeleteModal(row),
     },
-  ];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [t, dismissRows]);
 
   const bulkActionBar = (
     <FloatingActionBar
