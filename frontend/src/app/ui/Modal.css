@@ -2,7 +2,7 @@
 .ui-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 90;
+  z-index: 2000;
   display: grid;
   place-items: center;
   padding: var(--space-6);
@@ -90,6 +90,8 @@
   color: color-mix(in srgb, var(--color-accent) 88%, white 12%);
 }
 
+
+
 .ui-modal__description {
   margin: var(--space-2) 0 0;
   color: var(--color-muted);
@@ -107,10 +109,18 @@
   line-height: 1;
 }
 
+.ui-modal__close svg {
+  transition: transform 0.15s ease !important;
+}
+
 .ui-modal__close:hover {
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.18);
   color: var(--color-ink);
+}
+
+.ui-modal__close:hover svg {
+  transform: rotate(90deg) !important;
 }
 
 .ui-modal__close:focus-visible {

@@ -28,3 +28,9 @@ export const useClearDatabaseMutation = () => {
     },
   });
 };
+
+export const useValidateFoldersMutation = () => {
+  return useMutation({
+    mutationFn: (payload) => api.settings.validateFolders(payload),
+  });
+};

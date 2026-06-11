@@ -30,10 +30,8 @@ class TemplateRenderer:
         result = re.sub(r'\[\s*\]', '', result)
         
         # Collapse multiple separators (e.g., " -  - " -> " - ")
-        sep = self.config.separator.value
-        if sep == " ":
-            result = re.sub(r'\s*-\s*-\s*', ' - ', result)
-            result = re.sub(r'\s{2,}', ' ', result)
+        result = re.sub(r'\s*-\s*-\s*', ' - ', result)
+        result = re.sub(r'\s{2,}', ' ', result)
         
         result = re.sub(r'\s*-\s*$', '', result)
         result = re.sub(r'^\s*-\s*', '', result)
@@ -77,6 +75,9 @@ class TemplateRenderer:
         if not text:
             return ""
         sep = self.config.separator.value
+        if sep != " ":
+            text = text.replace("(", "").replace(")", "").replace("[", "").replace("]", "")
+            text = text.replace(" - ", " ")
         normalized = self.MULTI_SPACE.sub(" ", text.strip())
         return normalized.replace(" ", sep) if sep != " " else normalized
 

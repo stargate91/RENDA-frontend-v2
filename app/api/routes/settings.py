@@ -141,54 +141,52 @@ def get_changelog():
 
 @router.post("/settings/validate-folders")
 def validate_folders(payload: dict):
+    from app.utils.fs_utils import validate_directory
+
     scan_dir = (payload.get("default_scan_dir") or "").strip()
     library_dir = (payload.get("folder_library_path") or "").strip()
     move_to_library = bool(payload.get("folder_move_to_library"))
 
-    result = {"valid": False, "message": None}
+    errors = {}
 
-    if not scan_dir:
-        result["message"] = "Default Scan Folder is required."
-        return result
-
-    if not os.path.exists(scan_dir):
-        result["message"] = "Default Scan Folder does not exist."
-        return result
-
-    if not os.path.isdir(scan_dir):
-        result["message"] = "Default Scan Folder must point to a folder."
-        return result
-
-    if not os.access(scan_dir, os.R_OK):
-        result["message"] = "Default Scan Folder is not readable."
-        return result
+    # Validate default scan folder (readable) if provided
+    is_valid_scan = True
+    if scan_dir:
+        is_valid_scan, scan_err = validate_directory(scan_dir, check_write=False, label="Default Scan Folder")
+        if not is_valid_scan:
+            if "does not exist" in scan_err:
+                errors["scanFolder"] = "scanDirNotExist"
+            elif "must point to a folder" in scan_err:
+                errors["scanFolder"] = "scanDirNotFolder"
+            elif "not readable" in scan_err:
+                errors["scanFolder"] = "scanDirNotReadable"
+            else:
+                errors["scanFolder"] = "scanDirInvalid"
 
     # In-place organization may legitimately operate inside the same root.
     # We only reject identical source/target folders when the app is in move mode.
     if move_to_library:
-        if not library_dir:
-            result["message"] = "Target Library Folder is required in move mode."
-            return result
+        is_valid_lib, lib_err = validate_directory(library_dir, check_write=True, label="Target Library Folder")
+        if not is_valid_lib:
+            if "is required" in lib_err:
+                errors["targetFolder"] = "libraryDirRequired"
+            elif "does not exist" in lib_err:
+                errors["targetFolder"] = "libraryDirNotExist"
+            elif "must point to a folder" in lib_err:
+                errors["targetFolder"] = "libraryDirNotFolder"
+            elif "not writable" in lib_err:
+                errors["targetFolder"] = "libraryDirNotWritable"
+            else:
+                errors["targetFolder"] = "libraryDirInvalid"
+        
+        elif is_valid_scan and _normalize_path(scan_dir) == _normalize_path(library_dir):
+            errors["targetFolder"] = "foldersCannotBeSame"
 
-        if not os.path.exists(library_dir):
-            result["message"] = "Target Library Folder does not exist."
-            return result
+    if errors:
+        return {"valid": False, "errors": errors}
 
-        if not os.path.isdir(library_dir):
-            result["message"] = "Target Library Folder must point to a folder."
-            return result
+    return {"valid": True, "message": "foldersVerified"}
 
-        if not os.access(library_dir, os.W_OK):
-            result["message"] = "Target Library Folder is not writable."
-            return result
-
-        if _normalize_path(scan_dir) == _normalize_path(library_dir):
-            result["message"] = "Default Scan Folder and Target Library Folder cannot be the same."
-            return result
-
-    result["valid"] = True
-    result["message"] = "Folder settings verified."
-    return result
 
 
 @router.post("/settings/validate-api-keys")
@@ -311,6 +309,28 @@ def get_settings():
 def _apply_settings(db, settings: dict):
     if not isinstance(settings, dict):
         raise ValueError("Settings payload must be an object.")
+
+    # Validate vlc_path
+    if "vlc_path" in settings:
+        vlc_val = (settings.get("vlc_path") or "").strip()
+        if vlc_val:
+            from app.utils.fs_utils import to_win_long_path
+            long_path = to_win_long_path(vlc_val)
+            if not os.path.exists(long_path):
+                raise ValueError("vlcNotExist")
+            if not os.path.isfile(long_path):
+                raise ValueError("vlcNotFile")
+
+    # Validate mpc_path
+    if "mpc_path" in settings:
+        mpc_val = (settings.get("mpc_path") or "").strip()
+        if mpc_val:
+            from app.utils.fs_utils import to_win_long_path
+            long_path = to_win_long_path(mpc_val)
+            if not os.path.exists(long_path):
+                raise ValueError("mpcNotExist")
+            if not os.path.isfile(long_path):
+                raise ValueError("mpcNotFile")
 
     def _localized_folder_names(lang: str):
         if str(lang or "").lower() == "hu":
@@ -439,6 +459,8 @@ def import_settings(payload: dict):
     try:
         _apply_settings(db, settings)
         return {"status": "success"}
+    except ValueError as val_err:
+        return JSONResponse(status_code=400, content={"status": "error", "message": str(val_err)})
     finally:
         db.close()
 
@@ -448,8 +470,9 @@ def update_settings(settings: dict):
     db = Session()
     try:
         _apply_settings(db, settings)
-
         return {"status": "success"}
+    except ValueError as val_err:
+        return JSONResponse(status_code=400, content={"status": "error", "message": str(val_err)})
     finally:
         db.close()
 

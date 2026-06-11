@@ -370,6 +370,10 @@ function createWindow() {
     autoHideMenuBar: true,
   });
   mainWindow = win;
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url);
+    return { action: 'deny' };
+  });
   win.setMinimumSize(MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT);
   win.maximize();
   win.once('ready-to-show', () => {

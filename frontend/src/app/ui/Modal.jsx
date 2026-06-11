@@ -1,3 +1,4 @@
+import { X } from 'lucide-react';
 import IconButton from './IconButton';
 import Tooltip from './Tooltip';
 import './Modal.css';
@@ -20,7 +21,7 @@ export default function Modal({ open, title, description, children, footer, onCl
           </div>
           <Tooltip content="Close" side="top">
             <IconButton type="button" className="ui-modal__close" onClick={onClose} label="Close" title={null} size="sm">
-              x
+              <X size={16} />
             </IconButton>
           </Tooltip>
         </header>

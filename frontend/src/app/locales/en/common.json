@@ -1,0 +1,82 @@
+{
+  "common": {
+    "cancel": "Cancel"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "organizer": "Organizer",
+    "library": "Library",
+    "undoHistory": "Undo History",
+    "myRatings": "My Ratings",
+    "watchedHistory": "Watched History",
+    "lists": "Lists",
+    "settings": "Settings",
+    "about": "About",
+    "quit": "Quit",
+    "expand": "Expand",
+    "collapse": "Collapse"
+  },
+  "titlebar": {
+    "minimize": "Minimize",
+    "maximize": "Maximize",
+    "close": "Close"
+  },
+  "progress": {
+    "abortConfirm": {
+      "title": "Abort Scan?",
+      "description": "Are you sure you want to abort the active scanning or renaming process?",
+      "body": "The file currently in progress will finish processing, and the operation will then halt safely.",
+      "confirm": "Abort Process",
+      "cancel": "Go Back"
+    },
+    "ready": "Ready",
+    "working": "Working...",
+    "scan": {
+      "collecting": "Scanning files...",
+      "probing": "Probing media...",
+      "enriching": "Formatting names...",
+      "resolving": "Resolving metadata...",
+      "organizing": "Organizing matched media..."
+    },
+    "images": {
+      "downloading": "Downloading images..."
+    }
+  },
+  "closePrompt": {
+    "title": "Close RENDA?",
+    "description": "Choose whether to quit the application completely or minimize it to the system tray.",
+    "info": "You can customize this behavior anytime in Settings > General.",
+    "action": {
+      "cancel": "Cancel",
+      "tray": "Minimize to Tray",
+      "quit": "Quit App"
+    },
+    "dontAskAgain": "Don't ask me again"
+  },
+  "languages": {
+    "en": "English (English)",
+    "hu": "Hungarian (Magyar)",
+    "de": "German (Deutsch)",
+    "fr": "French (Français)",
+    "es": "Spanish (Español)",
+    "it": "Italian (Italiano)",
+    "zh": "Chinese (中文)",
+    "ko": "Korean (한국어)",
+    "ru": "Russian (Русский)",
+    "ja": "Japanese (日本語)",
+    "pt": "Portuguese (Português)",
+    "pl": "Polish (Polski)",
+    "en-US": "English (English)",
+    "hu-HU": "Hungarian (Magyar)",
+    "de-DE": "German (Deutsch)",
+    "fr-FR": "French (Français)",
+    "es-ES": "Spanish (Español)",
+    "it-IT": "Italian (Italiano)",
+    "zh-CN": "Chinese (中文)",
+    "ko-KR": "Korean (한국어)",
+    "ru-RU": "Russian (Русский)",
+    "ja-JP": "Japanese (日本語)",
+    "pt-PT": "Portuguese (Português)",
+    "pl-PL": "Polish (Polski)"
+  }
+}

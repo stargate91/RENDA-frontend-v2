@@ -78,7 +78,7 @@ function DropdownMenu({
   );
 }
 
-export default function Dropdown({ label, options = [], value, onChange, hint, className = '', placeholder = 'Select...', searchable = false }) {
+export default function Dropdown({ label, options = [], value, onChange, hint, className = '', placeholder = 'Select...', searchable = false, disabled = false }) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
   const triggerRef = useRef(null);
@@ -142,8 +142,9 @@ export default function Dropdown({ label, options = [], value, onChange, hint, c
         <button
           ref={triggerRef}
           type="button"
-          className="ui-dropdown__trigger"
-          onClick={() => setIsOpen(!isOpen)}
+          className={`ui-dropdown__trigger ${disabled ? 'is-disabled' : ''}`.trim()}
+          onClick={() => !disabled && setIsOpen(!isOpen)}
+          disabled={disabled}
         >
           <span className="ui-dropdown__trigger-text">
             {selectedOption ? selectedOption.label : placeholder}

@@ -49,7 +49,8 @@ class Formatter:
         Generates a preview for a single item using official metadata.
         Used for updating planned_path after enrichment.
         """
-        if not self.config.org_enabled:
+        is_inplace = not self.config.org_enabled or not self.config.move_to_library or not self.config.library_path
+        if is_inplace:
              # Just rename in place (keep same folder)
              target_name = (
                  self.format_movie_filename(self.build_movie_context(item, match, loc))
@@ -136,7 +137,8 @@ class Formatter:
             raise ValueError("No localization available for rename planning")
         
         # 1. Context Building & Route Generation
-        if not self.config.org_enabled:
+        is_inplace = not self.config.org_enabled or not self.config.move_to_library or not self.config.library_path
+        if is_inplace:
              # No folder structure, only filename change (in-place)
              if match.item_type == ItemType.MOVIE:
                  context = self.build_movie_context(item, match, loc)
@@ -218,7 +220,9 @@ class Formatter:
                 extra_sub = self.get_extra_subpath(extra)
                 
                 # Extras are placed in the parent folder (target_subpath) + optional extra_sub
-                final_extra_sub = str(Path(target_subpath) / extra_sub)
+                # Force flat/in-place placement if organization is disabled or bypassed
+                is_inplace = not self.config.org_enabled or not self.config.move_to_library or not self.config.library_path
+                final_extra_sub = "" if is_inplace else str(Path(target_subpath) / extra_sub)
                 
                 main_preview.extra_previews.append(RenamePreview(
                     item_id=extra.id,

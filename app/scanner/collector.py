@@ -28,6 +28,19 @@ class Collector:
             "ignored": []
         }
 
+        # Load dynamic video extensions from settings
+        video_exts = self.VIDEO_EXTS
+        try:
+            from app.utils.config_manager import config_manager
+            custom_exts_str = config_manager.get("naming_video_exts")
+            if custom_exts_str:
+                video_exts = {
+                    e.strip().lower() if e.strip().startswith('.') else f".{e.strip().lower()}"
+                    for e in custom_exts_str.split(",") if e.strip()
+                }
+        except Exception:
+            pass
+
         def process_file(file_path: Path):
             # Skip hidden files and directories
             if any(part.startswith('.') for part in file_path.parts):
@@ -37,7 +50,7 @@ class Collector:
             ext = file_path.suffix.lower()
             
             # Filter video files by size: videos smaller than 50MB are fast-tracked as extras
-            if ext in self.VIDEO_EXTS:
+            if ext in video_exts:
                 size = file_path.stat().st_size
                 if size >= self.fast_track_size:
                     results["potential_media"].append(file_path)

@@ -67,6 +67,7 @@ class Categorizer:
         audio_exts = ['.mka', '.ac3', '.dts', '.mp3', '.flac', '.wav', '.m4a']
         img_exts = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
         meta_exts = ['.nfo', '.xml', '.txt']
+        video_exts = ['.mp4', '.mkv', '.avi', '.mov', '.wmv', '.m4v']
         
         if db:
             try:
@@ -76,6 +77,11 @@ class Categorizer:
                 if "extras_audio_exts" in settings: audio_exts = [e.strip() for e in settings["extras_audio_exts"].split(",")]
                 if "extras_img_exts" in settings: img_exts = [e.strip() for e in settings["extras_img_exts"].split(",")]
                 if "extras_meta_exts" in settings: meta_exts = [e.strip() for e in settings["extras_meta_exts"].split(",")]
+                if "naming_video_exts" in settings:
+                    video_exts = [
+                        e.strip().lower() if e.strip().startswith('.') else f".{e.strip().lower()}"
+                        for e in settings["naming_video_exts"].split(",") if e.strip()
+                    ]
             except:
                 pass
 
@@ -90,7 +96,7 @@ class Categorizer:
             category = ExtraCategory.IMAGE
         elif ext in meta_exts:
             category = ExtraCategory.METADATA
-        elif ext in ['.mp4', '.mkv', '.avi', '.mov', '.wmv', '.m4v']:
+        elif ext in video_exts:
              # Video files can be clips if they aren't the main movie
              # This logic is usually handled by the Scanner (file size check)
              category = ExtraCategory.VIDEO

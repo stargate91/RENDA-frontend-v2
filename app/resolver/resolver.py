@@ -210,6 +210,13 @@ class Resolver:
         """
         candidates: Dict[int, Dict[str, Any]] = {} # tmdb_id -> raw_data
 
+        # Get include_adult setting
+        include_adult_setting = self.db.query(UserSetting).filter(UserSetting.key == "include_adult").first()
+        include_adult = False
+        if include_adult_setting:
+            value = include_adult_setting.value
+            include_adult = value.lower() == "true" if isinstance(value, str) else bool(value)
+
         # Validate season-based support for series
         def filter_by_season_support(tv_results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             target_season = item.fn_season or item.fd_season or item.it_season
@@ -289,13 +296,13 @@ class Resolver:
                 if not clean_title: continue
 
                 tmdb_type = "tv" if item.item_type in (ItemType.SERIES, ItemType.EPISODE) else "movie"
-                results = self.api.search(clean_title, item_type=tmdb_type, year=year, language=language)
+                results = self.api.search(clean_title, item_type=tmdb_type, year=year, language=language, include_adult=include_adult)
                 if tmdb_type == "tv":
                     results = filter_by_season_support(results)
                 
                 # FALLBACK 1: If no match with year, try without it
                 if not results and year:
-                    results = self.api.search(clean_title, item_type=tmdb_type, year=None, language=language)
+                    results = self.api.search(clean_title, item_type=tmdb_type, year=None, language=language, include_adult=include_adult)
                     if tmdb_type == "tv":
                         results = filter_by_season_support(results)
                 
@@ -304,11 +311,11 @@ class Resolver:
                     fallback_match = re.search(r'^(.*\b\d+)\s+\d+$', clean_title)
                     if fallback_match:
                         fallback_title = fallback_match.group(1).strip()
-                        results = self.api.search(fallback_title, item_type=tmdb_type, year=year, language=language)
+                        results = self.api.search(fallback_title, item_type=tmdb_type, year=year, language=language, include_adult=include_adult)
                         if tmdb_type == "tv":
                             results = filter_by_season_support(results)
                         if not results and year:
-                            results = self.api.search(fallback_title, item_type=tmdb_type, year=None, language=language)
+                            results = self.api.search(fallback_title, item_type=tmdb_type, year=None, language=language, include_adult=include_adult)
                             if tmdb_type == "tv":
                                 results = filter_by_season_support(results)
                 

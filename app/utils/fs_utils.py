@@ -92,3 +92,37 @@ def move_with_progress(src: str, dst: str, progress_callback=None):
     
     if progress_callback:
         progress_callback(1.0)
+
+
+def validate_directory(path_str: str, check_write: bool = False, label: str = "Folder") -> tuple[bool, str | None]:
+    """
+    Validates that a path:
+    1. Is not empty.
+    2. Exists on the filesystem.
+    3. Is a directory.
+    4. Is readable.
+    5. Is writable (optional, if check_write is True).
+    
+    Supports Windows long paths automatically.
+    Returns (is_valid, error_message).
+    """
+    path_clean = (path_str or "").strip()
+    if not path_clean:
+        return False, f"{label} is required."
+        
+    long_path = to_win_long_path(path_clean)
+    
+    if not os.path.exists(long_path):
+        return False, f"{label} does not exist."
+        
+    if not os.path.isdir(long_path):
+        return False, f"{label} must point to a folder."
+        
+    if not os.access(long_path, os.R_OK):
+        return False, f"{label} is not readable."
+        
+    if check_write and not os.access(long_path, os.W_OK):
+        return False, f"{label} is not writable."
+        
+    return True, None
+

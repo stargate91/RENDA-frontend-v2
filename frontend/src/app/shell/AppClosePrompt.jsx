@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import Button from '../ui/Button';
 import Modal from '../ui/Modal';
-import { useSettingsQuery } from '../queries';
+import Checkbox from '../ui/Checkbox';
+import { useSettingsQuery, useUpdateSettingsMutation } from '../queries';
 import { useTranslation } from '../providers/LanguageProvider';
 import { sendIpc, onIpc } from '../lib/electron';
 
@@ -12,8 +13,10 @@ const sendCloseResponse = (payload) => {
 
 export default function AppClosePrompt() {
   const settingsQuery = useSettingsQuery();
+  const updateSettingsMutation = useUpdateSettingsMutation();
   const closeBehavior = settingsQuery.data?.close_button_behavior || 'ask';
   const [isOpen, setIsOpen] = useState(false);
+  const [remember, setRemember] = useState(false);
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -39,9 +42,22 @@ export default function AppClosePrompt() {
     };
   }, [closeBehavior]);
 
-  const handleAction = (action) => {
+  const handleAction = async (action) => {
     setIsOpen(false);
-    sendCloseResponse({ action, rememberChoice: false, source: 'quit-button' });
+    
+    if (remember && (action === 'minimize-to-tray' || action === 'quit')) {
+      const targetBehavior = action === 'minimize-to-tray' ? 'tray' : 'quit';
+      try {
+        await updateSettingsMutation.mutateAsync({
+          close_button_behavior: targetBehavior,
+        });
+      } catch (err) {
+        console.error('Failed to save close behavior:', err);
+      }
+    }
+    
+    sendCloseResponse({ action, rememberChoice: remember, source: 'quit-button' });
+    setRemember(false);
   };
 
   return (
@@ -60,7 +76,10 @@ export default function AppClosePrompt() {
         </>
       )}
     >
-      <p className="support-copy">{t('closePrompt.info')}</p>
+      <p className="support-copy" style={{ marginBottom: '16px' }}>{t('closePrompt.info')}</p>
+      <Checkbox checked={remember} onChange={(e) => setRemember(e.target.checked)}>
+        {t('closePrompt.dontAskAgain')}
+      </Checkbox>
     </Modal>
   );
 }
