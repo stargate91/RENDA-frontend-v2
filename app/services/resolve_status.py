@@ -18,8 +18,5 @@ def determine_resolved_media_shape(media_kind, season=None, episode=None):
 
     if has_season and has_episode:
         return ItemType.EPISODE, ItemStatus.MATCHED
-    if has_season:
-        return ItemType.SEASON, ItemStatus.UNCERTAIN
-    if has_episode:
-        return ItemType.EPISODE, ItemStatus.UNCERTAIN
-    return ItemType.SERIES, ItemStatus.UNCERTAIN
+    
+    return ItemType.EPISODE, ItemStatus.UNCERTAIN

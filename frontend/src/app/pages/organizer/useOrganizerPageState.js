@@ -319,10 +319,7 @@ export function useOrganizerPageState({ discovery, t }) {
               .map((item) => mapExtraRow(item, t))
           : [];
 
-    if (currentTabRows.length > 0) {
-      setActiveRowId(currentTabRows[0].id);
-      return;
-    }
+
 
     if (!firstTarget) {
       setActiveRowId(null);

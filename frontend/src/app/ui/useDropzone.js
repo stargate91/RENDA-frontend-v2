@@ -1,13 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
+import { webUtils } from '../lib/electron';
 
 const getDroppedPaths = (dataTransfer) => {
   const files = Array.from(dataTransfer?.files || []);
-  let webUtils;
-  try {
-    webUtils = window.require('electron')?.webUtils;
-  } catch {
-    // Ignore if not in Electron
-  }
 
   const paths = files
     .map((file) => {
@@ -24,7 +19,7 @@ const getDroppedPaths = (dataTransfer) => {
   return [...new Set(paths)];
 };
 
-export function useOrganizerDropzone({ disabled = false, onDropPaths }) {
+export function useDropzone({ disabled = false, onDropPaths }) {
   const [isDropActive, setIsDropActive] = useState(false);
   const dragDepthRef = useRef(0);
 
@@ -77,7 +72,7 @@ export function useOrganizerDropzone({ disabled = false, onDropPaths }) {
     event.stopPropagation();
     dragDepthRef.current = 0;
     setIsDropActive(false);
-
+ 
     const paths = getDroppedPaths(event.dataTransfer);
     if (paths.length === 0) {
       return;

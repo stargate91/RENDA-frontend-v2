@@ -118,7 +118,7 @@
         "edition": "Specify if this is a special version (e.g., Extended Edition, Director's Cut).",
         "audioType": "Define the audio configuration (e.g., Stereo, Surround Sound) for name formatting.",
         "seasonNum": "Assign the season number that this episode belongs to.",
-        "episodeNum": "Assign the episode number or range (e.g., 3 or 3-4) for this file."
+        "episodeNum": "Assign episode numbers. Use '3' for single, '3,4' for multiple, or '3-5' to automatically expand ranges."
       }
     },
     "table": {

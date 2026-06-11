@@ -15,7 +15,7 @@ import {
 import { EMPTY_DISCOVERY } from './organizerConstants';
 import { useOrganizerActions } from './useOrganizerActions.jsx';
 import { useOrganizerColumns } from './useOrganizerColumns.jsx';
-import { useOrganizerDropzone } from './useOrganizerDropzone';
+import { useDropzone } from '../../ui/useDropzone';
 import { useOrganizerPageState } from './useOrganizerPageState';
 import { useOrganizerTabs } from './useOrganizerTabs';
 import { useOrganizerViewModel } from './useOrganizerViewModel';
@@ -119,7 +119,7 @@ export default function OrganizerPage() {
     dismissedRowIds,
     scanStatusQuery,
   });
-  const { dropzoneProps, isDropActive } = useOrganizerDropzone({
+  const { dropzoneProps, isDropActive } = useDropzone({
     disabled: isScanActive || isBrowseStarting || isLoadingAll || isRenameStarting,
     onDropPaths: handleScanPaths,
   });

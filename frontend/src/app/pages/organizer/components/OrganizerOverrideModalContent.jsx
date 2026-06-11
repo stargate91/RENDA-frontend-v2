@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Input from '../../../ui/Input';
-import Button from '../../../ui/Button';
 import Dropdown from '../../../ui/Dropdown';
 import { useTranslation } from '../../../providers/LanguageProvider';
 import { useQueryClient } from '@tanstack/react-query';
@@ -111,7 +110,7 @@ const MAIN_TYPE_OPTIONS = [
   { value: 'bonus', label: 'Bonus Video' },
 ];
 
-export default function OrganizerOverrideModalContent({ row, onClose, toast, api }) {
+export default function OrganizerOverrideModalContent({ row, onClose, toast }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const isExtra = row.rawType === 'extra';
@@ -147,6 +146,15 @@ export default function OrganizerOverrideModalContent({ row, onClose, toast, api
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (mainType === 'episode') {
+      const isSeasonEmpty = !String(seasonNum ?? '').trim();
+      const isEpisodeEmpty = !String(episodeNum ?? '').trim();
+      if (isSeasonEmpty || isEpisodeEmpty) {
+        toast('Season and Episode numbers are required for episodes', 'danger');
+        return;
+      }
+    }
+
     const updates = {};
     if (!isExtra) {
       // Media updates
@@ -169,6 +177,10 @@ export default function OrganizerOverrideModalContent({ row, onClose, toast, api
       updates.main_type = mainType; // could trigger convert to movie/episode
       if (mainType === 'movie' || mainType === 'episode') {
         updates.parent_id = parentId; // not strictly needed for media but useful
+        if (mainType === 'episode') {
+          updates.season = seasonNum;
+          updates.episode = episodeNum;
+        }
       } else {
         updates.parent_id = parentId;
         if (category !== 'metadata') {

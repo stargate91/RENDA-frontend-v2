@@ -1,15 +1,13 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { HelpCircle } from 'lucide-react';
 import EmptyState from '../../ui/EmptyState';
 import Spinner from '../../ui/Spinner';
-import Button from '../../ui/Button';
-import Checkbox from '../../ui/Checkbox';
 import MatchCandidateCard from './components/MatchCandidateCard';
 import MatchSeasonCard from './components/MatchSeasonCard';
 import MatchEpisodeCard from './components/MatchEpisodeCard';
 import MatchModalSearchForm from './components/MatchModalSearchForm';
 import MatchModalBrowserToolbar from './components/MatchModalBrowserToolbar';
 import MatchModalBucket from './components/MatchModalBucket';
+import MatchModalConfirmDialog from './components/MatchModalConfirmDialog';
 import useMatchModalViewModel from './components/useMatchModalViewModel';
 import '../../styles/MatchModal.css';
 
@@ -309,51 +307,14 @@ export default function OrganizerMatchModalContent({
         ) : null}
       </section>
 
-      {confirmState ? (
-        <div className="ui-confirm-overlay">
-          <div className="ui-confirm-dialog">
-            <div className="ui-confirm-header">
-              <HelpCircle size={20} className="ui-confirm-icon" />
-              <strong className="ui-confirm-title">
-                {t(`organizer.details.matchModal.confirm.${confirmState.type}.title`)}
-              </strong>
-            </div>
-            <p className="ui-confirm-description">
-              {confirmState.type === 'bucket'
-                ? t('organizer.details.matchModal.confirm.bucket.desc')
-                : confirmState.hasExisting
-                  ? t(`organizer.details.matchModal.confirm.${confirmState.type}.descWithExisting`).replace('{existing}', confirmState.existingDetails)
-                  : t(`organizer.details.matchModal.confirm.${confirmState.type}.descNoExisting`)}
-            </p>
-            <div className="ui-confirm-optout">
-              <Checkbox
-                checked={dontShowAgain}
-                onChange={(e) => setDontShowAgain(e.target.checked)}
-              >
-                {t('organizer.details.matchModal.confirm.dontShowAgain')}
-              </Checkbox>
-            </div>
-            <div className="ui-confirm-actions">
-              <Button
-                type="button"
-                variant="secondary-neutral"
-                size="sm"
-                onClick={handleCancelConfirm}
-              >
-                {t('organizer.details.matchModal.confirm.cancel')}
-              </Button>
-              <Button
-                type="button"
-                variant="primary"
-                size="sm"
-                onClick={handleConfirmMatch}
-              >
-                {t('organizer.details.matchModal.confirm.confirmBtn')}
-              </Button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <MatchModalConfirmDialog
+        confirmState={confirmState}
+        dontShowAgain={dontShowAgain}
+        setDontShowAgain={setDontShowAgain}
+        onCancel={handleCancelConfirm}
+        onConfirm={handleConfirmMatch}
+        t={t}
+      />
     </div>
   );
 }

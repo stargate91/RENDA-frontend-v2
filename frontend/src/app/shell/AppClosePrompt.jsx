@@ -4,14 +4,10 @@ import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import { useSettingsQuery } from '../queries/appQueries';
 import { useTranslation } from '../providers/LanguageProvider';
+import { sendIpc, onIpc } from '../lib/electron';
 
 const sendCloseResponse = (payload) => {
-  try {
-    const { ipcRenderer } = window.require('electron');
-    ipcRenderer.send('app-close-response', payload);
-  } catch {
-    // Ignore non-Electron environments.
-  }
+  sendIpc('app-close-response', payload);
 };
 
 export default function AppClosePrompt() {
@@ -21,14 +17,6 @@ export default function AppClosePrompt() {
   const { t } = useTranslation();
 
   useEffect(() => {
-    let ipcRenderer;
-
-    try {
-      ({ ipcRenderer } = window.require('electron'));
-    } catch {
-      return undefined;
-    }
-
     const handleCloseRequested = (_event, payload = {}) => {
       const source = payload?.source || 'quit-button';
 
@@ -45,9 +33,9 @@ export default function AppClosePrompt() {
       setIsOpen(true);
     };
 
-    ipcRenderer.on('app-close-requested', handleCloseRequested);
+    const unsubscribe = onIpc('app-close-requested', handleCloseRequested);
     return () => {
-      ipcRenderer.removeListener('app-close-requested', handleCloseRequested);
+      unsubscribe();
     };
   }, [closeBehavior]);
 

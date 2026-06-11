@@ -104,6 +104,53 @@ def _get_or_create_virtual_episode_state(db, series_tmdb_id: int, season_number:
     return state
 
 
+def _parse_episode_input(val):
+    if val is None or val == "":
+        return None
+    
+    if isinstance(val, (int, list)):
+        return val
+        
+    val_str = str(val).strip()
+    if not val_str:
+        return None
+        
+    import json
+    if val_str.startswith("[") and val_str.endswith("]"):
+        try:
+            parsed = json.loads(val_str)
+            if isinstance(parsed, list):
+                return sorted(list(set(int(x) for x in parsed if str(x).isdigit())))
+        except:
+            pass
+
+    import re
+    parts = re.split(r'[,;]+', val_str)
+    episodes = set()
+    for part in parts:
+        part = part.strip()
+        if not part:
+            continue
+        range_match = re.match(r'^(\d+)\s*-\s*(\d+)$', part)
+        if range_match:
+            start = int(range_match.group(1))
+            end = int(range_match.group(2))
+            if start <= end:
+                episodes.update(range(start, end + 1))
+            else:
+                episodes.update(range(end, start + 1))
+        elif part.isdigit():
+            episodes.add(int(part))
+            
+    if not episodes:
+        return None
+        
+    sorted_eps = sorted(list(episodes))
+    if len(sorted_eps) == 1:
+        return sorted_eps[0]
+    return sorted_eps
+
+
 def _apply_media_updates(item, updates):
     try:
         if "item_type" in updates:
@@ -138,7 +185,7 @@ def _apply_media_updates(item, updates):
             if "season" in updates:
                 active_match.season_number = int(updates["season"]) if updates["season"] else None
             if "episode" in updates:
-                active_match.episode_number = updates["episode"]
+                active_match.episode_number = _parse_episode_input(updates["episode"])
             active_match.item_type = ItemType.EPISODE
             item.item_type = ItemType.EPISODE
 
@@ -355,6 +402,8 @@ def update_media_item(payload: dict):
             requested_main_type = updates.get("main_type")
             if requested_main_type in {"movie", "episode"}:
                 item = _convert_extra_to_media(db, extra, requested_main_type)
+                if requested_main_type == "episode":
+                    _apply_media_updates(item, updates)
             else:
                 _apply_extra_updates(extra, updates)
                 item = extra.parent_item

@@ -2,6 +2,7 @@ import { Search } from 'lucide-react';
 import IconButton from '../../../ui/IconButton';
 import SegmentedControl from '../../../ui/SegmentedControl';
 import Tooltip from '../../../ui/Tooltip';
+import Input from '../../../ui/Input';
 
 export default function MatchModalSearchForm({
   query,
@@ -25,50 +26,40 @@ export default function MatchModalSearchForm({
         <div
           className={`organizer-match-modal__search-grid${isSeriesMode ? ' is-series' : ' is-movie'}`}
         >
-          <label
-            className="ui-field organizer-match-modal__field organizer-match-modal__field--query"
-          >
-            <input
-              className="ui-input"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={t('organizer.details.matchModal.queryPlaceholder')}
-              aria-label={t('organizer.details.matchModal.query')}
-            />
-          </label>
-          <label className="ui-field organizer-match-modal__field organizer-match-modal__field--year">
-            <input
-              className="ui-input"
-              value={year}
-              onChange={(event) => setYear(event.target.value)}
-              placeholder={t('organizer.details.matchModal.year')}
-              aria-label={t('organizer.details.matchModal.year')}
+          <Input
+            className="organizer-match-modal__field organizer-match-modal__field--query"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={t('organizer.details.matchModal.queryPlaceholder')}
+            aria-label={t('organizer.details.matchModal.query')}
+          />
+          <Input
+            className="organizer-match-modal__field organizer-match-modal__field--year"
+            value={year}
+            onChange={(event) => setYear(event.target.value)}
+            placeholder={t('organizer.details.matchModal.year')}
+            aria-label={t('organizer.details.matchModal.year')}
+            inputMode="numeric"
+          />
+          {isSeriesMode ? (
+            <Input
+              className="organizer-match-modal__field organizer-match-modal__field--compact"
+              value={season}
+              onChange={(event) => setSeason(event.target.value)}
+              placeholder={t('organizer.details.matchModal.seasonShort')}
+              aria-label={t('organizer.details.matchModal.seasonShort')}
               inputMode="numeric"
             />
-          </label>
-          {isSeriesMode ? (
-            <label className="ui-field organizer-match-modal__field organizer-match-modal__field--compact">
-              <input
-                className="ui-input"
-                value={season}
-                onChange={(event) => setSeason(event.target.value)}
-                placeholder={t('organizer.details.matchModal.seasonShort')}
-                aria-label={t('organizer.details.matchModal.seasonShort')}
-                inputMode="numeric"
-              />
-            </label>
           ) : null}
           {isSeriesMode ? (
-            <label className="ui-field organizer-match-modal__field organizer-match-modal__field--compact">
-              <input
-                className="ui-input"
-                value={episode}
-                onChange={(event) => setEpisode(event.target.value)}
-                placeholder={t('organizer.details.matchModal.episodeShort')}
-                aria-label={t('organizer.details.matchModal.episodeShort')}
-                inputMode="numeric"
-              />
-            </label>
+            <Input
+              className="organizer-match-modal__field organizer-match-modal__field--compact"
+              value={episode}
+              onChange={(event) => setEpisode(event.target.value)}
+              placeholder={t('organizer.details.matchModal.episodeShort')}
+              aria-label={t('organizer.details.matchModal.episodeShort')}
+              inputMode="numeric"
+            />
           ) : null}
         </div>
         <div className="organizer-match-modal__search-actions">
