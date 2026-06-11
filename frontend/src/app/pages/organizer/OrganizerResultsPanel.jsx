@@ -2,6 +2,7 @@ import EmptyState from '../../ui/EmptyState';
 import PaginationBar from '../../ui/PaginationBar';
 import Spinner from '../../ui/Spinner';
 import Table from '../../ui/Table';
+import FileDropZone from '../../ui/FileDropZone';
 
 import { useOrganizerModals } from './useOrganizerModals';
 
@@ -11,8 +12,8 @@ export default function OrganizerResultsPanel({
   currentPage,
   dropOverlayDescription,
   dropOverlayLabel,
-  isDropActive = false,
-  dropzoneProps,
+  onDropPaths,
+  isDropzoneDisabled = false,
   emptyActions,
   emptyState,
   emptyText,
@@ -42,15 +43,13 @@ export default function OrganizerResultsPanel({
   const shouldShowPagination = totalItems > 20;
 
   return (
-    <div className="organizer-results" {...dropzoneProps}>
-      {dropzoneProps ? (
-        <div className={`organizer-drop-overlay${isDropActive ? ' is-active' : ''}`}>
-          <div className="organizer-drop-overlay__panel">
-            <span className="organizer-drop-overlay__label">{dropOverlayLabel}</span>
-            <span className="organizer-drop-overlay__description">{dropOverlayDescription}</span>
-          </div>
-        </div>
-      ) : null}
+    <FileDropZone
+      className="organizer-results"
+      onDropPaths={onDropPaths}
+      disabled={isDropzoneDisabled}
+      label={dropOverlayLabel}
+      description={dropOverlayDescription}
+    >
       {loadingState ? (
         <div className="organizer-results organizer-results--empty">
           <div className="organizer-empty-state organizer-empty-state--loading">
@@ -119,6 +118,6 @@ export default function OrganizerResultsPanel({
           </div>
         </>
       )}
-    </div>
+    </FileDropZone>
   );
 }

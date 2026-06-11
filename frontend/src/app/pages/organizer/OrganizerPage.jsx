@@ -15,7 +15,6 @@ import {
 import { EMPTY_DISCOVERY } from './organizerConstants';
 import { useOrganizerActions } from './useOrganizerActions.jsx';
 import { useOrganizerColumns } from './useOrganizerColumns.jsx';
-import { useDropzone } from '../../ui/useDropzone';
 import { useOrganizerPageState } from './useOrganizerPageState';
 import { useOrganizerTabs } from './useOrganizerTabs';
 import { useOrganizerViewModel } from './useOrganizerViewModel';
@@ -119,10 +118,6 @@ export default function OrganizerPage() {
     closeModal,
     dismissedRowIds,
     scanStatusQuery,
-  });
-  const { dropzoneProps, isDropActive } = useDropzone({
-    disabled: isScanActive || isBrowseStarting || isLoadingAll || isRenameStarting,
-    onDropPaths: handleScanPaths,
   });
 
   const { computedExtrasTabs, computedManualTabs, computedMainTabs } = useOrganizerTabs({
@@ -323,8 +318,8 @@ export default function OrganizerPage() {
         summaryText={summaryText}
         emptyStateActions={emptyStateActions}
         headerActions={headerActions}
-        dropzoneProps={dropzoneProps}
-        isDropActive={isDropActive}
+        onDropPaths={handleScanPaths}
+        isDropzoneDisabled={isScanActive || isBrowseStarting || isLoadingAll || isRenameStarting}
         t={t}
       />
     </OrganizerModalProvider>
@@ -373,8 +368,8 @@ function OrganizerPageContent({
   summaryText,
   emptyStateActions,
   headerActions,
-  dropzoneProps,
-  isDropActive,
+  onDropPaths,
+  isDropzoneDisabled,
   t,
 }) {
   const { columns } = useOrganizerColumns({
@@ -418,8 +413,8 @@ function OrganizerPageContent({
             currentPage={currentPage}
             dropOverlayDescription={t('organizer.dropzone.description')}
             dropOverlayLabel={t('organizer.dropzone.label')}
-            dropzoneProps={dropzoneProps}
-            isDropActive={isDropActive}
+            onDropPaths={onDropPaths}
+            isDropzoneDisabled={isDropzoneDisabled}
             emptyActions={emptyStateActions}
             emptyState={organizerEmptyState}
             emptyText={discoveryQuery.isLoading ? t('organizer.table.emptyLoading') : t('organizer.table.emptyDefault')}

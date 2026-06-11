@@ -1,9 +1,10 @@
-import { memo, useState, useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { EyeOff, Trash2, Search, Sliders, X } from 'lucide-react';
 import { useTranslation } from '../providers/LanguageProvider';
 import Tooltip from './Tooltip';
 import IconButton from './IconButton';
 import ContextMenu from './ContextMenu';
+import { useContextMenu } from './useContextMenu';
 import './Table.css';
 
 function TableHeader({ columns }) {
@@ -101,22 +102,15 @@ export default function Table({
   dismissRows,
   clearSelectedRows,
 }) {
-  const [contextMenu, setContextMenu] = useState(null);
-
-  const handleRowContextMenu = (event, row) => {
-    event.preventDefault();
-    setContextMenu({
-      x: event.clientX,
-      y: event.clientY,
-      row,
-    });
-  };
+  const {
+    contextMenu,
+    handleRowContextMenu,
+    closeContextMenu,
+    activeRow,
+    useBulkActions,
+  } = useContextMenu(selectedRows);
 
   const { t } = useTranslation();
-
-  const activeRow = contextMenu?.row;
-  const isClickedRowSelected = activeRow && selectedRows.some((r) => r.id === activeRow.id);
-  const useBulkActions = isClickedRowSelected && selectedRows.length > 0;
 
   const contextMenuItems = useMemo(() => {
     const items = [];
@@ -228,7 +222,7 @@ export default function Table({
           x={contextMenu.x}
           y={contextMenu.y}
           items={contextMenuItems}
-          onClose={() => setContextMenu(null)}
+          onClose={closeContextMenu}
         />
       )}
     </div>
