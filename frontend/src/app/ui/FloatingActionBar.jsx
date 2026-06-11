@@ -24,7 +24,6 @@ export default function FloatingActionBar({
               onClick={action.onClick}
               disabled={action.disabled}
               aria-label={action.label}
-              title={action.label}
             >
               {action.icon ? <action.icon size={16} /> : null}
               <span>{action.label}</span>
