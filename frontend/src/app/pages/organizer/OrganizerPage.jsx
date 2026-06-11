@@ -5,7 +5,7 @@ import Button from '../../ui/Button';
 import OrganizerDetailsPanel from './OrganizerDetailsPanel';
 import OrganizerHeaderPanel from './OrganizerHeaderPanel';
 import OrganizerResultsPanel from './OrganizerResultsPanel';
-import { useDiscoveryCountQuery, useDiscoveryQuery, useScanStatusQuery, useSettingsQuery, useStatsQuery } from '../../queries/appQueries';
+import { useDiscoveryCountQuery, useDiscoveryQuery, useScanStatusQuery, useSettingsQuery, useStatsQuery } from '../../queries';
 import { useUi } from '../../providers/UiProvider';
 import { useTranslation } from '../../providers/LanguageProvider';
 import {
@@ -19,7 +19,8 @@ import { useDropzone } from '../../ui/useDropzone';
 import { useOrganizerPageState } from './useOrganizerPageState';
 import { useOrganizerTabs } from './useOrganizerTabs';
 import { useOrganizerViewModel } from './useOrganizerViewModel';
-import { useOrganizerModals } from './useOrganizerModals.jsx';
+import { OrganizerModalProvider } from './providers/OrganizerModalProvider';
+import { useOrganizerDeleteActions } from './useOrganizerDeleteActions';
 
 export default function OrganizerPage() {
   const { t } = useTranslation();
@@ -239,36 +240,13 @@ export default function OrganizerPage() {
     </>
   ) : null;
 
-  const {
-    openMatchModal,
-    rowActions,
-    bulkActionBar,
-    refreshOrganizerDiscovery,
-  } = useOrganizerModals({
+  const { refreshOrganizerDiscovery } = useOrganizerDeleteActions({
     t,
     closeModal,
-    openModal,
     toast,
     queryClient,
     focusFirstAvailableResult,
     clearSelectedRows,
-    dismissRows,
-    selectedRows,
-  });
-
-  const { columns } = useOrganizerColumns({
-    activeExtrasTab,
-    activeMainTab,
-    collisionStrategy: settingsQuery.data?.collision_strategy,
-    handleSortToggle,
-    handleToggleAll,
-    handleToggleRow,
-    normalizeStatusTone,
-    paginatedRows,
-    selectedRowIds,
-    sortConfig,
-    t,
-    onOpenMatch: (row) => openMatchModal(row),
   });
 
   useEffect(() => {
@@ -296,6 +274,123 @@ export default function OrganizerPage() {
   ]);
 
   return (
+    <OrganizerModalProvider
+      focusFirstAvailableResult={focusFirstAvailableResult}
+      clearSelectedRows={clearSelectedRows}
+      dismissRows={dismissRows}
+      selectedRows={selectedRows}
+    >
+      <OrganizerPageContent
+        activeExtrasTab={activeExtrasTab}
+        activeManualTab={activeManualTab}
+        activeImage={activeImage}
+        activeImageIndex={activeImageIndex}
+        activeImages={activeImages}
+        activeMainTab={activeMainTab}
+        activeRow={activeRow}
+        currentPage={currentPage}
+        handleAdvanceDetailsImage={handleAdvanceDetailsImage}
+        handleSortToggle={handleSortToggle}
+        handleToggleAll={handleToggleAll}
+        handleToggleDetails={handleToggleDetails}
+        handleToggleRow={handleToggleRow}
+        isDetailsCollapsed={isDetailsCollapsed}
+        pageSize={pageSize}
+        paginatedRows={paginatedRows}
+        searchQuery={searchQuery}
+        selectedRowIds={selectedRowIds}
+        setActiveExtrasTab={setActiveExtrasTab}
+        setActiveManualTab={setActiveManualTab}
+        setActiveMainTab={setActiveMainTab}
+        setActiveRowId={setActiveRowId}
+        setPageAndScrollToTop={setPageAndScrollToTop}
+        setPageSize={setPageSize}
+        setSearchQuery={setSearchQuery}
+        shouldShowDetailsCarousel={shouldShowDetailsCarousel}
+        shouldShowDetailsPoster={shouldShowDetailsPoster}
+        sortConfig={sortConfig}
+        sortedRows={sortedRows}
+        totalPages={totalPages}
+        settingsQuery={settingsQuery}
+        discoveryQuery={discoveryQuery}
+        computedExtrasTabs={computedExtrasTabs}
+        computedManualTabs={computedManualTabs}
+        computedMainTabs={computedMainTabs}
+        organizerEmptyState={organizerEmptyState}
+        organizerLoadingState={organizerLoadingState}
+        shouldShowDetailsPanel={shouldShowDetailsPanel}
+        summaryText={summaryText}
+        emptyStateActions={emptyStateActions}
+        headerActions={headerActions}
+        dropzoneProps={dropzoneProps}
+        isDropActive={isDropActive}
+        t={t}
+      />
+    </OrganizerModalProvider>
+  );
+}
+
+function OrganizerPageContent({
+  activeExtrasTab,
+  activeManualTab,
+  activeImage,
+  activeImageIndex,
+  activeImages,
+  activeMainTab,
+  activeRow,
+  currentPage,
+  handleAdvanceDetailsImage,
+  handleSortToggle,
+  handleToggleAll,
+  handleToggleDetails,
+  handleToggleRow,
+  isDetailsCollapsed,
+  pageSize,
+  paginatedRows,
+  searchQuery,
+  selectedRowIds,
+  setActiveExtrasTab,
+  setActiveManualTab,
+  setActiveMainTab,
+  setActiveRowId,
+  setPageAndScrollToTop,
+  setPageSize,
+  setSearchQuery,
+  shouldShowDetailsCarousel,
+  shouldShowDetailsPoster,
+  sortConfig,
+  sortedRows,
+  totalPages,
+  settingsQuery,
+  discoveryQuery,
+  computedExtrasTabs,
+  computedManualTabs,
+  computedMainTabs,
+  organizerEmptyState,
+  organizerLoadingState,
+  shouldShowDetailsPanel,
+  summaryText,
+  emptyStateActions,
+  headerActions,
+  dropzoneProps,
+  isDropActive,
+  t,
+}) {
+  const { columns } = useOrganizerColumns({
+    activeExtrasTab,
+    activeMainTab,
+    collisionStrategy: settingsQuery.data?.collision_strategy,
+    handleSortToggle,
+    handleToggleAll,
+    handleToggleRow,
+    normalizeStatusTone,
+    paginatedRows,
+    selectedRowIds,
+    sortConfig,
+    t,
+  });
+
+  return (
     <Page className="organizer-page">
       <div className={`organizer-main ${isDetailsCollapsed || !shouldShowDetailsPanel ? 'is-details-collapsed' : ''}`}>
         <div className="organizer-main__content">
@@ -318,7 +413,6 @@ export default function OrganizerPage() {
 
           <OrganizerResultsPanel
             activeRowId={activeRow?.id || null}
-            bulkActionBar={bulkActionBar}
             columns={columns}
             currentPage={currentPage}
             dropOverlayDescription={t('organizer.dropzone.description')}
@@ -333,7 +427,6 @@ export default function OrganizerPage() {
             onPageChange={setPageAndScrollToTop}
             onPageSizeChange={setPageSize}
             onRowClick={(row) => setActiveRowId(row.id)}
-            rowActions={rowActions}
             pageSize={pageSize}
             pageSizeOptions={PAGE_SIZE_OPTIONS}
             rows={paginatedRows}

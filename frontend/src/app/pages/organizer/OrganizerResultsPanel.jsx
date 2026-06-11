@@ -3,9 +3,10 @@ import PaginationBar from '../../ui/PaginationBar';
 import Spinner from '../../ui/Spinner';
 import Table from '../../ui/Table';
 
+import { useOrganizerModals } from './useOrganizerModals';
+
 export default function OrganizerResultsPanel({
   activeRowId,
-  bulkActionBar,
   columns,
   currentPage,
   dropOverlayDescription,
@@ -20,7 +21,6 @@ export default function OrganizerResultsPanel({
   onPageChange,
   onPageSizeChange,
   onRowClick,
-  rowActions,
   pageSize,
   pageSizeOptions,
   rows,
@@ -29,6 +29,7 @@ export default function OrganizerResultsPanel({
   totalItems = 0,
   totalPages,
 }) {
+  const { bulkActionBar, rowActions } = useOrganizerModals();
   const shouldShowPagination = totalItems > 20;
 
   return (

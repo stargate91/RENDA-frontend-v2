@@ -3,7 +3,7 @@ import Input from '../../../ui/Input';
 import Dropdown from '../../../ui/Dropdown';
 import { useTranslation } from '../../../providers/LanguageProvider';
 import { useQueryClient } from '@tanstack/react-query';
-import { useUpdateMediaMutation } from '../../../queries/organizerQueries';
+import { useUpdateMediaMutation } from '../../../queries';
 
 const SUBCATEGORIES_BY_CATEGORY = {
   video: [

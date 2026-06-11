@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import Button from '../ui/Button';
 import Modal from '../ui/Modal';
-import { useSettingsQuery } from '../queries/appQueries';
+import { useSettingsQuery } from '../queries';
 import { useTranslation } from '../providers/LanguageProvider';
 import { sendIpc, onIpc } from '../lib/electron';
 

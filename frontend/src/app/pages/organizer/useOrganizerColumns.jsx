@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import SortButton from '../../ui/SortButton';
 import { buildOrganizerColumns } from './organizerTableConfig';
+import { useOrganizerModals } from './useOrganizerModals';
 
 export function useOrganizerColumns({
   activeExtrasTab,
@@ -14,8 +15,9 @@ export function useOrganizerColumns({
   selectedRowIds,
   sortConfig,
   t,
-  onOpenMatch,
 }) {
+  const { openMatchModal } = useOrganizerModals();
+
   const columns = useMemo(() => {
     const renderSortableLabel = (label, key) => (
       <SortButton
@@ -37,7 +39,7 @@ export function useOrganizerColumns({
       renderSortableLabel,
       selectedRowIds,
       t,
-      onOpenMatch,
+      onOpenMatch: (row) => openMatchModal(row),
     });
   }, [
     activeExtrasTab,
@@ -49,7 +51,7 @@ export function useOrganizerColumns({
     paginatedRows,
     selectedRowIds,
     t,
-    onOpenMatch,
+    openMatchModal,
     sortConfig.key,
     sortConfig.direction,
     handleSortToggle,

@@ -5,7 +5,7 @@ import {
   useTvSeasonsQuery,
   useTvEpisodesQuery,
   useResolveMetadataMutation,
-} from '@/queries/organizerQueries';
+} from '@/queries';
 
 const getDefaultType = (row) => (
   row?.rawType === 'episode' || row?.rawType === 'series' ? 'tv' : 'movie'

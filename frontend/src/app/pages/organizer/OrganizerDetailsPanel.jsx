@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, FileJson, Info } from 'lucide-react';
 import { API_BASE } from '../../lib/backend';
 import { useTranslation } from '../../providers/LanguageProvider';
 import { useUi } from '../../providers/UiProvider';
-import { useFullMetadataQuery } from '../../queries/organizerQueries';
+import { useFullMetadataQuery } from '../../queries';
 import '../../styles/OrganizerDetailsPanel.css';
 
 const getImageLabel = (image, t) => t(`organizer.details.imageKinds.${image?.label || 'poster'}`);

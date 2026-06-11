@@ -2,7 +2,7 @@ import Card from '../ui/Card';
 import Page from '../ui/Page';
 import Spinner from '../ui/Spinner';
 import Table from '../ui/Table';
-import { useHistoryQuery } from '../queries/appQueries';
+import { useHistoryQuery } from '../queries';
 
 export default function HistoryPage() {
   const historyQuery = useHistoryQuery();

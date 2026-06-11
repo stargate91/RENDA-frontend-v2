@@ -8,7 +8,7 @@ import Input from '@/ui/Input';
 import Page from '@/ui/Page';
 import Stack from '@/ui/Stack';
 import Checkbox from '@/ui/Checkbox';
-import { useSettingsQuery, useUpdateSettingsMutation, useClearDatabaseMutation } from '@/queries/appQueries';
+import { useSettingsQuery, useUpdateSettingsMutation, useClearDatabaseMutation } from '@/queries';
 import { useUi } from '@/providers/UiProvider';
 import { selectFile, selectFolder } from '@/lib/ipc';
 import Spinner from '@/ui/Spinner';

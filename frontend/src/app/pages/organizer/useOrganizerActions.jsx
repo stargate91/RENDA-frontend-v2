@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { selectFolder } from '../../lib/ipc';
 import { scrollOrganizerToTop } from './organizerScroll';
-import { useScanMutation, useRenameMutation } from '../../queries/organizerQueries';
+import { useScanMutation, useRenameMutation } from '../../queries';
 import { useOrganizerRenameAction } from './hooks/useOrganizerRenameAction';
 
 const EMPTY_DISCOVERY = {

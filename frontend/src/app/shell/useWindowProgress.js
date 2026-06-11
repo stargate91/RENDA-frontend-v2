@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from '../providers/LanguageProvider';
-import { useImageStatusQuery, useScanStatusQuery } from '../queries/appQueries';
+import { useImageStatusQuery, useScanStatusQuery } from '../queries';
 
 const PHASE_RANGES = {
   collecting: [0, 28],

@@ -1,6 +1,6 @@
 import Card from '../ui/Card';
 import Page from '../ui/Page';
-import { useSettingsQuery, useStatsQuery } from '../queries/appQueries';
+import { useSettingsQuery, useStatsQuery } from '../queries';
 
 export default function DashboardPage() {
   const statsQuery = useStatsQuery();
