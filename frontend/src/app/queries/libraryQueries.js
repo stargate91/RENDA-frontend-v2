@@ -6,7 +6,3 @@ export const useStatsQuery = () => useQuery({
   queryFn: () => api.library.getStats(),
 });
 
-export const useHistoryQuery = () => useQuery({
-  queryKey: ['history'],
-  queryFn: () => api.history.get(),
-});
