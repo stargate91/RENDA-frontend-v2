@@ -54,6 +54,7 @@ export default function Dropdown({ label, options = [], value, onChange, hint, c
   return (
     <div className={`ui-field ${className}`.trim()} ref={containerRef}>
       {label ? <span className="ui-field__label">{label}</span> : null}
+      {hint ? <span className="ui-field__hint">{hint}</span> : null}
       <div className="ui-dropdown">
         <button
           ref={triggerRef}
@@ -80,7 +81,7 @@ export default function Dropdown({ label, options = [], value, onChange, hint, c
             >
               {options.map((opt) => (
                 <button
-                  key={opt.value}
+                   key={opt.value}
                   type="button"
                   className={`ui-dropdown__item ${opt.value === value ? 'is-active' : ''}`}
                   onClick={() => handleOptionClick(opt.value)}
@@ -92,7 +93,6 @@ export default function Dropdown({ label, options = [], value, onChange, hint, c
             document.body
           )}
       </div>
-      {hint ? <span className="ui-field__hint">{hint}</span> : null}
     </div>
   );
 }

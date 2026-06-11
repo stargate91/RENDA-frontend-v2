@@ -49,7 +49,11 @@ class TechParser:
     def format_enum_val(enum_obj) -> str:
         """Formats internal enum values for display (e.g., directors_cut -> Director's Cut)."""
         if not enum_obj or enum_obj.value == "none": return ""
-        return enum_obj.value.replace("_", " ").title().replace("Directors Cut", "Director's Cut")
+        val = enum_obj.value.replace("_", " ").title()
+        val = val.replace("Directors Cut", "Director's Cut")
+        val = val.replace("Collectors Edition", "Collector's Edition")
+        val = val.replace("Collectors", "Collector's Edition")
+        return val
 
     @staticmethod
     def format_source(source_enum) -> str:

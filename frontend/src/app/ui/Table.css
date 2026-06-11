@@ -127,14 +127,22 @@
   font-style: italic;
 }
 
+.ui-table tr:hover td:last-child {
+  overflow: visible !important;
+}
+
 .ui-table__row-actions {
   position: absolute;
-  inset: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
   gap: 6px;
-  width: 100%;
+  width: max-content;
+  padding: 0 var(--space-4) 0 24px;
+  background: linear-gradient(90deg, transparent 0%, rgba(10, 12, 16, 0.98) 20px);
 }
 
 .ui-table__row-action {

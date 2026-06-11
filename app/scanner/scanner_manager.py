@@ -487,7 +487,7 @@ class ScannerManager:
 
                 # Guessit analysis
                 triple = {}
-                if not nfo_imdb_id:
+                if True:
                     triple = self.analyzer.get_triple_data(
                         internal_title, item_dict["filename"], item_dict["folder_name"]
                     )

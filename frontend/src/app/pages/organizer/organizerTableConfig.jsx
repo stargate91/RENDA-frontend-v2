@@ -91,12 +91,18 @@ export function buildOrganizerColumns({
 
   if (activeMainTab === 'extras') {
     if (activeExtrasTab === 'bonus' || activeExtrasTab === 'images') {
-      columns.push({ key: 'category', label: renderSortableLabel(t('organizer.table.subcategory'), 'category'), align: 'center' });
+      columns.push({ key: 'category', label: renderSortableLabel(t('organizer.table.subcategory'), 'category'), align: 'center', width: '15%' });
     } else if (activeExtrasTab === 'subtitles' || activeExtrasTab === 'audio') {
-      columns.push({ key: 'category', label: renderSortableLabel(t('organizer.table.subcategory'), 'category'), align: 'center' });
-      columns.push({ key: 'language', label: renderSortableLabel(t('organizer.table.language'), 'language'), align: 'center' });
+      columns.push({ key: 'category', label: renderSortableLabel(t('organizer.table.subcategory'), 'category'), align: 'center', width: '15%' });
+      columns.push({
+        key: 'language',
+        label: renderSortableLabel(t('organizer.table.language'), 'language'),
+        align: 'center',
+        width: '10%',
+        render: (value) => (value ? String(value).substring(0, 2).toUpperCase() : ''),
+      });
     } else if (activeExtrasTab === 'metadata') {
-      columns.push({ key: 'extension', label: renderSortableLabel(t('organizer.table.extension'), 'extension'), align: 'center' });
+      columns.push({ key: 'extension', label: renderSortableLabel(t('organizer.table.extension'), 'extension'), align: 'center', width: '12%' });
     }
   } else {
     if (activeMainTab === 'manual') {
@@ -105,6 +111,7 @@ export function buildOrganizerColumns({
         label: renderSortableLabel(t('organizer.table.type'), 'type'),
         align: 'center',
         hideOnHover: true,
+        width: '12%',
         render: (value) => (
           <span className="organizer-type-text">
             {value}
@@ -116,6 +123,7 @@ export function buildOrganizerColumns({
       key: 'status',
       label: activeMainTab === 'manual' ? renderSortableLabel(t('organizer.table.status'), 'status') : t('organizer.table.status'),
       align: 'center',
+      width: '20%',
       render: (value, row) => (
         <span className="organizer-status-cell">
           <StatusPill tone={normalizeStatusTone(value, t)}>{value}</StatusPill>
@@ -143,11 +151,28 @@ export function buildOrganizerColumns({
     });
   }
 
-  const contentColumnsCount = columns.length - 1;
-  if (contentColumnsCount > 0) {
-    const equalWidth = `${(100 / contentColumnsCount).toFixed(2)}%`;
-    for (let i = 1; i < columns.length; i++) {
-      columns[i].width = equalWidth;
+  const targetCol = columns.find(c => c.key === 'target');
+  if (activeMainTab === 'manual' && targetCol) {
+    targetCol.width = '15%';
+  }
+
+  // Calculate sum of specific widths (excluding select, source)
+  let specificPercent = 0;
+  columns.forEach((col) => {
+    if (col.key !== 'source' && col.width && col.width.endsWith('%')) {
+      specificPercent += parseFloat(col.width);
+    }
+  });
+
+  const remainingPercent = 100 - specificPercent;
+  const sourceCol = columns.find(c => c.key === 'source');
+  if (sourceCol) {
+    if (activeMainTab === 'manual') {
+      sourceCol.width = `${remainingPercent.toFixed(2)}%`;
+    } else {
+      const halfWidth = `${(remainingPercent / 2).toFixed(2)}%`;
+      sourceCol.width = halfWidth;
+      if (targetCol) targetCol.width = halfWidth;
     }
   }
 

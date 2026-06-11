@@ -14,7 +14,7 @@ class ImageStatus(enum.Enum):
 class MovieEdition(enum.Enum):
     NONE = "none"; THEATRICAL = "theatrical"; DIRECTORS_CUT = "directors_cut"
     EXTENDED = "extended"; UNRATED = "unrated"; REMASTERED = "remastered"
-    SPECIAL = "special"; ULTIMATE = "ultimate"; COLLECTORS = "collectors"; FAN_EDIT = "fan_edit"
+    SPECIAL = "special"; ULTIMATE = "ultimate"; COLLECTORS_EDITION = "collectors_edition"; FAN_EDIT = "fan_edit"
 
 class MediaSource(enum.Enum):
     NONE = "none"; BLURAY = "bluray"; WEB = "web"; DVD = "dvd"; TV = "tv"; CAM = "cam"

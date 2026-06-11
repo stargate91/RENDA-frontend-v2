@@ -107,7 +107,19 @@
     },
     "overrideModal": {
       "title": "Override {type}",
-      "description": "Customize naming or organization overrides for this item."
+      "description": "Customize naming or organization overrides for this item.",
+      "hints": {
+        "mainType": "Change how this file is categorized (Movie, Episode, or Bonus Video/Extra).",
+        "parentId": "Select the main movie or series that this extra file belongs to.",
+        "subcategory": "Classify the specific type of this extra file (e.g., trailer, deleted scene, poster).",
+        "language": "Set the audio track or subtitle language for this extra file.",
+        "targetLanguage": "Override the main target language for this specific movie or episode.",
+        "source": "Specify where the video comes from (e.g., Blu-Ray, Web, DVD) to customize naming.",
+        "edition": "Specify if this is a special version (e.g., Extended Edition, Director's Cut).",
+        "audioType": "Define the audio configuration (e.g., Stereo, Surround Sound) for name formatting.",
+        "seasonNum": "Assign the season number that this episode belongs to.",
+        "episodeNum": "Assign the episode number or range (e.g., 3 or 3-4) for this file."
+      }
     },
     "table": {
       "originalFilename": "Original Filename",

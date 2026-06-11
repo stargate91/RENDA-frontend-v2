@@ -27,12 +27,19 @@
 
 .page-header__eyebrow,
 .ui-card__eyebrow,
-.ui-field__hint,
 .ui-field__label {
   color: var(--color-muted);
   font: var(--text-caption);
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.ui-field__hint {
+  color: var(--color-muted);
+  font: var(--text-caption);
+  text-transform: none;
+  letter-spacing: normal;
+  margin-top: 2px;
 }
 
 /* Card */

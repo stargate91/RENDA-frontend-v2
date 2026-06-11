@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Input from '../../../ui/Input';
 import Button from '../../../ui/Button';
 import Dropdown from '../../../ui/Dropdown';
+import { useTranslation } from '../../../providers/LanguageProvider';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUpdateMediaMutation } from '../../../queries/organizerQueries';
 
@@ -91,7 +92,7 @@ const EDITION_OPTIONS = [
   { value: 'remastered', label: 'Remastered' },
   { value: 'special', label: 'Special Edition' },
   { value: 'ultimate', label: 'Ultimate' },
-  { value: 'collectors', label: 'Collector\'s' },
+  { value: 'collectors_edition', label: 'Collector\'s Edition' },
   { value: 'fan_edit', label: 'Fan Edit' },
 ];
 
@@ -111,6 +112,7 @@ const MAIN_TYPE_OPTIONS = [
 ];
 
 export default function OrganizerOverrideModalContent({ row, onClose, toast, api }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const isExtra = row.rawType === 'extra';
   const category = isExtra ? (row.rawPayload?.category || 'video') : 'video';
@@ -200,6 +202,7 @@ export default function OrganizerOverrideModalContent({ row, onClose, toast, api
           value={mainType}
           onChange={(e) => setMainType(e.target.value)}
           options={MAIN_TYPE_OPTIONS}
+          hint={t('organizer.overrideModal.hints.mainType')}
         />
       )}
 
@@ -210,6 +213,7 @@ export default function OrganizerOverrideModalContent({ row, onClose, toast, api
           value={parentId}
           onChange={(e) => setParentId(e.target.value)}
           options={parentCandidates}
+          hint={t('organizer.overrideModal.hints.parentId')}
         />
       )}
 
@@ -222,6 +226,7 @@ export default function OrganizerOverrideModalContent({ row, onClose, toast, api
               value={subcategory}
               onChange={(e) => setSubcategory(e.target.value)}
               options={subcategoryList}
+              hint={t('organizer.overrideModal.hints.subcategory')}
             />
           )}
 
@@ -231,6 +236,7 @@ export default function OrganizerOverrideModalContent({ row, onClose, toast, api
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
               options={LANGUAGE_OPTIONS}
+              hint={t('organizer.overrideModal.hints.language')}
             />
           )}
         </>
@@ -244,24 +250,28 @@ export default function OrganizerOverrideModalContent({ row, onClose, toast, api
             value={targetLanguage}
             onChange={(e) => setTargetLanguage(e.target.value)}
             options={LANGUAGE_OPTIONS}
+            hint={t('organizer.overrideModal.hints.targetLanguage')}
           />
           <Dropdown
             label="Source"
             value={source}
             onChange={(e) => setSource(e.target.value)}
             options={SOURCE_OPTIONS}
+            hint={t('organizer.overrideModal.hints.source')}
           />
           <Dropdown
             label="Edition"
             value={edition}
             onChange={(e) => setEdition(e.target.value)}
             options={EDITION_OPTIONS}
+            hint={t('organizer.overrideModal.hints.edition')}
           />
           <Dropdown
             label="Audio Type"
             value={audioType}
             onChange={(e) => setAudioType(e.target.value)}
             options={AUDIO_TYPE_OPTIONS}
+            hint={t('organizer.overrideModal.hints.audioType')}
           />
         </>
       )}
@@ -274,12 +284,14 @@ export default function OrganizerOverrideModalContent({ row, onClose, toast, api
             value={targetLanguage}
             onChange={(e) => setTargetLanguage(e.target.value)}
             options={LANGUAGE_OPTIONS}
+            hint={t('organizer.overrideModal.hints.targetLanguage')}
           />
           <Dropdown
             label="Audio Type"
             value={audioType}
             onChange={(e) => setAudioType(e.target.value)}
             options={AUDIO_TYPE_OPTIONS}
+            hint={t('organizer.overrideModal.hints.audioType')}
           />
           <Input
             label="Season Number"
@@ -287,12 +299,14 @@ export default function OrganizerOverrideModalContent({ row, onClose, toast, api
             value={seasonNum}
             onChange={(e) => setSeasonNum(e.target.value)}
             placeholder="e.g. 1"
+            hint={t('organizer.overrideModal.hints.seasonNum')}
           />
           <Input
             label="Episode Number"
             value={episodeNum}
             onChange={(e) => setEpisodeNum(e.target.value)}
             placeholder="e.g. 3 or 3-4"
+            hint={t('organizer.overrideModal.hints.episodeNum')}
           />
         </>
       )}

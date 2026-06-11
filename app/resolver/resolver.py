@@ -227,12 +227,35 @@ class Resolver:
         if item.nfo_imdb_id:
             res = self.api.find_by_imdb(item.nfo_imdb_id, language=language)
             if res:
-                if res.get("item_type") == "tv":
-                    res_list = filter_by_season_support([res])
-                    if res_list:
+                # Validate that the IMDb result actually matches one of our parsed titles
+                tmdb_type = "tv" if res.get("item_type") in ("tv", "series") else "movie"
+                details = None
+                try:
+                    details = self.api.get_details(res["id"], tmdb_type, language=language)
+                except Exception:
+                    pass
+                candidate_titles = self._collect_candidate_titles(res, details)
+                
+                match_found = False
+                for t in [item.fn_title, item.it_title, item.fd_title]:
+                    if t and self._title_match_rank(t, candidate_titles) > 0:
+                        match_found = True
+                        break
+                
+                if match_found:
+                    if res.get("item_type") in ("tv", "series"):
+                        res_list = filter_by_season_support([res])
+                        if res_list:
+                            self._add_candidate(candidates, res, source_priority=100)
+                    else:
                         self._add_candidate(candidates, res, source_priority=100)
                 else:
-                    self._add_candidate(candidates, res, source_priority=100)
+                    from ..utils.logger import logger
+                    logger.warning(
+                        f"NFO IMDb ID {item.nfo_imdb_id} resolved to '{res.get('title') or res.get('name')}', "
+                        f"which does not match filename '{item.fn_title}', internal title '{item.it_title}', "
+                        f"or folder name '{item.fd_title}'. Discarding NFO ID and falling back to search."
+                    )
 
         # 2. Source: Triple Guessit Search (if we don't have a 100% match yet)
         if not candidates:
