@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react';
-import { Sliders } from 'lucide-react';
 import Dropdown from '../../../ui/Dropdown';
 import { useTranslation } from '../../../providers/LanguageProvider';
 import { useQueryClient } from '@tanstack/react-query';
@@ -252,8 +251,7 @@ export default function OrganizerOverrideModalContent({ row, onClose, toast }) {
       {showSelector ? (
         <div className="single-override-layout">
           <div className="single-override-layout__side-panel">
-            <h4 className="organizer-override-modal__section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Sliders size={16} />
+            <h4 className="organizer-override-modal__section-title">
               {t('organizer.overrideModal.matchAction.title') || 'Match Action'}
             </h4>
             <p className="organizer-override-field__label-text" style={{ fontSize: '12px', lineHeight: '1.4', marginBottom: 'var(--space-2)' }}>

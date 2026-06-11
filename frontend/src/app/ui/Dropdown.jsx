@@ -123,8 +123,8 @@ export default function Dropdown({ label, options = [], value, onChange, hint, c
         setIsOpen(false);
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside, true);
+    return () => document.removeEventListener('mousedown', handleClickOutside, true);
   }, []);
 
   const handleOptionClick = (val) => {

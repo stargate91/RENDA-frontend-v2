@@ -144,6 +144,12 @@ export default function OrganizerBulkOverrideModalContent({ rows, onClose, toast
   const [orderedItems, setOrderedItems] = useState(() => [...rows]);
   const [applyAutoNumbering, setApplyAutoNumbering] = useState(false);
   const [startEpisodeNum, setStartEpisodeNum] = useState('1');
+  const [matchAction, setMatchAction] = useState('keep');
+
+  const hasMatched = useMemo(() => rows.some((row) => row.rawStatus === 'matched'), [rows]);
+  const isEpisode = mainType === 'episode';
+  const isModifyingSeasonOrEpisode = applySeasonNum || applyAutoNumbering;
+  const showMatchActionSelector = hasMatched && isEpisode && isModifyingSeasonOrEpisode;
 
   const bulkUpdateMutation = useBulkUpdateMediaMutation();
 
@@ -184,18 +190,18 @@ export default function OrganizerBulkOverrideModalContent({ rows, onClose, toast
   const handleMoveUp = (index) => {
     if (index === 0) return;
     const newList = [...orderedItems];
-    const temp = newList[index];
-    newList[index] = newList[index - 1];
-    newList[index - 1] = temp;
+    const item = newList[index];
+    newList.splice(index, 1);
+    newList.splice(index - 1, 0, item);
     setOrderedItems(newList);
   };
 
   const handleMoveDown = (index) => {
     if (index === orderedItems.length - 1) return;
     const newList = [...orderedItems];
-    const temp = newList[index];
-    newList[index] = newList[index + 1];
-    newList[index + 1] = temp;
+    const item = newList[index];
+    newList.splice(index, 1);
+    newList.splice(index + 1, 0, item);
     setOrderedItems(newList);
   };
 
@@ -203,6 +209,10 @@ export default function OrganizerBulkOverrideModalContent({ rows, onClose, toast
     e.preventDefault();
 
     const updates = {};
+    if (showMatchActionSelector && matchAction === 'reset') {
+      updates.reset_match = true;
+    }
+
     if (applyMainType) {
       updates.main_type = mainType;
     }
@@ -414,6 +424,59 @@ export default function OrganizerBulkOverrideModalContent({ rows, onClose, toast
               />
               <span className="organizer-override-field__label-text font-semibold">{t('organizer.overrideModal.labels.autoNumberCheck')}</span>
             </label>
+          </div>
+        )}
+
+        {showMatchActionSelector && (
+          <div className="organizer-override-modal__section" style={{ marginTop: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+            <h4 className="organizer-override-modal__section-title" style={{ marginBottom: '0' }}>
+              {t('organizer.overrideModal.matchAction.title') || 'Match Action'}
+            </h4>
+            <p className="organizer-override-field__label-text" style={{ fontSize: '12px', lineHeight: '1.4' }}>
+              {t('organizer.overrideModal.matchAction.description') || 'Choose what to do with the current series match since season or episode changed:'}
+            </p>
+            
+            <div style={{ display: 'flex', gap: 'var(--space-4)' }}>
+              <div
+                className={`match-action-option ${matchAction === 'keep' ? 'is-selected' : ''}`}
+                onClick={() => setMatchAction('keep')}
+                style={{ flex: '1 1 0' }}
+              >
+                <label className="match-action-option__radio-label">
+                  <input
+                    type="radio"
+                    name="bulkMatchAction"
+                    checked={matchAction === 'keep'}
+                    onChange={() => setMatchAction('keep')}
+                    style={{ cursor: 'pointer' }}
+                  />
+                  {t('organizer.overrideModal.matchAction.keep') || 'Keep current series match'}
+                </label>
+                <span className="match-action-option__description">
+                  {t('organizer.overrideModal.matchAction.keepDesc') || 'Update season/episode under the series.'}
+                </span>
+              </div>
+
+              <div
+                className={`match-action-option ${matchAction === 'reset' ? 'is-selected' : ''}`}
+                onClick={() => setMatchAction('reset')}
+                style={{ flex: '1 1 0' }}
+              >
+                <label className="match-action-option__radio-label">
+                  <input
+                    type="radio"
+                    name="bulkMatchAction"
+                    checked={matchAction === 'reset'}
+                    onChange={() => setMatchAction('reset')}
+                    style={{ cursor: 'pointer' }}
+                  />
+                  {t('organizer.overrideModal.matchAction.reset') || 'Reset match (Pending)'}
+                </label>
+                <span className="match-action-option__description">
+                  {t('organizer.overrideModal.matchAction.resetDesc') || 'Remove match and return to Review Needed.'}
+                </span>
+              </div>
+            </div>
           </div>
         )}
       </div>
