@@ -9,6 +9,7 @@ import EmptyState from '@/ui/EmptyState';
 import PaginationBar from '@/ui/PaginationBar';
 import PosterCard from '@/ui/PosterCard';
 import PosterGrid from '@/ui/PosterGrid';
+import Dropdown from '@/ui/Dropdown';
 import { usePaginationVisibility } from '../../hooks/usePaginationVisibility';
 import { useTranslation } from '@/providers/LanguageProvider';
 import { useLocalListSearch } from '../../hooks/useLocalListSearch';
@@ -42,6 +43,8 @@ export default function LibraryPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const [sortKey, setSortKey] = useState('title');
+  const [sortDirection, setSortDirection] = useState('asc');
 
   if (isLoading) {
     return (
@@ -53,35 +56,13 @@ export default function LibraryPage() {
     );
   }
 
-  // Construct tabs based on include_adult setting
-  const tabs = [
-    { value: 'movies', label: t('library.tabs.movies') },
-    ...(settings?.folder_collection_mode !== 'never' ? [
-      { value: 'collections', label: t('library.tabs.collections') }
-    ] : []),
-    { value: 'series', label: t('library.tabs.series') },
-    { value: 'people', label: t('library.tabs.people') },
-    ...(settings?.include_adult ? [
-      { value: 'adult', label: t('library.tabs.adult') },
-      { value: 'adult_people', label: t('library.tabs.adultPeople') },
-    ] : []),
-    { value: 'tags', label: t('library.tabs.tags') },
-  ];
-
-  const resolvedTab = tabs.some(tab => tab.value === activeTab) ? activeTab : 'movies';
-
-  // Reset page when switching tabs
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [resolvedTab]);
-
-  const isCollections = resolvedTab === 'collections';
-  const isTags = resolvedTab === 'tags';
+  const isCollections = activeTab === 'collections';
+  const isTags = activeTab === 'tags';
 
   const { data: libraryData, isLoading: isLibraryLoading } = useLibraryQuery(
     !isCollections && !isTags
-      ? { tab: resolvedTab, page: 1, pageSize: 10000 }
-      : null
+      ? { tab: activeTab, page: 1, pageSize: 10000 }
+      : { tab: 'movies', page: 1, pageSize: 1 }
   );
 
   const { data: collectionsData, isLoading: isCollectionsLoading } = useCollectionsQuery(
@@ -91,6 +72,40 @@ export default function LibraryPage() {
   );
 
   const { data: tagsData, isLoading: isTagsLoading } = useTagsQuery();
+
+  const counts = libraryData?.counts || {};
+
+  // Construct tabs based on include_adult setting
+  const tabs = [
+    { value: 'movies', label: t('library.tabs.movies'), count: counts.movies },
+    ...(settings?.folder_collection_mode !== 'never' ? [
+      { value: 'collections', label: t('library.tabs.collections'), count: counts.collections }
+    ] : []),
+    { value: 'series', label: t('library.tabs.series'), count: counts.series },
+    { value: 'people', label: t('library.tabs.people'), count: counts.people },
+    ...(settings?.include_adult ? [
+      { value: 'adult', label: t('library.tabs.adult'), count: counts.adult },
+      { value: 'adult_people', label: t('library.tabs.adultPeople'), count: counts.adult_people },
+    ] : []),
+    { value: 'tags', label: t('library.tabs.tags'), count: counts.tags },
+  ];
+
+  const resolvedTab = tabs.some(tab => tab.value === activeTab) ? activeTab : 'movies';
+
+  // Reset page and sorting when switching tabs
+  useEffect(() => {
+    if (resolvedTab === 'collections') {
+      setSortKey('owned_count');
+      setSortDirection('desc');
+    } else if (resolvedTab === 'people' || resolvedTab === 'adult_people') {
+      setSortKey('library_count');
+      setSortDirection('desc');
+    } else {
+      setSortKey('title');
+      setSortDirection('asc');
+    }
+    setCurrentPage(1);
+  }, [resolvedTab]);
 
   const getEmptyStateIcon = () => {
     switch (resolvedTab) {
@@ -132,9 +147,88 @@ export default function LibraryPage() {
 
   const filteredItems = useLocalListSearch(allItems, searchQuery);
 
-  const totalItems = filteredItems.length;
+  // Sort items locally
+  const sortedItems = [...filteredItems].sort((a, b) => {
+    if (resolvedTab === 'movies' || resolvedTab === 'series' || resolvedTab === 'adult') {
+      let valA, valB;
+      if (sortKey === 'title') {
+        valA = String(a.title || '').toLowerCase();
+        valB = String(b.title || '').toLowerCase();
+      } else if (sortKey === 'year') {
+        valA = Number(a.year) || 0;
+        valB = Number(b.year) || 0;
+      } else if (sortKey === 'release_date') {
+        valA = a.release_date || a.year || '';
+        valB = b.release_date || b.year || '';
+      } else if (sortKey === 'rating_imdb') {
+        valA = parseFloat(a.rating_imdb) || 0;
+        valB = parseFloat(b.rating_imdb) || 0;
+      } else if (sortKey === 'rating') {
+        valA = parseFloat(a.rating) || 0;
+        valB = parseFloat(b.rating) || 0;
+      } else if (sortKey === 'user_rating') {
+        valA = parseFloat(a.user_rating) || 0;
+        valB = parseFloat(b.user_rating) || 0;
+      } else if (sortKey === 'duration') {
+        valA = Number(a.duration) || 0;
+        valB = Number(b.duration) || 0;
+      } else if (sortKey === 'file_size') {
+        valA = Number(a.file_size || a.size || a.size_mb) || 0;
+        valB = Number(b.file_size || b.size || b.size_mb) || 0;
+      } else if (sortKey === 'last_watched') {
+        valA = a.last_watched_at ? new Date(a.last_watched_at).getTime() : 0;
+        valB = b.last_watched_at ? new Date(b.last_watched_at).getTime() : 0;
+      }
+
+      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    }
+
+    if (resolvedTab === 'collections') {
+      let valA, valB;
+      if (sortKey === 'title') {
+        valA = String(a.title || '').toLowerCase();
+        valB = String(b.title || '').toLowerCase();
+      } else { // default to owned_count
+        valA = Number(a.owned_count) || 0;
+        valB = Number(b.owned_count) || 0;
+      }
+
+      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    }
+
+    if (resolvedTab === 'people' || resolvedTab === 'adult_people') {
+      let valA, valB;
+      if (sortKey === 'title') {
+        valA = String(a.title || '').toLowerCase();
+        valB = String(b.title || '').toLowerCase();
+      } else if (sortKey === 'library_count') {
+        valA = Number(a.library_count) || 0;
+        valB = Number(b.library_count) || 0;
+      } else if (sortKey === 'rating') { // popularity
+        valA = parseFloat(a.rating) || 0;
+        valB = parseFloat(b.rating) || 0;
+      } else if (sortKey === 'birthday') {
+        valA = a.birthday ? new Date(a.birthday).getTime() : 0;
+        valB = b.birthday ? new Date(b.birthday).getTime() : 0;
+      } else if (sortKey === 'user_rating') {
+        valA = parseFloat(a.user_rating) || 0;
+        valB = parseFloat(b.user_rating) || 0;
+      }
+
+      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    }
+    return 0;
+  });
+
+  const totalItems = sortedItems.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-  const paginatedItems = filteredItems.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const paginatedItems = sortedItems.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const shouldShowPagination = usePaginationVisibility(totalItems, pageSize);
 
@@ -171,6 +265,8 @@ export default function LibraryPage() {
         subtitle: t('library.collections.partsCount', { owned: item.owned_count, total: item.total_count }),
         imageUrl: resolvePosterUrl(item.poster_path),
         icon: emptyIcon,
+        ratingImdb: item.rating_imdb,
+        ratingTmdb: item.rating,
       };
     }
     if (resolvedTab === 'people' || resolvedTab === 'adult_people') {
@@ -192,6 +288,8 @@ export default function LibraryPage() {
       imageUrl: resolvePosterUrl(item.poster_path || item.local_poster_path),
       icon: emptyIcon,
       backgroundColor: item.color,
+      ratingImdb: item.rating_imdb,
+      ratingTmdb: item.rating,
     };
   };
 
@@ -221,8 +319,52 @@ export default function LibraryPage() {
             </div>
           </div>
 
-          {/* Row 3: Sorters and Filters (empty visible row) */}
+          {/* Row 3: Sorters and Filters */}
           <div className="organizer-panel__row library-filters-row">
+            {(resolvedTab === 'movies' || resolvedTab === 'series' || resolvedTab === 'collections' || resolvedTab === 'adult' || resolvedTab === 'people' || resolvedTab === 'adult_people') && (
+              <div className="library-sorter-container">
+                <span className="library-sorter-label">{t('library.sort.label') || 'Sort:'}</span>
+                <Dropdown
+                  variant="sorter"
+                  value={sortKey}
+                  onChange={(e) => {
+                    setSortKey(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  sortDirection={sortDirection}
+                  onSortDirectionToggle={() => {
+                    setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+                    setCurrentPage(1);
+                  }}
+                  options={
+                    resolvedTab === 'collections'
+                      ? [
+                          { value: 'owned_count', label: t('library.sort.ownedCount') || 'Item Count' },
+                          { value: 'title', label: t('library.sort.title') || 'Title' },
+                        ]
+                      : (resolvedTab === 'people' || resolvedTab === 'adult_people')
+                      ? [
+                          { value: 'library_count', label: t('library.sort.libraryCount') || 'Library Count' },
+                          { value: 'rating', label: t('library.sort.popularity') || 'Popularity' },
+                          { value: 'title', label: t('library.sort.title') || 'Name' },
+                          { value: 'birthday', label: t('library.sort.birthday') || 'Birthdate' },
+                          { value: 'user_rating', label: t('library.sort.userRating') || 'User Rating' },
+                        ]
+                      : [
+                          { value: 'title', label: t('library.sort.title') || 'Title' },
+                          { value: 'year', label: resolvedTab === 'series' ? (t('library.sort.firstAirYear') || 'First Air Year') : (t('library.sort.year') || 'Year') },
+                          { value: 'release_date', label: resolvedTab === 'series' ? (t('library.sort.firstAirDate') || 'First Air Date') : (t('library.sort.releaseDate') || 'Release Date') },
+                          { value: 'rating_imdb', label: t('library.sort.imdbRating') || 'IMDb Rating' },
+                          { value: 'rating', label: t('library.sort.tmdbRating') || 'TMDb Rating' },
+                          { value: 'user_rating', label: t('library.sort.userRating') || 'User Rating' },
+                          { value: 'duration', label: t('library.sort.duration') || 'Duration' },
+                          { value: 'file_size', label: t('library.sort.fileSize') || 'File Size' },
+                          { value: 'last_watched', label: t('library.sort.lastWatched') || 'Last Watched' },
+                        ]
+                  }
+                />
+              </div>
+            )}
           </div>
         </div>
 

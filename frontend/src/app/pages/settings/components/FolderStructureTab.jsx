@@ -187,7 +187,7 @@ export default function FolderStructureTab({
                       value={form.folder_show_template}
                       disabled={isScanActive}
                       onChange={handleChange('folder_show_template')}
-                      placeholder="{series_title} ({year})"
+                      placeholder="{series_title} ({year_range})"
                       tags={FOLDER_SHOW_TAGS}
                       fieldKey="folder_show_template"
                       insertTag={insertTag}

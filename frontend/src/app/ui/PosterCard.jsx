@@ -1,5 +1,6 @@
 import React from 'react';
 import MediaCard from './MediaCard';
+import RatingPill from './RatingPill';
 import './PosterCard.css';
 
 export default function PosterCard({
@@ -13,6 +14,8 @@ export default function PosterCard({
   subtitle,
   badge,
   overlay,
+  ratingImdb,
+  ratingTmdb,
   onClick,
   disabled = false,
   active = false,
@@ -51,12 +54,29 @@ export default function PosterCard({
         </MediaCard>
       </DefaultComponent>
 
-      {(title || subtitle) && (
+      {(title || subtitle || ratingImdb || ratingTmdb) && (
         <div className="ui-poster-card__details">
           {title && <div className="ui-poster-card__title" title={title}>{title}</div>}
-          {subtitle && <div className="ui-poster-card__subtitle">{subtitle}</div>}
+          {(subtitle || ratingImdb || ratingTmdb) && (
+            <div className="ui-poster-card__subtitle-row">
+              {subtitle && <div className="ui-poster-card__subtitle">{subtitle}</div>}
+              {(() => {
+                const hasImdb = ratingImdb !== undefined && ratingImdb !== null && ratingImdb !== '';
+                const hasTmdb = ratingTmdb !== undefined && ratingTmdb !== null && ratingTmdb !== '';
+                if (hasImdb) {
+                  const val = parseFloat(ratingImdb);
+                  return <RatingPill type="imdb">{isNaN(val) ? ratingImdb : val.toFixed(1)}</RatingPill>;
+                } else if (hasTmdb) {
+                  const val = parseFloat(ratingTmdb);
+                  return <RatingPill type="tmdb">{isNaN(val) ? ratingTmdb : val.toFixed(1)}</RatingPill>;
+                }
+                return null;
+              })()}
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
+

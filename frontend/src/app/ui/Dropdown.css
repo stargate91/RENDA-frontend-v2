@@ -79,6 +79,7 @@
     opacity: 0;
     transform: translateY(-4px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -90,6 +91,7 @@
     opacity: 0;
     transform: translateY(-100%) translateY(4px);
   }
+
   to {
     opacity: 1;
     transform: translateY(-100%) translateY(0);
@@ -168,4 +170,77 @@
   opacity: 0.5;
   cursor: not-allowed;
   pointer-events: none;
+}
+
+/* Sorter Variant CSS */
+.ui-field--sorter {
+  margin-bottom: 0;
+}
+
+.ui-dropdown--sorter {
+  width: 160px;
+  --ui-dropdown-sorter-hover-border: color-mix(in srgb, var(--color-accent) 35%, var(--ui-control-border));
+}
+
+.ui-dropdown__sorter-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  width: 100%;
+}
+
+.ui-dropdown__trigger--sorter {
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-xs, 12px);
+  border-radius: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ui-dropdown__trigger--sorter:hover {
+  border-color: var(--ui-dropdown-sorter-hover-border);
+}
+
+.ui-dropdown__direction-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.ui-dropdown__direction-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ui-control-text);
+}
+
+.ui-dropdown__menu--sorter {
+  width: auto !important;
+  min-width: 160px;
+}
+
+.ui-dropdown__menu--sorter .ui-dropdown__item {
+  font-size: var(--font-size-xs, 12px);
+  min-height: 32px;
+  line-height: 32px;
+}
+
+.ui-dropdown__menu--sorter .ui-dropdown__item.is-active {
+  background: transparent;
+  color: var(--color-muted);
+}
+
+.ui-dropdown__menu--sorter .ui-dropdown__item:hover,
+.ui-dropdown__menu--sorter .ui-dropdown__item.is-active:hover {
+  background: var(--color-surface-hover, var(--ui-control-bg-hover));
+  color: var(--ui-control-text);
 }

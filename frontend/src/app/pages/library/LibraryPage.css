@@ -19,7 +19,7 @@
   padding-bottom: 0;
 }
 
-.library-main > .ui-pagination:last-child {
+.library-main>.ui-pagination:last-child {
   margin-bottom: 0;
 }
 
@@ -30,6 +30,21 @@
 
 .library-filters-row {
   justify-content: space-between;
+  background: var(--color-surface-glass, rgba(255, 255, 255, 0.02));
+}
+
+.library-sorter-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+
+.library-sorter-label {
+  font-size: var(--font-size-2xs, 11px);
+  font-weight: var(--font-weight-bold, 700);
+  color: var(--color-text-muted, #64748b);
+  letter-spacing: 0.06em;
+  user-select: none;
 }
 
 .library-filter-group {
@@ -95,5 +110,3 @@
     transform: rotate(360deg);
   }
 }
-
-

@@ -78,6 +78,12 @@
   margin-left: calc(-1 * var(--space-4));
 }
 
+.organizer-panel .ui-tab,
+.organizer-panel .ui-tab--sub {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 /* Organizer Search Input */
 .organizer-search {
   margin-left: auto;
@@ -122,7 +128,7 @@
   width: 280px;
   background: var(--ui-control-bg);
   border-color: var(--color-accent-blue);
-  box-shadow: var(--ui-control-focus-ring);
+  box-shadow: none;
 }
 
 /* Organizer Table Content Container */

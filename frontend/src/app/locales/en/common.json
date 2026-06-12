@@ -143,6 +143,24 @@
     },
     "collections": {
       "partsCount": "{{owned}} / {{total}} movies"
+    },
+    "sort": {
+      "label": "Sort:",
+      "title": "Title",
+      "year": "Year",
+      "firstAirYear": "First Air Year",
+      "releaseDate": "Release Date",
+      "firstAirDate": "First Air Date",
+      "imdbRating": "IMDb Rating",
+      "tmdbRating": "TMDb Rating",
+      "userRating": "User Rating",
+      "duration": "Duration",
+      "fileSize": "File Size",
+      "lastWatched": "Last Watched",
+      "ownedCount": "Item Count",
+      "libraryCount": "Library Count",
+      "popularity": "Popularity",
+      "birthday": "Birthdate"
     }
   }
 }

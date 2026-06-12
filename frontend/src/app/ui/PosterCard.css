@@ -104,10 +104,22 @@ div.ui-poster-card__image-wrapper:focus-visible {
   line-height: 1.4;
 }
 
+.ui-poster-card__subtitle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  width: 100%;
+}
+
 .ui-poster-card__subtitle {
   font-size: var(--font-size-2xs, 10px);
   color: var(--color-muted, #94a3b8);
   line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
 }
 
 /* Active Highlight States (e.g. for matching candidate or selected rows) */

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import './Dropdown.css';
 
 function DropdownMenu({
@@ -9,6 +10,7 @@ function DropdownMenu({
   value,
   onOptionClick,
   searchable,
+  variant,
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const searchInputRef = useRef(null);
@@ -43,7 +45,7 @@ function DropdownMenu({
   return createPortal(
     <div
       ref={menuRef}
-      className={`ui-dropdown__menu ${searchable ? 'has-search' : ''} ${menuCoords.openUpwards ? 'is-upwards' : ''}`}
+      className={`ui-dropdown__menu ${searchable ? 'has-search' : ''} ${menuCoords.openUpwards ? 'is-upwards' : ''} ${variant === 'sorter' ? 'ui-dropdown__menu--sorter' : ''}`.trim()}
     >
       {searchable ? (
         <div className="ui-dropdown__search-container">
@@ -81,13 +83,27 @@ function DropdownMenu({
   );
 }
 
-export default function Dropdown({ label, options = [], value, onChange, hint, className = '', placeholder = 'Select...', searchable = false, disabled = false }) {
+export default function Dropdown({
+  label,
+  options = [],
+  value,
+  onChange,
+  hint,
+  className = '',
+  placeholder = 'Select...',
+  searchable = false,
+  disabled = false,
+  variant = 'default',
+  sortDirection = 'asc',
+  onSortDirectionToggle,
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
   const triggerRef = useRef(null);
   const [menuCoords, setMenuCoords] = useState({ top: 0, left: 0, width: 0 });
 
   const selectedOption = options.find((opt) => opt.value === value);
+  const isSorter = variant === 'sorter';
 
   const updateMenuCoords = () => {
     if (triggerRef.current) {
@@ -138,22 +154,38 @@ export default function Dropdown({ label, options = [], value, onChange, hint, c
   };
 
   return (
-    <div className={`ui-field ${className}`.trim()} ref={containerRef}>
+    <div className={`ui-field ${isSorter ? 'ui-field--sorter' : ''} ${className}`.trim()} ref={containerRef}>
       {label ? <span className="ui-field__label">{label}</span> : null}
       {hint ? <span className="ui-field__hint">{hint}</span> : null}
-      <div className="ui-dropdown">
-        <button
-          ref={triggerRef}
-          type="button"
-          className={`ui-dropdown__trigger ${disabled ? 'is-disabled' : ''}`.trim()}
-          onClick={() => !disabled && setIsOpen(!isOpen)}
-          disabled={disabled}
-        >
-          <span className="ui-dropdown__trigger-text">
-            {selectedOption ? selectedOption.label : placeholder}
-          </span>
-          <span className={`ui-dropdown__chevron ${isOpen ? 'is-open' : ''}`}>▼</span>
-        </button>
+      <div className={`ui-dropdown ${isSorter ? 'ui-dropdown--sorter' : ''}`}>
+        <div className="ui-dropdown__sorter-wrapper">
+          <button
+            ref={triggerRef}
+            type="button"
+            className={`ui-dropdown__trigger ${isSorter ? 'ui-dropdown__trigger--sorter' : ''} ${disabled ? 'is-disabled' : ''}`.trim()}
+            onClick={() => !disabled && setIsOpen(!isOpen)}
+            disabled={disabled}
+          >
+            <span className="ui-dropdown__trigger-text">
+              {selectedOption ? selectedOption.label : placeholder}
+            </span>
+            {!isSorter && <span className={`ui-dropdown__chevron ${isOpen ? 'is-open' : ''}`}>▼</span>}
+          </button>
+
+          {isSorter && (
+            <button
+              type="button"
+              className="ui-dropdown__direction-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onSortDirectionToggle) onSortDirectionToggle();
+              }}
+              title={sortDirection === 'asc' ? 'Ascending' : 'Descending'}
+            >
+              {sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </button>
+          )}
+        </div>
 
         <DropdownMenu
           isOpen={isOpen}
@@ -162,6 +194,7 @@ export default function Dropdown({ label, options = [], value, onChange, hint, c
           value={value}
           onOptionClick={handleOptionClick}
           searchable={searchable}
+          variant={variant}
         />
       </div>
     </div>
