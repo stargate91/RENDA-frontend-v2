@@ -16,7 +16,7 @@ Design and implementation structure for the application's first-time startup wiz
 5. **Step 5: Folders Setup**
    - Directory path inputs (Scan & Target) with system/browser picker trigger and validation (existence/write access).
 6. **Step 6: Completion**
-   - Success state animation, saves configurations, and routes to `/organizer`.
+   - Success state animation, saves configurations, and routes to `/dashboard`.
 
 ## Proposed Files to Create/Modify
 

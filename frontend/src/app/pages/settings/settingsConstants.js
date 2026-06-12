@@ -1,0 +1,51 @@
+export const SETTINGS_TAB_IDS = {
+  GENERAL: 'general',
+  THEME: 'theme',
+  ORGANIZATION: 'organization',
+  PRESETS: 'presets',
+  FILE_NAMING: 'fileNaming',
+  FOLDER_STRUCTURE: 'folderStructure',
+  EXTRAS: 'extras',
+  RULES: 'rules',
+  COLLECTIONS: 'collections',
+  API_KEYS: 'apiKeys',
+  ADVANCED: 'advanced',
+  MAINTENANCE: 'maintenance',
+};
+
+export const SETTINGS_TAB_GROUP_IDS = {
+  GENERAL: SETTINGS_TAB_IDS.GENERAL,
+  THEME: SETTINGS_TAB_IDS.THEME,
+  ORGANIZATION: SETTINGS_TAB_IDS.ORGANIZATION,
+  API_KEYS: SETTINGS_TAB_IDS.API_KEYS,
+  ADVANCED: SETTINGS_TAB_IDS.ADVANCED,
+  MAINTENANCE: SETTINGS_TAB_IDS.MAINTENANCE,
+};
+
+export const ORGANIZATION_TAB_IDS = [
+  SETTINGS_TAB_IDS.PRESETS,
+  SETTINGS_TAB_IDS.FILE_NAMING,
+  SETTINGS_TAB_IDS.FOLDER_STRUCTURE,
+  SETTINGS_TAB_IDS.EXTRAS,
+  SETTINGS_TAB_IDS.RULES,
+  SETTINGS_TAB_IDS.COLLECTIONS,
+];
+
+export const SETTINGS_PRESET_IDS = {
+  PLEX: 'plex',
+  JELLYFIN: 'jellyfin',
+  KODI: 'kodi',
+  MINIMAL: 'minimal',
+};
+
+export const FOLDER_COLLECTION_MODES = {
+  ALWAYS: 'always',
+  THRESHOLD: 'threshold',
+  COMPLETE_ONLY: 'complete_only',
+  NEVER: 'never',
+};
+
+export const EXTRAS_FOLDER_MODES = {
+  SUBFOLDER: 'subfolder',
+  FLAT: 'flat',
+};

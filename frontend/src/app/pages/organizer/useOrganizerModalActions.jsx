@@ -334,7 +334,7 @@ export function useOrganizerModalActions({
           key: 'delete',
           label: t('organizer.actions.delete'),
           icon: Trash2,
-          className: 'is-danger',
+          variant: 'danger',
           onClick: () => openBulkDeleteModal(selectedRows),
           disabled: selectedRows.length === 0,
         },

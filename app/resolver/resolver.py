@@ -3,7 +3,7 @@ import unicodedata
 from typing import List, Dict, Any, Set
 from datetime import datetime
 from sqlalchemy.orm import Session, backref
-from ..db.models import MediaItem, MediaMatch, MetadataLocalization, ItemStatus, ItemType
+from ..db.models import MediaItem, MediaMatch, MetadataLocalization, ItemStatus, ItemType, UserSetting
 from ..api.tmdb_client import TMDBClient
 from ..services.resolve_status import determine_resolved_media_shape
 

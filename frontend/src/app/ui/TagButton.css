@@ -1,0 +1,22 @@
+.ui-tag-button {
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--color-line);
+  background: var(--color-tag-button-bg, rgba(255, 255, 255, 0.04));
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-family: var(--font-family-mono, monospace);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.ui-tag-button:hover:not(:disabled) {
+  background: var(--color-tag-button-bg-hover, rgba(0, 136, 255, 0.08));
+  border-color: var(--color-tag-button-border-hover, rgba(0, 136, 255, 0.4));
+  color: var(--color-accent, #0088ff);
+}
+
+.ui-tag-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-accent-glow, rgba(0, 136, 255, 0.18));
+}

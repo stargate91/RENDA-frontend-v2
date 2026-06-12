@@ -12,6 +12,7 @@ function DropdownMenu({
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const searchInputRef = useRef(null);
+  const menuRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -24,6 +25,13 @@ function DropdownMenu({
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!menuRef.current || !menuCoords) return;
+    menuRef.current.style.setProperty('--dropdown-menu-top', `${menuCoords.top}px`);
+    menuRef.current.style.setProperty('--dropdown-menu-left', `${menuCoords.left}px`);
+    menuRef.current.style.setProperty('--dropdown-menu-width', `${menuCoords.width}px`);
+  }, [menuCoords]);
+
   if (!isOpen) {
     return null;
   }
@@ -34,13 +42,8 @@ function DropdownMenu({
 
   return createPortal(
     <div
+      ref={menuRef}
       className={`ui-dropdown__menu ${searchable ? 'has-search' : ''} ${menuCoords.openUpwards ? 'is-upwards' : ''}`}
-      style={{
-        position: 'absolute',
-        top: `${menuCoords.top}px`,
-        left: `${menuCoords.left}px`,
-        width: `${menuCoords.width}px`,
-      }}
     >
       {searchable ? (
         <div className="ui-dropdown__search-container">

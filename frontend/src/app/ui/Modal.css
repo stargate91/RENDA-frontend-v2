@@ -6,8 +6,8 @@
   display: grid;
   place-items: center;
   padding: var(--space-6);
-  background: rgba(3, 4, 7, 0.74);
-  backdrop-filter: blur(14px) saturate(125%);
+  background: var(--ui-overlay-backdrop-bg);
+  backdrop-filter: var(--ui-overlay-backdrop-blur);
   animation: ui-modal-backdrop-fade-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -28,11 +28,8 @@
   background:
     linear-gradient(180deg, rgba(18, 22, 28, 0.98), rgba(10, 12, 16, 0.96)),
     var(--color-panel-strong);
-  border: 1px solid color-mix(in srgb, var(--color-line-strong) 72%, rgba(255, 255, 255, 0.04));
-  box-shadow:
-    0 28px 72px rgba(0, 0, 0, 0.66),
-    0 10px 24px rgba(0, 0, 0, 0.28),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--ui-overlay-panel-border);
+  box-shadow: var(--ui-overlay-panel-shadow);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -67,9 +64,9 @@
   gap: var(--space-4);
   padding: var(--space-4) var(--space-5);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.022), rgba(255, 255, 255, 0.008)),
+    var(--ui-overlay-panel-highlight),
     transparent;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-text-primary) 6%, transparent);
 }
 
 .ui-modal__title {
@@ -100,8 +97,8 @@
 }
 
 .ui-modal__close {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-border-strong);
+  background: var(--ui-surface-soft);
   color: var(--color-muted);
   font-family: Consolas, Monaco, monospace;
   font-size: var(--font-size-2xs);
@@ -114,8 +111,8 @@
 }
 
 .ui-modal__close:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.18);
+  background: var(--ui-surface-soft-strong);
+  border-color: color-mix(in srgb, var(--color-text-primary) 18%, transparent);
   color: var(--color-ink);
 }
 
@@ -155,7 +152,7 @@
   justify-content: flex-end;
   gap: var(--space-3);
   padding: var(--space-4) var(--space-5);
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  border-top: 1px solid color-mix(in srgb, var(--color-text-primary) 4%, transparent);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.012));
 }
@@ -230,9 +227,9 @@
   justify-items: start;
   width: 100%;
   padding: var(--space-4);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.018);
+  background: color-mix(in srgb, var(--ui-surface-soft) 60%, transparent);
   color: inherit;
   text-align: left;
   cursor: pointer;
@@ -240,8 +237,8 @@
 }
 
 .ui-modal__action-card:hover {
-  border-color: rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.032);
+  border-color: color-mix(in srgb, var(--color-text-primary) 16%, transparent);
+  background: color-mix(in srgb, var(--ui-surface-soft-strong) 54%, transparent);
   transform: translateY(-1px);
 }
 

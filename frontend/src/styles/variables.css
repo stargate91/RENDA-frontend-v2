@@ -253,6 +253,79 @@
   --button-danger-hover-bg: color-mix(in srgb, var(--color-state-danger) 26%, transparent);
   --button-danger-focus-ring: 0 0 0 2px var(--color-state-danger);
 
+  /* Shared UI Surface Tokens */
+  --ui-control-height-md: 48px;
+  --ui-control-height-sm: 36px;
+  --ui-control-height-xs: 32px;
+  --ui-control-radius: var(--radius-md);
+  --ui-control-radius-sm: calc(var(--radius-md) - 2px);
+  --ui-control-radius-xs: calc(var(--radius-md) - 4px);
+  --ui-control-bg: rgba(9, 12, 16, 0.98);
+  --ui-control-bg-subtle: rgba(255, 255, 255, 0.02);
+  --ui-control-bg-hover: rgba(255, 255, 255, 0.04);
+  --ui-control-border: var(--color-line);
+  --ui-control-border-strong: var(--color-line-strong);
+  --ui-control-text: var(--color-ink);
+  --ui-control-shadow-focus:
+    0 0 0 4px color-mix(in srgb, var(--color-accent-blue) 18%, transparent),
+    0 0 24px color-mix(in srgb, var(--color-accent-blue) 22%, transparent);
+  --ui-control-focus-ring: 0 0 0 2px var(--color-accent-blue);
+  --ui-surface-ghost: rgba(255, 255, 255, 0.01);
+  --ui-surface-soft: rgba(255, 255, 255, 0.03);
+  --ui-surface-soft-strong: rgba(255, 255, 255, 0.06);
+  --ui-surface-card-gradient:
+    linear-gradient(180deg, rgba(14, 17, 21, 0.94), rgba(7, 9, 12, 0.9));
+  --ui-surface-card-gradient-soft:
+    linear-gradient(180deg, rgba(18, 21, 26, 0.92), rgba(10, 12, 16, 0.88));
+  --ui-surface-card-media:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.03));
+  --ui-surface-danger-tint: rgba(239, 68, 68, 0.05);
+  --ui-surface-danger-border: rgba(239, 68, 68, 0.22);
+  --ui-surface-danger-shadow: 0 0 24px rgba(239, 68, 68, 0.06);
+  --ui-overlay-backdrop-bg: rgba(3, 4, 7, 0.74);
+  --ui-overlay-backdrop-blur: blur(14px) saturate(125%);
+  --ui-overlay-panel-border: color-mix(in srgb, var(--color-line-strong) 72%, rgba(255, 255, 255, 0.04));
+  --ui-overlay-panel-shadow:
+    0 28px 72px rgba(0, 0, 0, 0.66),
+    0 10px 24px rgba(0, 0, 0, 0.28),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  --ui-overlay-panel-highlight:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.022), rgba(255, 255, 255, 0.008));
+  --ui-floating-surface-border: color-mix(in srgb, var(--color-line-strong) 72%, rgba(255, 255, 255, 0.04));
+  --ui-floating-surface-shadow:
+    0 22px 48px rgba(0, 0, 0, 0.52),
+    0 10px 20px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.02),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    inset 0 -10px 20px rgba(0, 0, 0, 0.3);
+  --ui-floating-surface-bg:
+    radial-gradient(120% 150% at 50% -20%, rgba(255, 255, 255, 0.025), transparent 38%),
+    radial-gradient(140% 180% at 0% 100%, rgba(255, 255, 255, 0.018), transparent 44%),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--color-panel-strong) 97%, black),
+      color-mix(in srgb, var(--color-canvas) 94%, black));
+  --ui-floating-surface-blur: blur(22px) saturate(125%);
+  --ui-floating-surface-highlight:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0.01) 18%, transparent 44%);
+  --ui-floating-surface-bottom-line: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.035), transparent);
+  --ui-floating-action-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.018), rgba(255, 255, 255, 0.004)),
+    color-mix(in srgb, var(--color-panel) 95%, black);
+  --ui-floating-action-bg-hover:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.024), rgba(255, 255, 255, 0.008)),
+    color-mix(in srgb, var(--color-panel-strong) 96%, black);
+  --ui-floating-action-border: color-mix(in srgb, var(--color-line) 82%, rgba(255, 255, 255, 0.04));
+  --ui-floating-action-border-hover: color-mix(in srgb, var(--color-line-strong) 84%, rgba(255, 255, 255, 0.05));
+  --ui-floating-action-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 8px 16px rgba(0, 0, 0, 0.18);
+  --ui-utility-button-bg: rgba(255, 255, 255, 0.035);
+  --ui-utility-button-bg-hover: rgba(255, 255, 255, 0.06);
+  --ui-utility-button-inset-border: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --ui-utility-button-titlebar-divider: inset 1px 0 0 rgba(255, 255, 255, 0.05);
+  --ui-danger-utility-bg:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-state-danger) 82%, white 18%), color-mix(in srgb, var(--color-state-danger) 90%, #220812 10%));
+
   /* Tooltip Tokens */
   --tooltip-max-width: 220px;
   --tooltip-padding: 8px 10px;
@@ -265,6 +338,67 @@
   --tooltip-color: #f4f8fc;
   --tooltip-shadow: 0 16px 38px rgba(0, 0, 0, 0.34);
   --tooltip-blur: blur(16px) saturate(135%);
+
+  /* Settings Tokens */
+  --settings-overlay-top: 46px;
+  --settings-overlay-z: 1000;
+  --settings-overlay-bg:
+    radial-gradient(circle at 50% 0%, rgba(32, 40, 52, 0.35), transparent 50%),
+    #07090c;
+  --settings-sidebar-width: 236px;
+  --settings-sidebar-padding: 29px 18px 30px 18px;
+  --settings-sidebar-bg:
+    linear-gradient(180deg, rgba(18, 22, 28, 0.98), rgba(10, 12, 16, 0.95)),
+    rgba(255, 255, 255, 0.018);
+  --settings-sidebar-blur: blur(22px) saturate(120%);
+  --settings-content-max-width: 760px;
+  --settings-content-padding: 29px 40px 120px 40px;
+  --settings-close-top: 76px;
+  --settings-close-right: 40px;
+  --settings-close-z: 1010;
+  --settings-close-size: 36px;
+  --settings-close-bg: rgba(255, 255, 255, 0.03);
+  --settings-close-bg-hover: rgba(255, 255, 255, 0.08);
+  --settings-surface-muted: rgba(255, 255, 255, 0.015);
+  --settings-surface-subtle: rgba(255, 255, 255, 0.02);
+  --settings-surface-soft: rgba(255, 255, 255, 0.03);
+  --settings-accent-surface: rgba(0, 136, 255, 0.05);
+  --settings-accent-surface-soft: rgba(0, 136, 255, 0.04);
+  --settings-accent-surface-strong: rgba(0, 136, 255, 0.08);
+  --settings-accent-border-soft: rgba(0, 136, 255, 0.12);
+  --settings-accent-border: rgba(0, 136, 255, 0.4);
+  --settings-accent-fill-soft: rgba(0, 136, 255, 0.15);
+  --settings-accent-shadow: 0 0 16px rgba(0, 136, 255, 0.08);
+  --settings-accent-shadow-soft: 0 0 16px rgba(0, 136, 255, 0.06);
+  --settings-danger-bg: rgba(239, 68, 68, 0.08);
+  --settings-danger-border: rgba(239, 68, 68, 0.2);
+  --settings-warning-bg: rgba(245, 158, 11, 0.08);
+  --settings-warning-border: rgba(245, 158, 11, 0.2);
+  --settings-danger-text: var(--color-state-danger);
+  --settings-warning-text: var(--color-state-warning);
+  --settings-success-text: var(--color-state-success);
+  --settings-contrast-text: var(--color-text-primary);
+  --settings-font-family-mono: var(--font-family-mono, monospace);
+  --settings-preview-panel-bg: rgba(0, 0, 0, 0.2);
+  --settings-preview-label-bg: rgba(0, 136, 255, 0.15);
+  --settings-preview-badge-bg: rgba(0, 136, 255, 0.05);
+  --settings-preview-badge-border: rgba(0, 136, 255, 0.12);
+  --settings-preset-plex-color: #e5a93b;
+  --settings-preset-jellyfin-start: #00a4dc;
+  --settings-preset-jellyfin-end: #aa5cc3;
+  --settings-preset-kodi-primary: #17b2e5;
+  --settings-preset-kodi-secondary: #118cb5;
+  --settings-preset-kodi-accent: #ffffff;
+  --settings-preset-minimal-color: #10b981;
+  --settings-gap-2xs: 4px;
+  --settings-gap-xs: 6px;
+  --settings-gap-sm: 8px;
+  --settings-gap-md: 10px;
+  --settings-gap-lg: 12px;
+  --settings-gap-xl: 16px;
+  --settings-gap-2xl: 20px;
+  --settings-indent-sm: 16px;
+  --settings-indent-md: 24px;
 
   /* Toast Tokens */
   --toast-bg:

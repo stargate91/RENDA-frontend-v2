@@ -374,6 +374,11 @@
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
 }
 
+.organizer-match-modal__load-more-sentinel {
+  height: 20px;
+  margin: 10px 0;
+}
+
 .organizer-match-modal__browser-card {
   display: grid;
   gap: 10px;
@@ -473,6 +478,10 @@
   line-height: 1.4;
 }
 
+.organizer-match-modal__select-button {
+  color: var(--color-accent) !important;
+}
+
 .organizer-match-modal__bucket {
   display: grid;
   gap: var(--space-2);
@@ -570,10 +579,21 @@
   min-height: 480px;
 }
 
+.organizer-override-modal--clip-x {
+  overflow-x: hidden;
+}
+
 .organizer-override-modal__section {
   padding: var(--space-3);
   border: 1px dashed var(--color-line);
   border-radius: var(--radius-md);
+}
+
+.organizer-override-modal__section--match-actions {
+  margin-top: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
 
 .organizer-override-modal__section-title {
@@ -581,6 +601,10 @@
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-bold);
   color: var(--color-ink);
+}
+
+.organizer-override-modal__section-title--compact {
+  margin-bottom: 0;
 }
 
 .organizer-override-modal__item {
@@ -611,6 +635,16 @@
   color: var(--color-text-secondary);
 }
 
+.organizer-override-field__label-text--support {
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: var(--font-weight-medium);
+}
+
+.organizer-override-field__label-text--spaced {
+  margin-bottom: var(--space-2);
+}
+
 .organizer-override-field__input {
   transition: opacity 0.15s ease;
 }
@@ -626,6 +660,10 @@
   border-top: 1px solid var(--color-line);
 }
 
+.organizer-override-bulk-episodes--sidebar-active {
+  border-top: 0;
+}
+
 .organizer-override-bulk-episodes__header-check {
   margin-bottom: var(--space-2);
 }
@@ -635,9 +673,16 @@
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-3);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--color-panel-subtle, rgba(255, 255, 255, 0.02));
   border: 1px solid var(--color-line);
   border-radius: var(--radius-md);
+}
+
+.organizer-override-bulk-episodes__panel--sidebar {
+  height: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0;
 }
 
 .organizer-override-bulk-episodes__hint {
@@ -652,6 +697,11 @@
   max-height: 240px;
   overflow-y: auto;
   padding-right: var(--space-1);
+}
+
+.organizer-override-bulk-episodes__list--sidebar {
+  flex: 1 1 auto;
+  max-height: 340px;
 }
 
 .organizer-override-bulk-episodes__item {
@@ -708,6 +758,20 @@
   display: flex;
   align-items: center;
   gap: var(--space-1);
+}
+
+.organizer-override-icon-button {
+  padding: 4px;
+  background: transparent;
+  border: 0;
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+  cursor: pointer;
+}
+
+.organizer-override-icon-button.is-disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 /* Bulk Overrides Side Panel Expansion */
@@ -790,32 +854,17 @@
 }
 
 .match-action-option {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-3);
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  background: var(--color-bg-secondary);
-  transition: all 0.2s ease;
   user-select: none;
+  gap: var(--space-1);
 }
 
-.match-action-option:hover {
-  border-color: var(--color-accent-blue);
-  background: var(--color-bg-hover);
+.organizer-match-action-grid {
+  display: flex;
+  gap: var(--space-4);
 }
 
-.match-action-option.is-selected {
-  border-color: color-mix(in srgb, var(--color-accent) 28%, rgba(255, 255, 255, 0.08));
-  background: color-mix(in srgb, var(--color-accent) 9%, rgba(255, 255, 255, 0.025));
-}
-
-.match-action-option.is-selected:hover {
-  border-color: rgba(0, 136, 255, 0.6);
-  background: color-mix(in srgb, var(--color-accent) 12%, rgba(255, 255, 255, 0.04));
-  box-shadow: 0 4px 12px rgba(0, 136, 255, 0.08);
+.organizer-match-action-grid .match-action-option {
+  flex: 1 1 0;
 }
 
 .match-action-option__radio-label {
@@ -825,6 +874,10 @@
   font-weight: var(--font-weight-semibold);
   color: var(--color-ink);
   font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.match-action-option__radio-input {
   cursor: pointer;
 }
 

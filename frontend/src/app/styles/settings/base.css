@@ -1,0 +1,143 @@
+.settings-overlay {
+  position: fixed;
+  top: var(--settings-overlay-top);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--settings-overlay-z);
+  display: flex;
+  background: var(--settings-overlay-bg);
+  color: var(--color-text-primary);
+  animation: settingsFadeIn 0.2s ease-out;
+}
+
+.settings-overlay--centered {
+  justify-content: center;
+  align-items: center;
+}
+
+.settings-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--settings-gap-2xl);
+}
+
+.settings-loading-text {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.settings-error-card {
+  padding: var(--space-4xl);
+  max-width: 400px;
+}
+
+.settings-error-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--settings-gap-xl);
+}
+
+.settings-error-actions {
+  display: flex;
+  gap: var(--settings-gap-lg);
+  margin-top: var(--settings-gap-xl);
+}
+
+@keyframes settingsFadeIn {
+  from { opacity: 0; transform: scale(1.01); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.settings-content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  overflow-y: auto;
+}
+
+.settings-content {
+  max-width: var(--settings-content-max-width);
+  width: 100%;
+  padding: var(--settings-content-padding);
+  margin: 0 auto;
+}
+
+.settings-close-container {
+  position: fixed;
+  top: var(--settings-close-top);
+  right: var(--settings-close-right);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: var(--settings-close-z);
+}
+
+.settings-close-btn {
+  width: var(--settings-close-size) !important;
+  height: var(--settings-close-size) !important;
+  border-radius: 50% !important;
+  border: 1px solid var(--color-border-default) !important;
+  background: var(--settings-close-bg) !important;
+  color: var(--color-text-secondary) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.settings-close-btn svg {
+  transition: transform 0.15s ease !important;
+}
+
+.settings-close-btn:hover {
+  background: var(--settings-close-bg-hover) !important;
+  color: var(--color-text-primary) !important;
+  transform: none !important;
+}
+
+.settings-close-btn:hover svg {
+  transform: rotate(90deg) !important;
+}
+
+.settings-close-esc-hint {
+  font-size: var(--font-size-2xs);
+  color: var(--color-text-muted);
+  margin-top: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  pointer-events: none;
+}
+
+.settings-tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5xl);
+}
+
+.settings-tab-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5xl);
+}
+
+.settings-section-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--settings-gap-xl);
+}
+
+.settings-preview-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--settings-gap-lg);
+}
+
+.settings-choice-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--settings-gap-sm);
+}

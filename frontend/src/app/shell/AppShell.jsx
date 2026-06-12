@@ -33,16 +33,7 @@ export default function AppShell() {
         type="button"
         tabIndex={0}
         autoFocus
-        style={{
-          position: 'absolute',
-          width: '1px',
-          height: '1px',
-          padding: 0,
-          margin: '-1px',
-          overflow: 'hidden',
-          clip: 'rect(0, 0, 0, 0)',
-          border: 0,
-        }}
+        className="shell__focus-sentinel"
         aria-hidden="true"
       />
       <WindowTitlebar />
@@ -54,7 +45,7 @@ export default function AppShell() {
             <div className="shell__utility-bar-left" aria-label="Context actions placeholder" />
           </header>
           <Suspense fallback={
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', padding: '40px' }}>
+            <div className="shell__suspense-fallback">
               <Spinner label="Loading page..." />
             </div>
           }>
@@ -66,4 +57,3 @@ export default function AppShell() {
     </div>
   );
 }
-

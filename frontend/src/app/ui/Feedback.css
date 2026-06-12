@@ -193,10 +193,10 @@
   width: 380px;
   height: 28px;
   padding: 0 var(--space-3);
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--color-progress-bg, rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--color-progress-border, rgba(255, 255, 255, 0.05));
   border-radius: var(--radius-input);
-  backdrop-filter: blur(10px);
+  backdrop-filter: var(--progress-backdrop-filter, blur(10px));
   -webkit-app-region: no-drag;
 }
 
@@ -237,18 +237,19 @@
 .ui-progress-bar__track {
   flex-grow: 1;
   height: 4px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--color-progress-track, rgba(255, 255, 255, 0.06));
   border-radius: var(--radius-full);
   overflow: hidden;
   position: relative;
 }
 
 .ui-progress-bar__fill {
+  width: var(--ui-progress-value, 0%);
   height: 100%;
-  background: linear-gradient(90deg, var(--color-accent-blue) 0%, #00bcff 100%);
+  background: linear-gradient(90deg, var(--color-accent-blue) 0%, var(--color-accent-cyan, #00bcff) 100%);
   border-radius: var(--radius-full);
   transition: width 0.3s ease;
-  box-shadow: 0 0 8px rgba(0, 136, 255, 0.3);
+  box-shadow: 0 0 8px var(--color-accent-shadow-strong, rgba(0, 136, 255, 0.3));
 }
 
 .ui-progress-bar__stats {
@@ -265,7 +266,7 @@
 /* Sub Progress Bar Styles (Background / Informational Tasks) */
 .ui-progress-bar-container--sub {
   background: transparent;
-  border-color: rgba(255, 255, 255, 0.03);
+  border-color: var(--color-progress-border-subtle, rgba(255, 255, 255, 0.03));
 }
 
 .ui-progress-bar__pulse-dot--sub {
@@ -295,5 +296,4 @@
   background: rgba(255, 255, 255, 0.25);
   box-shadow: none;
 }
-
 

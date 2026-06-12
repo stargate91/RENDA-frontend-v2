@@ -14,8 +14,8 @@ function TableHeader({ columns }) {
         {columns.map((col) => (
           <th
             key={col.key}
-            style={col.width ? { width: col.width, maxWidth: col.width, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } : undefined}
-            className={col.align ? `text-${col.align}` : ''}
+            width={col.width || undefined}
+            className={`${col.align ? `text-${col.align}` : ''} ${col.width ? 'ui-table__cell--truncate' : ''}`.trim()}
           >
             {col.label}
           </th>
@@ -55,8 +55,8 @@ const TableRow = memo(function TableRow({
         return (
           <td
             key={col.key}
-            className={col.align ? `text-${col.align}` : ''}
-            style={col.width ? { width: col.width, maxWidth: col.width, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } : undefined}
+            width={col.width || undefined}
+            className={`${col.align ? `text-${col.align}` : ''} ${col.width ? 'ui-table__cell--truncate' : ''}`.trim()}
           >
             <div className="ui-table__cell-content">
               <span className={`ui-table__cell-value ${hideOnHoverClass}`.trim()}>

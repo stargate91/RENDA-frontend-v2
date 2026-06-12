@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { ArrowUp, ArrowDown, GripVertical } from 'lucide-react';
 import Dropdown from '../../../ui/Dropdown';
 import Input from '../../../ui/Input';
+import SelectableCard from '../../../ui/SelectableCard';
 import { useTranslation } from '../../../providers/LanguageProvider';
 import { useQueryClient } from '@tanstack/react-query';
 import { useBulkUpdateMediaMutation } from '../../../queries';
@@ -425,7 +426,7 @@ export default function OrganizerBulkOverrideModalContent({ rows, onClose, toast
 
         {/* Auto-numbering and sorting panel checkbox (Only for Episodes) */}
         {mainType === 'episode' && (
-          <div className="organizer-override-bulk-episodes" style={{ borderTop: isSidebarActive ? '0' : '1px solid var(--color-line)' }}>
+          <div className={`organizer-override-bulk-episodes${isSidebarActive ? ' organizer-override-bulk-episodes--sidebar-active' : ''}`}>
             <label className="organizer-override-field__checkbox-label organizer-override-bulk-episodes__header-check">
               <input
                 type="checkbox"
@@ -439,19 +440,20 @@ export default function OrganizerBulkOverrideModalContent({ rows, onClose, toast
         )}
 
         {showMatchActionSelector && (
-          <div className="organizer-override-modal__section" style={{ marginTop: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <h4 className="organizer-override-modal__section-title" style={{ marginBottom: '0' }}>
+          <div className="organizer-override-modal__section organizer-override-modal__section--match-actions">
+            <h4 className="organizer-override-modal__section-title organizer-override-modal__section-title--compact">
               {t('organizer.overrideModal.matchAction.title') || 'Match Action'}
             </h4>
-            <p className="organizer-override-field__label-text" style={{ fontSize: '12px', lineHeight: '1.4' }}>
+            <p className="organizer-override-field__label-text organizer-override-field__label-text--support">
               {t('organizer.overrideModal.matchAction.description') || 'Choose what to do with the current series match since season or episode changed:'}
             </p>
             
-            <div style={{ display: 'flex', gap: 'var(--space-4)' }}>
-              <div
-                className={`match-action-option ${matchAction === 'keep' ? 'is-selected' : ''}`}
+            <div className="organizer-match-action-grid">
+              <SelectableCard
+                as="div"
+                className="match-action-option"
+                selected={matchAction === 'keep'}
                 onClick={() => setMatchAction('keep')}
-                style={{ flex: '1 1 0' }}
               >
                 <label className="match-action-option__radio-label">
                   <input
@@ -459,19 +461,20 @@ export default function OrganizerBulkOverrideModalContent({ rows, onClose, toast
                     name="bulkMatchAction"
                     checked={matchAction === 'keep'}
                     onChange={() => setMatchAction('keep')}
-                    style={{ cursor: 'pointer' }}
+                    className="match-action-option__radio-input"
                   />
                   {t('organizer.overrideModal.matchAction.keep') || 'Keep current series match'}
                 </label>
                 <span className="match-action-option__description">
                   {t('organizer.overrideModal.matchAction.keepDesc') || 'Update season/episode under the series.'}
                 </span>
-              </div>
+              </SelectableCard>
 
-              <div
-                className={`match-action-option ${matchAction === 'reset' ? 'is-selected' : ''}`}
+              <SelectableCard
+                as="div"
+                className="match-action-option"
+                selected={matchAction === 'reset'}
                 onClick={() => setMatchAction('reset')}
-                style={{ flex: '1 1 0' }}
               >
                 <label className="match-action-option__radio-label">
                   <input
@@ -479,14 +482,14 @@ export default function OrganizerBulkOverrideModalContent({ rows, onClose, toast
                     name="bulkMatchAction"
                     checked={matchAction === 'reset'}
                     onChange={() => setMatchAction('reset')}
-                    style={{ cursor: 'pointer' }}
+                    className="match-action-option__radio-input"
                   />
                   {t('organizer.overrideModal.matchAction.reset') || 'Reset match (Pending)'}
                 </label>
                 <span className="match-action-option__description">
                   {t('organizer.overrideModal.matchAction.resetDesc') || 'Remove match and return to Review Needed.'}
                 </span>
-              </div>
+              </SelectableCard>
             </div>
           </div>
         )}
@@ -494,7 +497,7 @@ export default function OrganizerBulkOverrideModalContent({ rows, onClose, toast
 
       {isSidebarActive && (
         <div className="bulk-override-layout__side-panel">
-          <div className="organizer-override-bulk-episodes__panel" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', border: '0', background: 'transparent', padding: '0' }}>
+          <div className="organizer-override-bulk-episodes__panel organizer-override-bulk-episodes__panel--sidebar">
             <div className="organizer-override-field">
               <span className="organizer-override-field__label-text">{t('organizer.overrideModal.labels.startNumbering')}</span>
               <Input
@@ -510,7 +513,7 @@ export default function OrganizerBulkOverrideModalContent({ rows, onClose, toast
               {t('organizer.overrideModal.labels.dragAndDropHint')}
             </span>
 
-            <div className="organizer-override-bulk-episodes__list" style={{ flex: '1 1 auto', maxHeight: '340px', overflowY: 'auto' }}>
+            <div className="organizer-override-bulk-episodes__list organizer-override-bulk-episodes__list--sidebar">
               {orderedItems.map((item, index) => (
                 <div
                   key={item.id}
@@ -559,15 +562,7 @@ function IconButton({ children, disabled, onClick, type = 'button' }) {
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className="ui-icon-button"
-      style={{
-        padding: '4px',
-        background: 'transparent',
-        border: '0',
-        color: 'var(--color-text-secondary)',
-        opacity: disabled ? 0.3 : 0.7,
-        cursor: disabled ? 'not-allowed' : 'pointer',
-      }}
+      className={`ui-icon-button organizer-override-icon-button${disabled ? ' is-disabled' : ''}`.trim()}
     >
       {children}
     </button>

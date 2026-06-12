@@ -70,7 +70,7 @@ export default function MatchEpisodeCard({
             type="button"
             variant="ghost"
             size="sm"
-            style={{ color: 'var(--color-accent)' }}
+            className="organizer-match-modal__select-button"
             onClick={() => onSelect(episodeEntry)}
             disabled={isDisabled}
           >

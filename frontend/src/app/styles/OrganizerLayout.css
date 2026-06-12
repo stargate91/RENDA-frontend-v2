@@ -212,6 +212,10 @@
   z-index: 3;
 }
 
+.ui-file-drop-zone {
+  position: relative;
+}
+
 .organizer-drop-overlay.is-active {
   opacity: 1;
 }
@@ -227,8 +231,8 @@
   border-radius: var(--radius-lg);
   background:
     radial-gradient(circle at top, color-mix(in srgb, var(--color-accent) 16%, transparent), transparent 58%),
-    rgba(16, 20, 26, 0.96);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    var(--color-dropzone-panel-bg, rgba(16, 20, 26, 0.96));
+  box-shadow: var(--shadow-overlay-dropzone, 0 20px 50px rgba(0, 0, 0, 0.35));
   text-align: center;
 }
 

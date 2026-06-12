@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import Dropdown from '../../../ui/Dropdown';
+import SelectableCard from '../../../ui/SelectableCard';
 import { useTranslation } from '../../../providers/LanguageProvider';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUpdateMediaMutation } from '../../../queries';
@@ -247,19 +248,21 @@ export default function OrganizerOverrideModalContent({ row, onClose, toast }) {
   );
 
   return (
-    <form id="organizer-override-form" className="organizer-override-modal" style={{ overflowX: 'hidden' }} onSubmit={handleSubmit}>
+    <form id="organizer-override-form" className="organizer-override-modal organizer-override-modal--clip-x" onSubmit={handleSubmit}>
       {showSelector ? (
         <div className="single-override-layout">
           <div className="single-override-layout__side-panel">
             <h4 className="organizer-override-modal__section-title">
               {t('organizer.overrideModal.matchAction.title') || 'Match Action'}
             </h4>
-            <p className="organizer-override-field__label-text" style={{ fontSize: '12px', lineHeight: '1.4', marginBottom: 'var(--space-2)' }}>
+            <p className="organizer-override-field__label-text organizer-override-field__label-text--support organizer-override-field__label-text--spaced">
               {t('organizer.overrideModal.matchAction.description') || 'Choose what to do with the current series match since season or episode changed:'}
             </p>
             
-            <div
-              className={`match-action-option ${matchAction === 'keep' ? 'is-selected' : ''}`}
+            <SelectableCard
+              as="div"
+              className="match-action-option"
+              selected={matchAction === 'keep'}
               onClick={() => setMatchAction('keep')}
             >
               <label className="match-action-option__radio-label">
@@ -268,17 +271,19 @@ export default function OrganizerOverrideModalContent({ row, onClose, toast }) {
                   name="matchAction"
                   checked={matchAction === 'keep'}
                   onChange={() => setMatchAction('keep')}
-                  style={{ cursor: 'pointer' }}
+                  className="match-action-option__radio-input"
                 />
                 {t('organizer.overrideModal.matchAction.keep') || 'Keep current series match'}
               </label>
               <span className="match-action-option__description">
                 {t('organizer.overrideModal.matchAction.keepDesc') || 'Update season/episode under the series.'}
               </span>
-            </div>
+            </SelectableCard>
 
-            <div
-              className={`match-action-option ${matchAction === 'reset' ? 'is-selected' : ''}`}
+            <SelectableCard
+              as="div"
+              className="match-action-option"
+              selected={matchAction === 'reset'}
               onClick={() => setMatchAction('reset')}
             >
               <label className="match-action-option__radio-label">
@@ -287,14 +292,14 @@ export default function OrganizerOverrideModalContent({ row, onClose, toast }) {
                   name="matchAction"
                   checked={matchAction === 'reset'}
                   onChange={() => setMatchAction('reset')}
-                  style={{ cursor: 'pointer' }}
+                  className="match-action-option__radio-input"
                 />
                 {t('organizer.overrideModal.matchAction.reset') || 'Reset match (Pending)'}
               </label>
               <span className="match-action-option__description">
                 {t('organizer.overrideModal.matchAction.resetDesc') || 'Remove match and return to Review Needed.'}
               </span>
-            </div>
+            </SelectableCard>
           </div>
           <div className="single-override-layout__form">
             {renderFormFields()}

@@ -36,8 +36,8 @@ export default function ContextMenu({ x, y, onClose, items = [] }) {
         adjustedY = viewportHeight - menuRect.height - 8;
       }
 
-      menuRef.current.style.left = `${adjustedX}px`;
-      menuRef.current.style.top = `${adjustedY}px`;
+      menuRef.current.style.setProperty('--context-menu-left', `${adjustedX}px`);
+      menuRef.current.style.setProperty('--context-menu-top', `${adjustedY}px`);
     }
   }, [x, y]);
 
@@ -45,12 +45,6 @@ export default function ContextMenu({ x, y, onClose, items = [] }) {
     <div
       ref={menuRef}
       className="ui-context-menu"
-      style={{
-        position: 'fixed',
-        top: `${y}px`,
-        left: `${x}px`,
-        zIndex: 9999,
-      }}
       onClick={(e) => e.stopPropagation()}
     >
       {items.map((item, idx) => {

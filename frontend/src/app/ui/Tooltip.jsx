@@ -40,6 +40,7 @@ export default function Tooltip({
   const triggerRef = useRef(null);
   const timeoutRef = useRef(null);
   const tooltipId = useId();
+  const tooltipRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState(null);
 
@@ -84,6 +85,12 @@ export default function Tooltip({
     };
   }, [isOpen, side]);
 
+  useEffect(() => {
+    if (!tooltipRef.current || !position) return;
+    tooltipRef.current.style.setProperty('--tooltip-left', `${position.left}px`);
+    tooltipRef.current.style.setProperty('--tooltip-top', `${position.top}px`);
+  }, [position]);
+
   if (!content) return children;
 
   return (
@@ -102,11 +109,11 @@ export default function Tooltip({
       </span>
       {isOpen && position ? createPortal(
         <span
+          ref={tooltipRef}
           id={tooltipId}
           role="tooltip"
           className={`ui-tooltip__content ui-tooltip__content--portal ${className}`.trim()}
           data-side={side}
-          style={{ left: `${position.left}px`, top: `${position.top}px` }}
         >
           {content}
         </span>,

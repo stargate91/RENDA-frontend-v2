@@ -117,7 +117,6 @@ export default function MatchModalBrowser({
               <div
                 ref={loadMoreRef}
                 className="organizer-match-modal__load-more-sentinel"
-                style={{ height: '20px', margin: '10px 0' }}
               />
             )}
           </>

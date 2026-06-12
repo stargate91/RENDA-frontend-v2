@@ -5,6 +5,8 @@
 
 .ui-tooltip__content {
   position: fixed;
+  left: var(--tooltip-left, 0);
+  top: var(--tooltip-top, 0);
   z-index: 110;
   max-width: var(--tooltip-max-width);
   padding: var(--tooltip-padding);

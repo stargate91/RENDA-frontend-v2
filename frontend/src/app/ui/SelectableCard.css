@@ -1,0 +1,36 @@
+.ui-selectable-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-4);
+  border-radius: var(--ui-control-radius);
+  border: 1.5px solid var(--color-line);
+  background: var(--color-selectable-card-bg, var(--ui-surface-ghost));
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.ui-selectable-card:hover:not(:disabled) {
+  border-color: var(--color-line-strong);
+  background: var(--color-selectable-card-bg-hover, var(--ui-surface-soft));
+}
+
+.ui-selectable-card:focus-visible {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: var(--ui-control-focus-ring);
+}
+
+.ui-selectable-card.is-selected {
+  border-color: var(--color-accent);
+  background: var(--color-selectable-card-bg-selected, var(--settings-accent-surface));
+  box-shadow: var(--shadow-selectable-card-selected, var(--settings-accent-shadow));
+}
+
+.ui-selectable-card.is-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

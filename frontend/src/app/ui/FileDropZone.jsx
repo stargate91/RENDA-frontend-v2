@@ -14,7 +14,7 @@ export default function FileDropZone({
   });
 
   return (
-    <div className={className} {...dropzoneProps} style={{ position: 'relative' }}>
+    <div className={`ui-file-drop-zone ${className}`.trim()} {...dropzoneProps}>
       <div className={`organizer-drop-overlay ${isDropActive ? 'is-active' : ''}`}>
         <div className="organizer-drop-overlay__panel">
           <span className="organizer-drop-overlay__label">{label}</span>

@@ -3,7 +3,7 @@ import { lazy } from 'react';
 import { Navigate } from 'react-router-dom';
 
 const DashboardPage = lazy(() => import('../pages/DashboardPage'));
-const SettingsPage = lazy(() => import('../pages/SettingsPage'));
+const SettingsPage = lazy(() => import('../pages/settings/SettingsPage'));
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 const PlaceholderPage = lazy(() => import('../pages/PlaceholderPage'));
 

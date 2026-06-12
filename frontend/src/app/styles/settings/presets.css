@@ -1,0 +1,59 @@
+.settings-preset-icon {
+  font-size: 18px;
+}
+
+.settings-preset-svg-icon {
+  flex-shrink: 0;
+}
+
+.settings-preset-title {
+  font-weight: 600;
+  color: var(--color-ink);
+  font-size: 13.5px;
+}
+
+.settings-preset-title.is-active {
+  color: var(--color-accent);
+}
+
+.settings-preset-description {
+  font-size: 11.5px;
+  color: var(--color-muted);
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+.settings-mode-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1.5fr;
+  gap: var(--settings-gap-xl);
+  margin-top: var(--settings-gap-2xs);
+}
+
+.settings-mode-card {
+  gap: var(--settings-gap-sm);
+}
+
+.settings-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--settings-gap-lg);
+  margin-bottom: var(--settings-gap-xl);
+}
+
+.settings-preset-card {
+  gap: var(--settings-gap-xs);
+  position: relative;
+}
+
+.settings-preset-badge {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--color-accent);
+  background: var(--settings-accent-border-soft);
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}

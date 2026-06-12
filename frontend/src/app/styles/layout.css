@@ -248,6 +248,17 @@
   min-height: 0;
 }
 
+.shell__focus-sentinel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
 .shell__utility-bar {
   position: absolute;
   top: var(--utility-bar-top);
@@ -310,6 +321,14 @@
     linear-gradient(180deg, rgba(11, 13, 17, 0.96), rgba(8, 10, 14, 0.98));
 }
 
+.shell__suspense-fallback {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 40px;
+}
+
 .ui-page {
   display: flex;
   flex-direction: column;
@@ -366,6 +385,10 @@
   margin: 0;
   max-width: 72ch;
   color: var(--color-muted);
+}
+
+.shell__close-prompt-copy {
+  margin-bottom: 16px;
 }
 
 .page-header__actions,

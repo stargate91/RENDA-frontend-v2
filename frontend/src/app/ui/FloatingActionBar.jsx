@@ -20,7 +20,7 @@ export default function FloatingActionBar({
             <button
               key={action.key}
               type="button"
-              className={`ui-floating-bar__action ${action.className || ''}`.trim()}
+              className={`ui-floating-bar__action ui-floating-bar__action--${action.variant || 'default'} ${action.className || ''}`.trim()}
               onClick={action.onClick}
               disabled={action.disabled}
               aria-label={action.label}

@@ -76,11 +76,10 @@ export default function AppClosePrompt() {
         </>
       )}
     >
-      <p className="support-copy" style={{ marginBottom: '16px' }}>{t('closePrompt.info')}</p>
+      <p className="support-copy shell__close-prompt-copy">{t('closePrompt.info')}</p>
       <Checkbox checked={remember} onChange={(e) => setRemember(e.target.checked)}>
         {t('closePrompt.dontAskAgain')}
       </Checkbox>
     </Modal>
   );
 }
-

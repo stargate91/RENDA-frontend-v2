@@ -6,9 +6,8 @@
   gap: var(--space-2);
   padding: var(--space-4);
   border-radius: var(--radius-md);
-  background:
-    linear-gradient(180deg, rgba(18, 21, 26, 0.92), rgba(10, 12, 16, 0.88));
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--ui-surface-card-gradient-soft);
+  border: 1px solid var(--color-border-subtle);
   box-shadow: var(--shadow-sm);
 }
 
@@ -16,7 +15,7 @@
   border: 0;
   border-radius: calc(var(--radius-md) - 2px);
   overflow: hidden;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.03));
+  background: var(--ui-surface-card-media);
   box-shadow: none;
 }
 
@@ -33,10 +32,9 @@
 
 /* Card */
 .ui-card {
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid color-mix(in srgb, var(--color-text-primary) 7%, transparent);
   border-radius: var(--radius-lg);
-  background:
-    linear-gradient(180deg, rgba(14, 17, 21, 0.94), rgba(7, 9, 12, 0.9));
+  background: var(--ui-surface-card-gradient);
   box-shadow: var(--shadow-md);
   backdrop-filter: blur(24px) saturate(118%);
 }
@@ -59,11 +57,11 @@
 }
 
 .ui-card--danger {
-  border: 1px solid rgba(239, 68, 68, 0.22) !important;
+  border: 1px solid var(--ui-surface-danger-border) !important;
   background: 
-    linear-gradient(180deg, rgba(239, 68, 68, 0.05) 0%, transparent 50%),
-    linear-gradient(180deg, rgba(14, 17, 21, 0.94), rgba(7, 9, 12, 0.9)) !important;
-  box-shadow: 0 0 24px rgba(239, 68, 68, 0.06), var(--shadow-md) !important;
+    linear-gradient(180deg, var(--ui-surface-danger-tint) 0%, transparent 50%),
+    var(--ui-surface-card-gradient) !important;
+  box-shadow: var(--ui-surface-danger-shadow), var(--shadow-md) !important;
 }
 
 .ui-card--danger .ui-card__eyebrow {

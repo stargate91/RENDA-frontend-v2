@@ -18,21 +18,11 @@
   gap: var(--space-4);
   width: 100%;
   padding: 14px 14px 14px 18px;
-  border: 1px solid color-mix(in srgb, var(--color-line-strong) 72%, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--ui-floating-surface-border);
   border-radius: var(--radius-xl);
-  background:
-    radial-gradient(120% 150% at 50% -20%, rgba(255, 255, 255, 0.025), transparent 38%),
-    radial-gradient(140% 180% at 0% 100%, rgba(255, 255, 255, 0.018), transparent 44%),
-    linear-gradient(180deg,
-      color-mix(in srgb, var(--color-panel-strong) 97%, black),
-      color-mix(in srgb, var(--color-canvas) 94%, black));
-  box-shadow:
-    0 22px 48px rgba(0, 0, 0, 0.52),
-    0 10px 20px rgba(0, 0, 0, 0.28),
-    0 0 0 1px rgba(255, 255, 255, 0.02),
-    inset 0 1px 0 rgba(255, 255, 255, 0.035),
-    inset 0 -10px 20px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(22px) saturate(125%);
+  background: var(--ui-floating-surface-bg);
+  box-shadow: var(--ui-floating-surface-shadow);
+  backdrop-filter: var(--ui-floating-surface-blur);
   opacity: 0;
   pointer-events: none;
   transform: translateY(34px) scale(0.96);
@@ -45,11 +35,7 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background:
-    linear-gradient(180deg,
-      rgba(255, 255, 255, 0.028),
-      rgba(255, 255, 255, 0.01) 18%,
-      transparent 44%);
+  background: var(--ui-floating-surface-highlight);
   pointer-events: none;
 }
 
@@ -61,7 +47,7 @@
   bottom: 0;
   height: 1px;
   border-radius: 999px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.035), transparent);
+  background: var(--ui-floating-surface-bottom-line);
   pointer-events: none;
 }
 
@@ -106,29 +92,30 @@
   gap: 8px;
   min-height: 38px;
   padding: 0 14px;
-  border: 1px solid color-mix(in srgb, var(--color-line) 82%, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--ui-floating-action-border);
   border-radius: var(--radius-input);
-  background:
-    linear-gradient(180deg,
-      rgba(255, 255, 255, 0.018),
-      rgba(255, 255, 255, 0.004)),
-    color-mix(in srgb, var(--color-panel) 95%, black);
+  background: var(--ui-floating-action-bg);
   color: var(--color-ink);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 8px 16px rgba(0, 0, 0, 0.18);
+  box-shadow: var(--ui-floating-action-shadow);
   cursor: pointer;
   transition: background 160ms ease, border-color 160ms ease, transform 160ms ease, color 160ms ease;
 }
 
 .ui-floating-bar__action:hover:not(:disabled) {
-  background:
-    linear-gradient(180deg,
-      rgba(255, 255, 255, 0.024),
-      rgba(255, 255, 255, 0.008)),
-    color-mix(in srgb, var(--color-panel-strong) 96%, black);
-  border-color: color-mix(in srgb, var(--color-line-strong) 84%, rgba(255, 255, 255, 0.05));
+  background: var(--ui-floating-action-bg-hover);
+  border-color: var(--ui-floating-action-border-hover);
   transform: translateY(-1px);
+}
+
+.ui-floating-bar__action--primary {
+  background: var(--color-accent-blue);
+  border-color: var(--color-accent-blue-soft);
+  color: var(--settings-contrast-text);
+}
+
+.ui-floating-bar__action--primary:hover:not(:disabled) {
+  background: var(--color-accent-blue-soft);
+  border-color: var(--color-accent-blue);
 }
 
 .ui-floating-bar__action:focus-visible {
@@ -136,6 +123,7 @@
   box-shadow: 0 0 0 2px var(--color-accent-blue);
 }
 
+.ui-floating-bar__action--danger,
 .ui-floating-bar__action.is-danger {
   background:
     linear-gradient(180deg,
@@ -146,6 +134,7 @@
   color: color-mix(in srgb, var(--color-accent-red-soft) 88%, white 12%);
 }
 
+.ui-floating-bar__action--danger:hover:not(:disabled),
 .ui-floating-bar__action.is-danger:hover:not(:disabled) {
   background:
     linear-gradient(180deg,
