@@ -99,13 +99,13 @@
 }
 
 .organizer-search .ui-input {
-  width: 180px;
+  width: 220px;
   height: 28px;
   min-height: 28px;
   padding: 0 var(--space-3) 0 30px;
   border-radius: var(--radius-input);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--ui-control-border);
+  background: var(--ui-control-bg-subtle);
   color: var(--color-ink);
   font-family: var(--font-family-base);
   font-size: var(--font-size-xs);
@@ -119,10 +119,10 @@
 }
 
 .organizer-search .ui-input:focus {
-  width: 220px;
-  background: rgba(0, 0, 0, 0.35);
+  width: 280px;
+  background: var(--ui-control-bg);
   border-color: var(--color-accent-blue);
-  box-shadow: 0 0 0 1px var(--color-accent-blue);
+  box-shadow: var(--ui-control-focus-ring);
 }
 
 /* Organizer Table Content Container */

@@ -431,7 +431,17 @@ function OrganizerPageContent({
             onChangeExtrasTab={setActiveExtrasTab}
             onChangeManualTab={setActiveManualTab}
             onChangeMainTab={setActiveMainTab}
-            searchPlaceholder={t('organizer.searchPlaceholder')}
+            searchPlaceholder={
+              activeMainTab === 'manual'
+                ? t('organizer.searchPlaceholderManual')
+                : activeMainTab === 'movies'
+                ? t('organizer.searchPlaceholderMovies')
+                : activeMainTab === 'episodes'
+                ? t('organizer.searchPlaceholderEpisodes')
+                : activeMainTab === 'extras'
+                ? t('organizer.searchPlaceholderExtras')
+                : t('organizer.searchPlaceholder')
+            }
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             title={t('organizer.title')}

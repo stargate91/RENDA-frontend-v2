@@ -53,6 +53,10 @@
     "description": "Drag and drop your media files right here to scan them."
   },
   "searchPlaceholder": "Search discovery...",
+  "searchPlaceholderManual": "Search review needed...",
+  "searchPlaceholderMovies": "Search movies...",
+  "searchPlaceholderEpisodes": "Search episodes...",
+  "searchPlaceholderExtras": "Search extras...",
   "toasts": {
     "scanComplete": "All done! Found {count} files ready for new names.",
     "scanCompleteFallback": "Finished scanning!",
