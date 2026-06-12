@@ -65,8 +65,69 @@ class LibraryPeopleService:
             ).all()
         ]
 
+        if include_adult and target_tab == "adult_people":
+            adult_cond = Person.is_adult == True
+        else:
+            adult_cond = Person.is_adult == False
+
+        selected_person_ids = set()
+        if matched_match_ids:
+            # 1. Get Directors (max 2 per match)
+            director_links = self.db.query(MediaPersonLink).join(
+                Person, MediaPersonLink.person_id == Person.id
+            ).filter(
+                MediaPersonLink.media_match_id.in_(matched_match_ids),
+                MediaPersonLink.job.in_(["Director", "Creator"]),
+                adult_cond
+            ).order_by(MediaPersonLink.media_match_id, MediaPersonLink.order).all()
+
+            directors_per_match = {}
+            for link in director_links:
+                directors_per_match.setdefault(link.media_match_id, []).append(link.person_id)
+
+            for match_id, pids in directors_per_match.items():
+                selected_person_ids.update(pids[:2])
+
+            # 2. Get Writers (max 2 per match)
+            writer_links = self.db.query(MediaPersonLink).join(
+                Person, MediaPersonLink.person_id == Person.id
+            ).filter(
+                MediaPersonLink.media_match_id.in_(matched_match_ids),
+                MediaPersonLink.job.in_(["Writer", "Screenplay", "Story", "Teleplay"]),
+                adult_cond
+            ).order_by(MediaPersonLink.media_match_id, MediaPersonLink.order).all()
+
+            writers_per_match = {}
+            for link in writer_links:
+                writers_per_match.setdefault(link.media_match_id, []).append(link.person_id)
+
+            for match_id, pids in writers_per_match.items():
+                selected_person_ids.update(pids[:2])
+
+            # 3. Get Actors (20 actors total, sorted by order/popularity)
+            actor_links = self.db.query(MediaPersonLink).join(
+                Person, MediaPersonLink.person_id == Person.id
+            ).filter(
+                MediaPersonLink.media_match_id.in_(matched_match_ids),
+                MediaPersonLink.job == "Actor",
+                adult_cond
+            ).order_by(Person.popularity.desc(), MediaPersonLink.order).all()
+
+            actor_ids = []
+            for link in actor_links:
+                if link.person_id not in actor_ids:
+                    actor_ids.append(link.person_id)
+                if len(actor_ids) >= 20:
+                    break
+            selected_person_ids.update(actor_ids)
+
+        if not selected_person_ids:
+            return []
+
         query = self.db.query(Person).outerjoin(
             MediaPersonLink, MediaPersonLink.person_id == Person.id
+        ).filter(
+            Person.id.in_(list(selected_person_ids))
         )
 
         # Apply active/inactive filter

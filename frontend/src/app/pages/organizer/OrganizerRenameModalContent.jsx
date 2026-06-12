@@ -4,25 +4,16 @@ import { compareOrganizerValues } from './organizerMappers';
 import Input from '../../ui/Input';
 import SortButton from '../../ui/SortButton';
 import { useOrganizerSort } from './useOrganizerSort';
+import { useLocalListSearch } from '../../hooks/useLocalListSearch';
 import '../../styles/RenameModal.css';
+
+const RENAME_SEARCH_KEYS = ['source', 'target', 'type'];
 
 export default function OrganizerRenameModalContent({ items = [], t }) {
   const [searchQuery, setSearchQuery] = useState('');
   const { sortConfig, handleSortToggle } = useOrganizerSort('target', 'asc');
 
-  const filteredItems = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) {
-      return items;
-    }
-
-    return items.filter((item) => {
-      const original = (item.source || '').toLowerCase();
-      const proposed = (item.target || '').toLowerCase();
-      const typeStr = (item.type || '').toLowerCase();
-      return original.includes(query) || proposed.includes(query) || typeStr.includes(query);
-    });
-  }, [items, searchQuery]);
+  const filteredItems = useLocalListSearch(items, searchQuery, RENAME_SEARCH_KEYS);
 
   const sortedItems = useMemo(() => {
     const result = [...filteredItems];

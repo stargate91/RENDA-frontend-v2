@@ -87,8 +87,27 @@ class LibraryCollectionService:
                 "user_rating": item.user_rating,
             })
 
+        from ..formatter.config import FormatterConfig
+        config = FormatterConfig.from_db(self.db)
+        collection_mode = config.collection_folder_mode
+        threshold = config.collection_folder_threshold
+
+        filtered_collections = []
+        for col in collections_map.values():
+            if collection_mode == "never":
+                continue
+            elif collection_mode == "threshold":
+                if col["owned_count"] >= threshold:
+                    filtered_collections.append(col)
+            elif collection_mode == "complete_only":
+                if col["total_count"] > 0 and col["owned_count"] >= col["total_count"]:
+                    filtered_collections.append(col)
+            else:  # always or fallback
+                if col["owned_count"] >= 1:
+                    filtered_collections.append(col)
+
         sorted_items = sorted(
-            collections_map.values(),
+            filtered_collections,
             key=lambda collection: (-collection["owned_count"], str(collection["title"]).lower(), collection["tmdb_id"]),
         )
         return sorted_items

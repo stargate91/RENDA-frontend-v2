@@ -2,6 +2,9 @@ import { useState, useEffect, useMemo } from 'react';
 import { useOrganizerSort } from '../useOrganizerSort';
 import { compareOrganizerValues } from '../organizerMappers';
 import { scrollOrganizerToTop } from '../organizerScroll';
+import { useLocalListSearch } from '../../../hooks/useLocalListSearch';
+
+const ORGANIZER_SEARCH_KEYS = ['source', 'target', 'type', 'status', 'category', 'language', 'extension'];
 
 export function useOrganizerPaginationSort({
   tabFilteredRows = [],
@@ -25,23 +28,7 @@ export function useOrganizerPaginationSort({
     setSortConfig({ key: 'source', direction: 'asc' });
   }, [activeExtrasTab, activeMainTab, activeManualTab, setSortConfig]);
 
-  const filteredRows = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) {
-      return tabFilteredRows;
-    }
-
-    return tabFilteredRows.filter(
-      (row) =>
-        row.source.toLowerCase().includes(query) ||
-        row.target.toLowerCase().includes(query) ||
-        (row.type && row.type.toLowerCase().includes(query)) ||
-        (row.status && row.status.toLowerCase().includes(query)) ||
-        (row.category && row.category.toLowerCase().includes(query)) ||
-        (row.language && row.language.toLowerCase().includes(query)) ||
-        (row.extension && row.extension.toLowerCase().includes(query))
-    );
-  }, [searchQuery, tabFilteredRows]);
+  const filteredRows = useLocalListSearch(tabFilteredRows, searchQuery, ORGANIZER_SEARCH_KEYS);
 
   const sortedRows = useMemo(() => {
     const rows = [...filteredRows];

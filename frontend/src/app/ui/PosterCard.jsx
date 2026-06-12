@@ -45,9 +45,6 @@ export default function PosterCard({
               {placeholderText && <span className="ui-poster-card__placeholder-text">{placeholderText}</span>}
             </div>
           )}
-          
-          <div className="ui-poster-card__overlay-gradient" />
-          
           {overlay}
           {badge}
           {children}

@@ -273,20 +273,23 @@ class MetadataEnrichmentService:
                     order=p.order,
                     gender=p.gender
                 ))
-            cast = cast[:10]
+            cast = cast[:20]
             crew = details.aggregate_credits.crew
         else:
             credits = details.credits
-            cast = credits.cast[:10] if credits else []
+            cast = credits.cast[:20] if credits else []
             crew = credits.crew if credits else []
         
-        # Determine directors/creators
+        # Determine directors/creators and writers
         creators = []
+        writers = []
         if isinstance(details, TMDBMovie):
             creators = [p for p in crew if p.job == "Director"][:2]
+            writers = [p for p in crew if p.job in ["Writer", "Screenplay", "Story", "Teleplay"]][:2]
         else:
-            # Handle TV creators from 'created_by' or producers/directors in crew
+            # Handle TV creators from 'created_by' or producers/directors/writers in crew
             creators = [p for p in crew if p.job in ["Executive Producer", "Director"]][:2]
+            writers = [p for p in crew if p.job in ["Writer", "Screenplay", "Story", "Teleplay"]][:2]
 
         processed_ids = set()
         
@@ -297,7 +300,14 @@ class MetadataEnrichmentService:
             processed_ids.add(p.id)
             if i == 0: match.director = p.name
 
-        # 2. Process Top Cast
+        # 2. Process Writers
+        for p in writers:
+            if p.id in processed_ids: continue
+            person = self.person_service.get_or_create_person(p.dict())
+            self.person_service.link_person_to_match(match, person, job="Writer")
+            processed_ids.add(p.id)
+
+        # 3. Process Top Cast
         for i, p in enumerate(cast):
             if p.id in processed_ids: continue
             person = self.person_service.get_or_create_person(p.dict())

@@ -17,17 +17,28 @@ const LanguageContext = createContext(null);
 export function LanguageProvider({ children }) {
   const [locale, setLocale] = useState('en');
 
-  const t = (key) => {
+  const t = (key, options) => {
     const keys = key.split('.');
     let value = translations[locale];
     for (const k of keys) {
       if (value && typeof value === 'object') {
         value = value[k];
       } else {
-        return key;
+        value = undefined;
+        break;
       }
     }
-    return value || key;
+    let result = value;
+    if (result === undefined) {
+      result = (options && options.defaultValue) ? options.defaultValue : key;
+    }
+    if (typeof result === 'string' && options) {
+      Object.keys(options).forEach((optKey) => {
+        result = result.replace(new RegExp(`{{\\s*${optKey}\\s*}}`, 'g'), options[optKey]);
+        result = result.replace(new RegExp(`{\\s*${optKey}\\s*}`, 'g'), options[optKey]);
+      });
+    }
+    return result;
   };
 
   return (

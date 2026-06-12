@@ -97,6 +97,13 @@
       "adultPeople": "Adult People",
       "tags": "Tags"
     },
+    "people": {
+      "roles": {
+        "actor": "Actor",
+        "director": "Director",
+        "writer": "Writer"
+      }
+    },
     "emptyStates": {
       "movies": {
         "title": "No Movies Found",
@@ -130,6 +137,12 @@
         "title": "No Items Found",
         "description": "Your media library is empty."
       }
+    },
+    "tags": {
+      "itemsCount": "{{count}} items"
+    },
+    "collections": {
+      "partsCount": "{{owned}} / {{total}} movies"
     }
   }
 }
