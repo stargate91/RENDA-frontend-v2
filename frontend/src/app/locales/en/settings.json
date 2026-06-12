@@ -75,8 +75,9 @@
       "label": "App Theme",
       "hint": "Choose how the app should look.",
       "options": {
-        "dark": "Dark",
-        "solarizedDark": "Solarized Dark"
+        "dark": "Dark RENDA",
+        "solarizedDark": "Solarized Dark",
+        "lightWindows": "Windows 11 Light"
       }
     },
     "closeBehavior": {
