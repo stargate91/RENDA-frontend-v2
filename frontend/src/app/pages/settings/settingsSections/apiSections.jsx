@@ -2,21 +2,10 @@ import SettingsInstructionsBox from '../components/SettingsInstructionsBox.jsx';
 
 export function createApiTmdbSection(t) {
   return {
-    title: t('settingsPage.sections.api.title'),
+    title: t('settingsPage.sections.api.tmdbHeader'),
     eyebrow: t('settingsPage.sections.api.eyebrow'),
     gap: 'xl',
     items: [
-      {
-        type: 'custom',
-        key: 'tmdb-group',
-        render: () => (
-          <div className="settings-api-group">
-            <h3 className="settings-section-heading">
-              {t('settingsPage.sections.api.tmdbHeader')}
-            </h3>
-          </div>
-        ),
-      },
       {
         type: 'text',
         field: 'tmdb_api_key',
@@ -52,22 +41,10 @@ export function createApiTmdbSection(t) {
 
 export function createApiOmdbSection(t) {
   return {
-    title: '',
-    eyebrow: '',
+    title: t('settingsPage.sections.api.omdbHeader'),
+    eyebrow: t('settingsPage.sections.api.eyebrow'),
     gap: 'xl',
-    className: 'settings-section-cardless',
     items: [
-      {
-        type: 'custom',
-        key: 'omdb-group',
-        render: () => (
-          <div className="settings-api-group">
-            <h3 className="settings-section-heading">
-              {t('settingsPage.sections.api.omdbHeader')}
-            </h3>
-          </div>
-        ),
-      },
       {
         type: 'text',
         field: 'omdb_api_key',

@@ -75,7 +75,7 @@ export default function StructurePreviewPanel({ form, t }) {
                     {model.fileIcon} {item.before}
                   </span>
                   <PreviewArrow arrow={model.arrow} />
-                  <span className={`structure-preview-line structure-preview-line--${item.afterTone}`}>
+                  <span className={`structure-preview-line structure-preview-line--${item.afterTone}${item.strike ? ' structure-preview-line--strike' : ''}`}>
                     {model.fileIcon} {item.after}
                   </span>
                 </div>

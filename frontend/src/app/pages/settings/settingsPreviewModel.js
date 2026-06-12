@@ -26,9 +26,31 @@ function createFileNode(label, options = {}) {
 }
 
 function buildPreviewAssets(form) {
+  const movieFile = generatePreview(form.naming_movie_template, 'movie', form.naming_filename_casing, form.naming_word_separator, form.naming_custom_tag, true);
+  const movieNameNoExt = movieFile.replace(/\.mp4$/, '');
+  
+  const helper = (template, type, defaultTmpl, defaultExt) => {
+    let result = generatePreview(
+      template || defaultTmpl,
+      type,
+      form.naming_filename_casing,
+      form.naming_word_separator,
+      form.naming_custom_tag,
+      true
+    );
+    if (result) {
+      return result.replace('The Matrix (1999)', movieNameNoExt);
+    }
+    return `${movieNameNoExt}${defaultExt}`;
+  };
+
   return {
-    movieFile: generatePreview(form.naming_movie_template, 'movie', form.naming_filename_casing, form.naming_word_separator, form.naming_custom_tag, true),
-    movieSubtitle: `${generatePreview(form.naming_movie_template, 'movie', form.naming_filename_casing, form.naming_word_separator, form.naming_custom_tag, false).replace(/\.mp4$/, '')}.en.srt`,
+    movieFile,
+    movieSubtitle: helper(form.extras_sub_template, 'extraSub', '{parent_name} {sub_category}', '.en.srt'),
+    movieExtraVideo: helper(form.extras_video_template, 'extraVideo', '{parent_name} {sub_category}', '-trailer.mp4'),
+    movieExtraAudio: helper(form.extras_audio_template, 'extraAudio', '{parent_name} {sub_category}', '.commentary.ac3'),
+    movieExtraImg: helper(form.extras_img_template, 'extraImg', '{parent_name} {sub_category}', '-poster.jpg'),
+    movieExtraMeta: helper(form.extras_meta_template, 'extraMeta', '{parent_name} {sub_category}', '.nfo'),
     adultMovieFile: generatePreview(form.naming_movie_template, 'adultMovie', form.naming_filename_casing, form.naming_word_separator, form.naming_custom_tag, true),
     adultFolderMovie: generatePreview(form.folder_movie_template, 'adultMovie', form.naming_filename_casing, form.naming_word_separator, form.naming_custom_tag, false),
     episodeFile: generatePreview(form.naming_episode_template, 'episode', form.naming_filename_casing, form.naming_word_separator, form.naming_custom_tag, true),
@@ -36,6 +58,7 @@ function buildPreviewAssets(form) {
     folderShow: generatePreview(form.folder_show_template, 'show', form.naming_filename_casing, form.naming_word_separator, form.naming_custom_tag, false),
     folderSeason: generatePreview(form.folder_season_template, 'season', form.naming_filename_casing, form.naming_word_separator, form.naming_custom_tag, false),
     folderEpisode: generatePreview(form.folder_episode_template, 'episode', form.naming_filename_casing, form.naming_word_separator, form.naming_custom_tag, false),
+    folderCollection: generatePreview(form.folder_collection_template || '{Collection}', 'collection', form.naming_filename_casing, form.naming_word_separator, form.naming_custom_tag, true),
   };
 }
 
@@ -44,21 +67,46 @@ function buildMovieExtraNodes(form, assets) {
     return [];
   }
 
+  const types = [
+    { key: 'video', action: form.extras_video_action, assetKey: 'movieExtraVideo', origName: 'original_trailer.mp4' },
+    { key: 'sub', action: form.extras_sub_action, assetKey: 'movieSubtitle', origName: 'original_subtitle.srt' },
+    { key: 'audio', action: form.extras_audio_action, assetKey: 'movieExtraAudio', origName: 'original_audio.ac3' },
+    { key: 'img', action: form.extras_img_action, assetKey: 'movieExtraImg', origName: 'original_poster.jpg' },
+    { key: 'meta', action: form.extras_meta_action, assetKey: 'movieExtraMeta', origName: 'original_metadata.nfo' },
+  ];
+
+  const fileNodes = [];
+  for (const t of types) {
+    const action = t.action || 'rename';
+    if (action === 'ignore') {
+      fileNodes.push(createFileNode(t.origName, { tone: 'muted' }));
+    } else if (action === 'delete') {
+      fileNodes.push(createFileNode(assets[t.assetKey] || t.origName, { tone: 'danger', strike: true }));
+    } else {
+      fileNodes.push(createFileNode(assets[t.assetKey], { tone: 'muted' }));
+    }
+  }
+
   if (form.extras_folder_mode === EXTRAS_FOLDER_MODES.SUBFOLDER) {
     return [
       createFolderNode(form.extras_subfolder_name, {
         topSpacing: true,
-        children: [createFileNode(assets.movieSubtitle, { tone: 'muted' })],
+        children: fileNodes,
       }),
     ];
   }
 
-  return [createFileNode(assets.movieSubtitle, { tone: 'muted', topSpacing: true })];
+  // Set top spacing for root-level extras (only first item)
+  if (fileNodes.length > 0) {
+    fileNodes[0].topSpacing = true;
+  }
+  return fileNodes;
 }
 
 function buildMovieNodes(form, assets) {
+  let nodes = [];
   if (form.folder_create_movie_subdir) {
-    return [
+    nodes = [
       createFolderNode(assets.folderMovie, {
         children: [
           createFileNode(assets.movieFile),
@@ -66,12 +114,22 @@ function buildMovieNodes(form, assets) {
         ],
       }),
     ];
+  } else {
+    nodes = [
+      createFileNode(assets.movieFile),
+      ...buildMovieExtraNodes(form, assets),
+    ];
   }
 
-  return [
-    createFileNode(assets.movieFile),
-    ...buildMovieExtraNodes(form, assets),
-  ];
+  if (form.folder_create_collection_dir) {
+    return [
+      createFolderNode(assets.folderCollection, {
+        children: nodes,
+      }),
+    ];
+  }
+
+  return nodes;
 }
 
 function buildAdultNodes(form, assets) {
@@ -156,9 +214,32 @@ function buildOrganizedNodes(form, assets) {
 }
 
 function buildUnorganizedNodes(form, assets) {
+  const extraNodes = [];
+  if (form.extras_enabled) {
+    const types = [
+      { action: form.extras_video_action, assetKey: 'movieExtraVideo', origName: 'original_trailer.mp4' },
+      { action: form.extras_sub_action, assetKey: 'movieSubtitle', origName: 'original_subtitle.srt' },
+      { action: form.extras_audio_action, assetKey: 'movieExtraAudio', origName: 'original_audio.ac3' },
+      { action: form.extras_img_action, assetKey: 'movieExtraImg', origName: 'original_poster.jpg' },
+      { action: form.extras_meta_action, assetKey: 'movieExtraMeta', origName: 'original_metadata.nfo' },
+    ];
+    for (const t of types) {
+      const action = t.action || 'rename';
+      const node = action === 'ignore'
+        ? createFileNode(t.origName, { tone: 'muted' })
+        : action === 'delete'
+        ? createFileNode(assets[t.assetKey] || t.origName, { tone: 'danger', strike: true })
+        : createFileNode(assets[t.assetKey], { tone: 'muted' });
+      extraNodes.push(node);
+    }
+    if (extraNodes.length > 0) {
+      extraNodes[0].topSpacing = true;
+    }
+  }
+
   return [
     createFileNode(assets.movieFile),
-    ...(form.extras_enabled ? [createFileNode(assets.movieSubtitle, { tone: 'muted', topSpacing: true })] : []),
+    ...extraNodes,
     createFileNode(assets.episodeFile),
     ...(form.include_adult ? [createFileNode(assets.adultMovieFile, { topSpacing: true })] : []),
   ];
@@ -179,11 +260,37 @@ function buildRenameItems(form, assets) {
   ];
 
   if (form.extras_enabled) {
-    items.push({
-      before: 'original_subtitle.srt',
-      after: assets.movieSubtitle,
-      afterTone: 'muted',
-    });
+    const types = [
+      { action: form.extras_video_action, assetKey: 'movieExtraVideo', origName: 'original_trailer.mp4' },
+      { action: form.extras_sub_action, assetKey: 'movieSubtitle', origName: 'original_subtitle.srt' },
+      { action: form.extras_audio_action, assetKey: 'movieExtraAudio', origName: 'original_audio.ac3' },
+      { action: form.extras_img_action, assetKey: 'movieExtraImg', origName: 'original_poster.jpg' },
+      { action: form.extras_meta_action, assetKey: 'movieExtraMeta', origName: 'original_metadata.nfo' },
+    ];
+
+    for (const t of types) {
+      const action = t.action || 'rename';
+      if (action === 'delete') {
+        items.push({
+          before: t.origName,
+          after: 'Deleted',
+          afterTone: 'danger',
+          strike: true,
+        });
+      } else if (action === 'ignore') {
+        items.push({
+          before: t.origName,
+          after: t.origName,
+          afterTone: 'muted',
+        });
+      } else {
+        items.push({
+          before: t.origName,
+          after: assets[t.assetKey] || t.origName,
+          afterTone: 'muted',
+        });
+      }
+    }
   }
 
   if (form.include_adult) {

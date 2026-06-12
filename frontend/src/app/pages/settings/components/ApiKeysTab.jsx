@@ -9,7 +9,6 @@ export default function ApiKeysTab() {
   return (
     <Stack gap="xl">
       <SettingsSectionRenderer section={createApiTmdbSection(t)} />
-      <hr className="settings-divider" />
       <SettingsSectionRenderer section={createApiOmdbSection(t)} />
     </Stack>
   );
