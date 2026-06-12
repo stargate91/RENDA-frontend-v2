@@ -38,3 +38,7 @@ export const useFullMetadataQuery = (itemId, options = {}) => useQuery({
   queryFn: () => api.metadata.getItemFullMetadata(itemId),
   ...options,
 });
+
+export const useSyncLanguageMutation = () => useMutation({
+  mutationFn: () => api.metadata.syncLanguage(),
+});

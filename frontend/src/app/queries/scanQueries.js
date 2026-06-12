@@ -10,3 +10,9 @@ export const useScanStatusQuery = () => useQuery({
 export const useScanMutation = () => useMutation({
   mutationFn: (payload) => api.scan.start(payload),
 });
+
+export const useHydrateStatusQuery = () => useQuery({
+  queryKey: ['hydrate-status'],
+  queryFn: () => api.hydrate.getStatus(),
+  refetchInterval: (query) => (query.state.data?.active ? 1200 : 10000),
+});

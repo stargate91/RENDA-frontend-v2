@@ -6,6 +6,7 @@ import Input from '@/ui/Input';
 import { useTemplatePreview } from '../hooks';
 import { FOLDER_COLLECTION_MODES } from '../settingsConstants.js';
 import TemplateFieldSection from './TemplateFieldSection.jsx';
+import { useSettingsFormContext } from '../SettingsFormContext.jsx';
 
 export default function CollectionsTab({
   form,
@@ -17,6 +18,8 @@ export default function CollectionsTab({
   formInputs
 }) {
   const getPreview = useTemplatePreview(form);
+  const { renderContext } = useSettingsFormContext();
+  const isScanActive = Boolean(renderContext?.isBackgroundActive);
   const sortOptions = {
     enabled: form.folder_sort_by_type,
     moviesName: form.folder_movies_name,
@@ -32,6 +35,7 @@ export default function CollectionsTab({
         <Switch
           id="folder_create_collection_dir"
           checked={form.folder_create_collection_dir}
+          disabled={isScanActive}
           onChange={(e) => {
             const checked = e.target.checked;
             setForm(prev => {
@@ -58,6 +62,7 @@ export default function CollectionsTab({
               label={t('settingsPage.sections.collections.collectionMode')}
               value={form.folder_collection_mode}
               options={collectionModeOptions}
+              disabled={isScanActive}
               onChange={handleChange('folder_collection_mode')}
               hint={t('settingsPage.sections.collections.collectionModeHint')}
             />
@@ -67,6 +72,7 @@ export default function CollectionsTab({
                 <Input
                   label={t('settingsPage.sections.collections.collectionThreshold')}
                   value={form.folder_collection_threshold}
+                  disabled={isScanActive}
                   onChange={handleChange('folder_collection_threshold')}
                   placeholder="3"
                   type="number"
@@ -81,6 +87,7 @@ export default function CollectionsTab({
               inputRef={formInputs.folderCollection}
               label={t('settingsPage.sections.collections.collectionTemplate')}
               value={form.folder_collection_template}
+              disabled={isScanActive}
               onChange={handleChange('folder_collection_template')}
               placeholder="{collection}"
               tags={['{collection}']}

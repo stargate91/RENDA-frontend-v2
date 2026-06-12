@@ -1,4 +1,5 @@
 import { createContext, useContext, useMemo } from 'react';
+import { ORGANIZATION_TAB_IDS } from './settingsConstants.js';
 
 const SettingsFormContext = createContext(null);
 
@@ -38,9 +39,31 @@ export function useSettingsFormContext() {
 }
 
 export function useSettingsField(name) {
-  const { form, actions, validationErrors } = useSettingsFormContext();
+  const { form, actions, validationErrors, renderContext } = useSettingsFormContext();
   const value = form[name];
   const isBooleanField = typeof value === 'boolean';
+  
+  const isScanActive = Boolean(renderContext?.isScanActive);
+  const isBackgroundActive = Boolean(renderContext?.isBackgroundActive);
+  const activeTab = renderContext?.activeTab;
+  const isOrgTab = ORGANIZATION_TAB_IDS.includes(activeTab);
+  const isApiKeysTab = activeTab === 'apiKeys';
+  const isAdvancedTab = activeTab === 'advanced';
+  const isMaintenanceTab = activeTab === 'maintenance';
+  const isFolderField = name === 'folder_library_path' || name === 'default_scan_dir';
+  
+  let disabled = Boolean(
+    isBackgroundActive && (isOrgTab || isFolderField || isApiKeysTab || isAdvancedTab || isMaintenanceTab)
+  );
+
+  if (name === 'ui_language' && isBackgroundActive) {
+    const followMedia = Boolean(form.follow_app_language_for_media_library);
+    const followNaming = Boolean(form.follow_app_language_for_naming);
+    if (followMedia || followNaming) {
+      disabled = true;
+    }
+  }
+
   const errorMap = {
     default_scan_dir: validationErrors?.scanFolder,
     folder_library_path: validationErrors?.targetFolder,
@@ -50,7 +73,10 @@ export function useSettingsField(name) {
     value,
     checked: Boolean(value),
     error: errorMap[name] || null,
-    onChange: isBooleanField ? actions.handleCheckboxChange(name) : actions.handleChange(name),
+    disabled,
+    onChange: disabled
+      ? () => {}
+      : (isBooleanField ? actions.handleCheckboxChange(name) : actions.handleChange(name)),
   };
 }
 

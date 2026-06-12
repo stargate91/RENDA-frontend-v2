@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from '../providers/LanguageProvider';
-import { useImageStatusQuery, useScanStatusQuery } from '../queries';
+import { useImageStatusQuery, useScanStatusQuery, useSettingsQuery, useHydrateStatusQuery } from '../queries';
 import {
   getScanProgress,
   formatScanRemaining,
@@ -13,10 +13,19 @@ export default function useWindowProgress() {
   const { t } = useTranslation();
   const scanStatusQuery = useScanStatusQuery();
   const imageStatusQuery = useImageStatusQuery();
+  const settingsQuery = useSettingsQuery();
+  const hydrateStatusQuery = useHydrateStatusQuery();
+  
   const scanStatus = scanStatusQuery.data || null;
   const imageStatus = imageStatusQuery.data || null;
-  const isScanActive = Boolean(scanStatus?.active);
+  const settings = settingsQuery.data || null;
+  const hydrateStatus = hydrateStatusQuery.data || null;
+  
+  const isScanActive = Boolean(scanStatus?.active) && scanStatus?.phase !== 'sync_language';
+  const isSyncActive = Boolean(scanStatus?.active) && scanStatus?.phase === 'sync_language';
   const isImageActive = Boolean(imageStatus?.active);
+  const isHydrateActive = Boolean(hydrateStatus?.active);
+  const isAutoHydrateActive = Boolean(settings?.auto_hydrate_inactive_people);
 
   const [scanState, setScanState] = useState({
     lastScanStartTime: null,
@@ -58,17 +67,36 @@ export default function useWindowProgress() {
         progress: currentMaxScanProgress,
         timeRemaining: formatScanRemaining(scanStatus, currentMaxScanProgress),
         active: true,
+        variant: 'primary',
       }
     : null;
 
   return {
-    hasProgress: isScanActive || isImageActive,
+    hasProgress: isScanActive || isSyncActive || isImageActive || isHydrateActive,
     scanProgress: scanProgressData,
     imageProgress: isImageActive
       ? {
           taskName: t('progress.images.downloading'),
           progress: getImageProgress(imageStatus),
           timeRemaining: formatImageRemaining(imageStatus),
+          active: true,
+          variant: 'sub',
+        }
+      : null,
+    hydrateProgress: isHydrateActive
+      ? {
+          taskName: t('progress.people.hydrating') || 'Enriching extra people...',
+          progress: hydrateStatus.total > 0 ? Math.round((hydrateStatus.current / hydrateStatus.total) * 100) : 0,
+          timeRemaining: `${hydrateStatus.current}/${hydrateStatus.total}`,
+          active: true,
+          variant: 'sub',
+        }
+      : null,
+    syncProgress: isSyncActive
+      ? {
+          taskName: t('progress.sync.running') || 'Syncing metadata languages...',
+          progress: Math.round(scanStatus.progress || 0),
+          timeRemaining: `${scanStatus.processed_files || 0}/${scanStatus.total_files || 0}`,
           active: true,
           variant: 'sub',
         }

@@ -6,6 +6,9 @@ export default function useSettingsRenderContext({
   setForm,
   isSaving,
   isWiping,
+  isScanActive,
+  isBackgroundActive,
+  isSyncActive,
   validationErrors,
   formInputs,
   insertTag,
@@ -26,6 +29,9 @@ export default function useSettingsRenderContext({
     setForm,
     isSaving,
     isWiping,
+    isScanActive,
+    isBackgroundActive,
+    isSyncActive,
     validationErrors,
     formInputs,
     insertTag,
@@ -37,6 +43,7 @@ export default function useSettingsRenderContext({
     handleImportClick,
     handleImportSettings,
     handleWipeDatabase,
+    activeTab,
     ...optionContext,
   };
 

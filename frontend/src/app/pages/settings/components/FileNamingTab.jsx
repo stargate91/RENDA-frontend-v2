@@ -6,6 +6,7 @@ import { MOVIE_TAGS, EPISODE_TAGS } from '../settingsTemplateTags.js';
 import { useTemplatePreview } from '../hooks';
 import SettingsLiveImpact from './SettingsLiveImpact.jsx';
 import TemplateFieldSection from './TemplateFieldSection.jsx';
+import { useSettingsFormContext } from '../SettingsFormContext.jsx';
 
 export default function FileNamingTab({
   form,
@@ -17,6 +18,8 @@ export default function FileNamingTab({
   formInputs
 }) {
   const getPreview = useTemplatePreview(form);
+  const { renderContext } = useSettingsFormContext();
+  const isScanActive = Boolean(renderContext?.isBackgroundActive);
 
   return (
     <Stack gap="xl">
@@ -35,6 +38,7 @@ export default function FileNamingTab({
                 hint={t('settingsPage.sections.fileNaming.casingHint')}
                 value={form.naming_filename_casing}
                 options={casingOptions}
+                disabled={isScanActive}
                 onChange={handleChange('naming_filename_casing')}
               />
               <Dropdown
@@ -42,6 +46,7 @@ export default function FileNamingTab({
                 hint={t('settingsPage.sections.fileNaming.separatorHint')}
                 value={form.naming_word_separator}
                 options={separatorOptions}
+                disabled={isScanActive}
                 onChange={handleChange('naming_word_separator')}
               />
             </Stack>
@@ -56,6 +61,7 @@ export default function FileNamingTab({
                 label={t('settingsPage.sections.fileNaming.customTagLabel')}
                 hint={t('settingsPage.sections.fileNaming.customTagHint')}
                 value={form.naming_custom_tag}
+                disabled={isScanActive}
                 onChange={handleChange('naming_custom_tag')}
                 placeholder={t('settingsPage.sections.fileNaming.defaultCustomTagPlaceholder')}
               />
@@ -66,6 +72,7 @@ export default function FileNamingTab({
                 label={t('settingsPage.sections.fileNaming.movieTemplateLabel')}
                 hint={t('settingsPage.sections.fileNaming.movieTemplateHint')}
                 value={form.naming_movie_template}
+                disabled={isScanActive}
                 onChange={handleChange('naming_movie_template')}
                 placeholder="{title} ({year}) {resolution}"
                 tags={MOVIE_TAGS}
@@ -80,6 +87,7 @@ export default function FileNamingTab({
                 label={t('settingsPage.sections.fileNaming.episodeTemplateLabel')}
                 hint={t('settingsPage.sections.fileNaming.episodeTemplateHint')}
                 value={form.naming_episode_template}
+                disabled={isScanActive}
                 onChange={handleChange('naming_episode_template')}
                 placeholder="{series_title} - S{season}E{episode} - {episode_title}"
                 tags={EPISODE_TAGS}
@@ -98,6 +106,7 @@ export default function FileNamingTab({
               label={t('settingsPage.sections.fileNaming.videoExtsLabel')}
               hint={t('settingsPage.sections.fileNaming.videoExtsHint')}
               value={form.naming_video_exts}
+              disabled={isScanActive}
               onChange={handleChange('naming_video_exts')}
               placeholder=".mkv, .mp4, .avi, .m4v, .mov, .wmv, .mpg, .mpeg"
             />

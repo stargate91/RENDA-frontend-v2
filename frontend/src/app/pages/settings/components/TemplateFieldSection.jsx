@@ -9,6 +9,7 @@ export default function TemplateFieldSection({
   hint,
   value,
   onChange,
+  disabled,
   placeholder,
   tags,
   fieldKey,
@@ -24,6 +25,7 @@ export default function TemplateFieldSection({
         hint={hint}
         value={value}
         onChange={onChange}
+        disabled={disabled}
         placeholder={placeholder}
       />
       <TemplateTagSelector
@@ -32,6 +34,7 @@ export default function TemplateFieldSection({
         fieldKey={fieldKey}
         inputRef={inputRef}
         insertTag={insertTag}
+        disabled={disabled}
       />
       {value && (
         <PreviewBadge

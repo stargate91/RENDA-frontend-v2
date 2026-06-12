@@ -8,6 +8,7 @@ export default function SettingsSwitchField({ field, onChange, children, ...prop
     <Switch
       {...props}
       checked={fieldState.checked}
+      disabled={props.disabled || fieldState.disabled}
       onChange={onChange || fieldState.onChange}
     >
       {children}

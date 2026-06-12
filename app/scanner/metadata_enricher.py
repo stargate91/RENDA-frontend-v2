@@ -35,7 +35,7 @@ class MetadataEnricher:
         """
         Executes the complete metadata download for the active match.
         Forces the correct type based on the API response.
-        If fallback_language is specified and differs from the primary, it also downloads the localization.
+        Downloads localization for primary language, default target language, item target language, and fallback language.
         """
         active_match = self.db.query(MediaMatch).filter(
             MediaMatch.media_item_id == item.id,
@@ -63,33 +63,59 @@ class MetadataEnricher:
                             if active_match.season_number is None: active_match.season_number = 1
                             if active_match.episode_number is None: active_match.episode_number = 1
 
-        # Primary language enrichment
-        if active_match.item_type == ItemType.MOVIE:
-            self._enrich_movie(active_match, language, include_ratings=include_ratings)
-        elif active_match.item_type == ItemType.SERIES or active_match.item_type == ItemType.EPISODE:
-            self._enrich_tv(active_match, language, include_ratings=include_ratings)
+        # Load user settings for default languages
+        from ..db.models import UserSetting
+        pl = self.db.query(UserSetting).filter(UserSetting.key == "primary_metadata_language").first()
+        tl = self.db.query(UserSetting).filter(UserSetting.key == "default_target_language").first()
+        fl = self.db.query(UserSetting).filter(UserSetting.key == "fallback_metadata_language").first()
 
-        # Fallback language enrichment (if set and different from primary)
-        if fallback_language and fallback_language != language:
-            logger.info(f"Enriching fallback language '{fallback_language}' for item {item.id}")
+        # Build unique list of languages to enrich
+        langs_to_enrich = []
+        if language:
+            langs_to_enrich.append(language)
+        if pl and pl.value:
+            langs_to_enrich.append(pl.value)
+        if tl and tl.value:
+            langs_to_enrich.append(tl.value)
+        if item.target_language:
+            langs_to_enrich.append(item.target_language)
+        if fallback_language:
+            langs_to_enrich.append(fallback_language)
+        if fl and fl.value and fl.value != "none":
+            langs_to_enrich.append(fl.value)
+
+        # Deduplicate while preserving order
+        unique_langs = []
+        for l in langs_to_enrich:
+            if l not in unique_langs:
+                unique_langs.append(l)
+
+        for idx, lang in enumerate(unique_langs):
+            # Include ratings only for the first language (primary) to save API/processing time
+            inc_rat = include_ratings if idx == 0 else False
             if active_match.item_type == ItemType.MOVIE:
-                self._enrich_movie(active_match, fallback_language, include_ratings=include_ratings)
+                self._enrich_movie(active_match, lang, include_ratings=inc_rat)
             elif active_match.item_type == ItemType.SERIES or active_match.item_type == ItemType.EPISODE:
-                self._enrich_tv(active_match, fallback_language, include_ratings=include_ratings)
+                self._enrich_tv(active_match, lang, include_ratings=inc_rat)
 
         # --- PLANNED PATH UPDATE (WITH OFFICIAL DATA) ---
         try:
             from ..formatter.formatter import Formatter, FormatterConfig
             from ..db.models import UserSetting
+            from ..utils.library_utils import _match_language_code
             config = FormatterConfig.from_db(self.db)
             formatter = Formatter(config)
             
-            primary_lang = self.db.query(UserSetting).filter(UserSetting.key == "primary_metadata_language").first()
-            primary_lang_val = primary_lang.value if primary_lang else "en"
+            target_lang = self.db.query(UserSetting).filter(UserSetting.key == "default_target_language").first()
+            target_lang_val = (item.target_language or (target_lang.value if target_lang else None) or "en")
             
-            loc = next((l for l in active_match.localizations if l.target_language == primary_lang_val), None)
+            loc = next((l for l in active_match.localizations if _match_language_code(l.target_language, target_lang_val)), None)
+            if not loc:
+                primary_lang = self.db.query(UserSetting).filter(UserSetting.key == "primary_metadata_language").first()
+                primary_lang_val = primary_lang.value if primary_lang else "en"
+                loc = next((l for l in active_match.localizations if _match_language_code(l.target_language, primary_lang_val)), None)
             if not loc and active_match.localizations:
-                loc = active_match.localizations[0]
+                loc = next((l for l in active_match.localizations if l.is_primary), active_match.localizations[0])
                 
             if loc:
                 preview = formatter.format_item(item, active_match, loc)

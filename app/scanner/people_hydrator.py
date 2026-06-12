@@ -49,6 +49,7 @@ hydrate_status_manager = HydrateStatusManager()
 class PeopleHydrator:
     def __init__(self):
         self._thread = None
+        self._stop_event = threading.Event()
 
     def is_running(self):
         return self._thread and self._thread.is_alive()
@@ -56,6 +57,7 @@ class PeopleHydrator:
     def start(self):
         if self.is_running():
             return
+        self._stop_event.clear()
 
         # Double check setting
         db = Session()
@@ -70,7 +72,7 @@ class PeopleHydrator:
         self._thread.start()
 
     def stop(self):
-        pass
+        self._stop_event.set()
 
     def _hydrate_loop(self):
         db = Session()
@@ -97,6 +99,9 @@ class PeopleHydrator:
             langs = _preferred_person_languages(db)
 
             for idx, (p_id,) in enumerate(persons):
+                if self._stop_event.is_set():
+                    logger.info("People hydrator stopped by request.")
+                    break
                 try:
                     person_service.enrich_person_metadata(p_id, langs)
                 except Exception as e:
@@ -106,7 +111,11 @@ class PeopleHydrator:
                     "current": idx + 1
                 })
 
-                time.sleep(0.3)
+                # Check multiple times during sleep for fast abort
+                for _ in range(3):
+                    if self._stop_event.is_set():
+                        break
+                    time.sleep(0.1)
 
         except Exception as e:
             logger.error(f"Error in people hydrator loop: {e}")

@@ -3,6 +3,7 @@ import SelectableCard from '@/ui/SelectableCard';
 import Switch from '@/ui/Switch';
 import { useSettingsPresets } from '../hooks';
 import SettingsLiveImpact from './SettingsLiveImpact.jsx';
+import { useSettingsFormContext } from '../SettingsFormContext.jsx';
 
 export default function PresetsTab() {
   const {
@@ -13,6 +14,8 @@ export default function PresetsTab() {
     setMoveToLibrary,
     setCustomOrganizationEnabled,
   } = useSettingsPresets();
+  const { renderContext } = useSettingsFormContext();
+  const isScanActive = Boolean(renderContext?.isBackgroundActive);
 
   return (
     <div className="settings-tab-stack">
@@ -28,15 +31,17 @@ export default function PresetsTab() {
             {/* Mode A: Library sorting */}
             <SelectableCard
               as="div"
-              onClick={() => setMoveToLibrary(true)}
+              onClick={isScanActive ? undefined : () => setMoveToLibrary(true)}
               className="settings-mode-card"
               selected={form.folder_move_to_library}
+              disabled={isScanActive}
             >
               <div className="settings-choice-header">
                 <input
                   type="radio"
                   checked={form.folder_move_to_library}
                   onChange={() => {}}
+                  disabled={isScanActive}
                   className="settings-choice-input"
                 />
                 <span className={`settings-choice-title${form.folder_move_to_library ? ' is-active' : ''}`}>
@@ -51,15 +56,17 @@ export default function PresetsTab() {
             {/* Mode B: In-place Rename */}
             <SelectableCard
               as="div"
-              onClick={() => setMoveToLibrary(false)}
+              onClick={isScanActive ? undefined : () => setMoveToLibrary(false)}
               className="settings-mode-card"
               selected={!form.folder_move_to_library}
+              disabled={isScanActive}
             >
               <div className="settings-choice-header">
                 <input
                   type="radio"
                   checked={!form.folder_move_to_library}
                   onChange={() => {}}
+                  disabled={isScanActive}
                   className="settings-choice-input"
                 />
                 <span className={`settings-choice-title${!form.folder_move_to_library ? ' is-active' : ''}`}>
@@ -86,15 +93,15 @@ export default function PresetsTab() {
           <div className="settings-preset-grid">
             {presetCards.map((preset) => {
               const isSelected = form.organization_preset === preset.value;
-              const isDisabled = form.custom_organization_enabled;
+              const isCardDisabled = isScanActive || (form.custom_organization_enabled && !isSelected);
               return (
                 <SelectableCard
                   as="div"
                   key={preset.value}
-                  onClick={() => applyPreset(preset.value)}
+                  onClick={isScanActive || form.custom_organization_enabled ? undefined : () => applyPreset(preset.value)}
                   className="settings-preset-card"
                   selected={isSelected}
-                  disabled={isDisabled && !isSelected}
+                  disabled={isCardDisabled}
                 >
                   <div className="settings-choice-header settings-choice-header--compact">
                     <span className="settings-preset-icon">{preset.icon}</span>
@@ -119,6 +126,7 @@ export default function PresetsTab() {
             <Switch
               id="custom_organization_enabled"
               checked={form.custom_organization_enabled}
+              disabled={isScanActive}
               onChange={(e) => setCustomOrganizationEnabled(e.target.checked)}
             >
               <span className="settings-choice-label-text">

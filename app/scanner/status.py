@@ -39,6 +39,8 @@ class StatusManager:
     def update(self, updates: Dict[str, Any]):
         """Updates the status and notifies listeners."""
         with self._lock:
+            if updates.get("active") is True:
+                self._status["message"] = None
             self._status.update(updates)
             current_status = self._status.copy()
         

@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { useUi } from '@/providers/UiProvider';
 import { useTranslation } from '@/providers/LanguageProvider';
+import { useScanStatusQuery, useImageStatusQuery, useHydrateStatusQuery } from '@/queries';
 import useSettingsNavigation from './useSettingsNavigation.jsx';
 import useTemplateTagInsertion from './useTemplateTagInsertion.jsx';
 import useFolderValidation from './useFolderValidation.jsx';
@@ -13,6 +14,18 @@ import { SETTINGS_TAB_IDS } from '../settingsConstants.js';
 export default function useSettingsForm() {
   const { t } = useTranslation();
   const { toast, openModal, closeModal } = useUi();
+  const scanStatusQuery = useScanStatusQuery();
+  const imageStatusQuery = useImageStatusQuery();
+  const hydrateStatusQuery = useHydrateStatusQuery();
+
+  const isSyncActive = Boolean(scanStatusQuery.data?.active && scanStatusQuery.data?.phase === 'sync_language');
+  const isScanActive = Boolean(scanStatusQuery.data?.active) && scanStatusQuery.data?.phase !== 'sync_language';
+  const isBackgroundActive = Boolean(
+    isScanActive ||
+    isSyncActive ||
+    imageStatusQuery.data?.active ||
+    hydrateStatusQuery.data?.active
+  );
 
   const formInputs = {
     scanFolder: useRef(null),
@@ -51,6 +64,8 @@ export default function useSettingsForm() {
   const persistence = useSettingsPersistence({
     t,
     toast,
+    openModal,
+    closeModal,
     validateFormFolders,
     onValidationInvalid: () => navigation.setActiveTab(SETTINGS_TAB_IDS.GENERAL),
   });
@@ -71,6 +86,7 @@ export default function useSettingsForm() {
     fileInputRef: formInputs.backupFile,
     toast,
     t,
+    isScanActive: isBackgroundActive,
   });
   const dangerZone = useSettingsDangerZone({
     t,
@@ -78,6 +94,7 @@ export default function useSettingsForm() {
     openModal,
     closeModal,
     onBeforeWipe: persistence.resetInitialization,
+    isScanActive: isBackgroundActive,
   });
 
   return {
@@ -93,6 +110,9 @@ export default function useSettingsForm() {
     isOrganizationTabActive: navigation.isOrganizationTabActive,
     isSaving: persistence.isSaving,
     isWiping: dangerZone.isWiping,
+    isScanActive,
+    isBackgroundActive,
+    isSyncActive,
     validationErrors,
     isDirty: persistence.isDirty,
     formInputs,
@@ -109,5 +129,7 @@ export default function useSettingsForm() {
     handleWipeDatabase: dangerZone.handleWipeDatabase,
     handleReset: persistence.handleReset,
     isShaking: navigation.isShaking,
+    openModal,
+    closeModal,
   };
 }

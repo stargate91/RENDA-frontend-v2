@@ -1,4 +1,7 @@
 import { useEffect } from 'react';
+import { AlertTriangle } from 'lucide-react';
+import Button from '@/ui/Button';
+import Checkbox from '@/ui/Checkbox';
 import { useSettingsForm, useSettingsOptions, useSettingsRenderContext } from './hooks';
 import { SettingsFormProvider } from './SettingsFormContext.jsx';
 import {
@@ -24,6 +27,9 @@ export default function SettingsPage() {
     isOrganizationTabActive,
     isSaving,
     isWiping,
+    isScanActive,
+    isBackgroundActive,
+    isSyncActive,
     validationErrors,
     isDirty,
     formInputs,
@@ -39,7 +45,9 @@ export default function SettingsPage() {
     handleSave,
     handleWipeDatabase,
     handleReset,
-    isShaking
+    isShaking,
+    openModal,
+    closeModal,
   } = useSettingsForm();
 
   const savedTheme = settingsQuery.data?.ui_theme || 'dark';
@@ -51,6 +59,47 @@ export default function SettingsPage() {
       document.documentElement.setAttribute('data-theme', savedTheme);
     };
   }, [currentTheme, savedTheme]);
+
+  useEffect(() => {
+    const hasShownWarning = sessionStorage.getItem('renda:settings-active-warning-shown');
+    if (isBackgroundActive && !hasShownWarning && localStorage.getItem('renda:skip-settings-active-warning') !== 'true') {
+      sessionStorage.setItem('renda:settings-active-warning-shown', 'true');
+      let dontShowAgain = false;
+      
+      const handleCheckboxChange = (e) => {
+        dontShowAgain = e.target.checked;
+      };
+
+      openModal({
+        title: t('settingsPage.activeTasksWarning.title'),
+        icon: AlertTriangle,
+        variant: 'danger',
+        content: (
+          <div className="ui-modal__body-text">
+            <p style={{ marginBottom: '16px', lineHeight: '1.5' }}>
+              {t('settingsPage.activeTasksWarning.description')}
+            </p>
+            <Checkbox onChange={handleCheckboxChange}>
+              {t('settingsPage.activeTasksWarning.dontShowAgain')}
+            </Checkbox>
+          </div>
+        ),
+        footer: (
+          <Button
+            variant="secondary-neutral"
+            onClick={() => {
+              if (dontShowAgain) {
+                localStorage.setItem('renda:skip-settings-active-warning', 'true');
+              }
+              closeModal();
+            }}
+          >
+            {t('settingsPage.activeTasksWarning.ok')}
+          </Button>
+        ),
+      });
+    }
+  }, [isBackgroundActive, openModal, closeModal, t]);
 
   const optionContext = useSettingsOptions(t);
   const {
@@ -64,6 +113,9 @@ export default function SettingsPage() {
     setForm,
     isSaving,
     isWiping,
+    isScanActive,
+    isBackgroundActive,
+    isSyncActive,
     validationErrors,
     formInputs,
     insertTag,

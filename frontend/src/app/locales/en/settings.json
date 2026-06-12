@@ -407,6 +407,22 @@
     "confirmTitle": "Wipe Database",
     "confirm": "Are you sure? This will clear your libraries, matches, lists, and playback history. Your settings and API cache will stay. This can't be undone.",
     "success": "The database was cleared.",
-    "failed": "Couldn't clear the database"
+    "failed": "Couldn't clear the database",
+    "backgroundActiveError": "Cannot perform maintenance actions while background tasks are running."
+  },
+  "activeTasksWarning": {
+    "title": "Active Background Process",
+    "description": "Certain settings (like file naming, folder structures, and API keys) are temporarily disabled. They will become editable again once all active tasks are complete.",
+    "dontShowAgain": "Don't show this again",
+    "ok": "OK"
+  },
+  "languageChangeInfo": {
+    "title": "Language Synchronization",
+    "description": "RENDA will download the new language data if it is not already available. The larger the library, the longer this process will take.",
+    "dontShowAgain": "Don't show this again",
+    "cancel": "Cancel",
+    "syncButton": "Sync Language",
+    "syncStarted": "Language synchronization started in background.",
+    "syncFailed": "Could not start language synchronization."
   }
 }

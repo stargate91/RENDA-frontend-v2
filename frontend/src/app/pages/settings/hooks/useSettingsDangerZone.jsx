@@ -9,11 +9,16 @@ export default function useSettingsDangerZone({
   openModal,
   closeModal,
   onBeforeWipe,
+  isScanActive,
 }) {
   const clearDbMutation = useClearDatabaseMutation();
   const [isWiping, setIsWiping] = useState(false);
 
   const handleWipeDatabase = useCallback(() => {
+    if (isScanActive) {
+      toast(t('settingsPage.dangerZone.backgroundActiveError'), 'danger');
+      return;
+    }
     openModal({
       title: t('settingsPage.dangerZone.confirmTitle'),
       icon: AlertTriangle,
@@ -50,7 +55,7 @@ export default function useSettingsDangerZone({
         </>
       ),
     });
-  }, [clearDbMutation, closeModal, onBeforeWipe, openModal, t, toast]);
+  }, [clearDbMutation, closeModal, onBeforeWipe, openModal, t, toast, isScanActive]);
 
   return {
     isWiping,

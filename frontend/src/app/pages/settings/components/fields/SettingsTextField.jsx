@@ -9,6 +9,7 @@ export default function SettingsTextField({ field, onChange, ...props }) {
       {...props}
       value={fieldState.value ?? ''}
       error={props.error ?? fieldState.error}
+      disabled={props.disabled || fieldState.disabled}
       onChange={onChange || fieldState.onChange}
     />
   );

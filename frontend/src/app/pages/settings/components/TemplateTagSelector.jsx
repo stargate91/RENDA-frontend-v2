@@ -1,6 +1,6 @@
 import TagButton from '@/ui/TagButton';
 
-export default function TemplateTagSelector({ t, tags, fieldKey, inputRef, insertTag }) {
+export default function TemplateTagSelector({ t, tags, fieldKey, inputRef, insertTag, disabled }) {
   const commonTags = tags.common || [];
   const allTags = tags.all || tags;
   const additionalTags = allTags.filter((tag) => !commonTags.includes(tag));
@@ -16,7 +16,8 @@ export default function TemplateTagSelector({ t, tags, fieldKey, inputRef, inser
             {commonTags.map((tag) => (
               <TagButton
                 key={tag}
-                onClick={() => insertTag(fieldKey, inputRef, tag)}
+                disabled={disabled}
+                onClick={disabled ? undefined : () => insertTag(fieldKey, inputRef, tag)}
               >
                 {tag}
               </TagButton>
@@ -33,7 +34,8 @@ export default function TemplateTagSelector({ t, tags, fieldKey, inputRef, inser
             {additionalTags.map((tag) => (
               <TagButton
                 key={tag}
-                onClick={() => insertTag(fieldKey, inputRef, tag)}
+                disabled={disabled}
+                onClick={disabled ? undefined : () => insertTag(fieldKey, inputRef, tag)}
               >
                 {tag}
               </TagButton>

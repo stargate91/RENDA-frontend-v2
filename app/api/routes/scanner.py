@@ -128,16 +128,31 @@ def start_scan(request: ScanRequest, background_tasks: BackgroundTasks):
 
 
 @router.post("/task/stop")
-def stop_active_task():
-    with scan_status_lock:
-        if not scan_status.get("active"):
-            raise HTTPException(status_code=400, detail="No active task to stop")
-        if not scan_status.get("can_stop"):
-            raise HTTPException(status_code=400, detail="This task can't be stopped")
-        if scan_status.get("stop_requested"):
-            return {"status": "success", "message": "Stop already requested"}
+def stop_active_task(background_tasks: BackgroundTasks):
+    from app.scanner.people_hydrator import people_hydrator
 
-    request_scan_stop()
+    stopped_any = False
+
+    # 1. Stop scanner
+    with scan_status_lock:
+        if scan_status.get("active") and not scan_status.get("stop_requested"):
+            request_scan_stop()
+            stopped_any = True
+
+    # 2. Stop people hydrator
+    if people_hydrator.is_running():
+        people_hydrator.stop()
+        stopped_any = True
+
+    # 3. Stop image downloader
+    image_status_data = get_image_status()
+    if image_status_data.get("active"):
+        background_tasks.add_task(reset_image_status)
+        stopped_any = True
+
+    if not stopped_any:
+        return {"status": "success", "message": "No active tasks to stop or stop already requested"}
+
     return {"status": "success", "message": "Stop requested"}
 
 

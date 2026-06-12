@@ -35,6 +35,13 @@ class MediaActionService:
                 item = self.repository.get_by_id(target_id)
                 if not item: raise ValueError("Media item not found")
                 self._apply_media_updates(item, updates)
+                if "target_language" in updates and updates["target_language"]:
+                    try:
+                        from .metadata_enrichment_service import MetadataEnrichmentService
+                        enricher = MetadataEnrichmentService(self.db)
+                        enricher.enrich_matched_item(item, language=updates["target_language"])
+                    except Exception as enrich_ex:
+                        logger.warning(f"Failed to enrich item {item.id} with new target language: {enrich_ex}")
                 self._refresh_planned_path(item)
             else:
                 extra = self.repository.get_extra_by_id(target_id)

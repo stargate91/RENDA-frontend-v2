@@ -1,4 +1,5 @@
 import SettingsSelectField from '../components/fields/SettingsSelectField.jsx';
+import Button from '@/ui/Button';
 
 export function createAdvancedThresholdSection(t) {
   return {
@@ -25,7 +26,7 @@ export function createAdvancedThresholdSection(t) {
   };
 }
 
-export function createAdvancedLanguageSection(t, metadataLanguageOptions, targetLanguageOptions) {
+export function createAdvancedLanguageSection(t, metadataLanguageOptions, targetLanguageOptions, onSyncLanguage, isSyncing) {
   return {
     title: t('settingsPage.sections.advancedLanguage.title'),
     eyebrow: t('settingsPage.sections.advancedLanguage.eyebrow'),
@@ -86,6 +87,22 @@ export function createAdvancedLanguageSection(t, metadataLanguageOptions, target
             options={targetLanguageOptions}
             className="settings-dropdown-nested"
           />
+        ),
+      },
+      {
+        type: 'custom',
+        key: 'sync_language_button_container',
+        render: () => (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+            <Button
+              variant="secondary"
+              type="button"
+              onClick={onSyncLanguage}
+              disabled={isSyncing}
+            >
+              {t('settingsPage.languageChangeInfo.syncButton')}
+            </Button>
+          </div>
         ),
       },
     ],

@@ -92,7 +92,8 @@ class ScannerService:
             "phase": "collecting",
             "current": 0,
             "total": 0,
-            "start_time": time.time()
+            "start_time": time.time(),
+            "message": None
         })
         
         def run_scan():

@@ -16,6 +16,7 @@ export default function TemplateRuleField({
   inputRef,
   insertTag,
   previewText,
+  disabled,
 }) {
   return (
     <div>
@@ -23,6 +24,7 @@ export default function TemplateRuleField({
         field={actionFieldName}
         label={actionLabel}
         options={actionOptions}
+        disabled={disabled}
       />
       {actionField.value === 'rename' && (
         <TemplateFieldSection
@@ -31,6 +33,7 @@ export default function TemplateRuleField({
           label={templateLabel}
           value={templateField.value}
           onChange={templateField.onChange}
+          disabled={disabled || templateField.disabled}
           placeholder={templatePlaceholder}
           tags={templateTags}
           fieldKey={templateFieldKey}

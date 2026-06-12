@@ -10,20 +10,38 @@ import useWindowProgress from './useWindowProgress';
 import useWindowControls from './useWindowControls';
 
 export default function WindowTitlebar() {
-  const { hasProgress, scanProgress, imageProgress } = useWindowProgress();
+  const { hasProgress, scanProgress, imageProgress, hydrateProgress, syncProgress } = useWindowProgress();
   const { openModal, closeModal, toast } = useUi();
   const { t } = useTranslation();
   const { minimize, toggleMaximize, close, resizeToMinimum } = useWindowControls();
 
-  const handleAbort = () => {
+  const handleAbort = (type) => {
+    let titleKey = 'progress.abortConfirm.title';
+    let descKey = 'progress.abortConfirm.description';
+    let bodyKey = 'progress.abortConfirm.body';
+
+    if (type === 'images') {
+      titleKey = 'progress.abortConfirm.titleImages';
+      descKey = 'progress.abortConfirm.descriptionImages';
+      bodyKey = 'progress.abortConfirm.bodyImages';
+    } else if (type === 'people') {
+      titleKey = 'progress.abortConfirm.titlePeople';
+      descKey = 'progress.abortConfirm.descriptionPeople';
+      bodyKey = 'progress.abortConfirm.bodyPeople';
+    } else if (type === 'sync') {
+      titleKey = 'progress.abortConfirm.titleSync';
+      descKey = 'progress.abortConfirm.descriptionSync';
+      bodyKey = 'progress.abortConfirm.bodySync';
+    }
+
     openModal({
-      title: t('progress.abortConfirm.title'),
-      description: t('progress.abortConfirm.description'),
+      title: t(titleKey),
+      description: t(descKey),
       icon: AlertTriangle,
       variant: 'danger',
       content: (
         <div className="ui-modal__body-text">
-          {t('progress.abortConfirm.body')}
+          {t(bodyKey)}
         </div>
       ),
       footer: (
@@ -61,8 +79,10 @@ export default function WindowTitlebar() {
 
       {hasProgress ? (
         <div className="window-titlebar__progress">
-          {scanProgress ? <ProgressBar {...scanProgress} onAbort={handleAbort} /> : null}
-          {imageProgress ? <ProgressBar {...imageProgress} /> : null}
+          {scanProgress ? <ProgressBar {...scanProgress} onAbort={() => handleAbort('scan')} /> : null}
+          {imageProgress ? <ProgressBar {...imageProgress} variant="sub" onAbort={() => handleAbort('images')} /> : null}
+          {hydrateProgress ? <ProgressBar {...hydrateProgress} variant="sub" onAbort={() => handleAbort('people')} /> : null}
+          {syncProgress ? <ProgressBar {...syncProgress} variant="sub" onAbort={() => handleAbort('sync')} /> : null}
         </div>
       ) : null}
 

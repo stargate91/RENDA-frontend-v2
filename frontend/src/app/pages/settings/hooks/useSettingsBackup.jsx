@@ -2,8 +2,12 @@ import { useCallback } from 'react';
 import { validateJsonStructure } from '@/lib/validation';
 import { getInitialFormValues } from '../settingsFormValues.js';
 
-export default function useSettingsBackup({ form, setForm, fileInputRef, toast, t }) {
+export default function useSettingsBackup({ form, setForm, fileInputRef, toast, t, isScanActive }) {
   const handleExportSettings = useCallback(() => {
+    if (isScanActive) {
+      toast(t('settingsPage.dangerZone.backgroundActiveError'), 'danger');
+      return;
+    }
     try {
       const dataStr = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(form, null, 2))}`;
       const downloadAnchor = document.createElement('a');
@@ -16,13 +20,22 @@ export default function useSettingsBackup({ form, setForm, fileInputRef, toast, 
     } catch {
       toast(t('settingsPage.sections.backup.exportError'), 'danger');
     }
-  }, [form, t, toast]);
+  }, [form, t, toast, isScanActive]);
 
   const handleImportClick = useCallback(() => {
+    if (isScanActive) {
+      toast(t('settingsPage.dangerZone.backgroundActiveError'), 'danger');
+      return;
+    }
     fileInputRef.current?.click();
-  }, [fileInputRef]);
+  }, [fileInputRef, isScanActive, toast, t]);
 
   const handleImportSettings = useCallback((event) => {
+    if (isScanActive) {
+      toast(t('settingsPage.dangerZone.backgroundActiveError'), 'danger');
+      event.target.value = '';
+      return;
+    }
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -49,7 +62,7 @@ export default function useSettingsBackup({ form, setForm, fileInputRef, toast, 
 
     reader.readAsText(file);
     event.target.value = '';
-  }, [setForm, t, toast]);
+  }, [setForm, t, toast, isScanActive]);
 
   return {
     handleExportSettings,

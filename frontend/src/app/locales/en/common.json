@@ -26,6 +26,15 @@
       "title": "Abort Scan?",
       "description": "Are you sure you want to abort the active scanning or renaming process?",
       "body": "The file currently in progress will finish processing, and the operation will then halt safely.",
+      "titleImages": "Abort Image Downloads?",
+      "descriptionImages": "Are you sure you want to abort downloading media artwork and posters?",
+      "bodyImages": "The current download will finish, and the image downloader will then halt safely.",
+      "titlePeople": "Abort People Enrichment?",
+      "descriptionPeople": "Are you sure you want to abort fetching details for extra people?",
+      "bodyPeople": "The current query will finish, and the enrichment process will then halt safely.",
+      "titleSync": "Abort Language Sync?",
+      "descriptionSync": "Are you sure you want to abort the active language synchronization?",
+      "bodySync": "The current item will finish processing, and the synchronization will then halt safely.",
       "confirm": "Abort Process",
       "cancel": "Go Back"
     },
@@ -40,6 +49,12 @@
     },
     "images": {
       "downloading": "Downloading images..."
+    },
+    "people": {
+      "hydrating": "Enriching extra people..."
+    },
+    "sync": {
+      "running": "Syncing metadata languages..."
     }
   },
   "closePrompt": {

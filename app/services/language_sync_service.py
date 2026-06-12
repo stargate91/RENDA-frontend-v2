@@ -34,7 +34,7 @@ class LanguageSyncService:
             
             with scan_status_lock:
                 scan_status["active"] = True
-                scan_status["phase"] = "enriching"
+                scan_status["phase"] = "sync_language"
                 scan_status["progress"] = 0.0
                 scan_status["current_item"] = f"Syncing {len(items)} items..."
                 scan_status["processed_files"] = 0

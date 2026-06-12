@@ -8,6 +8,7 @@ export default function SettingsSelectField({ field, onChange, ...props }) {
     <Dropdown
       {...props}
       value={fieldState.value}
+      disabled={props.disabled || fieldState.disabled}
       onChange={onChange || fieldState.onChange}
     />
   );

@@ -41,9 +41,34 @@ class MetadataEnrichmentService:
         active_match = self.db.query(MediaMatch).filter(MediaMatch.media_item_id == item.id, MediaMatch.is_active == True).first()
         if not active_match: return
 
-        # Perform enrichment for primary and optional fallback languages
-        languages = [lang for lang in [language, fallback_language] if lang]
-        for lang in languages:
+        # Load user settings for default languages
+        from ..db.models import UserSetting
+        pl = self.db.query(UserSetting).filter(UserSetting.key == "primary_metadata_language").first()
+        tl = self.db.query(UserSetting).filter(UserSetting.key == "default_target_language").first()
+        fl = self.db.query(UserSetting).filter(UserSetting.key == "fallback_metadata_language").first()
+
+        # Build unique list of languages to enrich
+        langs_to_enrich = []
+        if language:
+            langs_to_enrich.append(language)
+        if pl and pl.value:
+            langs_to_enrich.append(pl.value)
+        if tl and tl.value:
+            langs_to_enrich.append(tl.value)
+        if item.target_language:
+            langs_to_enrich.append(item.target_language)
+        if fallback_language:
+            langs_to_enrich.append(fallback_language)
+        if fl and fl.value and fl.value != "none":
+            langs_to_enrich.append(fl.value)
+
+        # Deduplicate while preserving order
+        unique_langs = []
+        for l in langs_to_enrich:
+            if l not in unique_langs:
+                unique_langs.append(l)
+
+        for lang in unique_langs:
             if active_match.item_type == ItemType.MOVIE:
                 self._enrich_movie(active_match, lang)
             elif active_match.item_type in [ItemType.SERIES, ItemType.EPISODE]:
@@ -294,18 +319,27 @@ class MetadataEnrichmentService:
             loc = MetadataLocalization(match_id=match.id, target_language=language)
             self.db.add(loc)
         return loc
-
     def _refresh_planned_path(self, item: MediaItem, match: MediaMatch):
         from ..formatter.formatter import Formatter, FormatterConfig
+        from ..db.models import UserSetting
         config = FormatterConfig.from_db(self.db)
         formatter = Formatter(config)
-        preferred_language = item.target_language or None
+        
+        target_lang = self.db.query(UserSetting).filter(UserSetting.key == "default_target_language").first()
+        preferred_language = item.target_language or (target_lang.value if target_lang else None)
+        
         loc = None
         if preferred_language:
             db_localizations = self.db.query(MetadataLocalization).filter(MetadataLocalization.match_id == match.id).all()
             loc = next((l for l in db_localizations if _match_language_code(l.target_language, preferred_language)), None)
+        if not loc:
+            primary_lang = self.db.query(UserSetting).filter(UserSetting.key == "primary_metadata_language").first()
+            primary_lang_val = primary_lang.value if primary_lang else "en"
+            if match.localizations:
+                loc = next((l for l in match.localizations if _match_language_code(l.target_language, primary_lang_val)), None)
         if not loc and match.localizations:
             loc = next((l for l in match.localizations if l.is_primary), match.localizations[0])
+            
         if loc:
             preview = formatter.format_item(item, match, loc)
             item.planned_path = str(preview.target_path).replace("\\", "/")

@@ -1,18 +1,24 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { buildSettingsPayload } from '@/lib/api/settings';
-import { useSettingsQuery, useUpdateSettingsMutation } from '@/queries';
+import { useSettingsQuery, useUpdateSettingsMutation, useSyncLanguageMutation } from '@/queries';
 import { getInitialFormValues } from '../settingsFormValues.js';
 import { isSettingsDirty } from '../settingsMapper.js';
+import Button from '@/ui/Button';
+import Checkbox from '@/ui/Checkbox';
+import { Info } from 'lucide-react';
 
 export default function useSettingsPersistence({
   t,
   toast,
+  openModal,
+  closeModal,
   validateFormFolders,
   onValidationInvalid,
 }) {
   const settingsQuery = useSettingsQuery();
   const settings = settingsQuery.data;
   const updateSettingsMutation = useUpdateSettingsMutation();
+  const syncLanguageMutation = useSyncLanguageMutation();
   const [form, setForm] = useState(() => getInitialFormValues(null, t));
   const [isSaving, setIsSaving] = useState(false);
   const isInitializedRef = useRef(false);
@@ -23,6 +29,12 @@ export default function useSettingsPersistence({
       isInitializedRef.current = true;
     }
   }, [settings, t]);
+
+  const executeSave = useCallback(async (formValues) => {
+    isInitializedRef.current = false;
+    await updateSettingsMutation.mutateAsync(buildSettingsPayload(formValues));
+    toast(t('settingsPage.saved'), 'success');
+  }, [t, toast, updateSettingsMutation]);
 
   const handleSave = useCallback(async () => {
     setIsSaving(true);
@@ -46,16 +58,94 @@ export default function useSettingsPersistence({
         return;
       }
 
-      isInitializedRef.current = false;
-      await updateSettingsMutation.mutateAsync(buildSettingsPayload(form));
-      toast(t('settingsPage.saved'), 'success');
+      // Check if language settings changed
+      const savedLanguage = settings?.ui_language;
+      const currentLanguage = form.ui_language;
+
+      const savedFollowMedia = settings?.follow_app_language_for_media_library;
+      const currentFollowMedia = form.follow_app_language_for_media_library;
+
+      const savedFollowNaming = settings?.follow_app_language_for_naming;
+      const currentFollowNaming = form.follow_app_language_for_naming;
+
+      const savedPrimary = settings?.primary_metadata_language;
+      const currentPrimary = form.primary_metadata_language;
+
+      const savedFallback = settings?.fallback_metadata_language;
+      const currentFallback = form.fallback_metadata_language;
+
+      const savedTarget = settings?.default_target_language;
+      const currentTarget = form.default_target_language;
+
+      const isLanguageChanging = 
+        (currentLanguage !== savedLanguage && (currentFollowMedia || currentFollowNaming)) ||
+        (currentFollowMedia !== savedFollowMedia && currentFollowMedia) ||
+        (currentFollowNaming !== savedFollowNaming && currentFollowNaming) ||
+        (!currentFollowMedia && (currentPrimary !== savedPrimary || currentFallback !== savedFallback)) ||
+        (!currentFollowNaming && (currentTarget !== savedTarget));
+
+      // Execute save first
+      await executeSave(form);
+
+      // Trigger the info modal popup after saving if languages were modified
+      if (isLanguageChanging && localStorage.getItem('renda:skip-settings-language-sync-warning') !== 'true') {
+        let dontShowAgain = false;
+        
+        openModal({
+          title: t('settingsPage.languageChangeInfo.title'),
+          icon: Info,
+          variant: 'info',
+          content: (
+            <div className="ui-modal__body-text">
+              <p style={{ marginBottom: '16px', lineHeight: '1.5' }}>
+                {t('settingsPage.languageChangeInfo.description')}
+              </p>
+              <Checkbox onChange={(e) => { dontShowAgain = e.target.checked; }}>
+                {t('settingsPage.languageChangeInfo.dontShowAgain')}
+              </Checkbox>
+            </div>
+          ),
+          footer: (
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', width: '100%' }}>
+              <Button
+                variant="secondary-neutral"
+                onClick={() => {
+                  if (dontShowAgain) {
+                    localStorage.setItem('renda:skip-settings-language-sync-warning', 'true');
+                  }
+                  closeModal();
+                }}
+              >
+                {t('settingsPage.languageChangeInfo.cancel')}
+              </Button>
+              <Button
+                variant="primary"
+                onClick={async () => {
+                  if (dontShowAgain) {
+                    localStorage.setItem('renda:skip-settings-language-sync-warning', 'true');
+                  }
+                  closeModal();
+                  try {
+                    await syncLanguageMutation.mutateAsync();
+                    toast(t('settingsPage.languageChangeInfo.syncStarted'), 'success');
+                  } catch (syncError) {
+                    toast(t('settingsPage.languageChangeInfo.syncFailed') || syncError.message, 'danger');
+                  }
+                }}
+              >
+                {t('settingsPage.languageChangeInfo.syncButton')}
+              </Button>
+            </div>
+          ),
+        });
+      }
     } catch (error) {
       const localizedErrorMessage = t(`settingsPage.validation.${error.message}`) || error.message;
       toast(localizedErrorMessage || t('settingsPage.saveFailed'), 'danger');
     } finally {
       setIsSaving(false);
     }
-  }, [form, onValidationInvalid, t, toast, updateSettingsMutation, validateFormFolders]);
+  }, [form, settings, onValidationInvalid, t, toast, validateFormFolders, openModal, closeModal, executeSave, syncLanguageMutation]);
 
   const handleReset = useCallback(() => {
     if (settings) {
