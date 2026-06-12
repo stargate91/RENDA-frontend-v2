@@ -25,9 +25,7 @@
   width: min(580px, 100%);
   max-height: min(88vh, calc(100vh - (var(--space-6) * 2)));
   border-radius: var(--radius-lg);
-  background:
-    linear-gradient(180deg, rgba(18, 22, 28, 0.98), rgba(10, 12, 16, 0.96)),
-    var(--color-panel-strong);
+  background: var(--ui-surface-card-gradient);
   border: 1px solid var(--ui-overlay-panel-border);
   box-shadow: var(--ui-overlay-panel-shadow);
   display: flex;
@@ -157,15 +155,13 @@
     linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.012));
 }
 
-/* Danger Modal Variation */
 .ui-modal--danger {
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--color-state-danger) 10%, rgba(18, 22, 28, 0.98)),
-      rgba(10, 12, 16, 0.97)
-    ),
-    var(--color-panel-strong);
+      color-mix(in srgb, var(--color-state-danger) 10%, var(--color-bg-elevated)),
+      var(--color-bg-canvas)
+    );
   border-color: color-mix(in srgb, var(--color-state-danger) 42%, rgba(255, 255, 255, 0.08));
   box-shadow:
     0 28px 72px rgba(0, 0, 0, 0.66),
@@ -300,9 +296,7 @@
 .ui-confirm-dialog {
   width: 100%;
   max-width: 440px;
-  background:
-    linear-gradient(180deg, rgba(24, 28, 36, 0.98), rgba(14, 16, 22, 0.96)),
-    var(--color-panel-strong);
+  background: var(--ui-surface-card-gradient);
   border: 1px solid color-mix(in srgb, var(--color-accent) 24%, rgba(255, 255, 255, 0.06));
   border-radius: var(--radius-lg);
   padding: 24px;

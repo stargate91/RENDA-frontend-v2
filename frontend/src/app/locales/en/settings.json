@@ -75,7 +75,8 @@
       "label": "App Theme",
       "hint": "Choose how the app should look.",
       "options": {
-        "dark": "Dark"
+        "dark": "Dark",
+        "solarizedDark": "Solarized Dark"
       }
     },
     "closeBehavior": {

@@ -10,7 +10,7 @@
   height: 46px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   background:
-    linear-gradient(180deg, rgba(18, 22, 28, 0.96), rgba(10, 12, 16, 0.94));
+    linear-gradient(180deg, var(--color-panel), var(--color-panel-strong));
   backdrop-filter: blur(18px) saturate(120%);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03);
 }
@@ -94,8 +94,8 @@
   height: 100%;
   min-height: 0;
   background:
-    linear-gradient(180deg, rgba(18, 22, 28, 0.98), rgba(10, 12, 16, 0.95)),
-    rgba(255, 255, 255, 0.018);
+    linear-gradient(180deg, var(--color-panel-strong), var(--color-panel)),
+    var(--app-shell-color-panel-soft, rgba(255, 255, 255, 0.018));
   border-right: 1px solid var(--color-line);
   backdrop-filter: blur(22px) saturate(120%);
   overflow: visible;
@@ -316,9 +316,7 @@
   min-height: 0;
   overflow: auto;
   padding: var(--page-top-offset) var(--space-7) var(--shell-top-band-height);
-  background:
-    radial-gradient(circle at top, rgba(34, 42, 54, 0.18), transparent 34%),
-    linear-gradient(180deg, rgba(11, 13, 17, 0.96), rgba(8, 10, 14, 0.98));
+  background: var(--color-canvas);
 }
 
 .shell__suspense-fallback {

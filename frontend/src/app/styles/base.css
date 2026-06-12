@@ -92,9 +92,7 @@ body,
 body {
   font: var(--text-body);
   color: var(--color-ink);
-  background:
-    radial-gradient(circle at top, rgba(32, 40, 52, 0.22), transparent 38%),
-    linear-gradient(180deg, #0b0d10 0%, #07090c 46%, #040507 100%);
+  background: var(--color-canvas);
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
 }

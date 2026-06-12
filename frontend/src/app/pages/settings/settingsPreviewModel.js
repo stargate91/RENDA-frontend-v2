@@ -104,7 +104,7 @@ function buildMovieExtraNodes(form, assets) {
 }
 
 function buildMovieNodes(form, assets) {
-  let nodes = [];
+  let nodes;
   if (form.folder_create_movie_subdir) {
     nodes = [
       createFolderNode(assets.folderMovie, {

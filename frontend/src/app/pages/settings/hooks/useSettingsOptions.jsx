@@ -57,6 +57,7 @@ export default function useSettingsOptions(t) {
 
   const themeOptions = useMemo(() => [
     { value: 'dark', label: t('settingsPage.sections.theme.options.dark') },
+    { value: 'solarized-dark', label: t('settingsPage.sections.theme.options.solarizedDark') || 'Solarized Dark' },
   ], [t]);
 
   const collectionModeOptions = useMemo(() =>

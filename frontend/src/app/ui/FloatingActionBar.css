@@ -108,14 +108,17 @@
 }
 
 .ui-floating-bar__action--primary {
-  background: var(--color-accent-blue);
-  border-color: var(--color-accent-blue-soft);
-  color: var(--settings-contrast-text);
+  background: var(--button-primary-bg);
+  border-color: transparent;
+  color: var(--button-primary-color);
+  box-shadow: var(--button-primary-shadow);
 }
 
 .ui-floating-bar__action--primary:hover:not(:disabled) {
-  background: var(--color-accent-blue-soft);
-  border-color: var(--color-accent-blue);
+  background: var(--button-primary-bg);
+  border-color: transparent;
+  color: var(--button-primary-color);
+  filter: var(--button-primary-hover-filter);
 }
 
 .ui-floating-bar__action:focus-visible {

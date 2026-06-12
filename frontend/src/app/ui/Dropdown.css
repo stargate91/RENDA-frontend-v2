@@ -154,7 +154,7 @@
 
 .ui-dropdown__item.is-active {
   background: var(--color-accent);
-  color: var(--color-text-primary);
+  color: var(--color-text-inverse);
 }
 
 .ui-dropdown__no-results {

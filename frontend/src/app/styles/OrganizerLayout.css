@@ -5,9 +5,7 @@
   position: relative;
   z-index: 1;
   isolation: isolate;
-  background:
-    linear-gradient(180deg, rgba(18, 21, 26, 0.92), rgba(10, 12, 16, 0.88)),
-    var(--color-panel-strong);
+  background: var(--ui-surface-card-gradient);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-lg);
   overflow: hidden;
