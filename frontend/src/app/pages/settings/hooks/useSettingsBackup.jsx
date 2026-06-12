@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { validateJsonStructure } from '@/lib/validation';
+import { validateImportedSettings } from '@/lib/validation';
 import { getInitialFormValues } from '../settingsFormValues.js';
 
 export default function useSettingsBackup({ form, setForm, fileInputRef, toast, t }) {
@@ -31,14 +31,15 @@ export default function useSettingsBackup({ form, setForm, fileInputRef, toast, 
       try {
         const imported = JSON.parse(e.target.result);
         const reference = getInitialFormValues({});
+        const { valid, settings } = validateImportedSettings(imported, reference);
 
-        if (!validateJsonStructure(imported, reference)) {
+        if (!valid || !settings) {
           throw new Error('Invalid structure or value types');
         }
 
         setForm((prev) => ({
           ...prev,
-          ...imported
+          ...settings
         }));
 
         toast(t('settingsPage.sections.backup.importSuccess'), 'success');

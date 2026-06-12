@@ -1,5 +1,5 @@
 import { Suspense, useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import AppClosePrompt from './AppClosePrompt';
 import WindowTitlebar from './WindowTitlebar';
 import Sidebar from './Sidebar';
@@ -9,10 +9,17 @@ import { useSettingsQuery } from '../queries';
 export default function AppShell() {
   const { data: settings } = useSettingsQuery();
   const theme = settings?.ui_theme || 'dark';
+  const navigate = useNavigate();
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    if (settings && !settings.onboarding_completed) {
+      navigate('/onboarding');
+    }
+  }, [settings, navigate]);
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     try {
