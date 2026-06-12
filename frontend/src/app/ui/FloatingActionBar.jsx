@@ -6,9 +6,10 @@ export default function FloatingActionBar({
   title,
   description,
   actions = [],
+  className = '',
 }) {
   return (
-    <div className={`ui-floating-bar-shell${visible ? ' is-visible' : ''}`}>
+    <div className={`ui-floating-bar-shell${visible ? ' is-visible' : ''} ${className}`.trim()}>
       <div className="ui-floating-bar" aria-hidden={visible ? undefined : true}>
         <div className="ui-floating-bar__copy">
           {eyebrow ? <span className="ui-floating-bar__eyebrow">{eyebrow}</span> : null}

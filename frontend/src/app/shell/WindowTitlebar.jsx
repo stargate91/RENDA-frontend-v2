@@ -56,9 +56,7 @@ export default function WindowTitlebar() {
         className="window-titlebar__drag-region"
         onDoubleClick={resizeToMinimum}
       >
-        <span className="window-titlebar__brand-shell">
-          <img src="/favicon/32x32.png" alt="RENDA" className="window-titlebar__brand-icon" />
-        </span>
+        <span className="window-titlebar__brand-text">RENDA</span>
       </div>
 
       {hasProgress ? (

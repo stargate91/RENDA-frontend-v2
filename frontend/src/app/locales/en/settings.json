@@ -77,7 +77,18 @@
       "options": {
         "dark": "Dark RENDA",
         "solarizedDark": "Solarized Dark",
-        "lightWindows": "Windows 11 Light"
+        "tokyoNight": "Tokyo Night",
+        "cyberpunkDark": "Cyberpunk Dark",
+        "bladerunner2049": "Blade Runner 2049 Las Vegas",
+        "bladerunnerLA": "Blade Runner 2049 Los Angeles",
+        "nord": "Nord Frost",
+        "dracula": "Dracula",
+        "gruvboxDark": "Gruvbox Dark",
+        "pineForest": "Pine Forest",
+        "rosePine": "Rosé Pine",
+        "classicDark": "Classic Dark",
+        "premiumCarbon": "Premium Carbon",
+        "amoledModern": "Amoled Modern"
       }
     },
     "closeBehavior": {

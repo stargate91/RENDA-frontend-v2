@@ -1,0 +1,90 @@
+.theme-tab-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-shell-space-5);
+}
+
+.theme-tab-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-shell-space-2);
+}
+
+.theme-tab-title {
+  font-family: var(--font-family-display);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-lg);
+  color: var(--color-text-primary);
+}
+
+.theme-tab-description {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: var(--app-shell-space-4);
+  margin-top: var(--app-shell-space-2);
+}
+
+.theme-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-shell-space-3);
+  padding: var(--app-shell-space-3);
+  background: var(--ui-control-bg-subtle, rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--app-shell-radius-md);
+  cursor: pointer;
+  transition: all var(--motion-duration-fast) var(--motion-ease-standard);
+  user-select: none;
+}
+
+.theme-card:hover {
+  transform: translateY(-2px);
+  background: var(--ui-control-bg-hover, rgba(255, 255, 255, 0.04));
+  border-color: var(--color-border-strong);
+  box-shadow: var(--app-shell-shadow-sm);
+}
+
+.theme-card--active {
+  background: var(--color-state-info-bg, rgba(59, 130, 246, 0.08));
+  border-color: var(--color-accent-blue);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--color-accent-blue) 20%, transparent);
+}
+
+.theme-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 var(--app-shell-space-1);
+}
+
+.theme-card__name {
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  line-height: var(--line-height-tight);
+}
+
+.theme-card__indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--app-shell-radius-pill);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-bg-canvas);
+  color: transparent;
+  transition: all var(--motion-duration-fast) var(--motion-ease-standard);
+}
+
+.theme-card--active .theme-card__indicator {
+  background: var(--color-accent-blue);
+  border-color: var(--color-accent-blue);
+  color: var(--color-text-inverse);
+}

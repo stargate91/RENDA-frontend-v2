@@ -58,6 +58,18 @@ export default function useSettingsOptions(t) {
   const themeOptions = useMemo(() => [
     { value: 'dark', label: t('settingsPage.sections.theme.options.dark') },
     { value: 'solarized-dark', label: t('settingsPage.sections.theme.options.solarizedDark') || 'Solarized Dark' },
+    { value: 'tokyo-night', label: t('settingsPage.sections.theme.options.tokyoNight') || 'Tokyo Night' },
+    { value: 'cyberpunk-dark', label: t('settingsPage.sections.theme.options.cyberpunkDark') || 'Cyberpunk Dark' },
+    { value: 'bladerunner-2049', label: t('settingsPage.sections.theme.options.bladerunner2049') || 'Blade Runner 2049 Las Vegas' },
+    { value: 'bladerunner-la', label: t('settingsPage.sections.theme.options.bladerunnerLA') || 'Blade Runner 2049 Los Angeles' },
+    { value: 'nord', label: t('settingsPage.sections.theme.options.nord') || 'Nord Frost' },
+    { value: 'dracula', label: t('settingsPage.sections.theme.options.dracula') || 'Dracula' },
+    { value: 'gruvbox-dark', label: t('settingsPage.sections.theme.options.gruvboxDark') || 'Gruvbox Dark' },
+    { value: 'pine-forest', label: t('settingsPage.sections.theme.options.pineForest') || 'Pine Forest' },
+    { value: 'rose-pine', label: t('settingsPage.sections.theme.options.rosePine') || 'Rosé Pine' },
+    { value: 'classic-dark', label: t('settingsPage.sections.theme.options.classicDark') || 'Classic Dark' },
+    { value: 'premium-carbon', label: t('settingsPage.sections.theme.options.premiumCarbon') || 'Premium Carbon' },
+    { value: 'amoled-modern', label: t('settingsPage.sections.theme.options.amoledModern') || 'Amoled Modern' },
   ], [t]);
 
   const collectionModeOptions = useMemo(() =>

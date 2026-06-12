@@ -1,4 +1,17 @@
 @import '../styles/variables.css';
+@import '../styles/themes/solarized-dark.css';
+@import '../styles/themes/tokyo-night.css';
+@import '../styles/themes/cyberpunk-dark.css';
+@import '../styles/themes/bladerunner-2049.css';
+@import '../styles/themes/bladerunner-la.css';
+@import '../styles/themes/nord.css';
+@import '../styles/themes/dracula.css';
+@import '../styles/themes/gruvbox-dark.css';
+@import '../styles/themes/pine-forest.css';
+@import '../styles/themes/rose-pine.css';
+@import '../styles/themes/classic-dark.css';
+@import '../styles/themes/premium-carbon.css';
+@import '../styles/themes/amoled-modern.css';
 @import './styles/base.css';
 @import './styles/layout.css';
 @import './styles/components.css';

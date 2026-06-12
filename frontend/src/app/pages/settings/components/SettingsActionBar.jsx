@@ -6,10 +6,12 @@ export default function SettingsActionBar({
   isSaving,
   onReset,
   onSave,
+  className = '',
 }) {
   return (
     <FloatingActionBar
       visible={visible}
+      className={className}
       title={t('settingsPage.unsavedChanges.title')}
       actions={[
         {

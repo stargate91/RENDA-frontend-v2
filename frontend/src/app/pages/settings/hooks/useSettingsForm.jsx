@@ -54,7 +54,7 @@ export default function useSettingsForm() {
     validateFormFolders,
     onValidationInvalid: () => navigation.setActiveTab(SETTINGS_TAB_IDS.GENERAL),
   });
-  const navigation = useSettingsNavigation(persistence.form);
+  const navigation = useSettingsNavigation(persistence.form, persistence.isDirty);
   const insertTag = useTemplateTagInsertion(persistence.form, persistence.setForm);
   const pickers = useSettingsPickers({
     form: persistence.form,
@@ -107,6 +107,7 @@ export default function useSettingsForm() {
     handleImportSettings,
     handleSave: persistence.handleSave,
     handleWipeDatabase: dangerZone.handleWipeDatabase,
-    handleReset: persistence.handleReset
+    handleReset: persistence.handleReset,
+    isShaking: navigation.isShaking,
   };
 }

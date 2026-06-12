@@ -126,6 +126,7 @@ export const settingsTabDefinitions = [
     labelKey: 'settingsPage.sidebar.collections',
     component: CollectionsTab,
     isVisible: whenCollectionsEnabled,
+    className: 'custom-only',
     getProps: (ctx) => ({
       form: ctx.form,
       setForm: ctx.setForm,

@@ -180,3 +180,15 @@
     flex: 1 1 0;
   }
 }
+
+@keyframes ui-bar-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
+
+.ui-floating-bar-shell.is-shaking .ui-floating-bar {
+  animation: ui-bar-shake 0.3s ease-in-out;
+  border-color: var(--color-state-danger) !important;
+  box-shadow: 0 0 20px color-mix(in srgb, var(--color-state-danger) 40%, transparent), var(--ui-floating-surface-shadow) !important;
+}

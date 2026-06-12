@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useSettingsForm, useSettingsOptions, useSettingsRenderContext } from './hooks';
 import { SettingsFormProvider } from './SettingsFormContext.jsx';
 import {
@@ -37,8 +38,19 @@ export default function SettingsPage() {
     handleImportSettings,
     handleSave,
     handleWipeDatabase,
-    handleReset
+    handleReset,
+    isShaking
   } = useSettingsForm();
+
+  const savedTheme = settingsQuery.data?.ui_theme || 'dark';
+  const currentTheme = form.ui_theme || 'dark';
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', currentTheme);
+    return () => {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    };
+  }, [currentTheme, savedTheme]);
 
   const optionContext = useSettingsOptions(t);
   const {
@@ -127,6 +139,7 @@ export default function SettingsPage() {
         isSaving={isSaving}
         onReset={handleReset}
         onSave={handleSave}
+        className={isShaking ? 'is-shaking' : ''}
       />
     </div>
   );

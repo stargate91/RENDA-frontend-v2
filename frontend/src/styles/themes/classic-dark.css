@@ -1,0 +1,128 @@
+[data-theme="classic-dark"] {
+  /* Foundation overrides */
+  --color-bg-canvas: #1e1e1e;
+  --color-bg-elevated: #252526;
+  --color-surface-card: rgba(255, 255, 255, 0.015);
+  --color-surface-glass: rgba(0, 122, 204, 0.04);
+  --color-surface-glass-strong: rgba(0, 122, 204, 0.08);
+  --color-surface-glass-heavy: rgba(0, 122, 204, 0.12);
+  --color-surface-overlay: rgba(30, 30, 30, 0.65);
+  --color-surface-overlay-strong: rgba(30, 30, 30, 0.85);
+  --color-surface-overlay-heavy: rgba(30, 30, 30, 0.96);
+
+  --color-text-primary: #d4d4d4;
+  --color-text-secondary: #a8a8a8;
+  --color-text-muted: #808080;
+  --color-text-disabled: rgba(212, 212, 212, 0.35);
+  --color-text-faint: rgba(212, 212, 212, 0.22);
+  --color-text-inverse: #1e1e1e;
+
+  --color-border-subtle: rgba(212, 212, 212, 0.08);
+  --color-border-default: rgba(212, 212, 212, 0.14);
+  --color-border-strong: rgba(0, 122, 204, 0.24);
+  --color-border-heavy: rgba(0, 122, 204, 0.32);
+
+  --color-accent-blue: #007acc;
+  --color-accent-blue-soft: #0e639c;
+  --color-accent-blue-pale: #569cd6;
+  --color-accent-purple: #c586c0;
+  --color-accent-pink: #d16969;
+  --color-accent-yellow: #dcdcaa;
+  --color-accent-yellow-soft: #ce9178;
+  --color-accent-green: #4ec9b0;
+  --color-accent-green-soft: #6a9955;
+  --color-accent-red-soft: #f44747;
+
+  --color-state-info: #569cd6;
+  --color-state-danger: #f44747;
+  --color-state-success: #4ec9b0;
+  --color-state-warning: #dcdcaa;
+  --color-state-amber: #ce9178;
+
+  --color-state-info-bg: rgba(86, 156, 214, 0.08);
+  --color-state-danger-bg: rgba(244, 71, 71, 0.12);
+  --color-state-danger-bg-strong: rgba(244, 71, 71, 0.22);
+  --color-state-success-bg: rgba(78, 201, 176, 0.12);
+  --color-state-warning-bg: rgba(220, 220, 170, 0.08);
+  --color-state-amber-bg: rgba(206, 145, 120, 0.08);
+
+  --color-accent-glow: rgba(0, 122, 204, 0.15);
+  --color-danger-glow: rgba(244, 71, 71, 0.15);
+  --color-canvas-glow: rgba(0, 122, 204, 0.12);
+  --color-accent-gradient: linear-gradient(135deg, #0e639c 0%, #007acc 100%);
+
+  /* App Shell */
+  --app-shell-color-canvas: #1e1e1e;
+  --app-shell-color-panel: rgba(37, 37, 38, 0.95);
+  --app-shell-color-panel-strong: rgba(37, 37, 38, 0.98);
+  --app-shell-color-panel-soft: rgba(255, 255, 255, 0.015);
+  --app-shell-color-ink: #d4d4d4;
+  --app-shell-color-muted: #a8a8a8;
+  --app-shell-color-subtle: #808080;
+  --app-shell-color-line: rgba(212, 212, 212, 0.12);
+  --app-shell-color-line-strong: rgba(0, 122, 204, 0.22);
+  --app-shell-color-accent: #007acc;
+  --app-shell-color-accent-strong: #569cd6;
+  --app-shell-color-accent-soft: rgba(0, 122, 204, 0.12);
+  --app-shell-color-accent-glow: rgba(0, 122, 204, 0.28);
+  --app-shell-color-signal: #007acc;
+  --app-shell-color-signal-soft: rgba(0, 122, 204, 0.16);
+  --app-shell-color-info: #569cd6;
+
+  --app-shell-scrollbar-track: rgba(30, 30, 30, 0.25);
+  --app-shell-scrollbar-track-hover: rgba(30, 30, 30, 0.4);
+  --app-shell-scrollbar-thumb: rgba(0, 122, 204, 0.25);
+  --app-shell-scrollbar-thumb-hover: rgba(86, 156, 214, 0.45);
+  --app-shell-scrollbar-thumb-active: rgba(0, 122, 204, 0.6);
+
+  /* Shadow overrides */
+  --app-shell-shadow-sm: 0 6px 16px rgba(30, 30, 30, 0.3);
+  --app-shell-shadow-md: 0 12px 28px rgba(30, 30, 30, 0.38);
+  --app-shell-shadow-lg: 0 20px 48px rgba(30, 30, 30, 0.48);
+
+  --ui-floating-surface-shadow:
+    0 12px 28px rgba(30, 30, 30, 0.22),
+    0 6px 14px rgba(30, 30, 30, 0.15),
+    0 0 0 1px var(--color-border-subtle),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    inset 0 -10px 20px color-mix(in srgb, var(--color-bg-canvas) 30%, transparent);
+
+  --dropdown-field-shadow: 0 4px 10px rgba(0, 122, 204, 0.1);
+  --dropdown-menu-shadow:
+    0 12px 28px rgba(30, 30, 30, 0.22),
+    0 6px 14px rgba(30, 30, 30, 0.15),
+    0 0 0 1px var(--color-border-subtle);
+
+  /* Dropzone overrides */
+  --color-dropzone-panel-bg: color-mix(in srgb, var(--color-bg-elevated) 95%, black);
+  --shadow-overlay-dropzone:
+    0 12px 28px rgba(30, 30, 30, 0.22),
+    0 6px 14px rgba(30, 30, 30, 0.15),
+    0 0 0 1px var(--color-border-subtle);
+
+  /* Toast overrides */
+  --toast-bg:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.02), transparent 28%),
+    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-elevated) 96%, transparent), color-mix(in srgb, var(--color-bg-canvas) 92%, transparent));
+  --toast-border: var(--color-border-strong);
+  --toast-shadow:
+    0 20px 48px rgba(30, 30, 30, 0.22),
+    0 0 0 1px var(--color-border-subtle);
+  --toast-success-bg:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--color-state-success) 12%, transparent), transparent 42%),
+    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-elevated) 98%, transparent), color-mix(in srgb, var(--color-bg-canvas) 95%, transparent));
+  --toast-success-border: color-mix(in srgb, var(--color-state-success) 28%, var(--color-border-strong));
+  --toast-danger-bg:
+    linear-gradient(135deg, color-mix(in srgb, var(--color-state-danger) 18%, transparent), transparent 28%),
+    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-elevated) 98%, transparent), color-mix(in srgb, var(--color-bg-canvas) 95%, transparent));
+  --toast-danger-border: color-mix(in srgb, var(--color-state-danger) 36%, var(--color-border-strong));
+
+  /* Button overrides */
+  --button-primary-bg: linear-gradient(135deg, #0e639c, #007acc);
+  --button-primary-color: #ffffff;
+  --button-primary-shadow: 0 8px 24px rgba(0, 122, 204, 0.25);
+  --button-secondary-bg: linear-gradient(180deg, rgba(0, 122, 204, 0.12), rgba(37, 37, 38, 0.25));
+  --button-secondary-color: #569cd6;
+  --button-secondary-border: rgba(0, 122, 204, 0.4);
+  --button-secondary-hover-bg: linear-gradient(180deg, rgba(0, 122, 204, 0.2), rgba(37, 37, 38, 0.35));
+}
