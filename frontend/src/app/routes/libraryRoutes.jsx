@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { lazy } from 'react';
 
-const LibraryPage = lazy(() => import('../pages/LibraryPage'));
+const LibraryPage = lazy(() => import('../pages/library/LibraryPage'));
 const HistoryPage = lazy(() => import('../pages/HistoryPage'));
 const RatingsPage = lazy(() => import('../pages/RatingsPage'));
 const WatchedHistoryPage = lazy(() => import('../pages/WatchedHistoryPage'));

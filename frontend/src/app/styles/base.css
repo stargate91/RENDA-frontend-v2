@@ -49,6 +49,7 @@
   --sidebar-first-nav-y: var(--shell-top-band-height);
   --sidebar-nav-icon-start-y: calc(var(--sidebar-first-nav-y) + var(--sidebar-nav-offset-y) + var(--sidebar-nav-link-padding-y));
   --page-top-offset: var(--sidebar-nav-icon-start-y);
+  --page-bottom-offset: var(--page-top-offset);
   --utility-bar-top: 18px;
   --utility-bar-min-height: 40px;
 

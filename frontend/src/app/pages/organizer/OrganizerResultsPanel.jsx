@@ -3,6 +3,7 @@ import PaginationBar from '../../ui/PaginationBar';
 import Spinner from '../../ui/Spinner';
 import Table from '../../ui/Table';
 import FileDropZone from '../../ui/FileDropZone';
+import { usePaginationVisibility } from '../../hooks/usePaginationVisibility';
 
 import { useOrganizerModals } from './useOrganizerModals';
 
@@ -40,7 +41,7 @@ export default function OrganizerResultsPanel({
     dismissRows,
     clearSelectedRows,
   } = useOrganizerModals();
-  const shouldShowPagination = totalItems > pageSize;
+  const shouldShowPagination = usePaginationVisibility(totalItems, pageSize);
 
   return (
     <FileDropZone

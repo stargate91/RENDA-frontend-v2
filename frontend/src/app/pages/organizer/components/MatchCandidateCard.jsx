@@ -2,6 +2,7 @@ import { Clapperboard } from 'lucide-react';
 import MediaCard from '@/ui/MediaCard';
 import MetaRow from '@/ui/MetaRow';
 import StatusBadge from '@/ui/StatusBadge';
+import PosterCard from '@/ui/PosterCard';
 
 const TMDB_IMAGE_SIZE_POSTER = 'w154';
 
@@ -54,39 +55,16 @@ export default function MatchCandidateCard({
 
   if (variant === 'poster') {
     return (
-      <div
+      <PosterCard
         key={`${sourceLabel}-${candidateId}`}
-        className={`organizer-match-modal__poster-card${candidate.is_active ? ' is-active' : ''}`.trim()}
-      >
-        <button
-          type="button"
-          className="organizer-match-modal__poster-card-image"
-          onClick={() => onSelect(candidate)}
-          disabled={isDisabled}
-        >
-          <MediaCard>
-            {posterUrl ? (
-              <img src={posterUrl} alt="" className="organizer-match-modal__poster-image" />
-            ) : (
-              <div className="organizer-match-modal__poster-placeholder">
-                <Clapperboard size={18} />
-              </div>
-            )}
-            {candidate.is_active ? (
-              rowStatus === 'uncertain' ? (
-                <StatusBadge variant="overlay" tone="warning">
-                  {t('organizer.status.uncertain')}
-                </StatusBadge>
-              ) : (
-                <StatusBadge variant="overlay">
-                  {t('organizer.details.matchModal.current')}
-                </StatusBadge>
-              )
-            ) : null}
-          </MediaCard>
-        </button>
-        <div className="organizer-match-modal__poster-card-copy">
-          <strong className="organizer-match-modal__poster-card-title">{displayTitle}</strong>
+        className="organizer-match-modal__poster-card"
+        active={candidate.is_active}
+        imageUrl={posterUrl}
+        icon={Clapperboard}
+        onClick={() => onSelect(candidate)}
+        disabled={isDisabled}
+        title={displayTitle}
+        subtitle={
           <MetaRow
             className="organizer-match-modal__poster-card-meta"
             items={[
@@ -94,8 +72,21 @@ export default function MatchCandidateCard({
               mediaType === 'tv' ? t('organizer.details.matchModal.series') : t('organizer.details.matchModal.movie'),
             ]}
           />
-        </div>
-      </div>
+        }
+        badge={
+          candidate.is_active ? (
+            rowStatus === 'uncertain' ? (
+              <StatusBadge variant="overlay" tone="warning">
+                {t('organizer.status.uncertain')}
+              </StatusBadge>
+            ) : (
+              <StatusBadge variant="overlay">
+                {t('organizer.details.matchModal.current')}
+              </StatusBadge>
+            )
+          ) : null
+        }
+      />
     );
   }
 

@@ -1,3 +1,11 @@
+import PlaceholderPage from './PlaceholderPage';
+
 export default function RatingsPage() {
-  return null;
+  return (
+    <PlaceholderPage
+      eyebrow="Planned page"
+      title="My Ratings"
+      description="Browse and manage the titles you have rated."
+    />
+  );
 }

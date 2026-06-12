@@ -418,7 +418,7 @@ function OrganizerPageContent({
 
   return (
     <Page className="organizer-page">
-      <div className={`organizer-main ${isDetailsCollapsed || !shouldShowDetailsPanel ? 'is-details-collapsed' : ''}`}>
+      <div className={`organizer-main ${!shouldShowDetailsPanel ? 'is-details-hidden' : isDetailsCollapsed ? 'is-details-collapsed' : ''}`}>
         <div className="organizer-main__content">
           <OrganizerHeaderPanel
             activeExtrasTab={activeExtrasTab}

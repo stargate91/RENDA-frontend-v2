@@ -6,11 +6,14 @@ export default function Page({
   description,
   actions,
   centered = false,
+  contentBottom = false,
   className = '',
   children,
 }) {
   return (
-    <div className={`ui-page${centered ? ' ui-page--centered' : ''} ${className}`.trim()}>
+    <div
+      className={`ui-page${centered ? ' ui-page--centered' : ''}${contentBottom ? ' ui-page--content-bottom' : ''} ${className}`.trim()}
+    >
       {(title || description || eyebrow || actions) ? (
         <PageHeader
           eyebrow={eyebrow}

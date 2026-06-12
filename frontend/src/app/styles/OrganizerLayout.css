@@ -152,12 +152,16 @@
   min-height: 0;
   padding-top: var(--page-top-offset);
   padding-right: calc(320px + var(--space-5));
-  padding-bottom: var(--shell-top-band-height);
+  padding-bottom: var(--page-bottom-offset);
   transition: padding-right 160ms ease;
 }
 
 .organizer-main.is-details-collapsed .organizer-main__content {
   padding-right: calc(44px + var(--space-5));
+}
+
+.organizer-main.is-details-hidden .organizer-main__content {
+  padding-right: var(--space-7);
 }
 
 .organizer-results {

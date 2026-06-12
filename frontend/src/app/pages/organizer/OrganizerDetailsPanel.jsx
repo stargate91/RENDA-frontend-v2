@@ -2,6 +2,7 @@ import UtilityButton from '../../ui/UtilityButton';
 import Button from '../../ui/Button';
 import Tooltip from '../../ui/Tooltip';
 import MediaCard from '../../ui/MediaCard';
+import PosterCard from '../../ui/PosterCard';
 import { ChevronLeft, ChevronRight, FileJson, Info } from 'lucide-react';
 import { API_BASE } from '../../lib/backend';
 import { useTranslation } from '../../providers/LanguageProvider';
@@ -167,44 +168,31 @@ export default function OrganizerDetailsPanel({
               </div>
               <div className="organizer-details__content">
                 {shouldShowDetailsPoster ? (
-                activeImages.length > 1 ? (
-                  <button
-                    type="button"
-                    className="organizer-details__poster-card has-image"
-                    onClick={onAdvanceImage}
-                  >
-                    <img
-                      src={resolveOrganizerImageUrl(activeImage.path)}
-                      alt={getImageLabel(activeImage, t)}
-                      className="organizer-details__poster-image"
+                  activeImages.length > 1 ? (
+                    <PosterCard
+                      className="organizer-details__poster-card has-image"
+                      imageUrl={resolveOrganizerImageUrl(activeImage?.path)}
+                      onClick={onAdvanceImage}
+                    >
+                      {shouldShowDetailsCarousel ? (
+                        <div className="organizer-details__poster-dots" aria-hidden="true">
+                          {activeImages.map((image, index) => (
+                            <span
+                              key={`${image.path}-${index}`}
+                              className={`organizer-details__poster-dot${index === activeImageIndex ? ' is-active' : ''}`}
+                            />
+                          ))}
+                        </div>
+                      ) : null}
+                    </PosterCard>
+                  ) : (
+                    <PosterCard
+                      className="organizer-details__poster-card"
+                      imageUrl={activeImage ? resolveOrganizerImageUrl(activeImage.path) : undefined}
+                      placeholderText={!activeImage ? t('organizer.details.posterPlaceholder') : undefined}
                     />
-                    {shouldShowDetailsCarousel ? (
-                      <div className="organizer-details__poster-dots" aria-hidden="true">
-                        {activeImages.map((image, index) => (
-                          <span
-                            key={`${image.path}-${index}`}
-                            className={`organizer-details__poster-dot${index === activeImageIndex ? ' is-active' : ''}`}
-                          />
-                        ))}
-                      </div>
-                    ) : null}
-                  </button>
-                ) : (
-                  <div className="organizer-details__poster-card">
-                    {activeImage ? (
-                      <img
-                        src={resolveOrganizerImageUrl(activeImage.path)}
-                        alt={getImageLabel(activeImage, t)}
-                        className="organizer-details__poster-image"
-                      />
-                    ) : (
-                      <div className="organizer-details__poster-placeholder">
-                        {t('organizer.details.posterPlaceholder')}
-                      </div>
-                    )}
-                  </div>
-                )
-              ) : null}
+                  )
+                ) : null}
               <MediaCard className="organizer-details__field">
                 <span className="organizer-details__label">{t('organizer.details.fields.source')}</span>
                 <span className="organizer-details__value" title={activeRow.sourcePath}>{activeRow.sourcePath}</span>
