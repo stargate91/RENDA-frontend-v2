@@ -60,46 +60,7 @@ export default function SettingsPage() {
     };
   }, [currentTheme, savedTheme]);
 
-  useEffect(() => {
-    const hasShownWarning = sessionStorage.getItem('renda:settings-active-warning-shown');
-    if (isBackgroundActive && !hasShownWarning && localStorage.getItem('renda:skip-settings-active-warning') !== 'true') {
-      sessionStorage.setItem('renda:settings-active-warning-shown', 'true');
-      let dontShowAgain = false;
-      
-      const handleCheckboxChange = (e) => {
-        dontShowAgain = e.target.checked;
-      };
 
-      openModal({
-        title: t('settingsPage.activeTasksWarning.title'),
-        icon: AlertTriangle,
-        variant: 'danger',
-        content: (
-          <div className="ui-modal__body-text">
-            <p style={{ marginBottom: '16px', lineHeight: '1.5' }}>
-              {t('settingsPage.activeTasksWarning.description')}
-            </p>
-            <Checkbox onChange={handleCheckboxChange}>
-              {t('settingsPage.activeTasksWarning.dontShowAgain')}
-            </Checkbox>
-          </div>
-        ),
-        footer: (
-          <Button
-            variant="secondary-neutral"
-            onClick={() => {
-              if (dontShowAgain) {
-                localStorage.setItem('renda:skip-settings-active-warning', 'true');
-              }
-              closeModal();
-            }}
-          >
-            {t('settingsPage.activeTasksWarning.ok')}
-          </Button>
-        ),
-      });
-    }
-  }, [isBackgroundActive, openModal, closeModal, t]);
 
   const optionContext = useSettingsOptions(t);
   const {

@@ -26,8 +26,6 @@ setup_logger()
 # Import routers
 from app.api.routes import scanner, settings, library, recommendations, people, playback, overrides, metadata, renamer, tags, lists, user
 
-import os
-
 # Automatically create tables if they don't exist
 Base.metadata.create_all(bind=engine)
 CacheBase.metadata.create_all(bind=cache_engine)
@@ -70,9 +68,6 @@ def _ensure_sqlite_columns():
 _ensure_sqlite_columns()
 
 
-
-
-
 from contextlib import asynccontextmanager
 from app.services.background_tasks import start_background_workers, stop_background_workers
 
@@ -80,11 +75,23 @@ from app.services.background_tasks import start_background_workers, stop_backgro
 async def lifespan(app: FastAPI):
     from app.scanner.image_worker import ImageWorker
     from app.db.base import Session
+    from app.db.models import UserSetting
+    from app.services.metadata_service import MetadataService
+    
     db = Session()
     try:
         ImageWorker.reset_stale_tasks(db)
+        
+        # Check if language sync was interrupted
+        pending_sync = db.query(UserSetting).filter(UserSetting.key == "language_sync_pending").first()
+        if pending_sync and pending_sync.value == "true":
+            print("Lifespan: Resuming interrupted language synchronization...")
+            MetadataService.run_sync_language()
+    except Exception as e:
+        print(f"Lifespan error: {e}")
     finally:
         db.close()
+        Session.remove()
         
     # Start background workers (e.g. ImageWorker)
     start_background_workers()

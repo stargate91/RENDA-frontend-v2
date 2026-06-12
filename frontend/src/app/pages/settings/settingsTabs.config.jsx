@@ -155,7 +155,7 @@ export const settingsTabDefinitions = [
       t: ctx.t,
       isSaving: ctx.isSaving,
       isWiping: ctx.isWiping,
-      isScanActive: ctx.isScanActive,
+      isScanActive: ctx.realBackgroundActive,
       handleExportSettings: ctx.handleExportSettings,
       handleImportClick: ctx.handleImportClick,
       handleImportSettings: ctx.handleImportSettings,

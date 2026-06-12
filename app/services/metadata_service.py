@@ -36,6 +36,13 @@ class MetadataService:
         def _run_sync():
             db = Session()
             try:
+                sync_pending_setting = db.query(UserSetting).filter(UserSetting.key == "language_sync_pending").first()
+                if sync_pending_setting:
+                    sync_pending_setting.value = "true"
+                else:
+                    db.add(UserSetting(key="language_sync_pending", value="true"))
+                db.commit()
+
                 with language_sync_lock:
                     language_sync_status["active"] = True
 
@@ -368,6 +375,10 @@ class MetadataService:
                 db.query(MetadataLocalization).filter(MetadataLocalization.target_language != target_lang).update({"is_primary": False})
                 db.query(MediaCollectionLocalization).filter(MediaCollectionLocalization.target_language == target_lang).update({"is_primary": True})
                 db.query(MediaCollectionLocalization).filter(MediaCollectionLocalization.target_language != target_lang).update({"is_primary": False})
+                
+                sync_pending_setting = db.query(UserSetting).filter(UserSetting.key == "language_sync_pending").first()
+                if sync_pending_setting:
+                    sync_pending_setting.value = "false"
                 db.commit()
 
                 update_scan_status({
@@ -392,6 +403,7 @@ class MetadataService:
                     "message": ""
                 })
                 db.close()
+                Session.remove()
 
         threading.Thread(target=_run_sync, daemon=True).start()
 

@@ -7,6 +7,7 @@ export default function MaintenanceTab({
   t,
   isSaving,
   isWiping,
+  isScanActive,
   handleExportSettings,
   handleImportClick,
   handleImportSettings,
@@ -47,7 +48,7 @@ export default function MaintenanceTab({
             {t('settingsPage.dangerZone.desc')}
           </span>
           <Inline className="settings-inline-actions">
-            <Button variant="danger" onClick={handleWipeDatabase} disabled={isWiping || isSaving}>
+            <Button variant="danger" onClick={handleWipeDatabase} disabled={isWiping || isSaving || isScanActive}>
               {isWiping ? t('settingsPage.dangerZone.buttonWiping') : t('settingsPage.dangerZone.button')}
             </Button>
           </Inline>

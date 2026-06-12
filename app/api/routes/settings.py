@@ -449,6 +449,11 @@ def export_settings():
     }
 
 
+@router.get("/settings/pending")
+def get_pending_settings_status():
+    return {"has_pending": False, "pending_count": 0}
+
+
 @router.post("/settings/import")
 def import_settings(payload: dict):
     settings, error_message = _extract_import_settings(payload)

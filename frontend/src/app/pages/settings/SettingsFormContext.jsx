@@ -52,17 +52,7 @@ export function useSettingsField(name) {
   const isMaintenanceTab = activeTab === 'maintenance';
   const isFolderField = name === 'folder_library_path' || name === 'default_scan_dir';
   
-  let disabled = Boolean(
-    isBackgroundActive && (isOrgTab || isFolderField || isApiKeysTab || isAdvancedTab || isMaintenanceTab)
-  );
-
-  if (name === 'ui_language' && isBackgroundActive) {
-    const followMedia = Boolean(form.follow_app_language_for_media_library);
-    const followNaming = Boolean(form.follow_app_language_for_naming);
-    if (followMedia || followNaming) {
-      disabled = true;
-    }
-  }
+  let disabled = false;
 
   const errorMap = {
     default_scan_dir: validationErrors?.scanFolder,

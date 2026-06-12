@@ -75,37 +75,52 @@ class PeopleHydrator:
         self._stop_event.set()
 
     def _hydrate_loop(self):
+        persons = []
+        langs = ["en-US"]
+        
+        # 1. Fetch target persons and preferred languages using a short-lived DB session
         db = Session()
         try:
             persons = db.query(Person.id).filter(
                 Person.is_active == False,
                 (Person.fetched_languages == None) | (Person.fetched_languages == "")
             ).all()
-
-            total = len(persons)
-            if total == 0:
-                hydrate_status_manager.update({"active": False, "phase": "idle", "current": 0, "total": 0, "message": ""})
-                return
-
-            hydrate_status_manager.update({
-                "active": True,
-                "phase": "people_enriching",
-                "total": total,
-                "current": 0,
-                "message": "",
-            })
-
-            person_service = PersonService(db)
             langs = _preferred_person_languages(db)
+        except Exception as e:
+            logger.error(f"Error initializing people hydrator query: {e}")
+        finally:
+            db.close()
+            Session.remove()
 
+        total = len(persons)
+        if total == 0:
+            hydrate_status_manager.update({"active": False, "phase": "idle", "current": 0, "total": 0, "message": ""})
+            return
+
+        hydrate_status_manager.update({
+            "active": True,
+            "phase": "people_enriching",
+            "total": total,
+            "current": 0,
+            "message": "",
+        })
+
+        # 2. Iterate and enrich each person using a fresh DB session per item
+        try:
             for idx, (p_id,) in enumerate(persons):
                 if self._stop_event.is_set():
                     logger.info("People hydrator stopped by request.")
                     break
+                
+                temp_db = Session()
                 try:
+                    person_service = PersonService(temp_db)
                     person_service.enrich_person_metadata(p_id, langs)
                 except Exception as e:
                     logger.error(f"Error hydrating person {p_id}: {e}")
+                finally:
+                    temp_db.close()
+                    Session.remove()
 
                 hydrate_status_manager.update({
                     "current": idx + 1
@@ -127,7 +142,6 @@ class PeopleHydrator:
                 "total": 0,
                 "message": ""
             })
-            db.close()
 
 
 people_hydrator = PeopleHydrator()

@@ -79,3 +79,4 @@ class LanguageSyncService:
                 scan_status["phase"] = "idle"
         finally:
             db.close()
+            DbSession.remove()

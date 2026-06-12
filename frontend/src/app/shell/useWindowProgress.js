@@ -21,8 +21,9 @@ export default function useWindowProgress() {
   const settings = settingsQuery.data || null;
   const hydrateStatus = hydrateStatusQuery.data || null;
   
-  const isScanActive = Boolean(scanStatus?.active) && scanStatus?.phase !== 'sync_language';
-  const isSyncActive = Boolean(scanStatus?.active) && scanStatus?.phase === 'sync_language';
+  const isPrimaryActive = Boolean(scanStatus?.active);
+  const isScanActive = isPrimaryActive && scanStatus?.phase !== 'sync_language';
+  const isSyncActive = isPrimaryActive && scanStatus?.phase === 'sync_language';
   const isImageActive = Boolean(imageStatus?.active);
   const isHydrateActive = Boolean(hydrateStatus?.active);
   const isAutoHydrateActive = Boolean(settings?.auto_hydrate_inactive_people);
@@ -61,18 +62,26 @@ export default function useWindowProgress() {
     ? Math.max(scanState.maxScanProgress, rawProgress)
     : 0;
 
-  const scanProgressData = isScanActive
-    ? {
-        taskName: getScanTaskName(scanStatus, t),
-        progress: currentMaxScanProgress,
-        timeRemaining: formatScanRemaining(scanStatus, currentMaxScanProgress),
-        active: true,
-        variant: 'primary',
-      }
+  const scanProgressData = isPrimaryActive
+    ? isSyncActive
+      ? {
+          taskName: t('progress.sync.running') || 'Syncing metadata languages...',
+          progress: Math.round(scanStatus.progress || 0),
+          timeRemaining: `${scanStatus.processed_files || 0}/${scanStatus.total_files || 0}`,
+          active: true,
+          variant: 'primary',
+        }
+      : {
+          taskName: getScanTaskName(scanStatus, t),
+          progress: currentMaxScanProgress,
+          timeRemaining: formatScanRemaining(scanStatus, currentMaxScanProgress),
+          active: true,
+          variant: 'primary',
+        }
     : null;
 
   return {
-    hasProgress: isScanActive || isSyncActive || isImageActive || isHydrateActive,
+    hasProgress: isPrimaryActive || isImageActive || isHydrateActive,
     scanProgress: scanProgressData,
     imageProgress: isImageActive
       ? {
@@ -92,14 +101,6 @@ export default function useWindowProgress() {
           variant: 'sub',
         }
       : null,
-    syncProgress: isSyncActive
-      ? {
-          taskName: t('progress.sync.running') || 'Syncing metadata languages...',
-          progress: Math.round(scanStatus.progress || 0),
-          timeRemaining: `${scanStatus.processed_files || 0}/${scanStatus.total_files || 0}`,
-          active: true,
-          variant: 'sub',
-        }
-      : null,
+    syncProgress: null,
   };
 }

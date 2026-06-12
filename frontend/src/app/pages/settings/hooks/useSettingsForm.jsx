@@ -86,7 +86,6 @@ export default function useSettingsForm() {
     fileInputRef: formInputs.backupFile,
     toast,
     t,
-    isScanActive: isBackgroundActive,
   });
   const dangerZone = useSettingsDangerZone({
     t,
@@ -94,7 +93,6 @@ export default function useSettingsForm() {
     openModal,
     closeModal,
     onBeforeWipe: persistence.resetInitialization,
-    isScanActive: isBackgroundActive,
   });
 
   return {

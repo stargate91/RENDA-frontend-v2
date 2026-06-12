@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from app.services.metadata_service import MetadataService
 from app.scanner.scanner_manager import scan_status
 
@@ -13,8 +13,7 @@ def get_sync_metadata_language_status():
 def sync_metadata_language():
     """Sync all item's metadata according to UserSettings."""
     if scan_status.get("active") or MetadataService.is_language_sync_active():
-        return {"status": "error", "message": "A scan or sync is already in progress"}
-
+        raise HTTPException(status_code=400, detail="A scan, rename, or sync task is already in progress")
         
     MetadataService.run_sync_language()
     

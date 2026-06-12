@@ -407,14 +407,7 @@
     "confirmTitle": "Wipe Database",
     "confirm": "Are you sure? This will clear your libraries, matches, lists, and playback history. Your settings and API cache will stay. This can't be undone.",
     "success": "The database was cleared.",
-    "failed": "Couldn't clear the database",
-    "backgroundActiveError": "Cannot perform maintenance actions while background tasks are running."
-  },
-  "activeTasksWarning": {
-    "title": "Active Background Process",
-    "description": "Certain settings (like file naming, folder structures, and API keys) are temporarily disabled. They will become editable again once all active tasks are complete.",
-    "dontShowAgain": "Don't show this again",
-    "ok": "OK"
+    "failed": "Couldn't clear the database"
   },
   "languageChangeInfo": {
     "title": "Language Synchronization",
