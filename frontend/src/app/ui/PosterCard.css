@@ -65,7 +65,7 @@ div.ui-poster-card__image-wrapper:focus-visible {
 }
 
 .ui-poster-card__placeholder-icon {
-  color: rgba(255, 255, 255, 0.15);
+  color: var(--color-text-faint);
   z-index: 1;
 }
 

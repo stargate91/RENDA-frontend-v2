@@ -1,6 +1,6 @@
 import { ArrowRight } from 'lucide-react';
 import Checkbox from '../../ui/Checkbox';
-import StatusPill from '../../ui/StatusPill';
+import Pill from '../../ui/Pill';
 import Tooltip from '../../ui/Tooltip';
 import { mapCollisionStrategyLabel, shouldShowCollisionStrategy } from './organizerMappers';
 
@@ -103,24 +103,24 @@ const renderProposedFilename = (value, row, activeMainTab, onOpenMatch, onOpenOv
 
 const renderStatusCell = (value, row, collisionStrategy, normalizeStatusTone, t) => (
   <span className="organizer-status-cell">
-    <StatusPill tone={normalizeStatusTone(value, t)}>{value}</StatusPill>
+    <Pill variant={normalizeStatusTone(value, t)}>{value}</Pill>
     {(row.rawType === 'movie' || row.rawType === 'episode') && shouldShowCollisionStrategy(row) ? (
-      <StatusPill className="organizer-status-cell__policy" tone="default">
+      <Pill className="organizer-status-cell__policy" variant="default">
         {mapCollisionStrategyLabel(row.rawAction || collisionStrategy, t)}
-      </StatusPill>
+      </Pill>
     ) : null}
     {row.rawStatus === 'uncertain' && row.rawType !== 'movie' && (row.season === null || row.season === undefined || row.season === '') ? (
       <Tooltip content={t('organizer.status.missingSeasonTooltip')} side="top">
-        <StatusPill className="organizer-status-cell__policy" tone="default">
+        <Pill className="organizer-status-cell__policy" variant="default">
           {t('organizer.status.missingSeason')}
-        </StatusPill>
+        </Pill>
       </Tooltip>
     ) : null}
     {row.rawStatus === 'uncertain' && row.rawType !== 'movie' && (row.episode === null || row.episode === undefined || row.episode === '') ? (
       <Tooltip content={t('organizer.status.missingEpisodeTooltip')} side="top">
-        <StatusPill className="organizer-status-cell__policy" tone="default">
+        <Pill className="organizer-status-cell__policy" variant="default">
           {t('organizer.status.missingEpisode')}
-        </StatusPill>
+        </Pill>
       </Tooltip>
     ) : null}
   </span>

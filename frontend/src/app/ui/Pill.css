@@ -1,0 +1,91 @@
+.ui-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-2xs, 10px);
+  font-weight: var(--font-weight-bold, 700);
+  line-height: 1;
+  padding: 2px 8px;
+  border-radius: var(--radius-xs, 4px);
+  user-select: none;
+  font-family: var(--font-family-sans, sans-serif);
+}
+
+/* Status variants */
+.ui-pill--success {
+  background: var(--color-state-success-bg);
+  color: var(--color-state-success);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ui-pill--danger {
+  background: var(--color-state-danger-bg);
+  color: var(--color-state-danger);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ui-pill--warning {
+  background: var(--color-state-warning-bg);
+  color: var(--color-state-warning);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ui-pill--default {
+  background: var(--color-surface-glass-strong);
+  color: var(--color-muted);
+}
+
+/* Rating variants */
+.ui-pill--imdb {
+  padding: 2px 5px;
+  border-radius: 2px;
+  backdrop-filter: blur(4px);
+  background-color: color-mix(in srgb, var(--color-brand-imdb) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-brand-imdb) 28%, transparent);
+  color: var(--color-brand-imdb);
+}
+
+.ui-pill--tmdb {
+  padding: 2px 5px;
+  border-radius: 2px;
+  backdrop-filter: blur(4px);
+  background-color: color-mix(in srgb, var(--color-brand-tmdb) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-brand-tmdb) 28%, transparent);
+  color: var(--color-brand-tmdb);
+}
+
+/* Favorite toggle variants */
+.ui-pill--favorite {
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: var(--color-surface-glass);
+  border: 1px solid var(--color-border-default);
+  color: var(--color-text-muted);
+  outline: none;
+}
+
+.ui-pill--favorite:hover {
+  background-color: var(--color-surface-glass-strong);
+  border-color: var(--color-border-strong);
+  color: var(--color-text-primary);
+}
+
+.ui-pill--favorite-active {
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: var(--color-state-danger-bg);
+  border: 1px solid var(--color-state-danger-bg-strong);
+  color: var(--color-state-danger);
+  outline: none;
+}
+
+.ui-pill--favorite-active:hover {
+  background-color: var(--color-state-danger-bg-strong);
+  border-color: color-mix(in srgb, var(--color-state-danger) 45%, transparent);
+}
+

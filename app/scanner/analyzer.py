@@ -15,8 +15,10 @@ class Analyzer:
         """
         if not text:
             return {}
+        # Normalize S1-01 / S02-09 style range-trap to S1E01 / S02E09
+        normalized_text = re.sub(r'(?i)\bs(\d+)-(\d+)\b', r'S\1E\2', text)
         try:
-            return dict(guessit(text))
+            return dict(guessit(normalized_text))
         except Exception as e:
             return {}
 

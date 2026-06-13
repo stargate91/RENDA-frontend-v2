@@ -202,9 +202,9 @@
   gap: var(--space-3);
   width: 100%;
   padding: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border-default);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.025);
+  background: var(--color-surface-glass);
   color: inherit;
   text-align: left;
   cursor: pointer;
@@ -212,9 +212,9 @@
 }
 
 .organizer-match-modal__result-card:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(0, 136, 255, 0.4);
-  box-shadow: 0 4px 12px rgba(0, 136, 255, 0.08);
+  background: var(--color-surface-glass-strong);
+  border-color: color-mix(in srgb, var(--color-accent-blue) 40%, transparent);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent-blue) 8%, transparent);
   transform: translateY(-1px);
 }
 
@@ -225,14 +225,14 @@
 }
 
 .organizer-match-modal__result-card.is-active {
-  border-color: color-mix(in srgb, var(--color-accent) 28%, rgba(255, 255, 255, 0.08));
-  background: color-mix(in srgb, var(--color-accent) 9%, rgba(255, 255, 255, 0.025));
+  border-color: color-mix(in srgb, var(--color-accent) 28%, var(--color-border-default));
+  background: color-mix(in srgb, var(--color-accent) 9%, var(--color-surface-glass));
 }
 
 .organizer-match-modal__result-card.is-active:hover:not(:disabled) {
-  border-color: rgba(0, 136, 255, 0.6);
-  background: color-mix(in srgb, var(--color-accent) 12%, rgba(255, 255, 255, 0.04));
-  box-shadow: 0 4px 12px rgba(0, 136, 255, 0.08);
+  border-color: color-mix(in srgb, var(--color-accent-blue) 60%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface-glass-strong));
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent-blue) 8%, transparent);
 }
 
 .organizer-match-modal__poster {
@@ -240,8 +240,8 @@
   height: 96px;
   border-radius: calc(var(--radius-md) - 2px);
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.04);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  background: var(--color-surface-glass-strong);
+  box-shadow: inset 0 0 0 1px var(--color-border-subtle);
 }
 
 .organizer-match-modal__poster-image,
@@ -433,7 +433,7 @@
   height: 22px;
   border-radius: 50%;
   background: var(--color-accent);
-  color: #fff;
+  color: var(--color-text-inverse);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   animation: scale-up 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
   z-index: 2;
@@ -486,9 +486,9 @@
   display: grid;
   gap: var(--space-2);
   padding: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border-default);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--color-surface-card);
 }
 
 .organizer-match-modal__bucket-title {
@@ -505,9 +505,9 @@
 .organizer-match-modal__bucket-chip {
   min-height: 28px;
   padding: 0 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border-default);
   border-radius: var(--radius-input);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-surface-glass-strong);
   color: var(--color-ink);
   cursor: pointer;
   transition: all 0.15s ease;
@@ -718,7 +718,7 @@
 }
 
 .organizer-override-bulk-episodes__item:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-surface-glass-strong);
 }
 
 .organizer-override-bulk-episodes__item.is-dragging {

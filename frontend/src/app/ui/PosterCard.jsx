@@ -1,5 +1,5 @@
 import MediaCard from './MediaCard';
-import RatingPill from './RatingPill';
+import Pill from './Pill';
 import './PosterCard.css';
 
 export default function PosterCard({
@@ -64,10 +64,10 @@ export default function PosterCard({
                 const hasTmdb = ratingTmdb !== undefined && ratingTmdb !== null && ratingTmdb !== '';
                 if (hasImdb) {
                   const val = parseFloat(ratingImdb);
-                  return <RatingPill type="imdb">{isNaN(val) ? ratingImdb : val.toFixed(1)}</RatingPill>;
+                  return <Pill variant="imdb">{isNaN(val) ? ratingImdb : val.toFixed(1)}</Pill>;
                 } else if (hasTmdb) {
                   const val = parseFloat(ratingTmdb);
-                  return <RatingPill type="tmdb">{isNaN(val) ? ratingTmdb : val.toFixed(1)}</RatingPill>;
+                  return <Pill variant="tmdb">{isNaN(val) ? ratingTmdb : val.toFixed(1)}</Pill>;
                 }
                 return null;
               })()}

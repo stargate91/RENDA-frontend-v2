@@ -13,6 +13,11 @@ from ..utils.logger import logger
 from .status import update_scan_status, increment_scan_status_current, is_scan_stop_requested
 from .mappers import map_guessit_source, map_guessit_edition, map_guessit_audio_type
 
+def sanitize_int(val):
+    if isinstance(val, list):
+        return val[0] if val else None
+    return val
+
 class ScanEnricher:
     def __init__(
         self,
@@ -153,20 +158,20 @@ class ScanEnricher:
                     
                     fn = triple.get("fn", {})
                     result["updates"]["fn_title"] = self.analyzer.reconstruct_title(fn, item_dict["filename"])
-                    result["updates"]["fn_year"] = fn.get('year')
-                    result["updates"]["fn_season"] = fn.get('season')
+                    result["updates"]["fn_year"] = sanitize_int(fn.get('year'))
+                    result["updates"]["fn_season"] = sanitize_int(fn.get('season'))
                     result["updates"]["fn_episode"] = str(fn.get('episode')) if fn.get('episode') else None
                     
                     fd = triple.get("fd", {})
                     result["updates"]["fd_title"] = self.analyzer.reconstruct_title(fd, item_dict["folder_name"])
-                    result["updates"]["fd_year"] = fd.get('year')
-                    result["updates"]["fd_season"] = fd.get('season')
+                    result["updates"]["fd_year"] = sanitize_int(fd.get('year'))
+                    result["updates"]["fd_season"] = sanitize_int(fd.get('season'))
                     result["updates"]["fd_episode"] = str(fd.get('episode')) if fd.get('episode') else None
 
                     it = triple.get("it", {})
                     result["updates"]["it_title"] = self.analyzer.reconstruct_title(it, internal_title) if internal_title else None
-                    result["updates"]["it_year"] = it.get('year')
-                    result["updates"]["it_season"] = it.get('season')
+                    result["updates"]["it_year"] = sanitize_int(it.get('year'))
+                    result["updates"]["it_season"] = sanitize_int(it.get('season'))
                     result["updates"]["it_episode"] = str(it.get('episode')) if it.get('episode') else None
                     
                     it_type = it.get('type')
@@ -182,7 +187,7 @@ class ScanEnricher:
                     
                     cleanup = self.decision_engine.get_clean_metadata(item_type, triple)
                     if cleanup:
-                        if "season" in cleanup: result["updates"]["fn_season"] = cleanup["season"]
+                        if "season" in cleanup: result["updates"]["fn_season"] = sanitize_int(cleanup["season"])
                         if "episode" in cleanup: result["updates"]["fn_episode"] = cleanup["episode"]
 
                     result["updates"]["fn_item_type"] = fn.get('type')

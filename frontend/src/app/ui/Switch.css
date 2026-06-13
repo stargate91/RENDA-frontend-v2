@@ -36,7 +36,7 @@
   position: absolute;
   inset: 0;
   border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-surface-glass-strong);
   border: 1px solid var(--color-line);
   transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -60,7 +60,7 @@
 
 .ui-switch__input:checked + .ui-switch__track .ui-switch__thumb {
   transform: translateX(20px);
-  background: #ffffff;
+  background: var(--color-text-primary);
 }
 
 .ui-switch__input:focus-visible + .ui-switch__track {

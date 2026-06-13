@@ -1,5 +1,6 @@
 import Dropdown from '@/ui/Dropdown';
 import SegmentedControl from '@/ui/SegmentedControl';
+import Pill from '@/ui/Pill';
 
 export default function LibraryFilters({
   t,
@@ -235,16 +236,15 @@ export default function LibraryFilters({
       </div>
 
       {isPeople && (
-        <button
-          type="button"
-          className={`library-favorite-pill ${favoriteFilter === 'favorites' ? 'active' : ''}`}
+        <Pill
+          variant={favoriteFilter === 'favorites' ? 'favorite-active' : 'favorite'}
           onClick={() => {
             setFavoriteFilter(prev => prev === 'favorites' ? 'all' : 'favorites');
             setCurrentPage(1);
           }}
         >
           {t('library.filter.favorite') || 'Favourite'}
-        </button>
+        </Pill>
       )}
 
       {(resolvedTab === 'movies' || resolvedTab === 'series' || resolvedTab === 'adult') && (

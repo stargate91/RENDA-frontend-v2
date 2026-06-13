@@ -43,8 +43,8 @@
 .ui-segmented-control--filter {
   height: auto;
   align-items: center;
-  background-color: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: var(--color-surface-glass);
+  border: 1px solid var(--color-border-default);
   border-radius: 6px;
   padding: 2px;
 }
@@ -63,7 +63,8 @@
 }
 
 .ui-segmented-control--filter .ui-segmented-control__option.is-active {
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: var(--color-surface-glass-strong);
   color: var(--color-text-primary, #ffffff);
 }
+
 

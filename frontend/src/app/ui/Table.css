@@ -3,7 +3,7 @@
   overflow: auto;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-line);
-  background: rgba(255, 255, 255, 0.01);
+  background: var(--color-surface-card);
 }
 
 .ui-table {
@@ -94,7 +94,7 @@
 .ui-table tbody tr:hover {
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--color-accent-blue) 8%, transparent), transparent 22%),
-    color-mix(in srgb, var(--color-panel) 88%, rgba(255, 255, 255, 0.035));
+    color-mix(in srgb, var(--color-panel) 88%, var(--color-surface-glass));
   box-shadow: inset 1px 0 0 color-mix(in srgb, var(--color-accent-blue) 22%, transparent);
 }
 
@@ -105,14 +105,14 @@
 .ui-table tbody tr.is-active {
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--color-accent-blue) 14%, transparent), transparent 28%),
-    color-mix(in srgb, var(--color-panel-strong) 90%, rgba(255, 255, 255, 0.03));
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--color-accent-blue) 82%, white);
+    color-mix(in srgb, var(--color-panel-strong) 90%, var(--color-surface-glass));
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--color-accent-blue) 82%, var(--color-text-primary));
 }
 
 .ui-table tbody tr.is-active:hover {
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--color-accent-blue) 18%, transparent), transparent 28%),
-    color-mix(in srgb, var(--color-panel-strong) 86%, rgba(255, 255, 255, 0.04));
+    color-mix(in srgb, var(--color-panel-strong) 86%, var(--color-surface-glass));
 }
 
 .ui-table .text-left {

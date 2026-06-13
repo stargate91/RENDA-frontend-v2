@@ -110,6 +110,7 @@
   background: var(--button-primary-bg);
   color: var(--button-primary-color);
   box-shadow: var(--button-primary-shadow);
+  border: 0;
 }
 
 .ui-icon-button--primary-neutral {
@@ -161,6 +162,7 @@
   background: var(--button-primary-bg);
   color: var(--button-primary-color);
   box-shadow: var(--button-primary-shadow);
+  border: 0;
 }
 
 .ui-button--primary-neutral {
