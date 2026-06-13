@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { X } from 'lucide-react';
-import './Feedback.css';
+import './ToastViewport.css';
 
 function ToastItem({ toast, onRemove }) {
   const { id, title, tone, duration } = toast;

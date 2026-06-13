@@ -60,29 +60,7 @@
   background: var(--color-table-header-bg, rgba(255, 255, 255, 0.01));
 }
 
-.ui-sort-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: inherit;
-  gap: 6px;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  letter-spacing: inherit;
-  text-transform: inherit;
-  cursor: pointer;
-}
 
-.ui-sort-button.is-active {
-  color: var(--color-ink);
-}
-
-.ui-sort-button:focus-visible {
-  outline: none;
-  border-radius: var(--radius-xs);
-  box-shadow: 0 0 0 2px var(--color-accent-blue);
-}
 
 .ui-table tbody tr {
   transition: background-color 0.06s ease;

@@ -1,4 +1,4 @@
-import './Feedback.css';
+import './Spinner.css';
 
 export default function Spinner({
   label = 'Loading',

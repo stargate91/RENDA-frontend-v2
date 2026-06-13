@@ -1,3 +1,5 @@
+import './PageHeader.css';
+
 export default function PageHeader({ eyebrow, title, description, actions }) {
   return (
     <header className="page-header">

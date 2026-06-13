@@ -2,7 +2,7 @@ import { X } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import IconButton from './IconButton';
 import Tooltip from './Tooltip';
-import './Feedback.css';
+import './ProgressBar.css';
 
 export default function ProgressBar({ taskName, progress = 0, timeRemaining = '--:--', active = true, variant = 'primary', onAbort }) {
   const isSub = variant === 'sub';

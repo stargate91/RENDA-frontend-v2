@@ -345,36 +345,6 @@
   min-height: calc(100vh - 220px);
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-6);
-  align-items: flex-end;
-}
-
-.page-header > div:first-child {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.page-header__title {
-  margin: 0;
-  font: var(--text-hero);
-  font-family: var(--font-display);
-}
-
-.page-header__eyebrow {
-  display: block;
-  line-height: 1;
-  margin: 0;
-  color: var(--color-muted);
-  font: var(--text-caption);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.page-header__description,
 .support-copy,
 .type-ramp__body {
   margin: 0;
@@ -386,7 +356,6 @@
   margin-bottom: 16px;
 }
 
-.page-header__actions,
 .ui-inline,
 .inline-note {
   display: flex;

@@ -1,3 +1,5 @@
+import './Button.css';
+
 export default function IconButton({
   children,
   className = '',
