@@ -21,14 +21,15 @@ class LibraryCollectionService:
         page: int = 1,
         page_size: Optional[int] = 40,
         search: str = "",
+        tab: str = "movies",
     ) -> LibraryCollectionsPageDTO:
-        sorted_items = self._build_movie_collection_rows(search=search)
+        sorted_items = self._build_movie_collection_rows(search=search, tab=tab)
         return self._paginate_collections(sorted_items, page=page, page_size=page_size)
 
-    def _build_movie_collection_rows(self, search: str = "") -> list[dict]:
+    def _build_movie_collection_rows(self, search: str = "", tab: str = "movies") -> list[dict]:
         ui_lang = _preferred_metadata_language(self.db)
         normalized_search = (search or "").strip().lower()
-        items = self.repository.get_library_items(requested_tabs={"movies"})
+        items = self.repository.get_library_items(requested_tabs={tab})
         collections_map: dict[int, dict] = {}
 
         for item in items:
@@ -36,7 +37,12 @@ class LibraryCollectionService:
                 continue
 
             active_match = next((match for match in item.matches if match.is_active), None)
-            if not active_match or active_match.is_adult or not active_match.collection_tmdb_id:
+            if not active_match or not active_match.collection_tmdb_id:
+                continue
+
+            if tab == "adult" and not active_match.is_adult:
+                continue
+            if tab == "movies" and active_match.is_adult:
                 continue
 
             collection_loc = self._pick_collection_localization(active_match.collection_entity, ui_lang)

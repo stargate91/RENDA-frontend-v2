@@ -62,6 +62,7 @@ class MediaMatch(Base):
     networks: Mapped[Optional[List[dict]]] = mapped_column(JSON)
     companies: Mapped[Optional[List[dict]]] = mapped_column(JSON)
     collection: Mapped[Optional[str]] = mapped_column(String)
+    keywords: Mapped[Optional[List[str]]] = mapped_column(JSON)
     collection_tmdb_id: Mapped[Optional[int]] = mapped_column(ForeignKey("media_collections.tmdb_id", ondelete="SET NULL"), index=True)
     release_date: Mapped[Optional[datetime]] = mapped_column(DateTime); first_air_date: Mapped[Optional[datetime]] = mapped_column(DateTime)
     last_air_date: Mapped[Optional[datetime]] = mapped_column(DateTime); episode_air_date: Mapped[Optional[datetime]] = mapped_column(DateTime)

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSettingsQuery } from '@/queries/settingsQueries';
-import { useLibraryQuery, useCollectionsQuery, useTagsQuery } from '@/queries/libraryQueries';
+import { useLibraryQuery, useCollectionsQuery, useTagsQuery, useLibraryFiltersQuery } from '@/queries/libraryQueries';
 import { API_BASE } from '@/lib/backend';
 import Page from '@/ui/Page';
 import { Tabs } from '@/ui/Tabs';
@@ -41,6 +41,9 @@ export default function LibraryPage() {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('movies');
   const [searchQuery, setSearchQuery] = useState('');
+  const [ownershipFilter, setOwnershipFilter] = useState('owned');
+  const [watchedFilter, setWatchedFilter] = useState('all');
+  const [genreFilter, setGenreFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [sortKey, setSortKey] = useState('title');
@@ -56,18 +59,24 @@ export default function LibraryPage() {
     );
   }
 
-  const isCollections = activeTab === 'collections';
+  const isCollections = activeTab === 'collections' || activeTab === 'adult_collections';
   const isTags = activeTab === 'tags';
 
   const { data: libraryData, isLoading: isLibraryLoading } = useLibraryQuery(
     !isCollections && !isTags
-      ? { tab: activeTab, page: 1, pageSize: 10000 }
+      ? { tab: activeTab, page: 1, pageSize: 10000, filter_ownership: ownershipFilter, filter_watched: watchedFilter, selected_genre: genreFilter || undefined }
       : { tab: 'movies', page: 1, pageSize: 1 }
+  );
+
+  const { data: filterData } = useLibraryFiltersQuery(
+    !isCollections && !isTags
+      ? { tab: activeTab, filter_ownership: ownershipFilter }
+      : null
   );
 
   const { data: collectionsData, isLoading: isCollectionsLoading } = useCollectionsQuery(
     isCollections
-      ? { page: 1, pageSize: 10000 }
+      ? { page: 1, pageSize: 10000, tab: activeTab === 'adult_collections' ? 'adult' : 'movies' }
       : null
   );
 
@@ -85,6 +94,9 @@ export default function LibraryPage() {
     { value: 'people', label: t('library.tabs.people'), count: counts.people },
     ...(settings?.include_adult ? [
       { value: 'adult', label: t('library.tabs.adult'), count: counts.adult },
+      ...(settings?.folder_collection_mode !== 'never' ? [
+        { value: 'adult_collections', label: t('library.tabs.adultCollections'), count: counts.adult_collections }
+      ] : []),
       { value: 'adult_people', label: t('library.tabs.adultPeople'), count: counts.adult_people },
     ] : []),
     { value: 'tags', label: t('library.tabs.tags'), count: counts.tags },
@@ -94,7 +106,7 @@ export default function LibraryPage() {
 
   // Reset page and sorting when switching tabs
   useEffect(() => {
-    if (resolvedTab === 'collections') {
+    if (resolvedTab === 'collections' || resolvedTab === 'adult_collections') {
       setSortKey('owned_count');
       setSortDirection('desc');
     } else if (resolvedTab === 'people' || resolvedTab === 'adult_people') {
@@ -105,7 +117,8 @@ export default function LibraryPage() {
       setSortDirection('asc');
     }
     setCurrentPage(1);
-  }, [resolvedTab]);
+    setGenreFilter('');
+  }, [resolvedTab, ownershipFilter]);
 
   const getEmptyStateIcon = () => {
     switch (resolvedTab) {
@@ -321,50 +334,107 @@ export default function LibraryPage() {
 
           {/* Row 3: Sorters and Filters */}
           <div className="organizer-panel__row library-filters-row">
-            {(resolvedTab === 'movies' || resolvedTab === 'series' || resolvedTab === 'collections' || resolvedTab === 'adult' || resolvedTab === 'people' || resolvedTab === 'adult_people') && (
-              <div className="library-sorter-container">
-                <span className="library-sorter-label">{t('library.sort.label') || 'Sort:'}</span>
-                <Dropdown
-                  variant="sorter"
-                  value={sortKey}
-                  onChange={(e) => {
-                    setSortKey(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  sortDirection={sortDirection}
-                  onSortDirectionToggle={() => {
-                    setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
-                    setCurrentPage(1);
-                  }}
-                  options={
-                    resolvedTab === 'collections'
-                      ? [
-                          { value: 'owned_count', label: t('library.sort.ownedCount') || 'Item Count' },
-                          { value: 'title', label: t('library.sort.title') || 'Title' },
-                        ]
-                      : (resolvedTab === 'people' || resolvedTab === 'adult_people')
-                      ? [
-                          { value: 'library_count', label: t('library.sort.libraryCount') || 'Library Count' },
-                          { value: 'rating', label: t('library.sort.popularity') || 'Popularity' },
-                          { value: 'title', label: t('library.sort.title') || 'Name' },
-                          { value: 'birthday', label: t('library.sort.birthday') || 'Birthdate' },
-                          { value: 'user_rating', label: t('library.sort.userRating') || 'User Rating' },
-                        ]
-                      : [
-                          { value: 'title', label: t('library.sort.title') || 'Title' },
-                          { value: 'year', label: resolvedTab === 'series' ? (t('library.sort.firstAirYear') || 'First Air Year') : (t('library.sort.year') || 'Year') },
-                          { value: 'release_date', label: resolvedTab === 'series' ? (t('library.sort.firstAirDate') || 'First Air Date') : (t('library.sort.releaseDate') || 'Release Date') },
-                          { value: 'rating_imdb', label: t('library.sort.imdbRating') || 'IMDb Rating' },
-                          { value: 'rating', label: t('library.sort.tmdbRating') || 'TMDb Rating' },
-                          { value: 'user_rating', label: t('library.sort.userRating') || 'User Rating' },
-                          { value: 'duration', label: t('library.sort.duration') || 'Duration' },
-                          { value: 'file_size', label: t('library.sort.fileSize') || 'File Size' },
-                          { value: 'last_watched', label: t('library.sort.lastWatched') || 'Last Watched' },
-                        ]
-                  }
-                />
-              </div>
-            )}
+            <div className="library-filters-left">
+              {(resolvedTab === 'movies' || resolvedTab === 'series' || resolvedTab === 'collections' || resolvedTab === 'adult_collections' || resolvedTab === 'adult' || resolvedTab === 'people' || resolvedTab === 'adult_people') && (
+                <div className="library-sorter-container">
+                  <span className="library-sorter-label">{t('library.sort.label') || 'Sort:'}</span>
+                  <Dropdown
+                    variant="sorter"
+                    value={sortKey}
+                    onChange={(e) => {
+                      setSortKey(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    sortDirection={sortDirection}
+                    onSortDirectionToggle={() => {
+                      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+                      setCurrentPage(1);
+                    }}
+                    options={
+                      (resolvedTab === 'collections' || resolvedTab === 'adult_collections')
+                        ? [
+                            { value: 'owned_count', label: t('library.sort.ownedCount') || 'Item Count' },
+                            { value: 'title', label: t('library.sort.title') || 'Title' },
+                          ]
+                        : (resolvedTab === 'people' || resolvedTab === 'adult_people')
+                        ? [
+                            { value: 'library_count', label: t('library.sort.libraryCount') || 'Library Count' },
+                            { value: 'rating', label: t('library.sort.popularity') || 'Popularity' },
+                            { value: 'title', label: t('library.sort.title') || 'Name' },
+                            { value: 'birthday', label: t('library.sort.birthday') || 'Birthdate' },
+                            { value: 'user_rating', label: t('library.sort.userRating') || 'User Rating' },
+                          ]
+                        : [
+                            { value: 'title', label: t('library.sort.title') || 'Title' },
+                            { value: 'year', label: resolvedTab === 'series' ? (t('library.sort.firstAirYear') || 'First Air Year') : (t('library.sort.year') || 'Year') },
+                            { value: 'release_date', label: resolvedTab === 'series' ? (t('library.sort.firstAirDate') || 'First Air Date') : (t('library.sort.releaseDate') || 'Release Date') },
+                            { value: 'rating_imdb', label: t('library.sort.imdbRating') || 'IMDb Rating' },
+                            { value: 'rating', label: t('library.sort.tmdbRating') || 'TMDb Rating' },
+                            { value: 'user_rating', label: t('library.sort.userRating') || 'User Rating' },
+                            { value: 'duration', label: t('library.sort.duration') || 'Duration' },
+                            { value: 'file_size', label: t('library.sort.fileSize') || 'File Size' },
+                            { value: 'last_watched', label: t('library.sort.lastWatched') || 'Last Watched' },
+                          ]
+                    }
+                  />
+                </div>
+              )}
+
+              {(resolvedTab === 'movies' || resolvedTab === 'series' || resolvedTab === 'adult') && (
+                <div className="library-sorter-container">
+                  <span className="library-sorter-label">{t('library.filter.label') || 'Filter:'}</span>
+                  <Dropdown
+                    variant="sorter"
+                    value={ownershipFilter}
+                    onChange={(e) => {
+                      setOwnershipFilter(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    options={[
+                      { value: 'owned', label: t('library.filter.have') || 'Have' },
+                      { value: 'unowned', label: t('library.filter.missing') || 'Missing' },
+                    ]}
+                  />
+                </div>
+              )}
+
+              {(resolvedTab === 'movies' || resolvedTab === 'series' || resolvedTab === 'adult') && (
+                <div className="library-sorter-container">
+                  <span className="library-sorter-label">{t('library.filter.statusLabel') || 'Status:'}</span>
+                  <Dropdown
+                    variant="sorter"
+                    value={watchedFilter}
+                    onChange={(e) => {
+                      setWatchedFilter(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    options={[
+                      { value: 'all', label: t('library.filter.all') || 'All' },
+                      { value: 'watched', label: t('library.filter.watched') || 'Watched' },
+                      { value: 'unwatched', label: t('library.filter.unwatched') || 'Unwatched' },
+                    ]}
+                  />
+                </div>
+              )}
+
+              {(resolvedTab === 'movies' || resolvedTab === 'series' || resolvedTab === 'adult') && (
+                <div className="library-sorter-container">
+                  <span className="library-sorter-label">{t('library.filter.genreLabel') || 'Genre:'}</span>
+                  <Dropdown
+                    variant="sorter"
+                    value={genreFilter}
+                    onChange={(e) => {
+                      setGenreFilter(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    options={[
+                      { value: '', label: t('library.filter.allGenres') || 'All Genres' },
+                      ...(filterData?.genres || []).map(g => ({ value: g, label: g })),
+                    ]}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

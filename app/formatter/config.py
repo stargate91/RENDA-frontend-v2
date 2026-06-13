@@ -61,7 +61,7 @@ class FormatterConfig:
     collection_folder_threshold: int = 3
     collection_folder: str = "{collection}"
     create_series_dir: bool = True
-    series_folder: str = "{series_title} ({year})"
+    series_folder: str = "{series_title} ({year_range})"
     create_season_dir: bool = True
     season_folder: str = "Season {season}"
     create_episode_dir: bool = False

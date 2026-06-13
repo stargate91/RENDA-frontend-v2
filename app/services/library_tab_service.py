@@ -98,15 +98,16 @@ class LibraryTabService:
         }
 
     def _build_media_tab_counts(self) -> dict:
-        from ..db.models import CustomListItem, ItemStatus, MediaItem, VirtualMediaState, Person
+        from ..db.models import CustomListItem, ItemStatus, MediaItem, VirtualMediaState, Person, Tag
         from ..db.models.metadata import MediaMatch
 
         counts = {
             **self.repository.get_library_owned_counts(),
             "people": 0,
             "adult_people": 0,
-            "tags": None,
-            "collections": len(self.collection_service._build_movie_collection_rows()),
+            "tags": self.db.query(func.count(Tag.id)).scalar() or 0,
+            "collections": len(self.collection_service._build_movie_collection_rows(tab="movies")),
+            "adult_collections": len(self.collection_service._build_movie_collection_rows(tab="adult")),
         }
 
         include_adult = self._include_adult_enabled()
@@ -340,6 +341,15 @@ class LibraryTabService:
                 return None
             return rating if rating > 0 else None
 
+        def _get_virtual_keywords(raw_data, media_type):
+            keywords_data = raw_data.get("keywords", {})
+            keywords_list = []
+            if isinstance(keywords_data, dict):
+                kw_list = keywords_data.get("keywords") if media_type == "movie" else keywords_data.get("results")
+                if isinstance(kw_list, list):
+                    keywords_list = [kw.get("name") for kw in kw_list if isinstance(kw, dict) and kw.get("name")]
+            return keywords_list
+
         for item in items:
             active_match = next((match for match in item.matches if match.is_active), None)
             target_group = None
@@ -386,10 +396,12 @@ class LibraryTabService:
                 "user_rating": item.user_rating,
                 "custom_tags": [tag.name for tag in item.tags] if item.tags else [],
                 "genres": _split_genres(loc.genres) if (loc and loc.genres) else [],
+                "keywords": active_match.keywords if (active_match and active_match.keywords) else [],
                 "is_watched": getattr(item, "is_watched", False),
                 "resume_position": getattr(item, "resume_position", 0),
                 "duration": item.duration or 0,
                 "last_watched_at": item.last_watched_at.isoformat() if item.last_watched_at else None,
+                "size": item.size or 0,
             }
 
             library[target_group].append(data)
@@ -453,6 +465,7 @@ class LibraryTabService:
                 "user_rating": virtual_state.user_rating if virtual_state else None,
                 "custom_tags": virtual_state.custom_tags or [] if virtual_state and virtual_state.custom_tags else [],
                 "genres": _get_virtual_genres(raw_data),
+                "keywords": _get_virtual_keywords(raw_data, media_type),
                 "is_watched": bool(virtual_state.is_watched) if virtual_state else False,
                 "resume_position": 0,
                 "duration": 0,
@@ -506,6 +519,7 @@ class LibraryTabService:
                 "user_rating": state.user_rating,
                 "custom_tags": state.custom_tags or [],
                 "genres": _get_virtual_genres(raw_data),
+                "keywords": _get_virtual_keywords(raw_data, media_type),
                 "is_watched": bool(state.is_watched),
                 "resume_position": 0,
                 "duration": 0,
@@ -528,7 +542,8 @@ class LibraryTabService:
         library["counts"]["people"] = len(people_items)
         library["counts"]["adult_people"] = len(adult_people_items) if self._include_adult_enabled() else 0
         library["counts"]["tags"] = None
-        library["counts"]["collections"] = len(self.collection_service._build_movie_collection_rows())
+        library["counts"]["collections"] = len(self.collection_service._build_movie_collection_rows(tab="movies"))
+        library["counts"]["adult_collections"] = len(self.collection_service._build_movie_collection_rows(tab="adult"))
         if include_all_tabs:
             library["counts"].update(self._build_display_counts(library))
         else:

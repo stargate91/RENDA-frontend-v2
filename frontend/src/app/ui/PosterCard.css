@@ -95,7 +95,7 @@ div.ui-poster-card__image-wrapper:focus-visible {
 
 .ui-poster-card__title {
   font-family: var(--font-family-display);
-  font-size: var(--font-size-xs, 12px);
+  font-size: var(--font-size-sm, 12px);
   font-weight: var(--font-weight-bold, 700);
   color: var(--color-ink, #f8fafc);
   white-space: nowrap;

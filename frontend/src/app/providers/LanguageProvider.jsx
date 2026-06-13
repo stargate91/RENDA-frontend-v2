@@ -3,11 +3,13 @@ import { createContext, useContext, useState } from 'react';
 import enCommon from '../locales/en/common.json';
 import enSettings from '../locales/en/settings.json';
 import enOrganizer from '../locales/en/organizer.json';
+import enLibrary from '../locales/en/library.json';
 
 const en = {
   ...enCommon,
   settingsPage: enSettings,
   organizer: enOrganizer,
+  library: enLibrary,
 };
 
 const translations = { en };

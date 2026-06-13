@@ -22,7 +22,8 @@
     "scanning": "Scanning...",
     "rename": "Rename",
     "organizing": "Organizing...",
-    "restoreDismissed": "Restore removed"
+    "restoreDismissed": "Restore removed",
+    "removeAll": "Remove All"
   },
   "emptyStates": {
     "notLoaded": {

@@ -217,8 +217,37 @@ export default function OrganizerPage() {
     </>
   ) : null;
 
+  const handleRemoveAll = () => {
+    const allItems = [
+      ...(discovery.manual || []),
+      ...(discovery.movies || []),
+      ...(discovery.series || []),
+      ...(discovery.collisions || []),
+    ];
+    const ids = allItems.map((item) => `item-${item.id}`);
+    dismissRows(ids);
+  };
+
+  const allMediaItems = [
+    ...(discovery.manual || []),
+    ...(discovery.movies || []),
+    ...(discovery.series || []),
+    ...(discovery.collisions || []),
+  ];
+  const hasActiveVisibleItems = allMediaItems.some(item => !dismissedRowIds.has(`item-${item.id}`));
+
   const headerActions = (hasVisibleItems || dismissedCount > 0) ? (
     <>
+      {hasActiveVisibleItems ? (
+        <Button
+          variant="secondary-neutral"
+          size="sm"
+          className="organizer-panel__browse-btn"
+          onClick={handleRemoveAll}
+        >
+          {t('organizer.buttons.removeAll')}
+        </Button>
+      ) : null}
       {dismissedCount > 0 ? (
         <Button
           variant="secondary-neutral"

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from '@/providers/LanguageProvider';
 import { useUi } from '@/providers/UiProvider';
 import { selectFolder } from '@/lib/ipc';
@@ -14,6 +15,7 @@ export default function useOnboardingState() {
   const { locale, setLocale, t } = useTranslation();
   const { toast } = useUi();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [step, setStep] = useState(1);
   const [stepDirection, setStepDirection] = useState('forward');
@@ -146,6 +148,7 @@ export default function useOnboardingState() {
           ...normalizedSettings,
           onboarding_completed: true,
         });
+        await queryClient.invalidateQueries({ queryKey: ['settings'] });
         
         toast(t('settingsPage.sections.backup.importSuccess') || 'Settings imported successfully!', 'success');
         
@@ -294,6 +297,7 @@ export default function useOnboardingState() {
       };
 
       await api.settings.update(payload);
+      await queryClient.invalidateQueries({ queryKey: ['settings'] });
       toast('Onboarding completed! Welcome to RENDA.', 'success');
       
       // Navigate to dashboard

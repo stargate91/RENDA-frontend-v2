@@ -107,6 +107,7 @@ def get_movie_collections(
     page: int = 1,
     page_size: Optional[int] = 40,
     search: str = "",
+    tab: str = "movies",
 ):
     db = Session()
     try:
@@ -114,6 +115,7 @@ def get_movie_collections(
             page=page,
             page_size=page_size,
             search=search,
+            tab=tab,
         )
         return collections.model_dump() if hasattr(collections, "model_dump") else collections
     finally:

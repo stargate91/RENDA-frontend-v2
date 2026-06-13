@@ -58,31 +58,16 @@ export default function useSettingsPersistence({
         return;
       }
 
-      // Check if language settings changed
-      const savedLanguage = settings?.ui_language;
-      const currentLanguage = form.ui_language;
-
-      const savedFollowMedia = settings?.follow_app_language_for_media_library;
-      const currentFollowMedia = form.follow_app_language_for_media_library;
-
-      const savedFollowNaming = settings?.follow_app_language_for_naming;
-      const currentFollowNaming = form.follow_app_language_for_naming;
-
-      const savedPrimary = settings?.primary_metadata_language;
-      const currentPrimary = form.primary_metadata_language;
-
-      const savedFallback = settings?.fallback_metadata_language;
-      const currentFallback = form.fallback_metadata_language;
-
-      const savedTarget = settings?.default_target_language;
-      const currentTarget = form.default_target_language;
+      const payload = buildSettingsPayload(form);
+      
+      const savedPrimary = settings?.primary_metadata_language || 'en-US';
+      const savedFallback = settings?.fallback_metadata_language || 'en-US';
+      const savedTarget = settings?.default_target_language || 'en';
 
       const isLanguageChanging = 
-        (currentLanguage !== savedLanguage && (currentFollowMedia || currentFollowNaming)) ||
-        (currentFollowMedia !== savedFollowMedia && currentFollowMedia) ||
-        (currentFollowNaming !== savedFollowNaming && currentFollowNaming) ||
-        (!currentFollowMedia && (currentPrimary !== savedPrimary || currentFallback !== savedFallback)) ||
-        (!currentFollowNaming && (currentTarget !== savedTarget));
+        (payload.primary_metadata_language !== savedPrimary) ||
+        (payload.fallback_metadata_language !== savedFallback) ||
+        (payload.default_target_language !== savedTarget);
 
       // Execute save first
       await executeSave(form);

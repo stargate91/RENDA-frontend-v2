@@ -81,6 +81,10 @@ class LibraryItemDTO(BaseModel):
     rating_imdb: Optional[float] = None
     type: str
     path: Optional[str] = None
+    duration: Optional[float] = None
+    last_watched_at: Optional[str] = None
+    size: Optional[int] = None
+    user_rating: Optional[float] = None
 
 class LibraryCollectionItemDTO(BaseModel):
     id: int

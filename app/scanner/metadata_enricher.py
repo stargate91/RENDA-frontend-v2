@@ -327,6 +327,15 @@ class MetadataEnricher:
         """Update common data (runtime, ratings, people)."""
         runtimes = details.get("episode_run_time", [])
         match.runtime = details.get("runtime") or (runtimes[0] if runtimes else None)
+        
+        keywords_data = details.get("keywords", {})
+        keywords_list = []
+        if isinstance(keywords_data, dict):
+            kw_list = keywords_data.get("keywords") if match.item_type == ItemType.MOVIE else keywords_data.get("results")
+            if isinstance(kw_list, list):
+                keywords_list = [kw.get("name") for kw in kw_list if isinstance(kw, dict) and kw.get("name")]
+        match.keywords = keywords_list
+
         match.popularity = details.get("popularity")
         match.rating_tmdb = details.get("vote_average")
         match.vote_count_tmdb = details.get("vote_count")

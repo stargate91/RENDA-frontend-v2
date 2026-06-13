@@ -172,7 +172,7 @@ export default function Dropdown({
             {!isSorter && <span className={`ui-dropdown__chevron ${isOpen ? 'is-open' : ''}`}>▼</span>}
           </button>
 
-          {isSorter && (
+          {isSorter && onSortDirectionToggle && (
             <button
               type="button"
               className="ui-dropdown__direction-btn"

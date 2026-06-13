@@ -222,10 +222,10 @@ class TMDBClient:
 
         if item_type == "movie":
             endpoint = f"/movie/{tmdb_id}"
-            append = "credits,external_ids,images,translations,videos"
+            append = "credits,external_ids,images,translations,videos,keywords"
         else:
             endpoint = f"/tv/{tmdb_id}"
-            append = "credits,aggregate_credits,external_ids,images,translations,videos"
+            append = "credits,aggregate_credits,external_ids,images,translations,videos,keywords"
 
         normalized_lang = str(language or "en").split("-", 1)[0].strip() or "en"
         include_image_language = ",".join(dict.fromkeys([normalized_lang, "en", "null"]))

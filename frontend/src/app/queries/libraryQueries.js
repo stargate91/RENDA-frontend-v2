@@ -22,4 +22,8 @@ export const useTagsQuery = () => useQuery({
   queryKey: ['libraryTags'],
   queryFn: () => api.library.getTags(),
 });
-
+export const useLibraryFiltersQuery = (params) => useQuery({
+  queryKey: ['libraryFilters', params],
+  queryFn: ({ signal }) => api.library.getFilters(params, { signal }),
+  staleTime: 5 * 60 * 1000,
+});

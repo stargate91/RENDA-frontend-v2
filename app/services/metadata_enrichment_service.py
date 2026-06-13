@@ -88,7 +88,7 @@ class MetadataEnrichmentService:
             return
 
         # Update core match properties
-        self._update_match_common(match, details)
+        self._update_match_common(match, details, raw_data)
         match.is_adult = details.adult
         match.release_status = details.status
         match.budget = details.budget
@@ -137,7 +137,7 @@ class MetadataEnrichmentService:
             logger.error(f"Failed to parse TMDBSeries: {e}")
             return
 
-        self._update_match_common(match, series)
+        self._update_match_common(match, series, raw_data)
         match.series_type = series.type
         match.number_of_seasons = series.number_of_seasons
         match.number_of_episodes = series.number_of_episodes
@@ -235,12 +235,26 @@ class MetadataEnrichmentService:
                 if not loc.title:
                     loc.title = loc.series_title or loc.original_series_title or loc.episode_title
 
-    def _update_match_common(self, match: MediaMatch, details: Union[TMDBMovie, TMDBSeries]):
+    def _update_match_common(self, match: MediaMatch, details: Union[TMDBMovie, TMDBSeries], raw_data: Dict[str, Any]):
         """Updates properties shared by both Movies and TV Shows."""
         if isinstance(details, TMDBMovie):
             match.runtime = details.runtime
+            keywords_data = raw_data.get("keywords", {})
+            keywords_list = []
+            if isinstance(keywords_data, dict):
+                kw_list = keywords_data.get("keywords")
+                if isinstance(kw_list, list):
+                    keywords_list = [kw.get("name") for kw in kw_list if isinstance(kw, dict) and kw.get("name")]
+            match.keywords = keywords_list
         elif isinstance(details, TMDBSeries):
             match.runtime = details.episode_run_time[0] if details.episode_run_time else None
+            keywords_data = raw_data.get("keywords", {})
+            keywords_list = []
+            if isinstance(keywords_data, dict):
+                kw_list = keywords_data.get("results")
+                if isinstance(kw_list, list):
+                    keywords_list = [kw.get("name") for kw in kw_list if isinstance(kw, dict) and kw.get("name")]
+            match.keywords = keywords_list
             
         match.popularity = details.popularity
         match.rating_tmdb = details.vote_average

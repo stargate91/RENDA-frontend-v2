@@ -33,6 +33,12 @@
   background: var(--color-surface-glass, rgba(255, 255, 255, 0.02));
 }
 
+.library-filters-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4, 16px);
+}
+
 .library-sorter-container {
   display: flex;
   align-items: center;

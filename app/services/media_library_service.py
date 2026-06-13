@@ -79,8 +79,8 @@ class MediaLibraryService:
     def get_people_group(self, role: str, filter_status: str = "active", tab: str = "people"):
         return self.people.get_people_group(role, filter_status=filter_status, tab=tab)
 
-    def get_movie_collections(self, page=1, page_size=40, search=""):
-        return self.collections.get_movie_collections(page=page, page_size=page_size, search=search)
+    def get_movie_collections(self, page=1, page_size=40, search="", tab="movies"):
+        return self.collections.get_movie_collections(page=page, page_size=page_size, search=search, tab=tab)
 
     def _get_people_group(self, role: str):
         return self.get_people_group(role, filter_status="active")
