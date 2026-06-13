@@ -196,7 +196,7 @@ export default function Table({
         <TableHeader columns={columns} />
         <tbody>
           {rows.length === 0 ? (
-            <tr>
+            <tr className="is-empty">
               <td colSpan={columns.length} className="ui-table__empty">
                 {emptyText}
               </td>

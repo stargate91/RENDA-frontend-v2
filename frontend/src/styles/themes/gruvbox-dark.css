@@ -80,36 +80,6 @@
   --app-shell-shadow-md: 0 12px 28px rgba(40, 40, 40, 0.38);
   --app-shell-shadow-lg: 0 20px 48px rgba(40, 40, 40, 0.48);
 
-  --dropdown-field-shadow: 0 4px 10px rgba(250, 189, 47, 0.1);
-  --dropdown-menu-shadow:
-    0 12px 28px rgba(40, 40, 40, 0.22),
-    0 6px 14px rgba(40, 40, 40, 0.15),
-    0 0 0 1px var(--color-border-subtle);
-
-  /* Dropzone overrides */
-  --color-dropzone-panel-bg: color-mix(in srgb, var(--color-bg-elevated) 95%, black);
-  --shadow-overlay-dropzone:
-    0 12px 28px rgba(40, 40, 40, 0.22),
-    0 6px 14px rgba(40, 40, 40, 0.15),
-    0 0 0 1px var(--color-border-subtle);
-
-  /* Toast overrides */
-  --toast-bg:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.02), transparent 28%),
-    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-elevated) 96%, transparent), color-mix(in srgb, var(--color-bg-canvas) 92%, transparent));
-  --toast-border: var(--color-border-strong);
-  --toast-shadow:
-    0 20px 48px rgba(40, 40, 40, 0.22),
-    0 0 0 1px var(--color-border-subtle);
-  --toast-success-bg:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--color-state-success) 12%, transparent), transparent 42%),
-    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-elevated) 98%, transparent), color-mix(in srgb, var(--color-bg-canvas) 95%, transparent));
-  --toast-success-border: color-mix(in srgb, var(--color-state-success) 28%, var(--color-border-strong));
-  --toast-danger-bg:
-    linear-gradient(135deg, color-mix(in srgb, var(--color-state-danger) 18%, transparent), transparent 28%),
-    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-elevated) 98%, transparent), color-mix(in srgb, var(--color-bg-canvas) 95%, transparent));
-  --toast-danger-border: color-mix(in srgb, var(--color-state-danger) 36%, var(--color-border-strong));
-
   /* Button overrides */
   --button-primary-bg: linear-gradient(135deg, #d79921, #fabd2f);
   --button-primary-color: #282828;
@@ -117,4 +87,8 @@
   --button-secondary-color: #fabd2f;
   --button-secondary-border: rgba(250, 189, 47, 0.4);
   --button-secondary-hover-bg: linear-gradient(180deg, rgba(250, 189, 47, 0.2), rgba(60, 56, 54, 0.35));
+
+  /* Table overrides */
+  --table-row-hover-shadow: inset 1px 0 0 #fabd2f;
+  --table-row-active-shadow: inset 2px 0 0 #fabd2f;
 }

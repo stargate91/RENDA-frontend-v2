@@ -129,11 +129,11 @@
   --dropdown-field-border: var(--color-border-subtle);
   --dropdown-field-hover-border: color-mix(in srgb, var(--color-text-primary) 20%, transparent);
   --dropdown-field-active-border: var(--color-accent-blue);
-  --dropdown-field-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  --dropdown-field-shadow: 0 4px 10px color-mix(in srgb, var(--app-shell-color-accent) 10%, transparent);
   --dropdown-menu-bg: color-mix(in srgb, var(--color-bg-canvas) 95%, transparent);
   --dropdown-menu-border: var(--color-border-subtle);
   --dropdown-menu-border-top: var(--color-surface-glass-heavy);
-  --dropdown-menu-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(0, 0, 0, 0.6);
+  --dropdown-menu-shadow: var(--ui-floating-surface-shadow);
   --dropdown-search-bg: rgba(0, 0, 0, 0.2);
   --dropdown-search-border: var(--color-surface-glass);
   --dropdown-scroll-bg: transparent;
@@ -298,8 +298,8 @@
     linear-gradient(180deg, rgba(255, 255, 255, 0.022), rgba(255, 255, 255, 0.008));
   --ui-floating-surface-border: color-mix(in srgb, var(--color-line-strong) 72%, rgba(255, 255, 255, 0.04));
   --ui-floating-surface-shadow:
-    0 8px 24px color-mix(in srgb, var(--app-shell-color-accent) 12%, transparent),
-    0 4px 12px rgba(0, 0, 0, 0.24),
+    0 6px 18px color-mix(in srgb, var(--app-shell-color-accent) 8%, transparent),
+    0 3px 8px rgba(0, 0, 0, 0.16),
     0 0 0 1px var(--color-border-subtle),
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
     inset 0 -10px 20px color-mix(in srgb, var(--color-bg-canvas) 30%, transparent);
@@ -392,22 +392,32 @@
 
   /* Toast Tokens */
   --toast-bg:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.04), transparent 28%),
-    linear-gradient(180deg, rgba(12, 16, 24, 0.98), rgba(5, 7, 12, 0.94));
-  --toast-border: rgba(255, 255, 255, 0.12);
-  --toast-shadow:
-    0 24px 56px rgba(0, 0, 0, 0.52),
-    0 0 0 1px rgba(9, 19, 36, 0.94),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.02), transparent 28%),
+    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-elevated) 96%, transparent), color-mix(in srgb, var(--color-bg-canvas) 92%, transparent));
+  --toast-border: var(--color-border-strong);
+  --toast-shadow: var(--ui-floating-surface-shadow);
   --toast-blur: blur(12px) saturate(145%);
   --toast-success-bg:
     radial-gradient(circle at top left, color-mix(in srgb, var(--color-state-success) 12%, transparent), transparent 42%),
-    linear-gradient(180deg, rgba(18, 22, 28, 0.98), rgba(10, 12, 16, 0.95));
-  --toast-success-border: color-mix(in srgb, var(--color-state-success) 24%, rgba(255, 255, 255, 0.1));
+    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-elevated) 98%, transparent), color-mix(in srgb, var(--color-bg-canvas) 95%, transparent));
+  --toast-success-border: color-mix(in srgb, var(--color-state-success) 28%, var(--color-border-strong));
   --toast-danger-bg:
-    linear-gradient(135deg, color-mix(in srgb, var(--color-state-danger) 22%, transparent), transparent 28%),
-    linear-gradient(180deg, color-mix(in srgb, var(--color-state-danger) 12%, rgba(12, 16, 24, 0.98)), rgba(5, 7, 12, 0.94));
-  --toast-danger-border: color-mix(in srgb, var(--color-state-danger) 36%, rgba(255, 255, 255, 0.1));
+    linear-gradient(135deg, color-mix(in srgb, var(--color-state-danger) 18%, transparent), transparent 28%),
+    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-elevated) 98%, transparent), color-mix(in srgb, var(--color-bg-canvas) 95%, transparent));
+  --toast-danger-border: color-mix(in srgb, var(--color-state-danger) 36%, var(--color-border-strong));
+
+  /* Table Tokens */
+  --table-row-hover-bg:
+    linear-gradient(90deg, color-mix(in srgb, var(--color-accent-blue) 8%, transparent), transparent 22%),
+    color-mix(in srgb, var(--color-panel) 88%, var(--color-surface-glass));
+  --table-row-hover-shadow: inset 1px 0 0 color-mix(in srgb, var(--color-accent-blue) 22%, transparent);
+  --table-row-active-bg:
+    linear-gradient(90deg, color-mix(in srgb, var(--color-accent-blue) 14%, transparent), transparent 28%),
+    color-mix(in srgb, var(--color-panel-strong) 90%, var(--color-surface-glass));
+  --table-row-active-shadow: inset 2px 0 0 color-mix(in srgb, var(--color-accent-blue) 82%, var(--color-text-primary));
+  --table-row-active-hover-bg:
+    linear-gradient(90deg, color-mix(in srgb, var(--color-accent-blue) 18%, transparent), transparent 28%),
+    color-mix(in srgb, var(--color-panel-strong) 86%, var(--color-surface-glass));
 
   /* Backwards-compatible aliases (prefer canonical --color-* / --layout-* tokens) */
   --bg-main: var(--color-bg-canvas);
@@ -478,6 +488,9 @@
   --glass-blur-md: blur(10px);
 
   /* Dropzone Tokens */
-  --color-dropzone-panel-bg: rgba(16, 20, 26, 0.96);
-  --shadow-overlay-dropzone: 0 20px 50px rgba(0, 0, 0, 0.35);
+  --color-dropzone-panel-bg: color-mix(in srgb, var(--color-bg-elevated) 95%, black);
+  --shadow-overlay-dropzone:
+    0 12px 28px color-mix(in srgb, var(--app-shell-color-accent) 12%, transparent),
+    0 6px 14px rgba(0, 0, 0, 0.25),
+    0 0 0 1px var(--color-border-subtle);
 }

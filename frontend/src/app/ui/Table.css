@@ -8,7 +8,8 @@
 
 .ui-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   table-layout: fixed;
 }
 
@@ -84,18 +85,19 @@
 }
 
 .ui-table tbody tr {
-  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  transition: background-color 0.06s ease;
 }
 
 .ui-table tbody tr:nth-child(even) {
   background: color-mix(in srgb, var(--color-line) 12%, transparent);
 }
 
-.ui-table tbody tr:hover {
-  background:
-    linear-gradient(90deg, color-mix(in srgb, var(--color-accent-blue) 8%, transparent), transparent 22%),
-    color-mix(in srgb, var(--color-panel) 88%, var(--color-surface-glass));
-  box-shadow: inset 1px 0 0 color-mix(in srgb, var(--color-accent-blue) 22%, transparent);
+.ui-table tbody tr:not(.is-empty):hover {
+  background: var(--table-row-hover-bg);
+}
+
+.ui-table tbody tr:not(.is-empty):hover td:first-child {
+  box-shadow: var(--table-row-hover-shadow);
 }
 
 .ui-table tbody tr.is-clickable {
@@ -103,16 +105,15 @@
 }
 
 .ui-table tbody tr.is-active {
-  background:
-    linear-gradient(90deg, color-mix(in srgb, var(--color-accent-blue) 14%, transparent), transparent 28%),
-    color-mix(in srgb, var(--color-panel-strong) 90%, var(--color-surface-glass));
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--color-accent-blue) 82%, var(--color-text-primary));
+  background: var(--table-row-active-bg);
+}
+
+.ui-table tbody tr.is-active td:first-child {
+  box-shadow: var(--table-row-active-shadow);
 }
 
 .ui-table tbody tr.is-active:hover {
-  background:
-    linear-gradient(90deg, color-mix(in srgb, var(--color-accent-blue) 18%, transparent), transparent 28%),
-    color-mix(in srgb, var(--color-panel-strong) 86%, var(--color-surface-glass));
+  background: var(--table-row-active-hover-bg);
 }
 
 .ui-table .text-left {
