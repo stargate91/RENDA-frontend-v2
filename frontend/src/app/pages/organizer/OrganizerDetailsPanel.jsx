@@ -10,7 +10,6 @@ import { useUi } from '../../providers/UiProvider';
 import { useFullMetadataQuery } from '../../queries';
 import '../../styles/OrganizerDetailsPanel.css';
 
-const getImageLabel = (image, t) => t(`organizer.details.imageKinds.${image?.label || 'poster'}`);
 
 const resolveOrganizerImageUrl = (path) => {
   if (!path) {

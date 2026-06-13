@@ -29,7 +29,7 @@ export default function useSettingsRenderContext({
     setForm,
     isSaving,
     isWiping,
-    isScanActive: false,
+    isScanActive,
     isBackgroundActive: false,
     realBackgroundActive: isBackgroundActive,
     isSyncActive,

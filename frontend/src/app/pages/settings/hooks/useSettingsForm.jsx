@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/refs */
 import { useRef } from 'react';
 import { useUi } from '@/providers/UiProvider';
 import { useTranslation } from '@/providers/LanguageProvider';

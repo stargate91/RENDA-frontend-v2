@@ -21,6 +21,8 @@ import { useOrganizerViewModel } from './useOrganizerViewModel';
 import { OrganizerModalProvider } from './providers/OrganizerModalProvider';
 import { useOrganizerDeleteActions } from './useOrganizerDeleteActions';
 
+const EMPTY_SETTINGS = {};
+
 export default function OrganizerPage() {
   const { t } = useTranslation();
   const { closeModal, openModal, toast } = useUi();
@@ -32,7 +34,7 @@ export default function OrganizerPage() {
   const scanStatusQuery = useScanStatusQuery();
   const discovery = discoveryQuery.data || EMPTY_DISCOVERY;
   const scanStatus = scanStatusQuery.data || null;
-  const settings = settingsQuery.data || {};
+  const settings = settingsQuery.data || EMPTY_SETTINGS;
   const isScanActive = Boolean(scanStatus?.active);
   const rawDiscoveryItemCount = discoveryCountQuery.data?.count ?? statsQuery.data?.unmatched;
   const discoveryItemCount = rawDiscoveryItemCount == null ? null : Number(rawDiscoveryItemCount);

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Key, CheckCircle } from 'lucide-react';
 import Button from '@/ui/Button';
 import OnboardingOrbitHero from '../OnboardingOrbitHero';

@@ -1,6 +1,5 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useMemo } from 'react';
-import { ORGANIZATION_TAB_IDS } from './settingsConstants.js';
-
 const SettingsFormContext = createContext(null);
 
 export function SettingsFormProvider({
@@ -39,18 +38,9 @@ export function useSettingsFormContext() {
 }
 
 export function useSettingsField(name) {
-  const { form, actions, validationErrors, renderContext } = useSettingsFormContext();
+  const { form, actions, validationErrors } = useSettingsFormContext();
   const value = form[name];
   const isBooleanField = typeof value === 'boolean';
-  
-  const isScanActive = Boolean(renderContext?.isScanActive);
-  const isBackgroundActive = Boolean(renderContext?.isBackgroundActive);
-  const activeTab = renderContext?.activeTab;
-  const isOrgTab = ORGANIZATION_TAB_IDS.includes(activeTab);
-  const isApiKeysTab = activeTab === 'apiKeys';
-  const isAdvancedTab = activeTab === 'advanced';
-  const isMaintenanceTab = activeTab === 'maintenance';
-  const isFolderField = name === 'folder_library_path' || name === 'default_scan_dir';
   
   let disabled = false;
 

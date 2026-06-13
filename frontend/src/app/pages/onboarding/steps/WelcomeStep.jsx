@@ -1,4 +1,3 @@
-import React from 'react';
 import { Globe, Languages, SlidersHorizontal, Search, CheckCircle, Check } from 'lucide-react';
 import OnboardingInfoCard from '../OnboardingInfoCard';
 import OnboardingOrbitHero from '../OnboardingOrbitHero';

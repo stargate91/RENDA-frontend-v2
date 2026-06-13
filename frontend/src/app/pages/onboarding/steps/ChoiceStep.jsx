@@ -1,4 +1,3 @@
-import React from 'react';
 import { Cpu, FileJson } from 'lucide-react';
 import OnboardingInfoCard from '../OnboardingInfoCard';
 import OnboardingOrbitHero from '../OnboardingOrbitHero';

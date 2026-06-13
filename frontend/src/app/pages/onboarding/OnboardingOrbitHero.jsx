@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
@@ -95,11 +95,7 @@ export default function OnboardingOrbitHero({
   chips = [],
   className = '',
 }) {
-  const [chipLayout, setChipLayout] = useState(() => createChipLayout(chips));
-
-  useEffect(() => {
-    setChipLayout(createChipLayout(chips));
-  }, [chips]);
+  const chipLayout = useMemo(() => createChipLayout(chips), [chips]);
 
   return (
     <div className={`welcome-hero-shell ${className}`.trim()}>

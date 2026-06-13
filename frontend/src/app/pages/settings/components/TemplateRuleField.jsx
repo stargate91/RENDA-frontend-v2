@@ -7,7 +7,6 @@ export default function TemplateRuleField({
   actionLabel,
   actionField,
   actionOptions,
-  templateFieldName,
   templateLabel,
   templateField,
   templatePlaceholder,

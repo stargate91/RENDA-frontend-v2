@@ -1,4 +1,3 @@
-import React from 'react';
 import MediaCard from './MediaCard';
 import RatingPill from './RatingPill';
 import './PosterCard.css';

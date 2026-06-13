@@ -1,4 +1,3 @@
-import React from 'react';
 import { useSettingsQuery } from '@/queries/settingsQueries';
 import Card from '@/ui/Card';
 import Page from '@/ui/Page';

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from '../providers/LanguageProvider';
-import { useImageStatusQuery, useScanStatusQuery, useSettingsQuery, useHydrateStatusQuery } from '../queries';
+import { useImageStatusQuery, useScanStatusQuery, useHydrateStatusQuery } from '../queries';
 import {
   getScanProgress,
   formatScanRemaining,
@@ -13,12 +13,10 @@ export default function useWindowProgress() {
   const { t } = useTranslation();
   const scanStatusQuery = useScanStatusQuery();
   const imageStatusQuery = useImageStatusQuery();
-  const settingsQuery = useSettingsQuery();
   const hydrateStatusQuery = useHydrateStatusQuery();
   
   const scanStatus = scanStatusQuery.data || null;
   const imageStatus = imageStatusQuery.data || null;
-  const settings = settingsQuery.data || null;
   const hydrateStatus = hydrateStatusQuery.data || null;
   
   const isPrimaryActive = Boolean(scanStatus?.active);
@@ -26,7 +24,6 @@ export default function useWindowProgress() {
   const isSyncActive = isPrimaryActive && scanStatus?.phase === 'sync_language';
   const isImageActive = Boolean(imageStatus?.active);
   const isHydrateActive = Boolean(hydrateStatus?.active);
-  const isAutoHydrateActive = Boolean(settings?.auto_hydrate_inactive_people);
 
   const [scanState, setScanState] = useState({
     lastScanStartTime: null,

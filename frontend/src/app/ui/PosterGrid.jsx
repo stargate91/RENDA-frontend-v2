@@ -1,4 +1,3 @@
-import React from 'react';
 import './PosterGrid.css';
 
 export default function PosterGrid({ children, className = '' }) {

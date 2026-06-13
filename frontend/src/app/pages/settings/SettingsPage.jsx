@@ -1,7 +1,4 @@
 import { useEffect } from 'react';
-import { AlertTriangle } from 'lucide-react';
-import Button from '@/ui/Button';
-import Checkbox from '@/ui/Checkbox';
 import { useSettingsForm, useSettingsOptions, useSettingsRenderContext } from './hooks';
 import { SettingsFormProvider } from './SettingsFormContext.jsx';
 import {
@@ -46,8 +43,6 @@ export default function SettingsPage() {
     handleWipeDatabase,
     handleReset,
     isShaking,
-    openModal,
-    closeModal,
   } = useSettingsForm();
 
   const savedTheme = settingsQuery.data?.ui_theme || 'dark';

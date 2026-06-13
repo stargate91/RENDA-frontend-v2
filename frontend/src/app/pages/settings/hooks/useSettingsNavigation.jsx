@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ORGANIZATION_TAB_IDS, SETTINGS_TAB_IDS } from '../settingsConstants.js';

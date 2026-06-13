@@ -1,4 +1,3 @@
-import React from 'react';
 import { FolderOpen, CheckCircle } from 'lucide-react';
 import Button from '@/ui/Button';
 import OnboardingInfoCard from '../OnboardingInfoCard';

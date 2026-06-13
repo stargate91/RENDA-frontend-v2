@@ -38,3 +38,32 @@
   outline: none;
   box-shadow: 0 0 0 2px var(--color-accent-blue);
 }
+
+/* Filter variant (smaller size for inline usage) */
+.ui-segmented-control--filter {
+  height: auto;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.ui-segmented-control--filter .ui-segmented-control__option {
+  padding: 4px 8px;
+  font-size: var(--font-size-2xs, 10px);
+  font-weight: var(--font-weight-bold, 700);
+  line-height: 1;
+  color: var(--color-text-muted, #94a3b8);
+  border-radius: 4px;
+}
+
+.ui-segmented-control--filter .ui-segmented-control__option:hover:not(.is-active) {
+  color: var(--color-text-primary, #ffffff);
+}
+
+.ui-segmented-control--filter .ui-segmented-control__option.is-active {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-primary, #ffffff);
+}
+

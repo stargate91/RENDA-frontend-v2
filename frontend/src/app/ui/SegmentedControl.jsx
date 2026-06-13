@@ -1,9 +1,9 @@
 import './SegmentedControl.css';
 
-export default function SegmentedControl({ options, value, onChange, ariaLabel, className = '' }) {
+export default function SegmentedControl({ options, value, onChange, ariaLabel, variant = 'default', className = '' }) {
   return (
     <div
-      className={`ui-segmented-control ${className}`.trim()}
+      className={`ui-segmented-control ui-segmented-control--${variant} ${className}`.trim()}
       role="tablist"
       aria-label={ariaLabel}
     >

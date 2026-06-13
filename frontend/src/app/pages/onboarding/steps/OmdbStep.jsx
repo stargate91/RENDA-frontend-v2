@@ -1,4 +1,3 @@
-import React from 'react';
 import Button from '@/ui/Button';
 import OnboardingPanelCard from '../OnboardingPanelCard';
 import { OMDB_GUIDE_STEPS } from '../onboarding.constants';

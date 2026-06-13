@@ -1,4 +1,3 @@
-import React from 'react';
 import NavButton from '@/ui/NavButton';
 import { ArrowRight } from 'lucide-react';
 import './OnboardingWizard.css';

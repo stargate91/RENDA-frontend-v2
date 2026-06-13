@@ -1,5 +1,4 @@
 import { Clapperboard } from 'lucide-react';
-import MediaCard from '@/ui/MediaCard';
 import MetaRow from '@/ui/MetaRow';
 import StatusBadge from '@/ui/StatusBadge';
 import PosterCard from '@/ui/PosterCard';

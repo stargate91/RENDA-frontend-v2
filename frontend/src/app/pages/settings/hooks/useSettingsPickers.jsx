@@ -32,7 +32,7 @@ export default function useSettingsPickers({ form, setForm, clearFolderValidatio
     if (key === 'default_scan_dir' || key === 'folder_library_path') {
       clearFolderValidation();
     }
-  }, [form, setForm]);
+  }, [form, setForm, clearFolderValidation]);
 
   const handlePickFile = useCallback((key) => async () => {
     const selectedPath = await selectFile(form[key]);
