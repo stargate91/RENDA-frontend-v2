@@ -351,7 +351,7 @@
   gap: var(--space-3);
   max-height: 440px;
   overflow-y: auto;
-  padding-right: 4px;
+  padding: 3px 4px 3px 3px;
 }
 
 .organizer-match-modal__browser-grid--seasons {
