@@ -80,13 +80,6 @@
   --app-shell-shadow-md: 0 12px 28px rgba(40, 42, 54, 0.38);
   --app-shell-shadow-lg: 0 20px 48px rgba(40, 42, 54, 0.48);
 
-  --ui-floating-surface-shadow:
-    0 12px 28px rgba(40, 42, 54, 0.22),
-    0 6px 14px rgba(40, 42, 54, 0.15),
-    0 0 0 1px var(--color-border-subtle),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    inset 0 -10px 20px color-mix(in srgb, var(--color-bg-canvas) 30%, transparent);
-
   --dropdown-field-shadow: 0 4px 10px rgba(189, 147, 249, 0.1);
   --dropdown-menu-shadow:
     0 12px 28px rgba(40, 42, 54, 0.22),
@@ -120,7 +113,6 @@
   /* Button overrides */
   --button-primary-bg: linear-gradient(135deg, #bd93f9, #ff79c6);
   --button-primary-color: #282a36;
-  --button-primary-shadow: 0 8px 24px rgba(189, 147, 249, 0.35);
   --button-secondary-bg: linear-gradient(180deg, rgba(189, 147, 249, 0.12), rgba(52, 55, 70, 0.25));
   --button-secondary-color: #bd93f9;
   --button-secondary-border: rgba(189, 147, 249, 0.4);

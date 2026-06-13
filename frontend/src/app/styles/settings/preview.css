@@ -17,11 +17,11 @@
 }
 
 .structure-preview-indent {
-  margin-left: var(--settings-indent-sm);
+  margin-left: var(--space-2xl);
 }
 
 .structure-preview-branch {
-  margin-left: var(--settings-indent-sm);
+  margin-left: var(--space-2xl);
   border-left: 1.5px dashed var(--color-line);
   padding-left: 12px;
 }
@@ -48,7 +48,7 @@
 
 .structure-preview-line--top {
   display: block;
-  margin-top: var(--settings-gap-2xs);
+  margin-top: var(--space-2xs);
 }
 
 .structure-preview-line--strike {
@@ -58,29 +58,29 @@
 .structure-preview-rename-list {
   display: flex;
   flex-direction: column;
-  gap: var(--settings-gap-2xs);
+  gap: var(--space-2xs);
 }
 
 .structure-preview-rename-item {
-  margin-top: var(--settings-gap-2xs);
+  margin-top: var(--space-2xs);
 }
 
 .structure-preview-arrow {
   color: var(--color-accent);
-  margin: 0 var(--settings-gap-sm);
+  margin: 0 var(--space-sm);
 }
 
 .template-tag-selector {
   display: flex;
   flex-direction: column;
-  gap: var(--settings-gap-sm);
-  margin-top: var(--settings-gap-xs);
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
 }
 
 .template-tag-selector-group {
   display: flex;
   flex-direction: column;
-  gap: var(--settings-gap-2xs);
+  gap: var(--space-2xs);
 }
 
 .template-tag-selector-label {
@@ -94,7 +94,7 @@
 .template-tag-selector-container {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--settings-gap-xs);
+  gap: var(--space-xs);
 }
 
 .preview-badge-container {
@@ -104,11 +104,11 @@
   border: 1px solid var(--settings-preview-badge-border);
   border-radius: 6px;
   padding: 6px 12px;
-  margin-top: var(--settings-gap-md);
+  margin-top: var(--space-md);
   font-family: var(--settings-font-family-mono);
   display: flex;
   align-items: center;
-  gap: var(--settings-gap-xs);
+  gap: var(--space-xs);
 }
 
 .preview-badge-label {

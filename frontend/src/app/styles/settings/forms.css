@@ -1,11 +1,11 @@
 .settings-choice-header {
   display: flex;
   align-items: center;
-  gap: var(--settings-gap-md);
+  gap: var(--space-md);
 }
 
 .settings-choice-header--compact {
-  gap: var(--settings-gap-sm);
+  gap: var(--space-sm);
 }
 
 .settings-choice-input {
@@ -32,7 +32,7 @@
 .settings-choice-label {
   display: flex;
   align-items: center;
-  gap: var(--settings-gap-sm);
+  gap: var(--space-sm);
   cursor: pointer;
 }
 
@@ -45,17 +45,17 @@
 .settings-field-stack {
   display: flex;
   flex-direction: column;
-  gap: var(--settings-gap-sm);
+  gap: var(--space-sm);
 }
 
 .settings-field-stack--spaced {
-  margin-top: var(--settings-gap-md);
+  margin-top: var(--space-md);
 }
 
 .settings-input-row {
   display: flex;
   align-items: flex-end;
-  gap: var(--settings-gap-md);
+  gap: var(--space-md);
 }
 
 .settings-input-grow {
@@ -72,7 +72,7 @@
 }
 
 .settings-inline-actions {
-  margin-top: var(--settings-gap-md);
+  margin-top: var(--space-md);
   justify-content: flex-end;
 }
 
@@ -99,7 +99,7 @@
 .settings-alert {
   display: flex;
   align-items: center;
-  gap: var(--settings-gap-sm);
+  gap: var(--space-sm);
   padding: 10px 14px;
   border-radius: 6px;
   font-size: 13px;
@@ -118,17 +118,17 @@
 }
 
 .settings-alert--spaced {
-  margin-bottom: var(--settings-gap-md);
+  margin-bottom: var(--space-md);
 }
 
 .settings-alert--tight {
   margin-top: -4px;
-  margin-bottom: var(--settings-gap-xs);
+  margin-bottom: var(--space-xs);
 }
 
 .settings-alert--soft {
-  margin-top: var(--settings-gap-2xs);
-  margin-bottom: var(--settings-gap-xs);
+  margin-top: var(--space-2xs);
+  margin-bottom: var(--space-xs);
 }
 
 .settings-icon-shrink-0 {
@@ -137,7 +137,7 @@
 
 .settings-info-box {
   padding: 12px 16px;
-  background: var(--settings-surface-subtle);
+  background: var(--ui-control-bg-subtle);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-md);
   color: var(--color-muted);
@@ -146,23 +146,23 @@
 }
 
 .settings-instructions-box {
-  background: var(--settings-surface-muted);
+  background: var(--app-shell-color-panel-soft, rgba(255, 255, 255, 0.018));
   border: 1px solid var(--color-line);
   border-radius: 8px;
   padding: 16px;
   font-size: 13px;
   line-height: var(--line-height-base);
   color: var(--color-text-secondary);
-  margin-top: var(--settings-gap-sm);
+  margin-top: var(--space-sm);
 }
 
 .settings-instructions-title {
   font-weight: 600;
   color: var(--color-ink);
-  margin-bottom: var(--settings-gap-sm);
+  margin-bottom: var(--space-sm);
   display: flex;
   align-items: center;
-  gap: var(--settings-gap-xs);
+  gap: var(--space-xs);
 }
 
 .settings-instructions-list {
@@ -170,7 +170,7 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--settings-gap-xs);
+  gap: var(--space-xs);
 }
 
 .settings-link {
@@ -181,7 +181,7 @@
 .settings-divider {
   border: none;
   border-top: 1px solid var(--color-line);
-  margin: var(--settings-gap-sm) 0;
+  margin: var(--space-sm) 0;
 }
 
 .settings-section-heading {
@@ -193,27 +193,27 @@
   margin-bottom: 4px;
 }
 
-.settings-block-top { margin-top: var(--settings-gap-xl); }
+.settings-block-top { margin-top: var(--space-2xl); }
 
 .settings-nested-block {
-  margin-left: var(--settings-indent-md);
+  margin-left: var(--space-4xl);
 }
 
 .settings-nested-block--top {
-  margin-top: var(--settings-gap-lg);
+  margin-top: var(--space-lg);
 }
 
 .settings-dropdown-nested {
-  margin-left: var(--settings-indent-md);
+  margin-left: var(--space-4xl);
 }
 
 .settings-dropdown-nested--spaced {
-  margin-bottom: var(--settings-gap-lg);
+  margin-bottom: var(--space-lg);
 }
 
 .settings-modal-footer {
   display: flex;
-  gap: var(--settings-gap-lg);
+  gap: var(--space-lg);
   justify-content: flex-end;
 }
 
@@ -223,32 +223,32 @@
 
 .settings-hint--compact {
   margin-top: -4px;
-  margin-bottom: var(--settings-gap-sm);
+  margin-bottom: var(--space-sm);
 }
 
 .settings-hint--indented {
   margin-top: -4px;
-  margin-bottom: var(--settings-gap-sm);
+  margin-bottom: var(--space-sm);
   margin-left: 22px;
 }
 
 .settings-hint--spaced {
   margin-top: -8px;
-  margin-bottom: var(--settings-gap-xl);
+  margin-bottom: var(--space-2xl);
 }
 
 .settings-hint--compact-bottom {
   margin-top: -8px;
-  margin-bottom: var(--settings-gap-sm);
+  margin-bottom: var(--space-sm);
 }
 
 .settings-hint--medium {
   margin-top: -8px;
-  margin-bottom: var(--settings-gap-lg);
+  margin-bottom: var(--space-lg);
 }
 
 .settings-hint--block-compact {
   display: block;
   margin-top: -8px;
-  margin-bottom: var(--settings-gap-sm);
+  margin-bottom: var(--space-sm);
 }

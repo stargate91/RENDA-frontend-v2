@@ -193,8 +193,8 @@ export function useOrganizerModalActions({
           rows={targetRows}
           t={t}
           toast={toast}
-          onResolved={() => {
-            handleResolveDiscoveryRows(targetRows);
+          onResolved={(performMutationFn) => {
+            handleResolveDiscoveryRows(targetRows, performMutationFn);
           }}
         />
       ),

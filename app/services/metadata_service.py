@@ -619,8 +619,8 @@ class MetadataService:
                     prepared_targets.append({
                         "tmdb_id": target.get("tmdb_id"),
                         "item_type": item_type_val,
-                        "season": target.get("season") if target.get("season") is not None else (item.fn_season or item.fd_season or item.it_season),
-                        "episode": target.get("episode") if target.get("episode") is not None else (item.fn_episode or item.fd_episode or item.it_episode),
+                        "season": target["season"] if "season" in target else (item.fn_season or item.fd_season or item.it_season),
+                        "episode": target["episode"] if "episode" in target else (item.fn_episode or item.fd_episode or item.it_episode),
                         "episodes": target.get("episodes"),
                     })
                 else:

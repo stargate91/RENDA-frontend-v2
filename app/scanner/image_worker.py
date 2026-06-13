@@ -253,6 +253,10 @@ class ImageWorker:
                 # A. POSTERS & THUMBNAILS
                 if loc.poster_path:
                     has_any_path = True
+                    remote_filename = loc.poster_path.lstrip("/")
+                    if loc.local_poster_path and remote_filename not in loc.local_poster_path:
+                        loc.local_poster_path = None
+                        loc.local_thumb_path = None
                     if not loc.local_poster_path:
                         local_p = self.download_image(loc.poster_path, "posters", size="w500")
                         if local_p:
@@ -266,6 +270,9 @@ class ImageWorker:
                 
                 if loc.series_poster_path:
                     has_any_path = True
+                    remote_series_filename = loc.series_poster_path.lstrip("/")
+                    if loc.local_series_poster_path and remote_series_filename not in loc.local_series_poster_path:
+                        loc.local_series_poster_path = None
                     if not loc.local_series_poster_path:
                         local_sp = self.download_image(loc.series_poster_path, "posters", size="w500")
                         if local_sp:
@@ -280,6 +287,9 @@ class ImageWorker:
 
                 if loc.logo_path:
                     has_any_path = True
+                    remote_logo_filename = loc.logo_path.lstrip("/")
+                    if loc.local_logo_path and remote_logo_filename not in loc.local_logo_path:
+                        loc.local_logo_path = None
                     if not loc.local_logo_path:
                         local_logo = self.download_image(loc.logo_path, "logos", size="original")
                         if local_logo:
@@ -293,6 +303,9 @@ class ImageWorker:
                 # B. STILLS
                 if loc.still_path:
                     has_any_path = True
+                    remote_still_filename = loc.still_path.lstrip("/")
+                    if loc.local_still_path and remote_still_filename not in loc.local_still_path:
+                        loc.local_still_path = None
                     if not loc.local_still_path:
                         local_s = self.download_image(loc.still_path, "stills", size="w400")
                         if local_s:
@@ -331,10 +344,16 @@ class ImageWorker:
             if series_id:
                 try:
                     from ..db.models import TMDBCache
-                    tmdb_cache = local_db.query(TMDBCache).filter(
+                    tmdb_caches = local_db.query(TMDBCache).filter(
                         TMDBCache.tmdb_id == series_id,
                         TMDBCache.cache_key.like(f"/tv/{series_id}%")
-                    ).first()
+                    ).all()
+                    tmdb_cache = None
+                    for cache in tmdb_caches:
+                        ck = cache.cache_key or ""
+                        if ck == f"/tv/{series_id}" or ck.startswith(f"/tv/{series_id}?"):
+                            tmdb_cache = cache
+                            break
                     if tmdb_cache and isinstance(tmdb_cache.raw_data, dict):
                         seasons = tmdb_cache.raw_data.get("seasons", [])
                         for s in seasons:
@@ -400,6 +419,9 @@ class ImageWorker:
             success = True # assume success if no paths exist
             for loc in match.localizations:
                 if loc.backdrop_path:
+                    remote_bd_filename = loc.backdrop_path.lstrip("/")
+                    if loc.local_backdrop_path and remote_bd_filename not in loc.local_backdrop_path:
+                        loc.local_backdrop_path = None
                     if not loc.local_backdrop_path:
                         local_b = self.download_image(loc.backdrop_path, "backdrops", size="w1280")
                         if local_b:

@@ -233,7 +233,7 @@
   --button-focus-ring: 0 0 0 2px var(--color-accent-blue);
   --button-primary-bg: linear-gradient(135deg, #1493ff, #0064d1);
   --button-primary-color: #ffffff;
-  --button-primary-shadow: 0 10px 26px rgba(0, 136, 255, 0.24);
+  --button-primary-shadow: 0 4px 12px color-mix(in srgb, var(--app-shell-color-accent) 14%, transparent);
   --button-primary-hover-filter: brightness(1.05);
   --button-primary-neutral-bg: rgba(255, 255, 255, 0.08);
   --button-primary-neutral-color: #f4f8fc;
@@ -298,8 +298,8 @@
     linear-gradient(180deg, rgba(255, 255, 255, 0.022), rgba(255, 255, 255, 0.008));
   --ui-floating-surface-border: color-mix(in srgb, var(--color-line-strong) 72%, rgba(255, 255, 255, 0.04));
   --ui-floating-surface-shadow:
-    0 22px 48px rgba(0, 0, 0, 0.45),
-    0 10px 20px rgba(0, 0, 0, 0.25),
+    0 8px 24px color-mix(in srgb, var(--app-shell-color-accent) 12%, transparent),
+    0 4px 12px rgba(0, 0, 0, 0.24),
     0 0 0 1px var(--color-border-subtle),
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
     inset 0 -10px 20px color-mix(in srgb, var(--color-bg-canvas) 30%, transparent);
@@ -361,17 +361,14 @@
   --settings-close-size: 36px;
   --settings-close-bg: rgba(255, 255, 255, 0.03);
   --settings-close-bg-hover: rgba(255, 255, 255, 0.08);
-  --settings-surface-muted: rgba(255, 255, 255, 0.015);
-  --settings-surface-subtle: rgba(255, 255, 255, 0.02);
-  --settings-surface-soft: rgba(255, 255, 255, 0.03);
-  --settings-accent-surface: rgba(0, 136, 255, 0.05);
-  --settings-accent-surface-soft: rgba(0, 136, 255, 0.04);
-  --settings-accent-surface-strong: rgba(0, 136, 255, 0.08);
-  --settings-accent-border-soft: rgba(0, 136, 255, 0.12);
-  --settings-accent-border: rgba(0, 136, 255, 0.4);
-  --settings-accent-fill-soft: rgba(0, 136, 255, 0.15);
-  --settings-accent-shadow: 0 0 16px rgba(0, 136, 255, 0.08);
-  --settings-accent-shadow-soft: 0 0 16px rgba(0, 136, 255, 0.06);
+  --settings-accent-surface: color-mix(in srgb, var(--color-state-info) 5%, transparent);
+  --settings-accent-surface-soft: color-mix(in srgb, var(--color-state-info) 4%, transparent);
+  --settings-accent-surface-strong: color-mix(in srgb, var(--color-state-info) 8%, transparent);
+  --settings-accent-border-soft: color-mix(in srgb, var(--color-state-info) 12%, transparent);
+  --settings-accent-border: color-mix(in srgb, var(--color-state-info) 40%, transparent);
+  --settings-accent-fill-soft: color-mix(in srgb, var(--color-state-info) 15%, transparent);
+  --settings-accent-shadow: 0 0 16px color-mix(in srgb, var(--color-state-info) 8%, transparent);
+  --settings-accent-shadow-soft: 0 0 16px color-mix(in srgb, var(--color-state-info) 6%, transparent);
   --settings-danger-bg: color-mix(in srgb, var(--color-state-danger) 8%, transparent);
   --settings-danger-border: color-mix(in srgb, var(--color-state-danger) 20%, transparent);
   --settings-warning-bg: color-mix(in srgb, var(--color-state-warning) 8%, transparent);
@@ -382,9 +379,9 @@
   --settings-contrast-text: var(--color-text-primary);
   --settings-font-family-mono: var(--font-family-mono, monospace);
   --settings-preview-panel-bg: rgba(0, 0, 0, 0.2);
-  --settings-preview-label-bg: rgba(0, 136, 255, 0.15);
-  --settings-preview-badge-bg: rgba(0, 136, 255, 0.05);
-  --settings-preview-badge-border: rgba(0, 136, 255, 0.12);
+  --settings-preview-label-bg: color-mix(in srgb, var(--color-state-info) 15%, transparent);
+  --settings-preview-badge-bg: color-mix(in srgb, var(--color-state-info) 5%, transparent);
+  --settings-preview-badge-border: color-mix(in srgb, var(--color-state-info) 12%, transparent);
   --settings-preset-plex-color: #e5a93b;
   --settings-preset-jellyfin-start: #00a4dc;
   --settings-preset-jellyfin-end: #aa5cc3;
@@ -392,15 +389,6 @@
   --settings-preset-kodi-secondary: #118cb5;
   --settings-preset-kodi-accent: #ffffff;
   --settings-preset-minimal-color: #10b981;
-  --settings-gap-2xs: 4px;
-  --settings-gap-xs: 6px;
-  --settings-gap-sm: 8px;
-  --settings-gap-md: 10px;
-  --settings-gap-lg: 12px;
-  --settings-gap-xl: 16px;
-  --settings-gap-2xl: 20px;
-  --settings-indent-sm: 16px;
-  --settings-indent-md: 24px;
 
   /* Toast Tokens */
   --toast-bg:

@@ -22,7 +22,7 @@
 .settings-sidebar-menu {
   display: flex;
   flex-direction: column;
-  gap: var(--settings-gap-2xs);
+  gap: var(--space-2xs);
 }
 
 .settings-sidebar-item {
@@ -46,7 +46,7 @@
 .settings-sidebar-item:hover,
 .settings-sidebar-item.active {
   color: var(--color-ink);
-  background: linear-gradient(180deg, var(--color-surface-card), var(--settings-surface-soft));
+  background: linear-gradient(180deg, var(--color-surface-card), var(--ui-surface-soft));
   box-shadow: inset 0 0 0 1px var(--color-line-strong);
 }
 
@@ -54,7 +54,7 @@
   display: flex;
   flex-direction: column;
   margin-left: 23px;
-  padding-left: var(--settings-indent-sm);
+  padding-left: var(--space-2xl);
   border-left: 1.5px solid var(--color-line);
   margin-top: 2px;
   margin-bottom: 6px;
@@ -102,7 +102,7 @@
   display: flex;
   align-items: center;
   height: 28px;
-  margin-bottom: var(--settings-gap-2xs);
+  margin-bottom: var(--space-2xs);
   padding: 0 14px;
   border-radius: var(--radius-md);
   color: var(--color-muted);
@@ -129,6 +129,6 @@
 .settings-sidebar-sub-item.custom-only.visible {
   height: 28px;
   opacity: 1;
-  margin-bottom: var(--settings-gap-2xs);
+  margin-bottom: var(--space-2xs);
   pointer-events: auto;
 }

@@ -228,7 +228,7 @@ class MetadataEnricher:
         # B. SEASON LEVEL (If a season number is available)
         if match.season_number is not None:
             seasons = series_details.get("seasons", [])
-            season_data = next((s for s in seasons if s.get("season_number") == match.season_number), None)
+            season_data = next((s for s in seasons if s.get("season_number") is not None and int(s.get("season_number")) == int(match.season_number)), None)
             
             if season_data:
                 loc.season_title = season_data.get("name")

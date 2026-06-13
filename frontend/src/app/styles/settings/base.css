@@ -20,7 +20,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--settings-gap-2xl);
+  gap: var(--space-3xl);
 }
 
 .settings-loading-text {
@@ -36,13 +36,13 @@
 .settings-error-content {
   display: flex;
   flex-direction: column;
-  gap: var(--settings-gap-xl);
+  gap: var(--space-2xl);
 }
 
 .settings-error-actions {
   display: flex;
-  gap: var(--settings-gap-lg);
-  margin-top: var(--settings-gap-xl);
+  gap: var(--space-lg);
+  margin-top: var(--space-2xl);
 }
 
 @keyframes settingsFadeIn {
@@ -127,17 +127,17 @@
 .settings-section-stack {
   display: flex;
   flex-direction: column;
-  gap: var(--settings-gap-xl);
+  gap: var(--space-2xl);
 }
 
 .settings-preview-stack {
   display: flex;
   flex-direction: column;
-  gap: var(--settings-gap-lg);
+  gap: var(--space-lg);
 }
 
 .settings-choice-stack {
   display: flex;
   flex-direction: column;
-  gap: var(--settings-gap-sm);
+  gap: var(--space-sm);
 }

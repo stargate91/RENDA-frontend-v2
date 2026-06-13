@@ -32,8 +32,9 @@ export function useOrganizerDetailsState({ sortedRows = [], paginatedRows = [] }
   const activeImages = activeRow?.images || [];
   const activeImage = activeImages[activeImageIndex] || activeImages[0] || null;
 
-  const shouldShowDetailsPoster = activeRow?.rawStatus === 'matched' &&
-    (activeRow?.rawType === 'movie' || activeRow?.rawType === 'episode');
+  const shouldShowDetailsPoster = (activeRow?.rawStatus === 'matched' || activeRow?.rawStatus === 'uncertain' || activeRow?.rawStatus === 'multiple') &&
+    (activeRow?.rawType === 'movie' || activeRow?.rawType === 'episode') &&
+    activeImages.length > 0;
 
   const shouldShowDetailsCarousel = activeRow?.rawType === 'episode' && activeImages.length > 1;
 

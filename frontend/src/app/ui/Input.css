@@ -21,6 +21,11 @@
   outline: none;
 }
 
+.ui-input::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.65;
+}
+
 .ui-input--password {
   padding-right: 44px;
 }

@@ -1,6 +1,8 @@
 .organizer-match-modal {
   display: grid;
   gap: var(--space-4);
+  min-width: 0;
+  overflow-y: hidden;
 }
 
 .organizer-match-modal__search {
@@ -70,6 +72,7 @@
 .organizer-match-modal__section {
   display: grid;
   gap: var(--space-3);
+  min-width: 0;
 }
 
 .organizer-match-modal__section-header {
@@ -106,25 +109,7 @@
 }
 
 .organizer-match-modal__poster-card {
-  display: grid;
-  gap: 10px;
   width: 100%;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: box-shadow 160ms ease;
-}
-
-.organizer-match-modal__poster-card:hover:not(:disabled) {
-  transform: none;
-}
-
-.organizer-match-modal__poster-card:focus-visible {
-  outline: none;
-  box-shadow: none;
 }
 
 .organizer-match-modal__poster-card-image {
@@ -364,6 +349,9 @@
 .organizer-match-modal__browser-grid {
   display: grid;
   gap: var(--space-3);
+  max-height: 440px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .organizer-match-modal__browser-grid--seasons {

@@ -68,7 +68,7 @@ export function useOrganizerDeleteActions({
     }
   }, [closeModal, queryClient, focusFirstAvailableResult, refreshOrganizerDiscovery]);
 
-  const handleResolveDiscoveryRows = useCallback(async (rows) => {
+  const handleResolveDiscoveryRows = useCallback(async (rows, performMutationFn) => {
     closeModal();
     const previousDiscovery = queryClient.getQueryData(['discovery']);
     const nextDiscovery = removeDiscoveryRows(previousDiscovery, rows);
@@ -80,6 +80,9 @@ export function useOrganizerDeleteActions({
     }
 
     try {
+      if (performMutationFn) {
+        await performMutationFn();
+      }
       await refreshOrganizerDiscovery();
     } catch (error) {
       if (previousDiscovery) {

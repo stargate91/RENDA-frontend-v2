@@ -109,14 +109,14 @@
 
 .ui-floating-bar__action--primary {
   background: var(--button-primary-bg);
-  border-color: transparent;
+  border: 0;
   color: var(--button-primary-color);
   box-shadow: var(--button-primary-shadow);
 }
 
 .ui-floating-bar__action--primary:hover:not(:disabled) {
   background: var(--button-primary-bg);
-  border-color: transparent;
+  border: 0;
   color: var(--button-primary-color);
   filter: var(--button-primary-hover-filter);
 }

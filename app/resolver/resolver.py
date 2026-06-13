@@ -92,6 +92,9 @@ class Resolver:
         # Only the most essential cleanup
         clean_query = query
         
+        # Remove season ranges (e.g. 1-4, Seasons 1-4, S1-S4)
+        clean_query = re.sub(r'(?i)\b(?:seasons?|s)?\s*\d+\s*[-–]\s*(?:seasons?|s)?\s*\d+\b', "", clean_query)
+        
         # Remove specific keywords
         for word in ["Mini-Series", "Complete", "Season"]:
             clean_query = re.sub(rf"\b{word}\b", "", clean_query, flags=re.IGNORECASE)

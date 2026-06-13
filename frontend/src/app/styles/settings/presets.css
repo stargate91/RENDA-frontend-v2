@@ -26,23 +26,23 @@
 .settings-mode-grid {
   display: grid;
   grid-template-columns: 1.5fr 1.5fr;
-  gap: var(--settings-gap-xl);
-  margin-top: var(--settings-gap-2xs);
+  gap: var(--space-2xl);
+  margin-top: var(--space-2xs);
 }
 
 .settings-mode-card {
-  gap: var(--settings-gap-sm);
+  gap: var(--space-sm);
 }
 
 .settings-preset-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--settings-gap-lg);
-  margin-bottom: var(--settings-gap-xl);
+  gap: var(--space-lg);
+  margin-bottom: var(--space-2xl);
 }
 
 .settings-preset-card {
-  gap: var(--settings-gap-xs);
+  gap: var(--space-xs);
   position: relative;
 }
 

@@ -112,7 +112,7 @@ class MediaDiscoveryService:
     def _serialize_item(self, item: MediaItem, p_path: str, action: str = None) -> MediaItemDTO:
         images = []
         active_match = next((m for m in item.matches if m.is_active), None)
-        if item.status not in [ItemStatus.UNCERTAIN, ItemStatus.MULTIPLE]:
+        if active_match or item.status not in [ItemStatus.UNCERTAIN, ItemStatus.MULTIPLE]:
             for am in [m for m in item.matches if m.is_active]:
                 loc = self._get_active_loc(am, item)
                 if loc:
