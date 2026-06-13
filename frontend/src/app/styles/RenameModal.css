@@ -27,7 +27,8 @@
 
 .organizer-rename-modal__table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   table-layout: fixed;
 }
 
@@ -48,12 +49,11 @@
 }
 
 .organizer-rename-modal__row {
-  border-bottom: 1px solid var(--color-border-subtle);
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
 }
 
-.organizer-rename-modal__row:last-child {
+.organizer-rename-modal__row:last-child .organizer-rename-modal__col {
   border-bottom: none;
 }
 
@@ -66,6 +66,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .organizer-rename-modal__header-col--source,

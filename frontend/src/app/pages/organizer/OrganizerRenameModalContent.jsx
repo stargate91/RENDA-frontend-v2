@@ -3,6 +3,7 @@ import { Search } from 'lucide-react';
 import { compareOrganizerValues } from './organizerMappers';
 import Input from '../../ui/Input';
 import SortButton from '../../ui/SortButton';
+import Tooltip from '../../ui/Tooltip';
 import { useOrganizerSort } from './useOrganizerSort';
 import { useLocalListSearch } from '../../hooks/useLocalListSearch';
 import '../../styles/RenameModal.css';
@@ -81,11 +82,19 @@ export default function OrganizerRenameModalContent({ items = [], t }) {
           <tbody>
             {sortedItems.map((item) => (
               <tr key={item.id} className="organizer-rename-modal__row">
-                <td className="organizer-rename-modal__col organizer-rename-modal__col--source" title={item.sourcePath}>
-                  {item.source}
+                <td className="organizer-rename-modal__col organizer-rename-modal__col--source">
+                  <Tooltip content={item.sourcePath} side="top" align="start">
+                    <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {item.source}
+                    </span>
+                  </Tooltip>
                 </td>
-                <td className="organizer-rename-modal__col organizer-rename-modal__col--target" title={item.targetPath}>
-                  {item.target}
+                <td className="organizer-rename-modal__col organizer-rename-modal__col--target">
+                  <Tooltip content={item.targetPath} side="top" align="start">
+                    <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {item.target}
+                    </span>
+                  </Tooltip>
                 </td>
                 <td className="organizer-rename-modal__col organizer-rename-modal__col--type">
                   {item.type}
