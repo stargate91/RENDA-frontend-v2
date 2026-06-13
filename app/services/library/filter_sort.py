@@ -67,7 +67,7 @@ class LibraryFilterSortService:
                     matches_ownership = not owned
 
             matches_gender = True
-            if tab in {"actors", "directors", "people"}:
+            if tab in {"actors", "directors", "people", "adult_people"}:
                 if filter_gender == "female":
                     matches_gender = item.get("gender") == 1
                 elif filter_gender == "male":

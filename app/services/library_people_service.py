@@ -65,8 +65,14 @@ class LibraryPeopleService:
             ).all()
         ]
 
+        adult_pref = self._adult_gender_preference()
         if include_adult and target_tab == "adult_people":
-            adult_cond = Person.is_adult == True
+            if adult_pref == "female":
+                adult_cond = (Person.is_adult == True) & (Person.gender == 1)
+            elif adult_pref == "male":
+                adult_cond = (Person.is_adult == True) & (Person.gender == 2)
+            else:
+                adult_cond = Person.is_adult == True
         else:
             adult_cond = Person.is_adult == False
 
@@ -194,6 +200,11 @@ class LibraryPeopleService:
             if include_adult:
                 if target_tab == "adult_people" and not is_adult_person:
                     continue
+                if target_tab == "adult_people":
+                    if adult_pref == "female" and person.gender != 1:
+                        continue
+                    if adult_pref == "male" and person.gender != 2:
+                        continue
                 if target_tab != "adult_people" and is_adult_person:
                     continue
             people_list.append({
@@ -250,3 +261,9 @@ class LibraryPeopleService:
             return False
         value = setting.value
         return value.lower() == "true" if isinstance(value, str) else bool(value)
+
+    def _adult_gender_preference(self) -> str:
+        setting = self.db.query(UserSetting).filter(UserSetting.key == "adult_gender_preference").first()
+        if not setting or not setting.value:
+            return "all"
+        return str(setting.value).strip().lower()

@@ -165,14 +165,26 @@ def get_people(
         query = query.group_by(Person.id)
         results = query.all()
         
+        # Fetch adult gender preference
+        adult_pref = "all"
+        if adult_only:
+            adult_pref_setting = db.query(UserSetting).filter(UserSetting.key == "adult_gender_preference").first()
+            if adult_pref_setting and adult_pref_setting.value:
+                adult_pref = str(adult_pref_setting.value).strip().lower()
+
         people_list = []
         for person, library_count in results:
             # Active people only OR people with a library match
             if not include_inactive and not person.is_active:
                 continue
-            if adult_only and not bool(getattr(person, "is_adult", False)):
-                continue
-                
+            if adult_only:
+                if not bool(getattr(person, "is_adult", False)):
+                    continue
+                if adult_pref == "female" and person.gender != 1:
+                    continue
+                if adult_pref == "male" and person.gender != 2:
+                    continue
+            
             loc = _pick_person_localization(person, preferred_lang)
             name = loc.name if loc else "Unknown"
             

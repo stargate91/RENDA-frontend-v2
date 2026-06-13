@@ -31,7 +31,7 @@ export function createGeneralLanguageSection(t, appLanguageOptions) {
   };
 }
 
-export function createGeneralContentSection(t) {
+export function createGeneralContentSection(t, adultGenderPreferenceOptions) {
   return {
     title: t('settingsPage.sections.content.title'),
     eyebrow: t('settingsPage.sections.content.eyebrow'),
@@ -50,6 +50,14 @@ export function createGeneralContentSection(t) {
             </span>
           </Inline>
         ),
+      },
+      {
+        type: 'select',
+        field: 'adult_gender_preference',
+        label: t('settingsPage.sections.content.adultGenderPreference'),
+        hint: t('settingsPage.sections.content.adultGenderPreferenceHint'),
+        options: adultGenderPreferenceOptions,
+        visible: (context) => Boolean(context.include_adult),
       },
       {
         type: 'switch',

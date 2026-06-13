@@ -111,9 +111,18 @@ class LibraryTabService:
         }
 
         include_adult = self._include_adult_enabled()
-        people_rows = self.db.query(Person.is_active, Person.is_adult).all()
-        counts["people"] = sum(1 for is_active, is_adult in people_rows if is_active and (not include_adult or not is_adult))
-        counts["adult_people"] = sum(1 for is_active, is_adult in people_rows if include_adult and is_active and is_adult)
+        adult_pref = self._adult_gender_preference()
+        people_rows = self.db.query(Person.is_active, Person.is_adult, Person.gender).all()
+        counts["people"] = sum(1 for is_active, is_adult, gender in people_rows if is_active and (not include_adult or not is_adult))
+        
+        def matches_pref(gender):
+            if adult_pref == "female":
+                return gender == 1
+            if adult_pref == "male":
+                return gender == 2
+            return True
+
+        counts["adult_people"] = sum(1 for is_active, is_adult, gender in people_rows if include_adult and is_active and is_adult and matches_pref(gender))
 
         virtual_keys = set()
         list_rows = self.db.query(
@@ -594,3 +603,9 @@ class LibraryTabService:
             return False
         value = setting.value
         return value.lower() == "true" if isinstance(value, str) else bool(value)
+
+    def _adult_gender_preference(self) -> str:
+        setting = self.db.query(UserSetting).filter(UserSetting.key == "adult_gender_preference").first()
+        if not setting or not setting.value:
+            return "all"
+        return str(setting.value).strip().lower()

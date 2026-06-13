@@ -104,6 +104,12 @@ export default function useSettingsOptions(t) {
     [t]
   );
 
+  const adultGenderPreferenceOptions = useMemo(() => [
+    { value: 'all', label: t('settingsPage.sections.content.adultGenderPreferenceOptions.all') },
+    { value: 'female', label: t('settingsPage.sections.content.adultGenderPreferenceOptions.female') },
+    { value: 'male', label: t('settingsPage.sections.content.adultGenderPreferenceOptions.male') },
+  ], [t]);
+
   return {
     appLanguageOptions,
     metadataLanguageOptions,
@@ -116,5 +122,6 @@ export default function useSettingsOptions(t) {
     extrasFolderModeOptions,
     casingOptions,
     separatorOptions,
+    adultGenderPreferenceOptions,
   };
 }

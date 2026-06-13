@@ -88,7 +88,14 @@
     "all": "All",
     "watched": "Watched",
     "unwatched": "Unwatched",
+    "complete": "Complete",
+    "inProgress": "In Progress",
     "genreLabel": "Genre:",
-    "allGenres": "All Genres"
+    "allGenres": "All Genres",
+    "roleLabel": "Role:",
+    "genderLabel": "Gender:",
+    "female": "Female",
+    "male": "Male",
+    "favorite": "Favourite"
   }
 }

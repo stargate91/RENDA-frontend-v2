@@ -44,6 +44,10 @@ export default function LibraryPage() {
   const [ownershipFilter, setOwnershipFilter] = useState('owned');
   const [watchedFilter, setWatchedFilter] = useState('all');
   const [genreFilter, setGenreFilter] = useState('');
+  const [collectionStatusFilter, setCollectionStatusFilter] = useState('all');
+  const [peopleRoleFilter, setPeopleRoleFilter] = useState('all');
+  const [genderFilter, setGenderFilter] = useState('all');
+  const [favoriteFilter, setFavoriteFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [sortKey, setSortKey] = useState('title');
@@ -61,10 +65,17 @@ export default function LibraryPage() {
 
   const isCollections = activeTab === 'collections' || activeTab === 'adult_collections';
   const isTags = activeTab === 'tags';
+  const isPeople = activeTab === 'people' || activeTab === 'adult_people';
+
+  const resolvedGenderFilter = isPeople
+    ? (activeTab === 'adult_people' && settings?.adult_gender_preference && settings.adult_gender_preference !== 'all'
+      ? settings.adult_gender_preference
+      : genderFilter)
+    : undefined;
 
   const { data: libraryData, isLoading: isLibraryLoading } = useLibraryQuery(
     !isCollections && !isTags
-      ? { tab: activeTab, page: 1, pageSize: 10000, filter_ownership: ownershipFilter, filter_watched: watchedFilter, selected_genre: genreFilter || undefined }
+      ? { tab: activeTab, page: 1, pageSize: 10000, filter_ownership: ownershipFilter, filter_watched: watchedFilter, selected_genre: genreFilter || undefined, people_role: isPeople ? peopleRoleFilter : undefined, filter_gender: resolvedGenderFilter, filter_favorite: isPeople ? favoriteFilter : undefined }
       : { tab: 'movies', page: 1, pageSize: 1 }
   );
 
@@ -118,6 +129,10 @@ export default function LibraryPage() {
     }
     setCurrentPage(1);
     setGenreFilter('');
+    setCollectionStatusFilter('all');
+    setPeopleRoleFilter('all');
+    setGenderFilter('all');
+    setFavoriteFilter('all');
   }, [resolvedTab, ownershipFilter]);
 
   const getEmptyStateIcon = () => {
@@ -158,7 +173,21 @@ export default function LibraryPage() {
     allItems = libraryData?.items || [];
   }
 
-  const filteredItems = useLocalListSearch(allItems, searchQuery);
+  let filteredItems = useLocalListSearch(allItems, searchQuery);
+
+  if (isCollections) {
+    filteredItems = filteredItems.filter(item => {
+      const owned = Number(item.owned_count) || 0;
+      const total = Number(item.total_count) || 0;
+      if (collectionStatusFilter === 'complete') {
+        return owned === total;
+      }
+      if (collectionStatusFilter === 'in_progress') {
+        return owned > 0 && owned < total;
+      }
+      return true;
+    });
+  }
 
   // Sort items locally
   const sortedItems = [...filteredItems].sort((a, b) => {
@@ -380,6 +409,64 @@ export default function LibraryPage() {
                 </div>
               )}
 
+              {isCollections && (
+                <div className="library-sorter-container">
+                  <span className="library-sorter-label">{t('library.filter.statusLabel') || 'Status:'}</span>
+                  <Dropdown
+                    variant="sorter"
+                    value={collectionStatusFilter}
+                    onChange={(e) => {
+                      setCollectionStatusFilter(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    options={[
+                      { value: 'all', label: t('library.filter.all') || 'All' },
+                      { value: 'complete', label: t('library.filter.complete') || 'Complete' },
+                      { value: 'in_progress', label: t('library.filter.inProgress') || 'In Progress' },
+                    ]}
+                  />
+                </div>
+              )}
+
+              {isPeople && (
+                <div className="library-sorter-container">
+                  <span className="library-sorter-label">{t('library.filter.roleLabel') || 'Role:'}</span>
+                  <Dropdown
+                    variant="sorter"
+                    value={peopleRoleFilter}
+                    onChange={(e) => {
+                      setPeopleRoleFilter(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    options={[
+                      { value: 'all', label: t('library.filter.all') || 'All' },
+                      { value: 'actor', label: t('library.people.roles.actor') || 'Actor' },
+                      { value: 'director', label: t('library.people.roles.director') || 'Director' },
+                      { value: 'writer', label: t('library.people.roles.writer') || 'Writer' },
+                    ]}
+                  />
+                </div>
+              )}
+
+              {isPeople && (resolvedTab !== 'adult_people' || !settings?.adult_gender_preference || settings.adult_gender_preference === 'all') && (
+                <div className="library-sorter-container">
+                  <span className="library-sorter-label">{t('library.filter.genderLabel') || 'Gender:'}</span>
+                  <Dropdown
+                    variant="sorter"
+                    value={genderFilter}
+                    onChange={(e) => {
+                      setGenderFilter(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    options={[
+                      { value: 'all', label: t('library.filter.all') || 'All' },
+                      { value: 'female', label: t('library.filter.female') || 'Female' },
+                      { value: 'male', label: t('library.filter.male') || 'Male' },
+                    ]}
+                  />
+                </div>
+              )}
+
               {(resolvedTab === 'movies' || resolvedTab === 'series' || resolvedTab === 'adult') && (
                 <div className="library-sorter-container">
                   <span className="library-sorter-label">{t('library.filter.label') || 'Filter:'}</span>
@@ -435,6 +522,19 @@ export default function LibraryPage() {
                 </div>
               )}
             </div>
+
+            {isPeople && (
+              <button
+                type="button"
+                className={`library-favorite-pill ${favoriteFilter === 'favorites' ? 'active' : ''}`}
+                onClick={() => {
+                  setFavoriteFilter(prev => prev === 'favorites' ? 'all' : 'favorites');
+                  setCurrentPage(1);
+                }}
+              >
+                {t('library.filter.favorite') || 'Favourite'}
+              </button>
+            )}
           </div>
         </div>
 
