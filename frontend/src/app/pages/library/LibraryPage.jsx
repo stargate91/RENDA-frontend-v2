@@ -48,6 +48,9 @@ export default function LibraryPage() {
   const [peopleRoleFilter, setPeopleRoleFilter] = useState('all');
   const [genderFilter, setGenderFilter] = useState('all');
   const [favoriteFilter, setFavoriteFilter] = useState('all');
+  const [decadeFilter, setDecadeFilter] = useState('all');
+  const [yearFilter, setYearFilter] = useState('');
+  const [timeFilterMode, setTimeFilterMode] = useState('decade'); // 'decade' or 'year'
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [sortKey, setSortKey] = useState('title');
@@ -75,7 +78,7 @@ export default function LibraryPage() {
 
   const { data: libraryData, isLoading: isLibraryLoading } = useLibraryQuery(
     !isCollections && !isTags
-      ? { tab: activeTab, page: 1, pageSize: 10000, filter_ownership: ownershipFilter, filter_watched: watchedFilter, selected_genre: genreFilter || undefined, people_role: isPeople ? peopleRoleFilter : undefined, filter_gender: resolvedGenderFilter, filter_favorite: isPeople ? favoriteFilter : undefined }
+      ? { tab: activeTab, page: 1, pageSize: 10000, filter_ownership: ownershipFilter, filter_watched: watchedFilter, selected_genre: genreFilter || undefined, people_role: isPeople ? peopleRoleFilter : undefined, filter_gender: resolvedGenderFilter, filter_favorite: isPeople ? favoriteFilter : undefined, selected_decade: decadeFilter !== 'all' ? decadeFilter : undefined, selected_year: yearFilter !== '' ? Number(yearFilter) : undefined }
       : { tab: 'movies', page: 1, pageSize: 1 }
   );
 
@@ -133,6 +136,8 @@ export default function LibraryPage() {
     setPeopleRoleFilter('all');
     setGenderFilter('all');
     setFavoriteFilter('all');
+    setDecadeFilter('all');
+    setYearFilter('');
   }, [resolvedTab, ownershipFilter]);
 
   const getEmptyStateIcon = () => {
@@ -283,7 +288,7 @@ export default function LibraryPage() {
     if (String(path).startsWith('http://') || String(path).startsWith('https://')) {
       return path;
     }
-    if (String(path).startsWith('/')) {
+    if (String(path).startsWith('/') && !String(path).startsWith('/images/')) {
       return `https://image.tmdb.org/t/p/w342${path}`;
     }
     return `${API_BASE}${path}`;
@@ -305,7 +310,7 @@ export default function LibraryPage() {
       return {
         title: item.name || item.title,
         subtitle: t('library.collections.partsCount', { owned: item.owned_count, total: item.total_count }),
-        imageUrl: resolvePosterUrl(item.poster_path),
+        imageUrl: resolvePosterUrl(item.displayPoster || item.poster_path),
         icon: emptyIcon,
         ratingImdb: item.rating_imdb,
         ratingTmdb: item.rating,
@@ -315,7 +320,7 @@ export default function LibraryPage() {
       return {
         title: item.title,
         subtitle: item.people_role ? t(`library.people.roles.${item.people_role}`, { defaultValue: item.people_role }) : '',
-        imageUrl: resolvePosterUrl(item.poster_path),
+        imageUrl: resolvePosterUrl(item.displayPoster || item.poster_path),
         icon: emptyIcon,
       };
     }
@@ -327,7 +332,7 @@ export default function LibraryPage() {
     return {
       title: item.title,
       subtitle: subtitleParts.join(' • '),
-      imageUrl: resolvePosterUrl(item.poster_path || item.local_poster_path),
+      imageUrl: resolvePosterUrl(item.displayPoster || item.poster_path || item.local_poster_path),
       icon: emptyIcon,
       backgroundColor: item.color,
       ratingImdb: item.rating_imdb,
@@ -521,6 +526,44 @@ export default function LibraryPage() {
                   />
                 </div>
               )}
+
+              {(resolvedTab === 'movies' || resolvedTab === 'series' || resolvedTab === 'adult') && timeFilterMode === 'decade' && (
+                <div className="library-sorter-container">
+                  <span className="library-sorter-label">{t('library.filter.decadeLabel') || 'Decade:'}</span>
+                  <Dropdown
+                    variant="sorter"
+                    value={decadeFilter}
+                    onChange={(e) => {
+                      setDecadeFilter(e.target.value);
+                      setYearFilter('');
+                      setCurrentPage(1);
+                    }}
+                    options={[
+                      { value: 'all', label: t('library.filter.allDecades') || 'All Decades' },
+                      ...(filterData?.decades || []).map(d => ({ value: d, label: d })),
+                    ]}
+                  />
+                </div>
+              )}
+
+              {(resolvedTab === 'movies' || resolvedTab === 'series' || resolvedTab === 'adult') && timeFilterMode === 'year' && (
+                <div className="library-sorter-container">
+                  <span className="library-sorter-label">{t('library.filter.yearLabel') || 'Year:'}</span>
+                  <Dropdown
+                    variant="sorter"
+                    value={yearFilter}
+                    onChange={(e) => {
+                      setYearFilter(e.target.value);
+                      setDecadeFilter('all');
+                      setCurrentPage(1);
+                    }}
+                    options={[
+                      { value: '', label: t('library.filter.allYears') || 'All Years' },
+                      ...(filterData?.years || []).map(y => ({ value: String(y), label: String(y) })),
+                    ]}
+                  />
+                </div>
+              )}
             </div>
 
             {isPeople && (
@@ -534,6 +577,35 @@ export default function LibraryPage() {
               >
                 {t('library.filter.favorite') || 'Favourite'}
               </button>
+            )}
+
+            {(resolvedTab === 'movies' || resolvedTab === 'series' || resolvedTab === 'adult') && (
+              <div className="library-mode-segmented">
+                <button
+                  type="button"
+                  className={`library-mode-btn ${timeFilterMode === 'decade' ? 'active' : ''}`}
+                  onClick={() => {
+                    setTimeFilterMode('decade');
+                    setDecadeFilter('all');
+                    setYearFilter('');
+                    setCurrentPage(1);
+                  }}
+                >
+                  {t('library.filter.decadeMode') || 'Decade'}
+                </button>
+                <button
+                  type="button"
+                  className={`library-mode-btn ${timeFilterMode === 'year' ? 'active' : ''}`}
+                  onClick={() => {
+                    setTimeFilterMode('year');
+                    setDecadeFilter('all');
+                    setYearFilter('');
+                    setCurrentPage(1);
+                  }}
+                >
+                  {t('library.filter.yearMode') || 'Year'}
+                </button>
+              </div>
             )}
           </div>
         </div>

@@ -96,6 +96,12 @@
     "genderLabel": "Gender:",
     "female": "Female",
     "male": "Male",
-    "favorite": "Favourite"
+    "favorite": "Favourite",
+    "decadeLabel": "Decade:",
+    "allDecades": "All Decades",
+    "decadeMode": "Decade",
+    "yearLabel": "Year:",
+    "allYears": "All Years",
+    "yearMode": "Year"
   }
 }
