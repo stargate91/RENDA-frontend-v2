@@ -116,6 +116,9 @@ def get_people(
     sort_by: str = "library_count",
     include_inactive: bool = False,
     adult_only: bool = False,
+    gender: str = "all",
+    offset: int = 0,
+    limit: int = 20,
 ):
     """Returns a list of all people associated with organized library items."""
     db = Session()
@@ -162,6 +165,11 @@ def get_people(
         elif role == "Writer":
             query = query.filter((MediaPersonLink.job.in_(["Writer", "Screenplay", "Story", "Teleplay"])) | (Person.known_for_department == "Writing"))
             
+        if gender == "female":
+            query = query.filter(Person.gender == 1)
+        elif gender == "male":
+            query = query.filter(Person.gender == 2)
+
         query = query.group_by(Person.id)
         results = query.all()
         
@@ -176,6 +184,8 @@ def get_people(
         for person, library_count in results:
             # Active people only OR people with a library match
             if not include_inactive and not person.is_active:
+                continue
+            if include_inactive and not person.is_active and library_count == 0:
                 continue
             if adult_only:
                 if not bool(getattr(person, "is_adult", False)):
@@ -220,7 +230,17 @@ def get_people(
         elif sort_by in ("name_desc", "title_desc"):
             people_list.sort(key=lambda x: x["name"].lower(), reverse=True)
             
-        return people_list
+        total = len(people_list)
+        sliced_list = people_list[offset:offset+limit]
+        has_more = offset + len(sliced_list) < total
+        
+        return {
+            "items": sliced_list,
+            "total": total,
+            "has_more": has_more,
+            "offset": offset,
+            "limit": limit
+        }
     except Exception as e:
         import traceback
         logger.error(f"Error getting people list: {e}")

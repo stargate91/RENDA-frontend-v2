@@ -59,14 +59,6 @@ export function createGeneralContentSection(t, adultGenderPreferenceOptions) {
         options: adultGenderPreferenceOptions,
         visible: (context) => Boolean(context.include_adult),
       },
-      {
-        type: 'switch',
-        field: 'auto_hydrate_inactive_people',
-        id: 'auto_hydrate_inactive_people',
-        hint: t('settingsPage.sections.content.autoHydrateInactivePeopleHint'),
-        hintClassName: 'ui-field__hint settings-hint--compact-bottom',
-        children: t('settingsPage.sections.content.autoHydrateInactivePeople'),
-      },
     ],
   };
 }

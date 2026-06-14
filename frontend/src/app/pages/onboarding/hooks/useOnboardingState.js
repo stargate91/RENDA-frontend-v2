@@ -145,10 +145,12 @@ export default function useOnboardingState() {
 
         const normalizedSettings = buildSettingsPayload(getInitialFormValues(settings, t));
 
-        await api.settings.import({
+        const importPayload = {
           ...normalizedSettings,
           onboarding_completed: true,
-        });
+        };
+        await api.settings.import(importPayload);
+        queryClient.setQueryData(['settings'], importPayload);
         await queryClient.invalidateQueries({ queryKey: ['settings'] });
         
         toast(t('settingsPage.sections.backup.importSuccess') || 'Settings imported successfully!', 'success');
@@ -298,6 +300,7 @@ export default function useOnboardingState() {
       };
 
       await api.settings.update(payload);
+      queryClient.setQueryData(['settings'], payload);
       await queryClient.invalidateQueries({ queryKey: ['settings'] });
       toast('Onboarding completed! Welcome to RENDA.', 'success');
       

@@ -127,14 +127,18 @@ class LibraryPeopleService:
                     break
             selected_person_ids.update(actor_ids)
 
-        if not selected_person_ids:
-            return []
-
         query = self.db.query(Person).outerjoin(
             MediaPersonLink, MediaPersonLink.person_id == Person.id
-        ).filter(
-            Person.id.in_(list(selected_person_ids))
         )
+        if selected_person_ids:
+            query = query.filter(
+                or_(
+                    Person.is_active == True,
+                    Person.id.in_(list(selected_person_ids))
+                )
+            )
+        else:
+            query = query.filter(Person.is_active == True)
 
         # Apply active/inactive filter
         if filter_status == "active":
@@ -209,7 +213,7 @@ class LibraryPeopleService:
                     continue
             people_list.append({
                 "id": person.id,
-                "title": person.localizations[0].name if person.localizations else fallback_name,
+                "name": person.localizations[0].name if person.localizations else fallback_name,
                 "year": None,
                 "poster_path": self._person_profile_path(person),
                 "rating": person.popularity or 0.0,

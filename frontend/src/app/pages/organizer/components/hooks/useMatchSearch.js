@@ -41,6 +41,8 @@ export function useMatchSearch({ rows = [], t, toast }) {
     query,
     mode,
     year,
+    season,
+    episode,
     { enabled: false }
   );
 
@@ -80,15 +82,14 @@ export function useMatchSearch({ rows = [], t, toast }) {
       if (error) {
         throw error;
       }
-      setResults(
-        Array.isArray(data)
-          ? data.map((candidate) => ({
-              ...candidate,
-              media_type: candidate.media_type || searchMode,
-            }))
-          : [],
-      );
-      return true;
+      const searchResults = Array.isArray(data)
+        ? data.map((candidate) => ({
+            ...candidate,
+            media_type: candidate.media_type || searchMode,
+          }))
+        : [];
+      setResults(searchResults);
+      return searchResults;
     } catch (error) {
       toast(error.message || t('organizer.toasts.matchSearchFailed'), 'danger');
       return false;

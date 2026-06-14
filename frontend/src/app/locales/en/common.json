@@ -1,6 +1,9 @@
 {
   "common": {
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "close": "Close",
+    "create": "Create",
+    "save": "Save"
   },
   "sidebar": {
     "dashboard": "Dashboard",

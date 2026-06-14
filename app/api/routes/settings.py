@@ -386,13 +386,7 @@ def _apply_settings(db, settings: dict):
         except Exception as w_err:
             print(f"Failed to restart watchdog on settings update: {w_err}")
             
-    # Trigger people hydrator if newly enabled
-    if str(settings.get("auto_hydrate_inactive_people")).lower() in ("true", "1"):
-        try:
-            from app.scanner.people_hydrator import people_hydrator
-            people_hydrator.start()
-        except Exception as e:
-            print(f"Failed to start people hydrator on settings update: {e}")
+
     
     # Update is_primary flags in database if language setting changed
     if "primary_metadata_language" in settings:

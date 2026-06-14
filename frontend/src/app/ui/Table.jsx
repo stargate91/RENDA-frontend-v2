@@ -1,6 +1,7 @@
 import { memo, useMemo } from 'react';
 import { EyeOff, Trash2, Search, Sliders, X } from 'lucide-react';
 import { useTranslation } from '../providers/LanguageProvider';
+import EmptyState from './EmptyState';
 import Tooltip from './Tooltip';
 import IconButton from './IconButton';
 import ContextMenu from './ContextMenu';
@@ -94,6 +95,7 @@ export default function Table({
   onRowClick,
   activeRowId = null,
   emptyText = 'No data available',
+  emptyContent = null,
   rowActions = [],
   selectedRows = [],
   openBulkDeleteModal,
@@ -198,7 +200,7 @@ export default function Table({
           {rows.length === 0 ? (
             <tr className="is-empty">
               <td colSpan={columns.length} className="ui-table__empty">
-                {emptyText}
+                {emptyContent || <EmptyState variant="inline" title={emptyText} />}
               </td>
             </tr>
           ) : (

@@ -2,6 +2,20 @@
   /* Foundation overrides */
   --color-bg-canvas: #002b36;
   --color-bg-elevated: #073642;
+  --ui-library-tag-focus-bg: var(--color-bg-elevated);
+  --ui-empty-page-search-bg: color-mix(in srgb, var(--color-surface-card) 70%, transparent);
+  --ui-empty-page-search-border: color-mix(in srgb, var(--color-border-default) 78%, transparent);
+  --ui-empty-page-search-highlight: rgba(255, 255, 255, 0.022);
+  --ui-empty-page-search-icon-color: color-mix(in srgb, var(--color-accent) 72%, var(--color-text-muted));
+  --ui-empty-page-search-icon-bg: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  --ui-empty-page-search-icon-border: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  --ui-empty-page-filter-bg: color-mix(in srgb, var(--color-surface-card) 46%, transparent);
+  --ui-empty-page-filter-border: color-mix(in srgb, var(--color-border-default) 58%, transparent);
+  --ui-empty-page-filter-highlight: rgba(255, 255, 255, 0.012);
+  --ui-empty-page-filter-icon-color: color-mix(in srgb, var(--color-accent) 48%, var(--color-text-muted));
+  --ui-empty-page-filter-icon-bg: color-mix(in srgb, var(--color-accent) 5%, transparent);
+  --ui-empty-page-filter-icon-border: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  --ui-empty-page-filter-description-color: color-mix(in srgb, var(--color-muted) 86%, var(--color-text-faint, var(--color-muted)));
   --color-surface-card: rgba(255, 255, 255, 0.025);
   --color-surface-glass: rgba(255, 255, 255, 0.04);
   --color-surface-glass-strong: rgba(255, 255, 255, 0.08);

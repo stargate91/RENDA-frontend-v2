@@ -53,6 +53,9 @@ def _ensure_sqlite_columns():
         "media_matches": {
             "companies": "TEXT",
         },
+        "tags": {
+            "target_type": "VARCHAR DEFAULT 'media'",
+        },
     }
     with engine.begin() as conn:
         for table_name, columns in column_specs.items():

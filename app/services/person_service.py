@@ -162,6 +162,13 @@ class PersonService:
                 self.db.flush()
             except Exception as e:
                 logger.error(f"Error enriching person {person_id} for language {lang}: {e}")
+                if isinstance(e, ValueError) and "API key is missing" in str(e):
+                    raise e
+                if hasattr(e, "response") and e.response is not None:
+                    if e.response.status_code == 401:
+                        raise e
+                    elif e.response.status_code == 404:
+                        fetched_langs.add(lang_code)
                 
         person.fetched_languages = ",".join(filter(None, fetched_langs))
         

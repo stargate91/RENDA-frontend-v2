@@ -12,11 +12,40 @@
     "tags": "Tags"
   },
   "people": {
+    "addPeopleBtn": "Add People",
     "roles": {
       "actor": "Actor",
       "director": "Director",
       "writer": "Writer"
     }
+  },
+  "addPeople": {
+    "modalTitle": "Add People",
+    "modalDescription": "Activate or search for people to add to the library.",
+    "adultModalTitle": "Add Adult People",
+    "adultModalDescription": "Activate or search for adult people to add to the library.",
+    "modes": {
+      "local": "Suggestions",
+      "search": "Search",
+      "bulk": "Bulk Add"
+    },
+    "searchPlaceholder": "Search people...",
+    "loading": "Loading people...",
+    "noInactive": "All discovered people are already in your library.",
+    "noInactiveDesc": "Scan and organize new movies or TV shows to find more cast and crew suggestions.",
+    "adultNoInactive": "All discovered adult people are already in your library.",
+    "adultNoInactiveDesc": "Scan and organize new adult titles to find more cast and creator suggestions.",
+    "noSearchResultsTitle": "No matching people found",
+    "noSearchResultsDesc": "No people in your local pack matched this search. Try another name.",
+    "noFilterResultsTitle": "Nothing fits these filters",
+    "noFilterResultsDesc": "Try clearing or relaxing the local people filters to see more suggestions.",
+    "adultNoSearchResultsTitle": "No matching adult people found",
+    "adultNoSearchResultsDesc": "No adult people in your local pack matched this search. Try another name.",
+    "adultNoFilterResultsTitle": "Nothing fits these filters",
+    "adultNoFilterResultsDesc": "Try clearing or relaxing the local adult people filters to see more suggestions.",
+    "activate": "Activate",
+    "tmdbPlaceholder": "TMDB search is not yet implemented.",
+    "bulkPlaceholder": "Bulk add is not yet implemented."
   },
   "emptyStates": {
     "movies": {
@@ -51,13 +80,42 @@
       "title": "No Tags Created",
       "description": "Organize your media with custom tags. You can add tags in the media details page."
     },
+    "search": {
+      "title": "No matching {tab} found",
+      "description": "Try a different search term or check the spelling."
+    },
+    "filter": {
+      "title": "Nothing fits these filters",
+      "description": "Try clearing or relaxing a few filters to bring {tab} back into view."
+    },
     "default": {
       "title": "No Items Found",
       "description": "Your media library is empty."
     }
   },
   "tags": {
-    "itemsCount": "{{count}} items"
+    "itemsCount": "{{count}} items",
+    "focusTitle": "Items tagged with \"{name}\"",
+    "backToTags": "Back to Tags",
+    "noTaggedItems": "No items carry this tag.",
+    "emptyFocusTitle": "This tag is ready to use.",
+    "emptyFocusDescription": "Add this tag to movies, shows, or people and they will appear here.",
+    "createBtn": "Create Tag",
+    "editBtn": "Edit Tag",
+    "deleteBtn": "Delete Tag",
+    "modalTitle": "Create Tag",
+    "modalDescription": "Create a new custom tag for organizing your media.",
+    "editModalTitle": "Edit Tag",
+    "editModalDescription": "Rename the tag or adjust its color.",
+    "deleteModalTitle": "Delete Tag",
+    "deleteModalDescription": "Remove this tag from every tagged item.",
+    "deleteConfirm": "Delete \"{name}\" and remove it from all tagged items?",
+    "nameLabel": "Tag Name",
+    "namePlaceholder": "Enter tag name...",
+    "colorLabel": "Select Color",
+    "customColor": "Custom Color",
+    "errorNameRequired": "Name is required",
+    "errorExists": "A tag with this name already exists"
   },
   "collections": {
     "partsCount": "{{owned}} / {{total}} movies"
@@ -65,6 +123,7 @@
   "sort": {
     "label": "Sort:",
     "title": "Title",
+    "name": "Name",
     "year": "Year",
     "firstAirYear": "First Air Year",
     "releaseDate": "Release Date",
@@ -74,6 +133,7 @@
     "userRating": "User Rating",
     "duration": "Duration",
     "fileSize": "File Size",
+    "itemCount": "Item Count",
     "lastWatched": "Last Watched",
     "ownedCount": "Item Count",
     "libraryCount": "Library Count",

@@ -51,9 +51,9 @@ export function sortLibraryItems(items, resolvedTab, sortKey, sortDirection) {
 
     if (resolvedTab === 'people' || resolvedTab === 'adult_people') {
       let valA, valB;
-      if (sortKey === 'title') {
-        valA = String(a.title || '').toLowerCase();
-        valB = String(b.title || '').toLowerCase();
+      if (sortKey === 'name' || sortKey === 'title') {
+        valA = String(a.name || '').toLowerCase();
+        valB = String(b.name || '').toLowerCase();
       } else if (sortKey === 'library_count') {
         valA = Number(a.library_count) || 0;
         valB = Number(b.library_count) || 0;
@@ -71,6 +71,21 @@ export function sortLibraryItems(items, resolvedTab, sortKey, sortDirection) {
       if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     }
+
+    if (resolvedTab === 'tags') {
+      let valA, valB;
+      if (sortKey === 'name' || sortKey === 'title') {
+        valA = String(a.name || '').toLowerCase();
+        valB = String(b.name || '').toLowerCase();
+      } else {
+        valA = Number(a.total_count) || 0;
+        valB = Number(b.total_count) || 0;
+      }
+      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    }
+
     return 0;
   });
 }

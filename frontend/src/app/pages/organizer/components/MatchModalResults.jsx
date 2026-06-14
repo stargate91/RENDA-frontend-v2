@@ -1,5 +1,6 @@
 import { useRef, useEffect } from 'react';
 import MatchCandidateCard from './MatchCandidateCard';
+import EmptyState from '../../../ui/EmptyState';
 
 export default function MatchModalResults({
   results,
@@ -12,6 +13,8 @@ export default function MatchModalResults({
   onCandidateSelect,
   row,
   t,
+  hasSearched,
+  view,
 }) {
   const posterResultsRef = useRef(null);
 
@@ -65,6 +68,20 @@ export default function MatchModalResults({
             />
           ))}
         </div>
+      ) : null}
+
+      {view === 'results' && hasSearched && results.length === 0 && !isBrowserLoading ? (
+        <EmptyState
+          title={mode === 'tv' || mode === 'series'
+            ? (t('organizer.details.matchModal.noResultsSeriesTitle') || 'No matching series found')
+            : (t('organizer.details.matchModal.noResultsMovieTitle') || 'No matching movies found')
+          }
+          description={mode === 'tv' || mode === 'series'
+            ? (t('organizer.details.matchModal.noResultsSeriesDesc') || 'We could not find any series matching your search. Try adjusting the title or year.')
+            : (t('organizer.details.matchModal.noResultsMovieDesc') || 'We could not find any movies matching your search. Try adjusting the title or year.')
+          }
+          variant="modal-search"
+        />
       ) : null}
     </>
   );

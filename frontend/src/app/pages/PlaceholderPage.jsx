@@ -16,7 +16,6 @@ export default function PlaceholderPage({
       <EmptyState
         title={title}
         description={description}
-        variant="simple"
       />
     </Page>
   );

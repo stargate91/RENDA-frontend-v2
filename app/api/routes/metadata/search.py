@@ -57,6 +57,7 @@ def _hydrate_result_details(result: dict, item_type: str, language: str) -> tupl
     else:
         merged_result["name"] = details.get("name") or merged_result.get("name")
         merged_result["first_air_date"] = details.get("first_air_date") or merged_result.get("first_air_date")
+        merged_result["seasons"] = details.get("seasons") or []
     merged_result["overview"] = details.get("overview") or merged_result.get("overview")
     merged_result["poster_path"] = details.get("poster_path") or merged_result.get("poster_path")
     merged_result["backdrop_path"] = details.get("backdrop_path") or merged_result.get("backdrop_path")
@@ -115,6 +116,8 @@ def search_metadata(
     query: str,
     year: int = None,
     item_type: str = None,
+    season: int = None,
+    episode: int = None,
     language: str = "en-US",
     page: int = 1,
     db: Session = Depends(get_db),
@@ -134,6 +137,24 @@ def search_metadata(
         results = _merge_search_results(tmdb, query_candidates, item_type="movie", year=year, display_language=language, include_adult=include_adult, page=page)
     elif item_type in ["tv", "series"]:
         results = _merge_search_results(tmdb, query_candidates, item_type="tv", year=year, display_language=language, include_adult=include_adult, page=page)
+        if results and (season is not None or episode is not None):
+            filtered = []
+            for r in results:
+                seasons = r.get("seasons") or []
+                match_found = False
+                for s in seasons:
+                    s_num = s.get("season_number")
+                    if season is not None and s_num != season:
+                        continue
+                    if episode is not None:
+                        ep_count = s.get("episode_count") or 0
+                        if ep_count < episode:
+                            continue
+                    match_found = True
+                    break
+                if match_found:
+                    filtered.append(r)
+            results = filtered
     else:
         results = []
 

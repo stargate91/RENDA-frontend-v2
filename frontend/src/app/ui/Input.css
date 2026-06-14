@@ -19,6 +19,7 @@
   background: var(--color-input-bg, var(--ui-control-bg));
   color: var(--ui-control-text);
   outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .ui-input::placeholder {
@@ -28,6 +29,11 @@
 
 .ui-input--password {
   padding-right: 44px;
+}
+
+.ui-input:hover:not(:focus):not(.ui-input--error),
+.ui-select:hover:not(:focus) {
+  border-color: color-mix(in srgb, var(--color-accent) 35%, var(--ui-control-border));
 }
 
 .ui-input:focus,

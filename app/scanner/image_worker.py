@@ -363,6 +363,48 @@ class ImageWorker:
                 except Exception as e:
                     logger.error(f"Failed to download season posters for series {series_id}: {e}")
 
+            # E. COMPANY LOGOS
+            try:
+                if match.companies:
+                    companies_updated = False
+                    updated_companies = []
+                    for comp in match.companies:
+                        logo_path = comp.get("logo_path")
+                        if logo_path:
+                            local_logo = comp.get("local_logo_path")
+                            if not local_logo or not os.path.exists(local_logo):
+                                local_logo = self.download_image(logo_path, "logos", size="original")
+                                if local_logo:
+                                    comp = dict(comp)
+                                    comp["local_logo_path"] = local_logo
+                                    companies_updated = True
+                        updated_companies.append(comp)
+                    if companies_updated:
+                        match.companies = updated_companies
+            except Exception as e:
+                logger.error(f"Failed to download company logos for match {match_id}: {e}")
+
+            # F. NETWORK LOGOS
+            try:
+                if match.networks:
+                    networks_updated = False
+                    updated_networks = []
+                    for net in match.networks:
+                        logo_path = net.get("logo_path")
+                        if logo_path:
+                            local_logo = net.get("local_logo_path")
+                            if not local_logo or not os.path.exists(local_logo):
+                                local_logo = self.download_image(logo_path, "logos", size="original")
+                                if local_logo:
+                                    net = dict(net)
+                                    net["local_logo_path"] = local_logo
+                                    networks_updated = True
+                        updated_networks.append(net)
+                    if networks_updated:
+                        match.networks = updated_networks
+            except Exception as e:
+                logger.error(f"Failed to download network logos for match {match_id}: {e}")
+
             # Only mark COMPLETED if everything downloaded; PENDING if some failed
             if has_pending:
                 match.image_status = ImageStatus.PENDING

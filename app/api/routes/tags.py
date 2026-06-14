@@ -9,40 +9,49 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 @router.get("/tags")
-def get_all_tags():
+def get_all_tags(target_type: str = None):
     db = DBSession()
     try:
-        tags = db.query(Tag).all()
-        return [{"id": t.id, "name": t.name, "color": t.color} for t in tags]
+        query = db.query(Tag)
+        if target_type:
+            query = query.filter(Tag.target_type == target_type)
+        tags = query.all()
+        return [{"id": t.id, "name": t.name, "color": t.color, "target_type": t.target_type} for t in tags]
     except Exception as e:
         logger.error(f"Error fetching tags: {e}")
         return JSONResponse(status_code=500, content={"error": str(e)})
     finally:
         db.close()
-
+ 
 @router.post("/tags")
 def create_tag(payload: dict):
     db = DBSession()
     try:
         name = payload.get("name", "").strip()
         color = payload.get("color", "#3b82f6")
+        target_type = payload.get("target_type", "media").strip().lower()
         if not name:
             return JSONResponse(status_code=400, content={"error": "Name required"})
+        if target_type not in {"media", "people"}:
+            return JSONResponse(status_code=400, content={"error": "Invalid target_type"})
             
-        existing = db.query(Tag).filter(Tag.name == name).first()
+        from sqlalchemy import func
+        existing = db.query(Tag).filter(
+            func.lower(Tag.name) == func.lower(name)
+        ).first()
         if existing:
             return JSONResponse(status_code=400, content={"error": "Tag already exists"})
             
-        tag = Tag(name=name, color=color)
+        tag = Tag(name=name, color=color, target_type=target_type)
         db.add(tag)
         db.commit()
-        return {"id": tag.id, "name": tag.name, "color": tag.color}
+        return {"id": tag.id, "name": tag.name, "color": tag.color, "target_type": tag.target_type}
     except Exception as e:
         db.rollback()
         return JSONResponse(status_code=500, content={"error": str(e)})
     finally:
         db.close()
-
+ 
 @router.put("/tags/{tag_id}")
 def update_tag(tag_id: int, payload: dict):
     db = DBSession()
@@ -54,7 +63,11 @@ def update_tag(tag_id: int, payload: dict):
         if "name" in payload:
             name = payload["name"].strip()
             if name:
-                existing = db.query(Tag).filter(Tag.name == name, Tag.id != tag_id).first()
+                from sqlalchemy import func
+                existing = db.query(Tag).filter(
+                    func.lower(Tag.name) == func.lower(name),
+                    Tag.id != tag_id
+                ).first()
                 if existing:
                     return JSONResponse(status_code=400, content={"error": "Name already taken"})
                 old_name = tag.name
@@ -73,7 +86,7 @@ def update_tag(tag_id: int, payload: dict):
             tag.color = payload["color"]
             
         db.commit()
-        return {"id": tag.id, "name": tag.name, "color": tag.color}
+        return {"id": tag.id, "name": tag.name, "color": tag.color, "target_type": tag.target_type}
     except Exception as e:
         db.rollback()
         return JSONResponse(status_code=500, content={"error": str(e)})

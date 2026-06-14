@@ -4,6 +4,7 @@ import Card from '@/ui/Card';
 
 const THEME_LIST = [
   { value: 'dark', translationKey: 'settingsPage.sections.theme.options.dark' },
+  { value: 'renda-legacy', translationKey: 'settingsPage.sections.theme.options.rendaLegacy' },
   { value: 'tokyo-night', translationKey: 'settingsPage.sections.theme.options.tokyoNight' },
   { value: 'dracula', translationKey: 'settingsPage.sections.theme.options.dracula' },
   { value: 'gruvbox-dark', translationKey: 'settingsPage.sections.theme.options.gruvboxDark' },

@@ -50,6 +50,7 @@ class PeopleHydrator:
     def __init__(self):
         self._thread = None
         self._stop_event = threading.Event()
+        self._invalid_key = None
 
     def is_running(self):
         return self._thread and self._thread.is_alive()
@@ -57,16 +58,28 @@ class PeopleHydrator:
     def start(self):
         if self.is_running():
             return
-        self._stop_event.clear()
 
-        # Double check setting
+        # Prevent concurrent execution with the main scan task to avoid DB lock and network contention
+        from app.scanner.scanner_manager import scan_status
+        if scan_status.get("active"):
+            return
+
+        # Check TMDB API key to prevent loops on invalid/missing keys
         db = Session()
         try:
-            setting = db.query(UserSetting).filter(UserSetting.key == "auto_hydrate_inactive_people").first()
-            if not setting or str(setting.value).lower() not in ("true", "1"):
+            setting = db.query(UserSetting).filter(UserSetting.key == "tmdb_api_key").first()
+            current_key = setting.value if setting else ""
+            if not current_key:
                 return
+            if self._invalid_key == current_key:
+                return
+        except Exception:
+            pass
         finally:
             db.close()
+            Session.remove()
+
+        self._stop_event.clear()
 
         self._thread = threading.Thread(target=self._hydrate_loop, daemon=True)
         self._thread.start()
@@ -75,6 +88,7 @@ class PeopleHydrator:
         self._stop_event.set()
 
     def _hydrate_loop(self):
+        from concurrent.futures import ThreadPoolExecutor, as_completed
         persons = []
         langs = ["en-US"]
         
@@ -105,32 +119,50 @@ class PeopleHydrator:
             "message": "",
         })
 
-        # 2. Iterate and enrich each person using a fresh DB session per item
+        # 2. Iterate and enrich each person in parallel
         try:
-            for idx, (p_id,) in enumerate(persons):
+            current_count = 0
+            
+            def enrich_single(p_id):
                 if self._stop_event.is_set():
-                    logger.info("People hydrator stopped by request.")
-                    break
-                
+                    return
                 temp_db = Session()
                 try:
                     person_service = PersonService(temp_db)
                     person_service.enrich_person_metadata(p_id, langs)
                 except Exception as e:
                     logger.error(f"Error hydrating person {p_id}: {e}")
+                    is_auth_error = False
+                    if isinstance(e, ValueError) and "API key is missing" in str(e):
+                        is_auth_error = True
+                    elif hasattr(e, "response") and e.response is not None and e.response.status_code == 401:
+                        is_auth_error = True
+                    
+                    if is_auth_error:
+                        setting = temp_db.query(UserSetting).filter(UserSetting.key == "tmdb_api_key").first()
+                        failed_key = setting.value if setting else ""
+                        self._invalid_key = failed_key
+                        logger.warning("Aborting people hydration: TMDB API key is invalid/missing. Will not retry until settings change.")
+                        self._stop_event.set()
                 finally:
                     temp_db.close()
                     Session.remove()
 
-                hydrate_status_manager.update({
-                    "current": idx + 1
-                })
-
-                # Check multiple times during sleep for fast abort
-                for _ in range(3):
+            # Process up to 6 people concurrently to balance speed with API rate limits and DB locks
+            max_workers = min(6, total)
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                futures = {executor.submit(enrich_single, p_id): p_id for (p_id,) in persons}
+                for future in as_completed(futures):
                     if self._stop_event.is_set():
+                        for f in futures:
+                            f.cancel()
+                        logger.info("People hydrator stopped by request.")
                         break
-                    time.sleep(0.1)
+                    
+                    current_count += 1
+                    hydrate_status_manager.update({
+                        "current": current_count
+                    })
 
         except Exception as e:
             logger.error(f"Error in people hydrator loop: {e}")

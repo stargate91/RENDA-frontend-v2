@@ -57,6 +57,7 @@ export default function useSettingsOptions(t) {
 
   const themeOptions = useMemo(() => [
     { value: 'dark', label: t('settingsPage.sections.theme.options.dark') },
+    { value: 'renda-legacy', label: t('settingsPage.sections.theme.options.rendaLegacy') || 'RENDA Legacy' },
     { value: 'solarized-dark', label: t('settingsPage.sections.theme.options.solarizedDark') || 'Solarized Dark' },
     { value: 'tokyo-night', label: t('settingsPage.sections.theme.options.tokyoNight') || 'Tokyo Night' },
     { value: 'cyberpunk-dark', label: t('settingsPage.sections.theme.options.cyberpunkDark') || 'Cyberpunk Dark' },

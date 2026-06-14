@@ -1,9 +1,9 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '@/lib/api';
 
-export const useSearchMetadataQuery = (query, itemType, year, options = {}) => useQuery({
-  queryKey: ['metadata-search', query, itemType, year],
-  queryFn: () => api.metadata.search({ query, itemType, year }),
+export const useSearchMetadataQuery = (query, itemType, year, season, episode, options = {}) => useQuery({
+  queryKey: ['metadata-search', query, itemType, year, season, episode],
+  queryFn: () => api.metadata.search({ query, itemType, year, season, episode }),
   ...options,
 });
 

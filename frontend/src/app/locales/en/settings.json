@@ -75,6 +75,7 @@
       "label": "App Theme",
       "hint": "Choose how the app should look.",
       "options": {
+        "rendaLegacy": "RENDA Legacy",
         "dark": "Dark RENDA",
         "solarizedDark": "Solarized Dark",
         "tokyoNight": "Tokyo Night",
@@ -120,9 +121,7 @@
         "all": "All",
         "female": "Female",
         "male": "Male"
-      },
-      "autoHydrateInactivePeople": "Include people from your extra people list",
-      "autoHydrateInactivePeopleHint": "RENDA will also fetch full details for people you add to your extra people list, even if they were not picked up by an exact match."
+      }
     },
     "folders": {
       "title": "Folders",

@@ -447,6 +447,19 @@ function OrganizerPageContent({
     t,
   });
 
+  const currentContextLabel =
+    activeMainTab === 'manual'
+      ? computedManualTabs.find((tab) => tab.value === activeManualTab)?.label || t('organizer.tabs.manual')
+      : activeMainTab === 'extras'
+        ? computedExtrasTabs.find((tab) => tab.value === activeExtrasTab)?.label || t('organizer.tabs.extras')
+        : computedMainTabs.find((tab) => tab.value === activeMainTab)?.label || t('organizer.tabs.manual');
+
+  const organizerInlineEmptyText = discoveryQuery.isLoading
+    ? t('organizer.table.emptyLoading')
+    : searchQuery.trim()
+      ? t('organizer.table.emptySearch', { context: currentContextLabel }) || `No items match your search in ${currentContextLabel}.`
+      : t('organizer.table.emptyCategory', { context: currentContextLabel }) || `No items in ${currentContextLabel}.`;
+
   return (
     <Page className="organizer-page">
       <div className={`organizer-main ${!shouldShowDetailsPanel ? 'is-details-hidden' : isDetailsCollapsed ? 'is-details-collapsed' : ''}`}>
@@ -488,7 +501,7 @@ function OrganizerPageContent({
             isDropzoneDisabled={isDropzoneDisabled}
             emptyActions={emptyStateActions}
             emptyState={organizerEmptyState}
-            emptyText={discoveryQuery.isLoading ? t('organizer.table.emptyLoading') : t('organizer.table.emptyDefault')}
+            emptyText={organizerInlineEmptyText}
             labels={t('organizer.pagination')}
             loadingState={organizerLoadingState}
             onPageChange={setPageAndScrollToTop}

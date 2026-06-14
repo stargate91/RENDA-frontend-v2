@@ -29,7 +29,6 @@ export const SETTINGS_BASE_DEFAULTS = {
   close_button_behavior: 'ask',
   include_adult: false,
   adult_gender_preference: 'all',
-  auto_hydrate_inactive_people: false,
   custom_organization_enabled: false,
   organization_preset: SETTINGS_PRESET_IDS.PLEX,
   ui_theme: 'dark',
@@ -154,10 +153,6 @@ export function getInitialFormValues(settingsData = null, t = null) {
     close_button_behavior: getStringValue(settingsData.close_button_behavior, defaults.close_button_behavior),
     include_adult: getBooleanValue(settingsData.include_adult, defaults.include_adult),
     adult_gender_preference: getStringValue(settingsData.adult_gender_preference, defaults.adult_gender_preference),
-    auto_hydrate_inactive_people: getBooleanValue(
-      settingsData.auto_hydrate_inactive_people,
-      defaults.auto_hydrate_inactive_people
-    ),
     custom_organization_enabled: getBooleanValue(
       settingsData.custom_organization_enabled,
       defaults.custom_organization_enabled

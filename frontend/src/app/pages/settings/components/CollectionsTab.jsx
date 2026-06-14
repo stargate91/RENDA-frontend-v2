@@ -20,6 +20,7 @@ export default function CollectionsTab({
   const getPreview = useTemplatePreview(form);
   const { renderContext } = useSettingsFormContext();
   const isScanActive = Boolean(renderContext?.isBackgroundActive);
+  const shouldShowCollectionThreshold = form.folder_collection_mode === FOLDER_COLLECTION_MODES.THRESHOLD;
   const sortOptions = {
     enabled: form.folder_sort_by_type,
     moviesName: form.folder_movies_name,
@@ -67,7 +68,7 @@ export default function CollectionsTab({
               hint={t('settingsPage.sections.collections.collectionModeHint')}
             />
 
-            {form.folder_collection_mode === FOLDER_COLLECTION_MODES.THRESHOLD && (
+            {shouldShowCollectionThreshold && (
               <div className="settings-block-top">
                 <Input
                   label={t('settingsPage.sections.collections.collectionThreshold')}

@@ -3,6 +3,7 @@
   gap: var(--space-4);
   min-width: 0;
   overflow-y: hidden;
+  padding-top: 4px;
 }
 
 .organizer-match-modal__search {
@@ -58,6 +59,8 @@
   justify-content: flex-end;
   align-items: flex-end;
   flex: 0 0 auto;
+  padding-top: 4px;
+  margin-top: -4px;
 }
 
 .organizer-match-modal__search-button {
@@ -392,6 +395,10 @@
 .organizer-match-modal__browser-card.is-selected .organizer-match-modal__browser-card-image {
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 42%, transparent),
     0 0 0 2px color-mix(in srgb, var(--color-accent) 16%, transparent);
+}
+
+.organizer-match-modal__browser-card.is-highlighted .organizer-match-modal__browser-card-image {
+  box-shadow: 0 0 0 2px var(--color-accent);
 }
 
 .organizer-match-modal__browser-card-image {

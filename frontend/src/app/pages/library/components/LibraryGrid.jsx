@@ -1,7 +1,12 @@
+import React, { useState, useMemo } from 'react';
 import PosterGrid from '@/ui/PosterGrid';
 import PosterCard from '@/ui/PosterCard';
 import EmptyState from '@/ui/EmptyState';
+import Button from '@/ui/Button';
+import IconButton from '@/ui/IconButton';
+import NavButton from '@/ui/NavButton';
 import { API_BASE } from '@/lib/backend';
+import { Pencil, Plus, Tag, Trash2, UserPlus } from 'lucide-react';
 
 export default function LibraryGrid({
   t,
@@ -12,7 +17,16 @@ export default function LibraryGrid({
   resolvedTab,
   emptyTitle,
   emptyDescription,
+  emptyStateVariant,
   emptyIcon,
+  hasActiveFilters,
+  onAddPeople,
+  onCreateTag,
+  onEditTag,
+  onDeleteTag,
+  focusedTag,
+  onFocusTag,
+  onExitTagFocus,
 }) {
   const resolvePosterUrl = (path) => {
     if (!path) return '';
@@ -45,7 +59,7 @@ export default function LibraryGrid({
     }
     if (resolvedTab === 'people' || resolvedTab === 'adult_people') {
       return {
-        title: item.title,
+        title: item.name || item.title,
         subtitle: item.people_role ? t(`library.people.roles.${item.people_role}`, { defaultValue: item.people_role }) : '',
         imageUrl: resolvePosterUrl(item.displayPoster || item.poster_path),
         icon: emptyIcon,
@@ -79,21 +93,243 @@ export default function LibraryGrid({
 
   return (
     <div className="library-content">
-      {paginatedItems.length > 0 ? (
-        <PosterGrid>
-          {paginatedItems.map((item) => (
-            <PosterCard
-              key={isTags ? item.name : item.id}
-              {...getCardProps(item)}
-            />
-          ))}
-        </PosterGrid>
+      {focusedTag || paginatedItems.length > 0 ? (
+        isTags ? (
+          focusedTag ? (
+            <div className="library-tag-focus-view">
+              <div className="library-tag-focus-view__toolbar">
+                <NavButton className="library-tag-focus-view__back" onClick={onExitTagFocus}>
+                  {t('library.tags.backToTags') || 'Back to Tags'}
+                </NavButton>
+              </div>
+              <ExpandedTagPanel
+                key={focusedTag.name}
+                tag={focusedTag}
+                t={t}
+                resolvePosterUrl={resolvePosterUrl}
+                emptyIcon={emptyIcon}
+                isFocusMode
+              />
+            </div>
+          ) : (
+            <div className="library-tags-grid">
+              {paginatedItems.map((item) => {
+                const samplePreviews = Array.isArray(item.sample_previews) ? item.sample_previews.slice(0, 3) : [];
+                const previewCount = samplePreviews.length;
+                const singlePreview = previewCount === 1 ? samplePreviews[0] : null;
+                const singlePreviewImage = singlePreview
+                  ? resolvePosterUrl(singlePreview.backdrop || (singlePreview.kind === 'people' ? '' : singlePreview.poster))
+                  : '';
+                return (
+                <button
+                  key={item.name}
+                  type="button"
+                  className={`library-tag-card ${previewCount > 0 ? `library-tag-card--preview-${Math.min(previewCount, 3)}` : ''}`.trim()}
+                  onClick={() => onFocusTag?.(item.name)}
+                  style={{
+                    '--tag-color': item.color || 'var(--color-accent)',
+                  }}
+                >
+                  {(previewCount > 1 || singlePreviewImage) ? (
+                    <div className="library-tag-card__preview" aria-hidden="true">
+                      {samplePreviews.map((preview, index) => (
+                        <div
+                          key={`${item.name}-preview-${index}`}
+                          className="library-tag-card__preview-image"
+                          style={{ backgroundImage: `url(${previewCount === 1 ? singlePreviewImage : resolvePosterUrl(preview.poster)})` }}
+                        />
+                      ))}
+                    </div>
+                  ) : null}
+                  <div className="library-tag-card__actions">
+                    <IconButton
+                      type="button"
+                      size="xs"
+                      variant="ghost"
+                      label={t('library.tags.editBtn') || 'Edit Tag'}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onEditTag?.(item);
+                      }}
+                    >
+                      <Pencil size={12} />
+                    </IconButton>
+                    <IconButton
+                      type="button"
+                      size="xs"
+                      variant="ghost"
+                      label={t('library.tags.deleteBtn') || 'Delete Tag'}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onDeleteTag?.(item);
+                      }}
+                    >
+                      <Trash2 size={12} />
+                    </IconButton>
+                  </div>
+                  <div className="library-tag-card__color-badge" />
+                  <div className="library-tag-card__content">
+                    <span className="library-tag-card__name">{item.name}</span>
+                    <span className="library-tag-card__count">
+                      {t('library.tags.itemsCount', { count: item.total_count })}
+                    </span>
+                  </div>
+                </button>
+                );
+              })}
+            </div>
+          )
+        ) : (
+          <PosterGrid>
+            {paginatedItems.map((item) => (
+              <PosterCard
+                key={item.id}
+                {...getCardProps(item)}
+              />
+            ))}
+          </PosterGrid>
+        )
       ) : (
         <EmptyState
+          variant={emptyStateVariant}
           title={emptyTitle}
           description={emptyDescription}
           icon={emptyIcon}
+          actions={
+            (resolvedTab === 'people' || resolvedTab === 'adult_people') && onAddPeople && !hasActiveFilters ? (
+              <Button variant="primary" size="sm" onClick={onAddPeople}>
+                <UserPlus size={16} />
+                {t('library.people.addPeopleBtn') || 'Add People'}
+              </Button>
+            ) : resolvedTab === 'tags' && onCreateTag && !hasActiveFilters ? (
+              <Button variant="primary" size="sm" onClick={onCreateTag}>
+                <Plus size={16} />
+                {t('library.tags.createBtn') || 'Create Tag'}
+              </Button>
+            ) : null
+          }
         />
+      )}
+    </div>
+  );
+}
+
+function ExpandedTagPanel({ tag, t, resolvePosterUrl, emptyIcon, isFocusMode = false }) {
+  const allItems = useMemo(() => {
+    return [
+      ...(tag.movies || []),
+      ...(tag.series || []),
+      ...(tag.adult || []),
+      ...(tag.people || []),
+      ...(tag.adult_people || []),
+    ];
+  }, [tag]);
+
+  const [visibleCount, setVisibleCount] = useState(20);
+  const paginatedItems = allItems.slice(0, visibleCount);
+  const hasMore = allItems.length > visibleCount;
+  const samplePosterItems = useMemo(() => {
+    if (!Array.isArray(tag.sample_previews) || tag.sample_previews.length === 0) {
+      return [];
+    }
+    return tag.sample_previews.slice(0, 3).map((preview, index) => ({
+      id: `sample_${tag.id || tag.name}_${index}`,
+      title: tag.name,
+      imageUrl: resolvePosterUrl(preview.backdrop || preview.poster),
+    }));
+  }, [tag, resolvePosterUrl]);
+
+  const getCardProps = (item) => {
+    const isPerson = item.type === 'person' || item.type === 'adult_star';
+    if (isPerson) {
+      return {
+        variant: isFocusMode ? 'overlay-title' : 'default',
+        title: item.name || item.title,
+        subtitle: item.people_role ? t(`library.people.roles.${item.people_role}`, { defaultValue: item.people_role }) : '',
+        imageUrl: resolvePosterUrl(item.displayPoster || item.poster_path),
+        icon: emptyIcon,
+      };
+    }
+    const subtitleParts = [];
+    if (item.year) subtitleParts.push(item.year);
+    if (item.info) subtitleParts.push(item.info);
+    return {
+      variant: isFocusMode ? 'overlay-title' : 'default',
+      title: item.title,
+      subtitle: subtitleParts.join(' • '),
+      imageUrl: resolvePosterUrl(item.displayPoster || item.poster_path || item.local_poster_path),
+      icon: emptyIcon,
+      backgroundColor: item.color,
+      ratingImdb: item.rating_imdb,
+      ratingTmdb: item.rating,
+    };
+  };
+
+  if (allItems.length === 0) {
+    return (
+      <div
+        className={`library-tag-expanded-panel ${isFocusMode ? 'is-focus-mode' : ''}`.trim()}
+        style={{ '--tag-color': tag.color || 'var(--color-accent)' }}
+      >
+        {isFocusMode ? (
+          <div className="library-tag-expanded-panel__header">
+            <div className="library-tag-expanded-panel__title-row">
+              <h2 className="library-tag-expanded-panel__title">
+                {(t('library.tags.focusTitle') || 'Items tagged with "{name}"').replace('{name}', tag.name)}
+              </h2>
+            </div>
+          </div>
+        ) : null}
+        {samplePosterItems.length > 0 ? (
+          <PosterGrid>
+            {samplePosterItems.map((item) => (
+              <PosterCard
+                key={item.id}
+                variant="overlay-title"
+                title={item.title}
+                imageUrl={item.imageUrl}
+              />
+            ))}
+          </PosterGrid>
+        ) : null}
+        <EmptyState
+          variant="tag-focus"
+          title={(t('library.tags.emptyFocusTitle') || 'This tag is ready to use.').replace('{name}', tag.name)}
+          description={(t('library.tags.emptyFocusDescription') || 'Add this tag to movies, shows, or people and they will appear here.').replace('{name}', tag.name)}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`library-tag-expanded-panel ${isFocusMode ? 'is-focus-mode' : ''}`.trim()}
+      style={{ '--tag-color': tag.color || 'var(--color-accent)' }}
+    >
+      {isFocusMode ? (
+        <div className="library-tag-expanded-panel__header">
+          <div className="library-tag-expanded-panel__title-row">
+            <h2 className="library-tag-expanded-panel__title">
+              {(t('library.tags.focusTitle') || 'Items tagged with "{name}"').replace('{name}', tag.name)}
+            </h2>
+          </div>
+        </div>
+      ) : null}
+      <PosterGrid>
+        {paginatedItems.map((item) => (
+          <PosterCard
+            key={item.id}
+            {...getCardProps(item)}
+          />
+        ))}
+      </PosterGrid>
+
+      {hasMore && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
+          <Button variant="secondary" onClick={() => setVisibleCount(prev => prev + 20)}>
+            {t('common.showMore') || 'Show More'}
+          </Button>
+        </div>
       )}
     </div>
   );

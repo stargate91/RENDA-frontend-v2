@@ -40,6 +40,7 @@
 
 /* Rating variants */
 .ui-pill--imdb {
+  gap: 4px;
   padding: 2px 5px;
   border-radius: 2px;
   backdrop-filter: blur(4px);
@@ -49,12 +50,22 @@
 }
 
 .ui-pill--tmdb {
+  gap: 4px;
   padding: 2px 5px;
   border-radius: 2px;
   backdrop-filter: blur(4px);
   background-color: color-mix(in srgb, var(--color-brand-tmdb) 10%, transparent);
   border: 1px solid color-mix(in srgb, var(--color-brand-tmdb) 28%, transparent);
   color: var(--color-brand-tmdb);
+}
+
+.ui-pill--imdb svg,
+.ui-pill--tmdb svg {
+  display: block;
+  align-self: center;
+  flex-shrink: 0;
+  position: relative;
+  top: -0.5px;
 }
 
 /* Favorite toggle variants */
@@ -88,4 +99,3 @@
   background-color: var(--color-state-danger-bg-strong);
   border-color: color-mix(in srgb, var(--color-state-danger) 45%, transparent);
 }
-

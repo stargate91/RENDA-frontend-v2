@@ -16,8 +16,9 @@ class Tag(Base):
     """Global user-defined tags."""
     __tablename__ = "tags"
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String, unique=True, index=True)
+    name: Mapped[str] = mapped_column(String, index=True)
     color: Mapped[Optional[str]] = mapped_column(String, default="#3b82f6")
+    target_type: Mapped[str] = mapped_column(String, default="media", server_default="media", index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 class MediaItem(Base):

@@ -118,8 +118,8 @@ export function useMatchResolve({ rows = [], t, toast, onResolved, mode, season,
 
   const handleResolve = async (candidate, overrides = {}) => {
     const candidateId = candidate.tmdb_id || candidate.id;
-    const effectiveSeason = overrides.season !== undefined ? overrides.season : season;
-    const effectiveEpisode = overrides.episode !== undefined ? overrides.episode : episode;
+    const effectiveSeason = overrides.season !== undefined ? overrides.season : null;
+    const effectiveEpisode = overrides.episode !== undefined ? overrides.episode : null;
 
     const isMatchedEpisode = rows.some(r => r.rawType === 'episode' && (r.rawStatus === 'matched' || r.rawStatus === 'renamed' || r.rawStatus === 'organized'));
 

@@ -15,7 +15,14 @@ def run_image_worker_loop():
         local_db = DbSession()
         try:
             iw = ImageWorker(local_db, "./data")
-            iw.process_all()
+            iw.process_all(max_workers=6)
+            
+            # Auto-trigger people hydrator to enrich details & profiles for new cast members
+            try:
+                from app.scanner.people_hydrator import people_hydrator
+                people_hydrator.start()
+            except Exception as hyd_err:
+                logger.error(f"Failed to auto-start people hydrator: {hyd_err}")
         except Exception as e:
             logger.error(f"Global ImageWorker loop error: {e}")
         finally:

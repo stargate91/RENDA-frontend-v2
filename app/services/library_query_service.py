@@ -15,6 +15,14 @@ from ..utils.library_helpers import match_language_code as _match_language_code,
 
 logger = logging.getLogger(__name__)
 
+TAG_EMPTY_STATE_SAMPLE_POSTERS = [
+    "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
+    "https://image.tmdb.org/t/p/w500/8UlWHLMpgZm9bx6QYh0NFoq67TZ.jpg",
+    "https://image.tmdb.org/t/p/w500/6ELCZlTA5lGUops70hKdB83WJxH.jpg",
+]
+
+TAG_PREVIEW_GROUP_ORDER = ("movies", "series", "people", "adult", "adult_people")
+
 
 
 
@@ -35,6 +43,8 @@ class LibraryQueryService:
         self.tab_service = LibraryTabService(db)
         from .library_virtual_cache_service import LibraryVirtualCacheService
         self.virtual_cache = LibraryVirtualCacheService(db)
+        from .library.formatter import LibraryFormatterService
+        self.formatter = LibraryFormatterService(db)
     def get_continue_watching(self, limit: int = 12) -> list[dict]:
         from ..db.models.metadata import MediaMatch
 
@@ -87,21 +97,38 @@ class LibraryQueryService:
         return results
 
     def get_tag_groups(self) -> list[dict]:
-        from ..db.models import Person
+        from ..db.models import Person, Tag
 
         preferred_languages = _preferred_metadata_languages(self.db)
         ui_lang = _preferred_metadata_language(self.db)
         tags_map = {}
 
+        # Pre-populate tags_map with all tags from database
+        all_db_tags = self.db.query(Tag).all()
+        for t in all_db_tags:
+            tags_map[t.name] = {
+                "id": t.id,
+                "name": t.name,
+                "color": t.color,
+                "movies": [],
+                "series": [],
+                "adult": [],
+                "people": [],
+                "adult_people": [],
+                "total_count": 0,
+            }
+
         def _ensure_tag(tag_name: str) -> dict:
             if tag_name not in tags_map:
                 tags_map[tag_name] = {
+                    "id": None,
                     "name": tag_name,
+                    "color": None,
                     "movies": [],
                     "series": [],
                     "adult": [],
-                    "actors": [],
-                    "directors": [],
+                    "people": [],
+                    "adult_people": [],
                     "total_count": 0,
                 }
             return tags_map[tag_name]
@@ -140,6 +167,7 @@ class LibraryQueryService:
                 "year": _library_year(item, active_match),
                 "release_date": _library_release_date(active_match),
                 "poster_path": loc.poster_path if loc else None,
+                "backdrop_path": loc.backdrop_path if loc else None,
                 "series_poster_path": loc.series_poster_path if loc else None,
                 "rating": active_match.rating_tmdb if active_match else 0,
                 "rating_imdb": active_match.rating_imdb if active_match else None,
@@ -200,7 +228,9 @@ class LibraryQueryService:
                 "year": year_value,
                 "release_date": date_field,
                 "poster_path": raw_poster_path,
+                "backdrop_path": raw_data.get("backdrop_path"),
                 "local_poster_path": local_poster_path,
+                "local_backdrop_path": _public_image_path(raw_data.get("backdrop_path"), "backdrops"),
                 "displayPosterRemote": f"https://image.tmdb.org/t/p/w500{raw_poster_path}" if raw_poster_path else None,
                 "rating": raw_data.get("vote_average") or 0,
                 "type": "series" if media_type == "tv" else "movie",
@@ -237,15 +267,22 @@ class LibraryQueryService:
             tags = person.custom_tags
             if not tags or not isinstance(tags, list):
                 continue
-            person_group = "actors" if person.known_for_department == "Acting" else "directors"
-            fallback_name = "Unknown Actor" if person_group == "actors" else "Unknown Director"
+            
+            if person.is_adult:
+                person_group = "adult_people"
+                fallback_name = "Unknown Adult Star"
+            else:
+                person_group = "people"
+                fallback_name = "Unknown Person"
+
             person_entry = {
                 "id": person.id,
+                "name": person.localizations[0].name if person.localizations else fallback_name,
                 "title": person.localizations[0].name if person.localizations else fallback_name,
                 "year": None,
                 "poster_path": self.people_service._person_profile_path(person),
                 "rating": person.popularity or 0.0,
-                "type": "actor" if person_group == "actors" else "director",
+                "type": "adult_star" if person.is_adult else "person",
                 "is_active": person.is_active,
                 "is_favorite": person.is_favorite,
                 "user_rating": person.user_rating,
@@ -263,7 +300,76 @@ class LibraryQueryService:
                 tag_entry[person_group].append(person_entry)
                 tag_entry["total_count"] += 1
 
-        return sorted(tags_map.values(), key=lambda tag: tag["name"].lower())
+        media_tag_names = {t.name for t in all_db_tags}
+        result = sorted([tag for tag in tags_map.values() if tag["name"] in media_tag_names], key=lambda tag: tag["name"].lower())
+        for tag in result:
+            tag["movies"] = self.formatter.format_media_cards("movies", tag["movies"])
+            tag["series"] = self.formatter.format_media_cards("series", tag["series"])
+            tag["adult"] = self.formatter.format_media_cards("adult", tag["adult"])
+            tag["people"] = self.formatter.format_media_cards("people", tag["people"])
+            tag["adult_people"] = self.formatter.format_media_cards("adult_people", tag["adult_people"])
+
+        preview_pool = []
+        for tag in result:
+            for group_name in TAG_PREVIEW_GROUP_ORDER:
+                for item in tag[group_name]:
+                    preview = self._build_tag_preview_entry(item)
+                    poster = preview.get("poster") if preview else None
+                    if poster and poster not in preview_pool:
+                        preview_pool.append(poster)
+
+        for tag in result:
+            tag["sample_previews"] = self._build_tag_sample_previews(
+                tag,
+                fallback_preview=(preview_pool[:3] if preview_pool else TAG_EMPTY_STATE_SAMPLE_POSTERS),
+            )
+            tag["sample_posters"] = [entry["poster"] for entry in tag["sample_previews"] if entry.get("poster")]
+        return result
+
+    def _build_tag_preview_entry(self, item: dict) -> dict | None:
+        poster = item.get("displayPoster") or item.get("local_poster_path") or item.get("poster_path")
+        backdrop = item.get("local_backdrop_path") or item.get("backdrop_path")
+        if not poster and not backdrop:
+            return None
+        return {
+            "poster": poster,
+            "backdrop": backdrop,
+            "kind": item.get("type"),
+        }
+
+    def _build_tag_sample_postviews_fallback(self, fallback_preview: list[str]) -> list[dict]:
+        return [{"poster": poster, "backdrop": None} for poster in fallback_preview[:3] if poster]
+
+    def _build_tag_sample_previews(self, tag: dict, fallback_preview: list[str]) -> list[dict]:
+        if not tag.get("total_count"):
+            return self._build_tag_sample_postviews_fallback(fallback_preview)
+
+        previews: list[dict] = []
+        seen: set[str] = set()
+
+        def add_preview(item: dict) -> bool:
+            preview = self._build_tag_preview_entry(item)
+            poster = preview.get("poster") if preview else None
+            if not preview or not poster or poster in seen:
+                return False
+            previews.append(preview)
+            seen.add(poster)
+            return len(previews) >= 3
+
+        # First pass: diversify across groups so mixed tags read immediately.
+        for group_name in TAG_PREVIEW_GROUP_ORDER:
+            for item in tag.get(group_name, []):
+                if add_preview(item):
+                    return previews
+                break
+
+        # Second pass: fill remaining slots from the natural group ordering.
+        for group_name in TAG_PREVIEW_GROUP_ORDER:
+            for item in tag.get(group_name, []):
+                if add_preview(item):
+                    return previews
+
+        return previews[:3]
 
     def _format_size(self, size_bytes: int) -> str:
         if size_bytes >= 1024 ** 4:

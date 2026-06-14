@@ -1,10 +1,12 @@
 import MediaCard from './MediaCard';
 import Pill from './Pill';
+import { Star } from 'lucide-react';
 import './PosterCard.css';
 
 export default function PosterCard({
   as: Component,
   className = '',
+  variant = 'default',
   imageUrl,
   backgroundColor,
   icon: IconComponent,
@@ -23,8 +25,9 @@ export default function PosterCard({
 }) {
   const isInteractive = !!onClick;
   const DefaultComponent = Component || (isInteractive ? 'button' : 'div');
+  const isOverlayTitle = variant === 'overlay-title';
 
-  const cardClassName = `ui-poster-card ${active ? 'is-active' : ''} ${className}`.trim();
+  const cardClassName = `ui-poster-card ${isOverlayTitle ? 'ui-poster-card--overlay-title' : ''} ${active ? 'is-active' : ''} ${className}`.trim();
 
   return (
     <div className={cardClassName}>
@@ -49,11 +52,17 @@ export default function PosterCard({
           )}
           {overlay}
           {badge}
+          {isOverlayTitle && title ? (
+            <div className="ui-poster-card__title-overlay">
+              <div className="ui-poster-card__title-overlay-gradient" />
+              <div className="ui-poster-card__title-overlay-label" title={title}>{title}</div>
+            </div>
+          ) : null}
           {children}
         </MediaCard>
       </DefaultComponent>
 
-      {(title || subtitle || ratingImdb || ratingTmdb) && (
+      {!isOverlayTitle && (title || subtitle || ratingImdb || ratingTmdb) && (
         <div className="ui-poster-card__details">
           {title && <div className="ui-poster-card__title" title={title}>{title}</div>}
           {(subtitle || ratingImdb || ratingTmdb) && (
@@ -64,10 +73,20 @@ export default function PosterCard({
                 const hasTmdb = ratingTmdb !== undefined && ratingTmdb !== null && ratingTmdb !== '';
                 if (hasImdb) {
                   const val = parseFloat(ratingImdb);
-                  return <Pill variant="imdb">{isNaN(val) ? ratingImdb : val.toFixed(1)}</Pill>;
+                  return (
+                    <Pill variant="imdb">
+                      <Star size={10} fill="currentColor" strokeWidth={1.8} />
+                      {isNaN(val) ? ratingImdb : val.toFixed(1)}
+                    </Pill>
+                  );
                 } else if (hasTmdb) {
                   const val = parseFloat(ratingTmdb);
-                  return <Pill variant="tmdb">{isNaN(val) ? ratingTmdb : val.toFixed(1)}</Pill>;
+                  return (
+                    <Pill variant="tmdb">
+                      <Star size={10} fill="currentColor" strokeWidth={1.8} />
+                      {isNaN(val) ? ratingTmdb : val.toFixed(1)}
+                    </Pill>
+                  );
                 }
                 return null;
               })()}
@@ -78,4 +97,3 @@ export default function PosterCard({
     </div>
   );
 }
-

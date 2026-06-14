@@ -44,6 +44,7 @@ export default function useMatchModalViewModel({
     resetBrowser,
     handleBrowseSeries,
     handleBrowseSeason,
+    handleDirectBrowse,
     handleBrowserBack,
     browserTitle,
     browserMetaItems,
@@ -79,7 +80,15 @@ export default function useMatchModalViewModel({
 
   const handleSearch = async (event) => {
     event?.preventDefault();
-    await performSearch(resetBrowser);
+    const searchResults = await performSearch(resetBrowser);
+    if (searchResults && searchResults.length === 1 && mode === 'tv') {
+      const parsedSeason = Number.parseInt(season, 10);
+      if (Number.isFinite(parsedSeason)) {
+        handleDirectBrowse(searchResults[0], parsedSeason);
+      } else {
+        handleBrowseSeries(searchResults[0]);
+      }
+    }
   };
 
   const handleModeChange = async (nextMode) => {
@@ -91,7 +100,15 @@ export default function useMatchModalViewModel({
     resetBrowser();
 
     if (hasSearched && !isSearching) {
-      await performSearch(resetBrowser, nextMode);
+      const searchResults = await performSearch(resetBrowser, nextMode);
+      if (searchResults && searchResults.length === 1 && nextMode === 'tv') {
+        const parsedSeason = Number.parseInt(season, 10);
+        if (Number.isFinite(parsedSeason)) {
+          handleDirectBrowse(searchResults[0], parsedSeason);
+        } else {
+          handleBrowseSeries(searchResults[0]);
+        }
+      }
     }
   };
 

@@ -57,6 +57,21 @@ export function useMatchBrowser({ t }) {
     }));
   };
 
+  const handleDirectBrowse = (candidate, seasonNumber) => {
+    const seasons = candidate.seasons || [];
+    const matchedSeason = seasons.find(s => s.season_number === seasonNumber);
+    if (matchedSeason) {
+      setBrowserState({
+        view: 'episodes',
+        seriesCandidate: candidate,
+        selectedSeason: matchedSeason,
+        bucketEpisodes: [],
+      });
+    } else {
+      handleBrowseSeries(candidate);
+    }
+  };
+
   const handleBrowserBack = () => {
     setBrowserState((current) => {
       if (current.view === 'episodes') {
@@ -115,6 +130,7 @@ export function useMatchBrowser({ t }) {
     resetBrowser,
     handleBrowseSeries,
     handleBrowseSeason,
+    handleDirectBrowse,
     handleBrowserBack,
     browserTitle,
     browserMetaItems,

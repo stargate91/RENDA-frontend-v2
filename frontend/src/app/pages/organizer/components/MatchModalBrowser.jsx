@@ -12,6 +12,7 @@ export default function MatchModalBrowser({
   onBrowseSeason,
   onSelectEpisode,
   onToggleBucketEpisode,
+  episode,
   t,
 }) {
   const [visibleCount, setVisibleCount] = useState(30);
@@ -21,6 +22,16 @@ export default function MatchModalBrowser({
   if (prevViewSeason !== currentViewSeason) {
     setPrevViewSeason(currentViewSeason);
     setVisibleCount(30);
+  }
+
+  // Ensure searched episode is rendered even if it's beyond initial visibleCount
+  const targetEpisodeNum = Number.parseInt(episode, 10);
+  const matchedEpisodeIndex = Number.isFinite(targetEpisodeNum)
+    ? browserState.episodes.findIndex(e => e.episode_number === targetEpisodeNum)
+    : -1;
+
+  if (matchedEpisodeIndex >= visibleCount) {
+    setVisibleCount(matchedEpisodeIndex + 10);
   }
 
   const observerRef = useRef();
@@ -78,7 +89,7 @@ export default function MatchModalBrowser({
           </div>
         ) : (
           <EmptyState
-            variant="simple"
+            variant="modal-default"
             title={t('organizer.details.matchModal.noSeasons')}
           />
         )
@@ -99,6 +110,7 @@ export default function MatchModalBrowser({
                       ? [Number(row.rawPayload.episode)]
                       : []) : [];
                 const isActiveEpisode = isActiveSeason && currentEpisodes.includes(Number(episodeEntry.episode_number));
+                const isHighlightedEpisode = Number.isFinite(targetEpisodeNum) && Number(episodeEntry.episode_number) === targetEpisodeNum;
                 return (
                   <MatchEpisodeCard
                     key={`episode-${episodeEntry.id || episodeEntry.episode_number}`}
@@ -108,6 +120,7 @@ export default function MatchModalBrowser({
                     onSelect={onSelectEpisode}
                     onToggle={onToggleBucketEpisode}
                     isActive={isActiveEpisode}
+                    isHighlighted={isHighlightedEpisode}
                     t={t}
                   />
                 );
@@ -122,7 +135,7 @@ export default function MatchModalBrowser({
           </>
         ) : (
           <EmptyState
-            variant="simple"
+            variant="modal-default"
             title={t('organizer.details.matchModal.noEpisodes')}
           />
         )

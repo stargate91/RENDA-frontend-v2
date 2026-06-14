@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react';
 import { Clapperboard, Check } from 'lucide-react';
 import MediaCard from '../../../ui/MediaCard';
 import MetaRow from '../../../ui/MetaRow';
@@ -20,14 +21,27 @@ export default function MatchEpisodeCard({
   onSelect,
   onToggle,
   isActive = false,
+  isHighlighted = false,
   t,
 }) {
   const stillUrl = getImageUrl(episodeEntry.still_path, TMDB_IMAGE_SIZE_STILL);
+  const cardRef = useRef();
+
+  useEffect(() => {
+    if (isHighlighted && cardRef.current) {
+      // Small timeout to allow render/layout to stabilize before scrolling
+      const timer = setTimeout(() => {
+        cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [isHighlighted]);
 
   return (
     <div
+      ref={cardRef}
       key={`episode-${episodeEntry.id || episodeEntry.episode_number}`}
-      className={`organizer-match-modal__browser-card organizer-match-modal__browser-card--episode${isBucketed ? ' is-selected' : ''}`.trim()}
+      className={`organizer-match-modal__browser-card organizer-match-modal__browser-card--episode${isBucketed ? ' is-selected' : ''}${isHighlighted ? ' is-highlighted' : ''}`.trim()}
     >
       <button
         type="button"

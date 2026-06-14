@@ -10,6 +10,35 @@ import useMatchModalViewModel from './components/useMatchModalViewModel';
 import EmptyState from '../../ui/EmptyState';
 import '../../styles/MatchModal.css';
 
+function getInitialMatchEmptyState({ row, mode, t }) {
+  const isSeriesMode = mode === 'tv' || mode === 'series';
+
+  if (row?.rawStatus === 'no_match') {
+    return {
+      title: t('organizer.details.matchModal.noDetectedMatchesTitle') || 'No detected matches',
+      description: isSeriesMode
+        ? (t('organizer.details.matchModal.noDetectedMatchesSeriesDesc') || 'We could not detect a usable series match for this item. Search above to find the right show.')
+        : (t('organizer.details.matchModal.noDetectedMatchesMovieDesc') || 'We could not detect a usable movie match for this item. Search above to find the right title.'),
+    };
+  }
+
+  if (row?.rawStatus === 'error') {
+    return {
+      title: t('organizer.details.matchModal.errorDetectedMatchesTitle') || 'Automatic matching ran into an issue',
+      description: isSeriesMode
+        ? (t('organizer.details.matchModal.errorDetectedMatchesSeriesDesc') || 'This item could not be matched automatically right now. Search above to choose the correct show manually.')
+        : (t('organizer.details.matchModal.errorDetectedMatchesMovieDesc') || 'This item could not be matched automatically right now. Search above to choose the correct movie manually.'),
+    };
+  }
+
+  return {
+    title: t('organizer.details.matchModal.newDetectedMatchesTitle') || 'No automatic match yet',
+    description: isSeriesMode
+      ? (t('organizer.details.matchModal.newDetectedMatchesSeriesDesc') || 'This item has not been matched to a show yet. Search above to find the correct series.')
+      : (t('organizer.details.matchModal.newDetectedMatchesMovieDesc') || 'This item has not been matched to a movie yet. Search above to find the correct title.'),
+  };
+}
+
 export default function OrganizerMatchModalContent({
   row,
   rows = [],
@@ -55,6 +84,10 @@ export default function OrganizerMatchModalContent({
 
   const targetRows = rows.length > 0 ? rows : (row ? [row] : []);
   const isBulk = targetRows.length > 1;
+  const shouldShowStatusEmptyState = !isBulk && !hasSearched && browserState.view === 'results' && ['no_match', 'new', 'error'].includes(row?.rawStatus);
+  const initialMatchEmptyState = shouldShowStatusEmptyState
+    ? getInitialMatchEmptyState({ row, mode, t })
+    : null;
 
   const [dontShowAgain, setDontShowAgain] = useState(false);
 
@@ -95,9 +128,15 @@ export default function OrganizerMatchModalContent({
       <section className="organizer-match-modal__section">
         {isBulk && !hasSearched && browserState.view === 'results' ? (
           <EmptyState
-            variant="simple"
-            title={t('organizer.details.matchModal.searchRequiredTitle')}
-            description={t('organizer.details.matchModal.searchRequiredDesc')}
+            variant="modal-intro"
+            title={t('organizer.details.matchModal.bulkSearchIntroTitle')}
+            description={t('organizer.details.matchModal.bulkSearchIntroDesc')}
+          />
+        ) : shouldShowStatusEmptyState ? (
+          <EmptyState
+            variant="modal-default"
+            title={initialMatchEmptyState.title}
+            description={initialMatchEmptyState.description}
           />
         ) : (
           <>
@@ -161,6 +200,8 @@ export default function OrganizerMatchModalContent({
               onCandidateSelect={handleCandidateSelect}
               row={row}
               t={t}
+              hasSearched={hasSearched}
+              view={browserState.view}
             />
 
             <MatchModalBrowser
@@ -172,6 +213,7 @@ export default function OrganizerMatchModalContent({
               onBrowseSeason={handleBrowseSeason}
               onSelectEpisode={handleSelectEpisode}
               onToggleBucketEpisode={toggleBucketEpisode}
+              episode={episode}
               t={t}
             />
           </>

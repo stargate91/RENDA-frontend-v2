@@ -96,6 +96,7 @@ export default function OrganizerResultsPanel({
                 activeRowId={activeRowId}
                 onRowClick={onRowClick}
                 emptyText={emptyText}
+                emptyContent={<EmptyState variant="inline" title={emptyText} />}
                 rowActions={rowActions}
                 selectedRows={selectedRows}
                 openBulkDeleteModal={openBulkDeleteModal}

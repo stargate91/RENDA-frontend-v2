@@ -4,12 +4,33 @@ from sqlalchemy.orm import joinedload
 
 from app.db.base import get_db
 from app.db.models import MediaItem, TMDBCache, MediaMatch
+from app.utils.library_utils import _public_image_path, _tmdb_image_url
 
 import logging
 import traceback
 from fastapi.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
+
+def _resolve_image_path(path: str | None, local_path: str | None, subfolder: str, size: str) -> str | None:
+    if not path:
+        return None
+    public = _public_image_path(local_path, subfolder) or _public_image_path(path, subfolder)
+    if public:
+        return public
+    return _tmdb_image_url(path, size=size)
+
+def _resolve_poster_path(path: str | None, local_path: str | None) -> str | None:
+    return _resolve_image_path(path, local_path, "posters", "w500")
+
+def _resolve_backdrop_path(path: str | None, local_path: str | None) -> str | None:
+    return _resolve_image_path(path, local_path, "backdrops", "w1280")
+
+def _resolve_still_path(path: str | None, local_path: str | None) -> str | None:
+    return _resolve_image_path(path, local_path, "stills", "w400")
+
+def _resolve_logo_path(path: str | None, local_path: str | None) -> str | None:
+    return _resolve_image_path(path, local_path, "logos", "original")
 
 router = APIRouter()
 
@@ -67,14 +88,14 @@ def get_full_item_metadata(item_id: int, db: Session = Depends(get_db)):
                     "origin_country": loc.origin_country,
                     "original_language": loc.original_language,
                     "spoken_languages": loc.spoken_languages,
-                    "poster_path": loc.poster_path,
-                    "local_poster_path": loc.local_poster_path,
-                    "logo_path": loc.logo_path,
-                    "local_logo_path": loc.local_logo_path,
-                    "backdrop_path": loc.backdrop_path,
-                    "local_backdrop_path": loc.local_backdrop_path,
-                    "still_path": loc.still_path,
-                    "local_still_path": loc.local_still_path,
+                    "poster_path": _resolve_poster_path(loc.poster_path, loc.local_poster_path),
+                    "local_poster_path": _resolve_poster_path(loc.poster_path, loc.local_poster_path),
+                    "logo_path": _resolve_logo_path(loc.logo_path, loc.local_logo_path),
+                    "local_logo_path": _resolve_logo_path(loc.logo_path, loc.local_logo_path),
+                    "backdrop_path": _resolve_backdrop_path(loc.backdrop_path, loc.local_backdrop_path),
+                    "local_backdrop_path": _resolve_backdrop_path(loc.backdrop_path, loc.local_backdrop_path),
+                    "still_path": _resolve_still_path(loc.still_path, loc.local_still_path),
+                    "local_still_path": _resolve_still_path(loc.still_path, loc.local_still_path),
                     "is_primary": loc.is_primary
                 })
 
@@ -89,8 +110,18 @@ def get_full_item_metadata(item_id: int, db: Session = Depends(get_db)):
                 "director": match.director,
                 "cast": match.cast,
                 "collection": match.collection,
-                "networks": match.networks,
-                "companies": match.companies,
+                "networks": [
+                    {
+                        "name": net.get("name"),
+                        "logo_path": _resolve_logo_path(net.get("logo_path"), net.get("local_logo_path"))
+                    } for net in (match.networks or [])
+                ],
+                "companies": [
+                    {
+                        "name": comp.get("name"),
+                        "logo_path": _resolve_logo_path(comp.get("logo_path"), comp.get("local_logo_path"))
+                    } for comp in (match.companies or [])
+                ],
                 "series_type": match.series_type,
                 "number_of_seasons": match.number_of_seasons,
                 "number_of_episodes": match.number_of_episodes,
