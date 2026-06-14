@@ -6,7 +6,7 @@ import Spinner from '@/ui/Spinner';
 import IconButton from '@/ui/IconButton';
 import EmptyState from '@/ui/EmptyState';
 import Dropdown from '@/ui/Dropdown';
-import { Search, Plus, Check, Minus, Users } from 'lucide-react';
+import { Search, Plus, Check, Minus } from 'lucide-react';
 import { API_BASE } from '@/lib/backend';
 
 function ActivationButton({ isActive, onClick, disabled }) {
@@ -48,11 +48,12 @@ export default function AddPeopleModalContent({ isAdult, t }) {
   const [activeMode, setActiveMode] = useState('local'); // 'local', 'search', 'bulk'
   const [searchQuery, setSearchQuery] = useState('');
   const [optimisticStatus, setOptimisticStatus] = useState({});
+  // eslint-disable-next-line no-unused-vars
   const [loadingIds, setLoadingIds] = useState(new Set());
   const [roleFilter, setRoleFilter] = useState('all');
   const [genderFilter, setGenderFilter] = useState('all');
   const [sortBy, setSortBy] = useState('library_count');
-  const [sortDirection, setSortDirection] = useState('desc');
+  const [sortDirection, setSortDirection] = useState('asc');
 
   const { data: settings } = useSettingsQuery();
   const hideGenderFilter = isAdult && settings?.adult_gender_preference && settings.adult_gender_preference !== 'all';
@@ -203,9 +204,9 @@ export default function AddPeopleModalContent({ isAdult, t }) {
                   ? (isAdult
                       ? (t('library.addPeople.adultNoFilterResultsTitle') || 'Nothing fits these filters')
                       : (t('library.addPeople.noFilterResultsTitle') || 'Nothing fits these filters'))
-                : (isAdult
-                    ? (t('library.addPeople.adultNoInactive') || 'All discovered adult people are already in your library.')
-                    : (t('library.addPeople.noInactive') || 'No people found.'))
+                  : (isAdult
+                      ? (t('library.addPeople.adultNoInactive') || 'All discovered adult people are already in your library.')
+                      : (t('library.addPeople.noInactive') || 'No people found.'))
               }
               description={hasSearchQuery
                 ? (isAdult
@@ -215,9 +216,9 @@ export default function AddPeopleModalContent({ isAdult, t }) {
                   ? (isAdult
                       ? (t('library.addPeople.adultNoFilterResultsDesc') || 'Try clearing or relaxing the local adult people filters to see more suggestions.')
                       : (t('library.addPeople.noFilterResultsDesc') || 'Try clearing or relaxing the local people filters to see more suggestions.'))
-                : (isAdult
-                    ? (t('library.addPeople.adultNoInactiveDesc') || 'Scan and organize new adult titles to find more cast and creator suggestions.')
-                    : (t('library.addPeople.noInactiveDesc') || 'All people from organized items are already active.'))
+                  : (isAdult
+                      ? (t('library.addPeople.adultNoInactiveDesc') || 'Scan and organize new adult titles to find more cast and creator suggestions.')
+                      : (t('library.addPeople.noInactiveDesc') || 'All people from organized items are already active.'))
               }
               variant={hasSearchQuery ? 'modal-search' : hasActiveFilters ? 'modal-filter' : 'modal-default'}
             />

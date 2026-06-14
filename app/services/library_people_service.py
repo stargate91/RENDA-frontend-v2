@@ -211,6 +211,9 @@ class LibraryPeopleService:
                         continue
                 if target_tab != "adult_people" and is_adult_person:
                     continue
+            else:
+                if is_adult_person:
+                    continue
             people_list.append({
                 "id": person.id,
                 "name": person.localizations[0].name if person.localizations else fallback_name,

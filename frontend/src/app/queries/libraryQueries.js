@@ -9,40 +9,49 @@ export const useStatsQuery = () => useQuery({
 export const useLibraryQuery = (params) => useQuery({
   queryKey: ['library', params],
   queryFn: ({ signal }) => api.library.getItems(params, { signal }),
-  placeholderData: (previousData) => previousData,
+  placeholderData: (previousData, previousQuery) => {
+    if (!previousData || !previousQuery) return undefined;
+    const prevParams = previousQuery.queryKey[1] || {};
+    const currentParams = params || {};
+    if (prevParams.tab !== currentParams.tab) {
+      return undefined;
+    }
+    return previousData;
+  },
 });
 
 export const useCollectionsQuery = (params) => useQuery({
   queryKey: ['libraryCollections', params],
   queryFn: ({ signal }) => api.library.getCollections(params, { signal }),
-  placeholderData: (previousData) => previousData,
+  placeholderData: (previousData, previousQuery) => {
+    if (!previousData || !previousQuery) return undefined;
+    const prevParams = previousQuery.queryKey[1] || {};
+    const currentParams = params || {};
+    if (prevParams.tab !== currentParams.tab) {
+      return undefined;
+    }
+    return previousData;
+  },
 });
 
-export const useTagsQuery = () => useQuery({
-  queryKey: ['libraryTags'],
-  queryFn: () => api.library.getTags(),
+export const useTagsQuery = (isAdult = false) => useQuery({
+  queryKey: ['libraryTags', isAdult],
+  queryFn: () => api.library.getTags(isAdult),
 });
 
-export const useAllTagsQuery = () => useQuery({
-  queryKey: ['allTags'],
-  queryFn: () => api.tags.getAll(),
+export const useAllTagsQuery = (isAdult = false) => useQuery({
+  queryKey: ['allTags', isAdult],
+  queryFn: () => api.tags.getAll(isAdult),
 });
 
 export const useCreateTagMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload) => api.tags.create(payload),
-    onSuccess: (newTag) => {
-      queryClient.setQueryData(['libraryTags'], (oldTags) => {
-        const formatted = {
-          id: newTag.id,
-          name: newTag.name,
-          color: newTag.color,
-          total_count: 0,
-        };
-        return oldTags ? [...oldTags, formatted] : [formatted];
-      });
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['libraryTags'] });
+      queryClient.invalidateQueries({ queryKey: ['allTags'] });
+      queryClient.invalidateQueries({ queryKey: ['libraryFilters'] });
       queryClient.invalidateQueries({ queryKey: ['stats'] });
     },
   });
@@ -55,6 +64,7 @@ export const useUpdateTagMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['libraryTags'] });
       queryClient.invalidateQueries({ queryKey: ['allTags'] });
+      queryClient.invalidateQueries({ queryKey: ['libraryFilters'] });
       queryClient.invalidateQueries({ queryKey: ['stats'] });
     },
   });
@@ -68,6 +78,7 @@ export const useDeleteTagMutation = () => {
       queryClient.invalidateQueries({ queryKey: ['libraryTags'] });
       queryClient.invalidateQueries({ queryKey: ['allTags'] });
       queryClient.invalidateQueries({ queryKey: ['library'] });
+      queryClient.invalidateQueries({ queryKey: ['libraryFilters'] });
       queryClient.invalidateQueries({ queryKey: ['stats'] });
     },
   });

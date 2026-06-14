@@ -55,6 +55,8 @@ def _ensure_sqlite_columns():
         },
         "tags": {
             "target_type": "VARCHAR DEFAULT 'media'",
+            "is_adult": "BOOLEAN DEFAULT 0",
+            "custom_images": "TEXT",
         },
     }
     with engine.begin() as conn:

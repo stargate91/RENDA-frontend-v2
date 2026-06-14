@@ -75,10 +75,10 @@ def get_library_items(
 
 
 @router.get("/library/tags")
-def get_library_tags():
+def get_library_tags(is_adult: bool = False):
     db = Session()
     try:
-        tags = MediaLibraryService(db).get_tag_groups()
+        tags = MediaLibraryService(db).get_tag_groups(is_adult=is_adult)
         return tags
     finally:
         db.close()

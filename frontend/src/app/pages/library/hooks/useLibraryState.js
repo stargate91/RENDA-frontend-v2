@@ -1,15 +1,19 @@
 import { useEffect, useState, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import api from '@/lib/api';
 import { useSettingsQuery } from '@/queries/settingsQueries';
-import { useLibraryQuery, useCollectionsQuery, useTagsQuery, useLibraryFiltersQuery } from '@/queries/libraryQueries';
+import { useLibraryQuery, useCollectionsQuery, useLibraryFiltersQuery } from '@/queries/libraryQueries';
+import { useLibraryTags } from './useLibraryTags';
 import { usePaginationVisibility } from '../../../hooks/usePaginationVisibility';
 import { useTranslation } from '@/providers/LanguageProvider';
 import { useLocalListSearch } from '../../../hooks/useLocalListSearch';
-import { Clapperboard, Tv, Users, Tag, ShieldAlert, Layers } from 'lucide-react';
+import { Clapperboard, Tv, Users, Tag, Layers } from 'lucide-react';
 import { sortLibraryItems } from '../utils/librarySort';
 
 export function useLibraryState({ initialTab = 'movies', lockTab = false, includeTagsTab = false } = {}) {
   const { data: settings, isLoading } = useSettingsQuery();
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState(initialTab);
   const [searchQuery, setSearchQuery] = useState('');
   const [ownershipFilter, setOwnershipFilter] = useState('owned');
@@ -81,22 +85,46 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
       : genderFilter)
     : undefined;
 
+  const libraryQueryParams = useMemo(() => {
+    if (isCollections || isTags || !activeSessionMode) return null;
+    return {
+      tab: backendTab,
+      page: currentPage,
+      pageSize: pageSize,
+      search: searchQuery || undefined,
+      sortBy: `${sortKey}_${sortDirection}`,
+      filter_ownership: ownershipFilter,
+      filter_watched: watchedFilter,
+      selected_genre: genreFilter || undefined,
+      people_role: isPeople ? peopleRoleFilter : undefined,
+      filter_gender: resolvedGenderFilter,
+      filter_favorite: isPeople ? favoriteFilter : undefined,
+      selected_decade: decadeFilter !== 'all' ? decadeFilter : undefined,
+      selected_year: yearFilter !== '' ? Number(yearFilter) : undefined
+    };
+  }, [
+    isCollections,
+    isTags,
+    activeSessionMode,
+    backendTab,
+    currentPage,
+    pageSize,
+    searchQuery,
+    sortKey,
+    sortDirection,
+    ownershipFilter,
+    watchedFilter,
+    genreFilter,
+    isPeople,
+    peopleRoleFilter,
+    resolvedGenderFilter,
+    favoriteFilter,
+    decadeFilter,
+    yearFilter
+  ]);
+
   const { data: libraryData, isLoading: isLibraryLoading } = useLibraryQuery(
-    !isCollections && !isTags && activeSessionMode
-      ? {
-          tab: backendTab,
-          page: 1,
-          pageSize: 10000,
-          filter_ownership: ownershipFilter,
-          filter_watched: watchedFilter,
-          selected_genre: genreFilter || undefined,
-          people_role: isPeople ? peopleRoleFilter : undefined,
-          filter_gender: resolvedGenderFilter,
-          filter_favorite: isPeople ? favoriteFilter : undefined,
-          selected_decade: decadeFilter !== 'all' ? decadeFilter : undefined,
-          selected_year: yearFilter !== '' ? Number(yearFilter) : undefined
-        }
-      : { tab: 'movies', page: 1, pageSize: 1 }
+    libraryQueryParams || { tab: 'movies', page: 1, pageSize: 1 }
   );
 
   const { data: filterData } = useLibraryFiltersQuery(
@@ -111,45 +139,7 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
       : null
   );
 
-  const { data: tagsData, isLoading: isTagsLoading } = useTagsQuery();
-
-  const processedTags = useMemo(() => {
-    if (!tagsData) return [];
-    const isNsfw = activeSessionMode === 'nsfw';
-    return tagsData
-      .map(tag => {
-        const localCount = isNsfw
-          ? (tag.adult?.length || 0) + (tag.adult_series?.length || 0) + (tag.adult_people?.length || 0)
-          : (tag.movies?.length || 0) + (tag.series?.length || 0) + (tag.people?.length || 0);
-
-        const modeItems = isNsfw
-          ? [...(tag.adult || []), ...(tag.adult_series || []), ...(tag.adult_people || [])]
-          : [...(tag.movies || []), ...(tag.series || []), ...(tag.people || [])];
-
-        const localPreviews = [];
-        const seenPosters = new Set();
-        for (const item of modeItems) {
-          const poster = item.displayPoster || item.local_poster_path || item.poster_path;
-          const backdrop = item.local_backdrop_path || item.backdrop_path;
-          if ((poster || backdrop) && !seenPosters.has(poster)) {
-            localPreviews.push({
-              poster,
-              backdrop,
-              kind: item.type,
-            });
-            seenPosters.add(poster);
-            if (localPreviews.length >= 3) break;
-          }
-        }
-
-        return {
-          ...tag,
-          total_count: localCount,
-          sample_previews: localPreviews,
-        };
-      })
-      .filter(tag => tag.total_count > 0);
-  }, [tagsData, activeSessionMode]);
+  const { processedTags, isTagsLoading } = useLibraryTags({ activeSessionMode });
 
   const counts = libraryData?.counts || {};
 
@@ -172,6 +162,7 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
 
   useEffect(() => {
     if (lockTab && activeTab !== initialTab) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveTab(initialTab);
     }
   }, [activeTab, initialTab, lockTab]);
@@ -194,6 +185,7 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
       setSortDirection('asc');
     }
     setCurrentPage(1);
+    setSearchQuery('');
     setGenreFilter('');
     setCollectionStatusFilter('all');
     setPeopleRoleFilter('all');
@@ -206,6 +198,7 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
   const handleOwnershipFilterChange = (newOwnership) => {
     setOwnershipFilter(newOwnership);
     setCurrentPage(1);
+    setSearchQuery('');
     setGenreFilter('');
     setCollectionStatusFilter('all');
     setPeopleRoleFilter('all');
@@ -213,6 +206,16 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
     setFavoriteFilter('all');
     setDecadeFilter('all');
     setYearFilter('');
+  };
+
+  const handleFilterChange = (setter) => (val) => {
+    setter(val);
+    setCurrentPage(1);
+  };
+
+  const handleSearchQueryChange = (val) => {
+    setSearchQuery(val);
+    setCurrentPage(1);
   };
 
   const getEmptyStateIcon = () => {
@@ -226,27 +229,63 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
     }
   };
 
+  const isServerPaged = !isCollections && !isTags;
+
   const allItems = isCollections
     ? (collectionsData?.items || [])
     : isTags
       ? processedTags
       : (libraryData?.items || []);
 
-  let filteredItems = useLocalListSearch(allItems, searchQuery);
+  const localFilteredItems = useLocalListSearch(allItems, searchQuery);
 
-  if (isCollections) {
-    filteredItems = filteredItems.filter(item => {
-      const owned = Number(item.owned_count) || 0;
-      const total = Number(item.total_count) || 0;
-      if (collectionStatusFilter === 'complete') return owned === total;
-      if (collectionStatusFilter === 'in_progress') return owned > 0 && owned < total;
-      return true;
-    });
+  let filteredItems;
+  let sortedItems;
+  let paginatedItems;
+  let totalItems;
+  let totalPages;
+
+  if (isServerPaged) {
+    sortedItems = allItems;
+    paginatedItems = allItems;
+    totalItems = libraryData?.total_items || 0;
+    totalPages = libraryData?.total_pages || 1;
+  } else {
+    filteredItems = localFilteredItems;
+    if (isCollections) {
+      filteredItems = filteredItems.filter(item => {
+        const owned = Number(item.owned_count) || 0;
+        const total = Number(item.total_count) || 0;
+        if (collectionStatusFilter === 'complete') return owned === total;
+        if (collectionStatusFilter === 'in_progress') return owned > 0 && owned < total;
+        return true;
+      });
+    }
+    sortedItems = sortLibraryItems(filteredItems, resolvedTab, sortKey, sortDirection);
+    totalItems = sortedItems.length;
+    totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+    paginatedItems = sortedItems.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   }
 
-  const sortedItems = sortLibraryItems(filteredItems, resolvedTab, sortKey, sortDirection);
-
-  const totalItems = sortedItems.length;
+  // Background Prefetch next/prev pages
+  useEffect(() => {
+    if (isServerPaged && libraryQueryParams) {
+      if (currentPage < totalPages) {
+        const nextParams = { ...libraryQueryParams, page: currentPage + 1 };
+        queryClient.prefetchQuery({
+          queryKey: ['library', nextParams],
+          queryFn: ({ signal }) => api.library.getItems(nextParams, { signal }),
+        });
+      }
+      if (currentPage > 1) {
+        const prevParams = { ...libraryQueryParams, page: currentPage - 1 };
+        queryClient.prefetchQuery({
+          queryKey: ['library', prevParams],
+          queryFn: ({ signal }) => api.library.getItems(prevParams, { signal }),
+        });
+      }
+    }
+  }, [isServerPaged, libraryQueryParams, currentPage, totalPages, queryClient]);
 
   const translationKey = activeSessionMode === 'nsfw' && resolvedTab === 'people' ? 'adultPeople' : resolvedTab;
   const emptyStateTranslationKey = activeSessionMode === 'nsfw'
@@ -287,8 +326,6 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
       ? (t('library.emptyStates.filter.description', { tab: tabLabel }) || `Try clearing or relaxing a few filters to bring ${tabLabel} back into view.`)
       : t(`library.emptyStates.${emptyStateTranslationKey}.description`);
   const emptyIcon = getEmptyStateIcon();
-  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-  const paginatedItems = sortedItems.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   const shouldShowPagination = usePaginationVisibility(totalItems, pageSize);
 
   const summaryText = totalItems > 0
@@ -306,25 +343,25 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
     activeTab,
     setActiveTab: handleTabChange,
     searchQuery,
-    setSearchQuery,
+    setSearchQuery: handleSearchQueryChange,
     ownershipFilter,
     setOwnershipFilter: handleOwnershipFilterChange,
     watchedFilter,
-    setWatchedFilter,
+    setWatchedFilter: handleFilterChange(setWatchedFilter),
     genreFilter,
-    setGenreFilter,
+    setGenreFilter: handleFilterChange(setGenreFilter),
     collectionStatusFilter,
-    setCollectionStatusFilter,
+    setCollectionStatusFilter: handleFilterChange(setCollectionStatusFilter),
     peopleRoleFilter,
-    setPeopleRoleFilter,
+    setPeopleRoleFilter: handleFilterChange(peopleRoleFilter ? setPeopleRoleFilter : null),
     genderFilter,
-    setGenderFilter,
+    setGenderFilter: handleFilterChange(setGenderFilter),
     favoriteFilter,
-    setFavoriteFilter,
+    setFavoriteFilter: handleFilterChange(setFavoriteFilter),
     decadeFilter,
-    setDecadeFilter,
+    setDecadeFilter: handleFilterChange(setDecadeFilter),
     yearFilter,
-    setYearFilter,
+    setYearFilter: handleFilterChange(setYearFilter),
     timeFilterMode,
     setTimeFilterMode,
     currentPage,

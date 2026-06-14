@@ -1,5 +1,6 @@
 {
   "title": "Media Library",
+  "adultTitle": "Adult Library",
   "searchPlaceholder": "Search {{tab}}...",
   "backToSelector": "Change Mode",
   "chooser": {
@@ -133,7 +134,13 @@
     "colorLabel": "Select Color",
     "customColor": "Custom Color",
     "errorNameRequired": "Name is required",
-    "errorExists": "A tag with this name already exists"
+    "errorExists": "A tag with this name already exists",
+    "customImagesLabel": "Custom Images (Max 3)",
+    "imageUrlPlaceholder": "Paste image URL...",
+    "addImageUrl": "Add URL",
+    "uploadImage": "Upload",
+    "aspectRatioOne": "Ideal aspect ratio is 16:9 (landscape/backdrop)",
+    "aspectRatioMultiple": "Ideal aspect ratio is 2:3 (portrait/poster)"
   },
   "collections": {
     "partsCount": "{{owned}} / {{total}} movies"

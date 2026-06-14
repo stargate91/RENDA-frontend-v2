@@ -54,7 +54,9 @@ export default function LibraryHeader({
     <>
       {/* Row 1: Title */}
       <div className="organizer-panel__row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span className="organizer-panel__title">{pageTitle || t('library.title')}</span>
+        <span className="organizer-panel__title">
+          {pageTitle || (activeSessionMode === 'nsfw' ? (t('library.adultTitle') || 'Adult Library') : t('library.title'))}
+        </span>
         {(resolvedTab === 'people' || resolvedTab === 'adult_people') && hasItems && onAddPeople && (
           <Button variant={btnVariant} size="sm" onClick={onAddPeople} style={{ height: '28px', minHeight: '28px' }}>
             <UserPlus size={14} />

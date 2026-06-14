@@ -20,6 +20,7 @@ export default function PosterCard({
   onClick,
   disabled = false,
   active = false,
+  style,
   children,
   ...props
 }) {
@@ -30,7 +31,7 @@ export default function PosterCard({
   const cardClassName = `ui-poster-card ${isOverlayTitle ? 'ui-poster-card--overlay-title' : ''} ${active ? 'is-active' : ''} ${className}`.trim();
 
   return (
-    <div className={cardClassName}>
+    <div className={cardClassName} style={style}>
       <DefaultComponent
         type={DefaultComponent === 'button' ? 'button' : undefined}
         className="ui-poster-card__image-wrapper"

@@ -73,8 +73,8 @@ class MediaLibraryService:
             people_role=people_role,
         )
 
-    def get_tag_groups(self):
-        return self.query.get_tag_groups()
+    def get_tag_groups(self, is_adult: bool = False):
+        return self.query.get_tag_groups(is_adult=is_adult)
 
     def get_people_group(self, role: str, filter_status: str = "active", tab: str = "people"):
         return self.people.get_people_group(role, filter_status=filter_status, tab=tab)

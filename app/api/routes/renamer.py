@@ -131,7 +131,7 @@ def get_history():
     """Returns a list of past organization batches and their logs."""
     db = Session()
     try:
-        from app.db.models import ActionBatch, ActionLog, ActionStatus
+        from app.db.models import ActionBatch, ActionLog, ActionStatus, MediaItem, ExtraFile, ItemType
         from sqlalchemy import desc, func
         
         batches = db.query(ActionBatch).order_by(desc(ActionBatch.created_at)).all()
@@ -148,13 +148,44 @@ def get_history():
                 ActionLog.status == ActionStatus.FAILED
             ).count()
 
+            undone_count = db.query(ActionLog).filter(
+                ActionLog.batch_id == b.id, 
+                ActionLog.status == ActionStatus.UNDONE
+            ).count()
+
+            movie_count = db.query(ActionLog).join(MediaItem, ActionLog.media_item_id == MediaItem.id).filter(
+                ActionLog.batch_id == b.id,
+                ActionLog.status.in_([ActionStatus.SUCCESS, ActionStatus.UNDONE]),
+                MediaItem.item_type == ItemType.MOVIE
+            ).count()
+
+            episode_count = db.query(ActionLog).join(MediaItem, ActionLog.media_item_id == MediaItem.id).filter(
+                ActionLog.batch_id == b.id,
+                ActionLog.status.in_([ActionStatus.SUCCESS, ActionStatus.UNDONE]),
+                MediaItem.item_type == ItemType.EPISODE
+            ).count()
+
+            extra_count = db.query(ActionLog).filter(
+                ActionLog.batch_id == b.id,
+                ActionLog.status.in_([ActionStatus.SUCCESS, ActionStatus.UNDONE]),
+                ActionLog.extra_file_id != None
+            ).count()
+
+            is_undone = (success_count == 0) and (undone_count > 0 or failed_count == 0)
+            status = "undone" if is_undone else "completed" if failed_count == 0 else "partial"
+
             result.append({
                 "id": b.id,
                 "name": b.name or f"Batch #{b.id}",
                 "created_at": b.created_at.isoformat() + "Z",
-                "success_count": success_count,
+                "success_count": success_count + undone_count,
                 "failed_count": failed_count,
-                "status": "undone" if (success_count == 0 and failed_count == 0) else "completed" if failed_count == 0 else "partial"
+                "movie_count": movie_count,
+                "episode_count": episode_count,
+                "extra_count": extra_count,
+                "remaining_count": success_count,
+                "undone_count": undone_count,
+                "status": status
             })
             
         return result

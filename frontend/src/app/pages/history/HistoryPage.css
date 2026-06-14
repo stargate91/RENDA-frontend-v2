@@ -1,0 +1,210 @@
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.history-page {
+  padding: var(--space-6) var(--space-4);
+}
+
+.history-page .page-header__title {
+  font: var(--text-title);
+}
+
+.history-page .page-header__description {
+  font-size: var(--font-size-sm);
+  color: var(--text-color-secondary);
+  margin-top: 4px;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+}
+
+.history-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-5);
+  border-radius: var(--radius-lg, 12px);
+  background: var(--color-bg-elevated, #171d25);
+  border: 1px solid var(--color-border-subtle, rgba(255, 255, 255, 0.04));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+  opacity: 0;
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--item-index, 0) * 15ms);
+}
+
+.history-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.015), transparent);
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+
+.history-card__icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: var(--ui-surface-soft);
+  box-shadow: inset 0 0 0 1px var(--color-border-subtle);
+  color: var(--accent-color, var(--color-accent, #1493ff));
+  flex-shrink: 0;
+  margin-right: var(--space-4);
+  position: relative;
+  z-index: 2;
+  transition: all 0.2s ease;
+}
+
+.history-card__left {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  z-index: 2;
+}
+
+.history-card__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.history-card__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: var(--font-size-sm);
+  color: var(--text-color-secondary);
+  flex-wrap: wrap;
+  margin-top: 1px;
+}
+
+.history-card__meta-item {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space-1) * 1.5);
+}
+
+.history-card__right {
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+.history-card__detailed-stats {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.history-card__stat-badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  background: var(--ui-control-bg-subtle);
+  border: 1px solid color-mix(in srgb, var(--accent-color) 12%, var(--color-border-subtle));
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: var(--font-size-xs);
+}
+
+.history-card__stat-badge--total {
+  background: color-mix(in srgb, var(--accent-color) 6%, var(--ui-control-bg-subtle)) !important;
+  border-color: color-mix(in srgb, var(--accent-color) 25%, var(--color-border-default)) !important;
+}
+
+.history-card__stat-badge--total .history-card__badge-val {
+  color: var(--accent-color, var(--color-state-success)) !important;
+}
+
+.history-card__stat-badge--failed {
+  background: color-mix(in srgb, var(--color-state-danger) 6%, transparent) !important;
+  border-color: color-mix(in srgb, var(--color-state-danger) 15%, transparent) !important;
+}
+
+.history-card__stat-badge--failed .history-card__badge-val {
+  color: var(--color-state-danger, #ef4444) !important;
+}
+
+.history-card__stat-badge--undone {
+  background: color-mix(in srgb, var(--color-text-muted) 6%, transparent) !important;
+  border-color: color-mix(in srgb, var(--color-text-muted) 15%, transparent) !important;
+}
+
+.history-card__stat-badge--undone .history-card__badge-val {
+  color: var(--color-text-muted, #94a3b8) !important;
+}
+
+.history-card__stat-badge--remaining {
+  background: color-mix(in srgb, var(--color-state-warning) 6%, transparent) !important;
+  border-color: color-mix(in srgb, var(--color-state-warning) 15%, transparent) !important;
+}
+
+.history-card__stat-badge--remaining .history-card__badge-val {
+  color: var(--color-state-warning, #f59e0b) !important;
+}
+
+.history-card__badge-val {
+  font-weight: var(--font-weight-bold, 700);
+  color: var(--text-color-primary, #ffffff);
+}
+
+.history-card__badge-lbl {
+  color: var(--text-color-secondary, #94a3b8);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* For undone (closed) cards, bring all stat values (including total) to match the icon color */
+.history-card--undone .history-card__badge-val {
+  color: var(--accent-color) !important;
+}
+
+.history-card__actions {
+  display: flex;
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .history-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-4);
+  }
+
+  .history-card__right {
+    margin-left: 0;
+    justify-content: space-between;
+  }
+}
+
+.history-card__actions .history-card__revert-btn {
+  min-width: 120px;
+}

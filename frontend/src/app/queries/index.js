@@ -6,3 +6,4 @@ export * from './discoveryQueries';
 export * from './metadataQueries';
 export * from './renameQueries';
 export * from './mediaQueries';
+export * from './historyQueries';

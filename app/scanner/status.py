@@ -111,3 +111,74 @@ def is_scan_stop_requested() -> bool:
 # Export for thread-safe access in loops
 scan_status_lock = status_manager._lock
 scan_status = status_manager._status # Warning: direct access discouraged
+
+
+class ImageStatusManager:
+    _instance = None
+    _lock = threading.Lock()
+
+    def __new__(cls):
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super(ImageStatusManager, cls).__new__(cls)
+                cls._instance._initialized = False
+            return cls._instance
+
+    def __init__(self):
+        if self._initialized:
+            return
+        self._lock = threading.Lock()
+        self.batch_total = 0
+        self.is_active = False
+        self._initialized = True
+
+    def get_status(self, db) -> Dict[str, Any]:
+        with self._lock:
+            from app.db.models import MediaMatch, Person, ImageStatus
+
+            pending_media = db.query(MediaMatch).filter(MediaMatch.image_status.in_([ImageStatus.PENDING, ImageStatus.DOWNLOADING])).count()
+            pending_backdrops = db.query(MediaMatch).filter(MediaMatch.backdrop_status.in_([ImageStatus.PENDING, ImageStatus.DOWNLOADING])).count()
+            pending_persons = db.query(Person).filter(Person.image_status.in_([ImageStatus.PENDING, ImageStatus.DOWNLOADING])).count()
+            pending_alts = db.query(Person).filter(
+                Person.image_status.in_([ImageStatus.COMPLETED, ImageStatus.FAILED]),
+                Person.images == None
+            ).count()
+
+            current_pending = pending_media + pending_backdrops + pending_persons + pending_alts
+            
+            if current_pending == 0:
+                self.is_active = False
+                self.batch_total = 0
+                return {"active": False, "pending": 0, "total": 0, "completed": 0, "progress": 0}
+
+            if not self.is_active or current_pending > self.batch_total:
+                self.is_active = True
+                self.batch_total = current_pending
+
+            completed = self.batch_total - current_pending
+            progress = (completed / self.batch_total) * 100 if self.batch_total > 0 else 0
+
+            # Get current item name being downloaded if possible
+            current_item = None
+            current = db.query(MediaMatch).filter(MediaMatch.image_status == ImageStatus.DOWNLOADING).first()
+            if not current:
+                current = db.query(MediaMatch).filter(MediaMatch.backdrop_status == ImageStatus.DOWNLOADING).first()
+            if not current:
+                current = db.query(Person).filter(Person.image_status == ImageStatus.DOWNLOADING).first()
+            
+            if current and hasattr(current, 'media_item') and current.media_item:
+                current_item = current.media_item.filename
+            elif current and hasattr(current, 'name'):
+                current_item = current.name
+
+            return {
+                "active": True,
+                "pending": current_pending,
+                "total": self.batch_total,
+                "completed": completed,
+                "progress": progress,
+                "current_item": current_item
+            }
+
+image_status_manager = ImageStatusManager()
+

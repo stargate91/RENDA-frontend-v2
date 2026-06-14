@@ -35,29 +35,10 @@ def get_image_status():
     """Returns the current progress of background image and profile downloads."""
     db = Session()
     try:
-        total_tasks = (db.query(MediaMatch).count() * 2) + (db.query(Person).count() * 2)
-        if total_tasks == 0:
-            return {"active": False, "pending": 0, "downloading": 0, "total": 0, "completed": 0}
-            
-        completed_tasks = (
-            db.query(MediaMatch).filter(MediaMatch.image_status.in_([ImageStatus.COMPLETED, ImageStatus.FAILED, ImageStatus.NONE])).count() +
-            db.query(MediaMatch).filter(MediaMatch.backdrop_status.in_([ImageStatus.COMPLETED, ImageStatus.FAILED, ImageStatus.NONE])).count() +
-            db.query(Person).filter(Person.image_status.in_([ImageStatus.COMPLETED, ImageStatus.FAILED, ImageStatus.NONE])).count() +
-            db.query(Person).filter(Person.images != None).count() +
-            db.query(Person).filter(Person.image_status == ImageStatus.NONE).count()
-        )
-        
-        active = total_tasks > completed_tasks
-        progress = (completed_tasks / total_tasks) * 100 if total_tasks > 0 else 0
-        
-        return {
-            "active": active,
-            "pending": total_tasks - completed_tasks,
-            "downloading": 0,
-            "total": total_tasks,
-            "completed": completed_tasks,
-            "progress": progress
-        }
+        from app.scanner.status import image_status_manager
+        return image_status_manager.get_status(db)
+    except Exception as e:
+        return {"active": False, "pending": 0, "downloading": 0, "total": 0, "completed": 0, "progress": 0, "error": str(e)}
     finally:
         db.close()
 

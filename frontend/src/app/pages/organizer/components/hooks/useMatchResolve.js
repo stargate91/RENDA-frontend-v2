@@ -64,7 +64,7 @@ const getDefaultEpisode = (row) => {
   return payload.episode ?? payload.fn_episode ?? payload.fd_episode ?? payload.it_episode ?? '';
 };
 
-export function useMatchResolve({ rows = [], t, toast, onResolved, mode, season, episode }) {
+export function useMatchResolve({ rows = [], t, toast, onResolved, mode }) {
   const [confirmState, setConfirmState] = useState(null);
   const [isResolvingId, setIsResolvingId] = useState(null);
   const resolveMutation = useResolveMetadataMutation();

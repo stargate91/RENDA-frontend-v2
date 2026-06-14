@@ -96,7 +96,7 @@ class LibraryQueryService:
 
         return results
 
-    def get_tag_groups(self) -> list[dict]:
+    def get_tag_groups(self, is_adult: bool = False) -> list[dict]:
         from ..db.models import Person, Tag
 
         preferred_languages = _preferred_metadata_languages(self.db)
@@ -104,12 +104,13 @@ class LibraryQueryService:
         tags_map = {}
 
         # Pre-populate tags_map with all tags from database
-        all_db_tags = self.db.query(Tag).all()
+        all_db_tags = self.db.query(Tag).filter(Tag.is_adult == is_adult).all()
         for t in all_db_tags:
             tags_map[t.name] = {
                 "id": t.id,
                 "name": t.name,
                 "color": t.color,
+                "custom_images": t.custom_images,
                 "movies": [],
                 "series": [],
                 "adult": [],
@@ -125,6 +126,7 @@ class LibraryQueryService:
                     "id": None,
                     "name": tag_name,
                     "color": None,
+                    "custom_images": None,
                     "movies": [],
                     "series": [],
                     "adult": [],
@@ -140,7 +142,7 @@ class LibraryQueryService:
             joinedload(MediaItem.matches).joinedload(MediaMatch.localizations),
         ).filter(
             MediaItem.status.in_([ItemStatus.RENAMED, ItemStatus.ORGANIZED]),
-            MediaItem.tags.any(),
+            MediaItem.tags.any(Tag.is_adult == is_adult),
         ).all()
 
         for item in tagged_media_items:
@@ -184,7 +186,7 @@ class LibraryQueryService:
                 "is_favorite": item.is_favorite or False,
                 "in_library": True,
                 "user_rating": item.user_rating,
-                "custom_tags": [tag.name for tag in item.tags] if item.tags else [],
+                "custom_tags": [tag.name for tag in item.tags if tag.is_adult == is_adult] if item.tags else [],
                 "genres": _split_genres(loc.genres) if (loc and loc.genres) else [],
                 "is_watched": getattr(item, "is_watched", False),
                 "resume_position": getattr(item, "resume_position", 0),
@@ -215,6 +217,9 @@ class LibraryQueryService:
         for state in tagged_virtual_states:
             media_type = "tv" if (state.media_type or "").lower() in {"tv", "series", "show"} else "movie"
             raw_data = tv_cache.get(state.tmdb_id, {}) if media_type == "tv" else movie_cache.get(state.tmdb_id, {})
+            is_virtual_adult = bool(raw_data.get("adult", False))
+            if is_virtual_adult != is_adult:
+                continue
             raw_poster_path = raw_data.get("poster_path")
             local_poster_path = _public_image_path(raw_poster_path, "posters")
             date_field = raw_data.get("first_air_date") if media_type == "tv" else raw_data.get("release_date")
@@ -266,6 +271,7 @@ class LibraryQueryService:
 
         tagged_people = self.db.query(Person).options(joinedload(Person.localizations)).filter(
             Person.custom_tags.isnot(None),
+            Person.is_adult == is_adult,
         ).all()
 
         for person in tagged_people:
@@ -325,11 +331,23 @@ class LibraryQueryService:
                         preview_pool.append(poster)
 
         for tag in result:
-            tag["sample_previews"] = self._build_tag_sample_previews(
-                tag,
-                fallback_preview=(preview_pool[:3] if preview_pool else TAG_EMPTY_STATE_SAMPLE_POSTERS),
-            )
-            tag["sample_posters"] = [entry["poster"] for entry in tag["sample_previews"] if entry.get("poster")]
+            custom_images = tag.get("custom_images") or []
+            if custom_images:
+                tag["sample_previews"] = [
+                    {
+                        "poster": img,
+                        "backdrop": img if len(custom_images) == 1 else None,
+                        "kind": "custom"
+                    }
+                    for img in custom_images
+                ]
+                tag["sample_posters"] = [entry["poster"] for entry in tag["sample_previews"]]
+            else:
+                tag["sample_previews"] = self._build_tag_sample_previews(
+                    tag,
+                    fallback_preview=(preview_pool[:3] if preview_pool else TAG_EMPTY_STATE_SAMPLE_POSTERS),
+                )
+                tag["sample_posters"] = [entry["poster"] for entry in tag["sample_previews"] if entry.get("poster")]
         return result
 
     def _build_tag_preview_entry(self, item: dict) -> dict | None:

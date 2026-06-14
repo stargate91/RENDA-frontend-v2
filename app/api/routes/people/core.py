@@ -194,6 +194,9 @@ def get_people(
                     continue
                 if adult_pref == "male" and person.gender != 2:
                     continue
+            else:
+                if bool(getattr(person, "is_adult", False)):
+                    continue
             
             loc = _pick_person_localization(person, preferred_lang)
             name = loc.name if loc else "Unknown"

@@ -161,17 +161,18 @@
 /* Custom Tag Grid */
 .library-tags-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
   width: 100%;
 }
 
 .library-tag-card {
   position: relative;
   display: flex;
-  align-items: flex-start;
-  gap: 16px;
+  align-items: flex-end;
+  gap: 12px;
   width: 100%;
+  min-height: 130px;
   padding: 16px;
   border-radius: var(--radius-lg, 12px);
   background: var(--color-bg-elevated, #171d25);
@@ -222,8 +223,8 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--tag-color) 8%, transparent), transparent);
-  opacity: 0.4;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--tag-color) 10%, transparent), transparent);
+  opacity: 0.5;
   transition: opacity 0.2s ease;
 }
 
@@ -234,8 +235,13 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 2px;
   padding: 2px;
-  opacity: 0.22;
+  opacity: 0.3;
   pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.library-tag-card:hover .library-tag-card__preview {
+  opacity: 0.45;
 }
 
 .library-tag-card__preview-image {
@@ -550,8 +556,23 @@
 .library-page--nsfw {
 }
 
-.library-page--nsfw .library-spinner {
-  border-top-color: var(--color-state-danger);
+/* Staggered fadeInUp entry animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ui-poster-card,
+.library-tag-card {
+  opacity: 0;
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--item-index, 0) * 15ms);
 }
 
 

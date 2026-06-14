@@ -19,6 +19,8 @@ class Tag(Base):
     name: Mapped[str] = mapped_column(String, index=True)
     color: Mapped[Optional[str]] = mapped_column(String, default="#3b82f6")
     target_type: Mapped[str] = mapped_column(String, default="media", server_default="media", index=True)
+    is_adult: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0", index=True)
+    custom_images: Mapped[Optional[List[str]]] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 class MediaItem(Base):

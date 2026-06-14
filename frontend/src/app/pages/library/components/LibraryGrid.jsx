@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import PosterGrid from '@/ui/PosterGrid';
 import PosterCard from '@/ui/PosterCard';
 import EmptyState from '@/ui/EmptyState';
@@ -6,7 +6,7 @@ import Button from '@/ui/Button';
 import IconButton from '@/ui/IconButton';
 import NavButton from '@/ui/NavButton';
 import { API_BASE } from '@/lib/backend';
-import { Pencil, Plus, Tag, Trash2, UserPlus } from 'lucide-react';
+import { Pencil, Plus, Trash2, UserPlus } from 'lucide-react';
 
 export default function LibraryGrid({
   t,
@@ -115,13 +115,18 @@ export default function LibraryGrid({
             </div>
           ) : (
             <div className="library-tags-grid">
-              {paginatedItems.map((item) => {
+              {paginatedItems.map((item, index) => {
                 const samplePreviews = Array.isArray(item.sample_previews) ? item.sample_previews.slice(0, 3) : [];
                 const previewCount = samplePreviews.length;
                 const singlePreview = previewCount === 1 ? samplePreviews[0] : null;
-                const singlePreviewImage = singlePreview
-                  ? resolvePosterUrl(singlePreview.backdrop || (singlePreview.kind === 'people' ? '' : singlePreview.poster))
-                  : '';
+                 const singlePreviewImage = (() => {
+                   if (!singlePreview) return '';
+                   const isPerson = singlePreview.kind === 'person' || singlePreview.kind === 'adult_star';
+                   if (isPerson) {
+                     return singlePreview.backdrop ? resolvePosterUrl(singlePreview.backdrop) : '';
+                   }
+                   return resolvePosterUrl(singlePreview.backdrop || singlePreview.poster);
+                 })();
                 return (
                 <button
                   key={item.name}
@@ -130,6 +135,7 @@ export default function LibraryGrid({
                   onClick={() => onFocusTag?.(item.name)}
                   style={{
                     '--tag-color': item.color || 'var(--color-accent)',
+                    '--item-index': index,
                   }}
                 >
                   {(previewCount > 1 || singlePreviewImage) ? (
@@ -183,9 +189,10 @@ export default function LibraryGrid({
           )
         ) : (
           <PosterGrid>
-            {paginatedItems.map((item) => (
+            {paginatedItems.map((item, index) => (
               <PosterCard
                 key={item.id}
+                style={{ '--item-index': index }}
                 {...getCardProps(item)}
               />
             ))}
