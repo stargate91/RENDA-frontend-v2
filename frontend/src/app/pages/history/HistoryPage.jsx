@@ -3,7 +3,7 @@ import EmptyState from '@/ui/EmptyState';
 import Button from '@/ui/Button';
 import Spinner from '@/ui/Spinner';
 import PageHeader from '@/ui/PageHeader';
-import { useTranslation } from '@/providers/LanguageProvider';
+import { useTranslation } from '@/providers/LanguageContext';
 import { useUi } from '@/providers/UiProvider';
 import { useHistoryQuery, useUndoMutation, useScanStatusQuery } from '@/queries';
 import { RotateCcw, AlertTriangle } from 'lucide-react';

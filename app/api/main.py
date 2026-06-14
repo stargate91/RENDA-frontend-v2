@@ -183,4 +183,4 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Failed to write port.txt: {e}")
 
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    uvicorn.run(app, host="0.0.0.0", port=port, access_log=False)

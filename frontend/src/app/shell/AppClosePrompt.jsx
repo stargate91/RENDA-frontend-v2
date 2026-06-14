@@ -4,7 +4,7 @@ import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import Checkbox from '../ui/Checkbox';
 import { useSettingsQuery, useUpdateSettingsMutation } from '../queries';
-import { useTranslation } from '../providers/LanguageProvider';
+import { useTranslation } from '../providers/LanguageContext';
 import { sendIpc, onIpc } from '../lib/electron';
 
 const sendCloseResponse = (payload) => {

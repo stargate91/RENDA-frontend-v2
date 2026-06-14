@@ -2,7 +2,7 @@ import { RotateCcw, Calendar, CheckCircle2, Clock, AlertTriangle } from 'lucide-
 import Button from '@/ui/Button';
 import Tooltip from '@/ui/Tooltip';
 import Spinner from '@/ui/Spinner';
-import { useTranslation } from '@/providers/LanguageProvider';
+import { useTranslation } from '@/providers/LanguageContext';
 
 const getCardIconAndClass = (status) => {
   switch (status) {

@@ -5,7 +5,7 @@ import MediaCard from '../../ui/MediaCard';
 import PosterCard from '../../ui/PosterCard';
 import { ChevronLeft, ChevronRight, FileJson, Info } from 'lucide-react';
 import { API_BASE } from '../../lib/backend';
-import { useTranslation } from '../../providers/LanguageProvider';
+import { useTranslation } from '../../providers/LanguageContext';
 import { useUi } from '../../providers/UiProvider';
 import { useFullMetadataQuery } from '../../queries';
 import '../../styles/OrganizerDetailsPanel.css';

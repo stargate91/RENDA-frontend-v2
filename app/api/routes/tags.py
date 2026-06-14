@@ -15,17 +15,46 @@ from pathlib import Path
 
 TAG_IMAGES_DIR = Path("data/media/tags")
 
-def _process_custom_images(custom_images) -> list[str]:
+def _normalize_custom_images(custom_images) -> list[dict]:
+    if not custom_images or not isinstance(custom_images, list):
+        return []
+    normalized = []
+    for img in custom_images:
+        if isinstance(img, dict):
+            normalized.append({
+                "path": img.get("path", ""),
+                "position_x": img.get("position_x", 50),
+                "position_y": img.get("position_y", 50)
+            })
+        elif isinstance(img, str):
+            normalized.append({
+                "path": img,
+                "position_x": 50,
+                "position_y": 50
+            })
+    return normalized
+
+def _process_custom_images(custom_images) -> list:
     if not custom_images or not isinstance(custom_images, list):
         return []
     TAG_IMAGES_DIR.mkdir(parents=True, exist_ok=True)
     saved_urls = []
-    for img in custom_images:
-        if not isinstance(img, str) or not img.strip():
+    for entry in custom_images:
+        img = ""
+        position_x = 50
+        position_y = 50
+        if isinstance(entry, dict):
+            img = entry.get("path", "").strip()
+            position_x = entry.get("position_x", 50)
+            position_y = entry.get("position_y", 50)
+        elif isinstance(entry, str):
+            img = entry.strip()
+
+        if not img:
             continue
-        img = img.strip()
+
         if img.startswith("/media/tags/"):
-            saved_urls.append(img)
+            saved_urls.append({"path": img, "position_x": position_x, "position_y": position_y})
             continue
         
         # Base64 string
@@ -42,7 +71,7 @@ def _process_custom_images(custom_images) -> list[str]:
                 filepath = TAG_IMAGES_DIR / filename
                 with open(filepath, "wb") as f:
                     f.write(base64.b64decode(data))
-                saved_urls.append(f"/media/tags/{filename}")
+                saved_urls.append({"path": f"/media/tags/{filename}", "position_x": position_x, "position_y": position_y})
             except Exception as e:
                 logger.error(f"Error saving base64 image: {e}")
             continue
@@ -65,7 +94,7 @@ def _process_custom_images(custom_images) -> list[str]:
                     filepath = TAG_IMAGES_DIR / filename
                     with open(filepath, "wb") as f:
                         f.write(response.content)
-                    saved_urls.append(f"/media/tags/{filename}")
+                    saved_urls.append({"path": f"/media/tags/{filename}", "position_x": position_x, "position_y": position_y})
             except Exception as e:
                 logger.error(f"Error downloading image from {img}: {e}")
             continue
@@ -80,7 +109,7 @@ def get_all_tags(target_type: str = None, is_adult: bool = False):
         if target_type:
             query = query.filter(Tag.target_type == target_type)
         tags = query.all()
-        return [{"id": t.id, "name": t.name, "color": t.color, "target_type": t.target_type, "is_adult": t.is_adult, "custom_images": t.custom_images} for t in tags]
+        return [{"id": t.id, "name": t.name, "color": t.color, "target_type": t.target_type, "is_adult": t.is_adult, "custom_images": _normalize_custom_images(t.custom_images)} for t in tags]
     except Exception as e:
         logger.error(f"Error fetching tags: {e}")
         return JSONResponse(status_code=500, content={"error": str(e)})
@@ -109,17 +138,22 @@ def create_tag(payload: dict):
         if existing:
             return JSONResponse(status_code=400, content={"error": "Tag already exists"})
             
+        logger.info(f"Creating tag {name} with custom_images: {custom_images}")
         saved_images = _process_custom_images(custom_images)
+        logger.info(f"Processed custom_images: {saved_images}")
         tag = Tag(name=name, color=color, target_type=target_type, is_adult=is_adult, custom_images=saved_images)
         db.add(tag)
         db.commit()
-        return {"id": tag.id, "name": tag.name, "color": tag.color, "target_type": tag.target_type, "is_adult": tag.is_adult, "custom_images": tag.custom_images}
+        return {"id": tag.id, "name": tag.name, "color": tag.color, "target_type": tag.target_type, "is_adult": tag.is_adult, "custom_images": _normalize_custom_images(tag.custom_images)}
     except Exception as e:
+        logger.exception(f"Error creating tag: {e}")
         db.rollback()
         return JSONResponse(status_code=500, content={"error": str(e)})
     finally:
         db.close()
  
+from sqlalchemy.orm.attributes import flag_modified
+
 @router.put("/tags/{tag_id}")
 def update_tag(tag_id: int, payload: dict):
     db = DBSession()
@@ -159,11 +193,15 @@ def update_tag(tag_id: int, payload: dict):
             tag.color = payload["color"]
             
         if "custom_images" in payload:
+            logger.info(f"Updating tag {tag_id} custom_images: {payload['custom_images']}")
             tag.custom_images = _process_custom_images(payload["custom_images"])
+            flag_modified(tag, "custom_images")
+            logger.info(f"Processed custom_images for tag {tag_id}: {tag.custom_images}")
 
         db.commit()
-        return {"id": tag.id, "name": tag.name, "color": tag.color, "target_type": tag.target_type, "is_adult": tag.is_adult, "custom_images": tag.custom_images}
+        return {"id": tag.id, "name": tag.name, "color": tag.color, "target_type": tag.target_type, "is_adult": tag.is_adult, "custom_images": _normalize_custom_images(tag.custom_images)}
     except Exception as e:
+        logger.exception(f"Error updating tag: {e}")
         db.rollback()
         return JSONResponse(status_code=500, content={"error": str(e)})
     finally:
@@ -178,16 +216,16 @@ def delete_tag(tag_id: int):
             return JSONResponse(status_code=404, content={"error": "Not found"})
 
         tag_name = tag.name
-        for item in db.query(MediaItem).filter(MediaItem.tags.any(Tag.id == tag_id)).all():
-            item.tags = [existing_tag for existing_tag in item.tags if existing_tag.id != tag_id]
+        from app.db.models.media import media_item_tags
+        db.execute(media_item_tags.delete().where(media_item_tags.c.tag_id == tag_id))
 
-        for state in db.query(VirtualMediaState).all():
-            current_tags = list(getattr(state, "custom_tags", []) or [])
+        for state in db.query(VirtualMediaState).filter(VirtualMediaState.custom_tags.isnot(None)).all():
+            current_tags = list(state.custom_tags or [])
             if tag_name in current_tags:
                 state.custom_tags = [entry for entry in current_tags if entry != tag_name]
 
-        for person in db.query(Person).all():
-            current_tags = list(getattr(person, "custom_tags", []) or [])
+        for person in db.query(Person).filter(Person.custom_tags.isnot(None)).all():
+            current_tags = list(person.custom_tags or [])
             if tag_name in current_tags:
                 person.custom_tags = [entry for entry in current_tags if entry != tag_name]
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useTranslation } from '../providers/LanguageProvider';
+import { useTranslation } from '../providers/LanguageContext';
 import { useImageStatusQuery, useScanStatusQuery, useHydrateStatusQuery } from '../queries';
 import {
   getScanProgress,
@@ -20,7 +20,8 @@ export default function useWindowProgress() {
   const hydrateStatus = hydrateStatusQuery.data || null;
   
   const isPrimaryActive = Boolean(scanStatus?.active);
-  const isScanActive = isPrimaryActive && scanStatus?.phase !== 'sync_language';
+  const isPeopleImportActive = isPrimaryActive && scanStatus?.phase === 'people_importing';
+  const isScanActive = isPrimaryActive && scanStatus?.phase !== 'sync_language' && scanStatus?.phase !== 'people_importing';
   const isSyncActive = isPrimaryActive && scanStatus?.phase === 'sync_language';
   const isImageActive = Boolean(imageStatus?.active);
   const isHydrateActive = Boolean(hydrateStatus?.active);
@@ -79,7 +80,7 @@ export default function useWindowProgress() {
 
   return {
     hasProgress: isPrimaryActive || isImageActive || isHydrateActive,
-    scanProgress: scanProgressData,
+    scanProgress: isScanActive || isSyncActive ? scanProgressData : null,
     imageProgress: isImageActive
       ? {
           taskName: t('progress.images.downloading'),
@@ -94,6 +95,14 @@ export default function useWindowProgress() {
           taskName: t('progress.people.hydrating') || 'Enriching extra people...',
           progress: hydrateStatus.total > 0 ? Math.round((hydrateStatus.current / hydrateStatus.total) * 100) : 0,
           timeRemaining: `${hydrateStatus.current}/${hydrateStatus.total}`,
+          active: true,
+          variant: 'sub',
+        }
+      : isPeopleImportActive
+      ? {
+          taskName: t('progress.people.importing') || 'Importing bulk people...',
+          progress: scanStatus.total > 0 ? Math.round((scanStatus.current / scanStatus.total) * 100) : 0,
+          timeRemaining: `${scanStatus.current}/${scanStatus.total}`,
           active: true,
           variant: 'sub',
         }

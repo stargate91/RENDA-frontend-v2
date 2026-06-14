@@ -1,5 +1,5 @@
 import { LayoutDashboard, FolderSearch2, Library, Star, Clapperboard, Settings, ListTodo, RotateCcw } from 'lucide-react';
-import { useTranslation } from '../providers/LanguageProvider';
+import { useTranslation } from '../providers/LanguageContext';
 import { sendWindowEvent } from '../lib/ipc';
 
 export const navItems = [

@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/refs */
 import { useRef } from 'react';
 import { useUi } from '@/providers/UiProvider';
-import { useTranslation } from '@/providers/LanguageProvider';
+import { useTranslation } from '@/providers/LanguageContext';
 import { useScanStatusQuery, useImageStatusQuery, useHydrateStatusQuery } from '@/queries';
 import useSettingsNavigation from './useSettingsNavigation.jsx';
 import useTemplateTagInsertion from './useTemplateTagInsertion.jsx';

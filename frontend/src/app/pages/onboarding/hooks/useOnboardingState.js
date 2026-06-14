@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from '@/providers/LanguageProvider';
+import { useTranslation } from '@/providers/LanguageContext';
 import { useUi } from '@/providers/UiProvider';
 import { selectFolder } from '@/lib/ipc';
 import api from '@/lib/api';
@@ -285,6 +285,12 @@ export default function useOnboardingState() {
   const handleFinish = async () => {
     setIsFinishing(true);
     try {
+      if (configChoice === 'import') {
+        toast('Onboarding completed! Welcome to RENDA.', 'success');
+        navigate('/dashboard');
+        return;
+      }
+
       // Load current settings first to merge other values
       const currentSettings = await api.settings.get();
       

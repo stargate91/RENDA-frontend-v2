@@ -541,8 +541,8 @@ function createWindow() {
   });
 
   win.webContents.on('console-message', (_event, level, message, line, sourceId) => {
-    if (level >= 2) {
-      writeElectronLog(level === 3 ? 'ERROR' : 'WARN', 'Renderer console message', {
+    if (level === 3) {
+      writeElectronLog('ERROR', 'Renderer console message', {
         level,
         message,
         line,

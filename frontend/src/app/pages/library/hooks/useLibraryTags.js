@@ -45,8 +45,7 @@ export function useLibraryTags({ activeSessionMode }) {
           total_count: localCount,
           sample_previews: localPreviews,
         };
-      })
-      .filter(tag => tag.total_count > 0 || (tag.custom_images && tag.custom_images.length > 0));
+      });
   }, [tagsData, activeSessionMode]);
 
   return {

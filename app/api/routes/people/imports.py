@@ -63,6 +63,7 @@ def bulk_import_people(payload: dict):
         "current_item": "",
         "start_time": time.time(),
         "people_role": role.lower(),
+        "people_adult_only": adult_only,
     })
 
     threading.Thread(target=_run_bulk_people_import_job, args=(raw_text, role, adult_only), daemon=True).start()
@@ -70,12 +71,12 @@ def bulk_import_people(payload: dict):
 
 
 @router.get("/people/bulk-import-report")
-def get_bulk_people_import_report(role: str):
+def get_bulk_people_import_report(role: str, adult_only: bool = False):
     role_key = _normalize_bulk_people_role(role)
     if role_key is None:
         return JSONResponse(status_code=400, content={"error": "Invalid role"})
-    report = _get_bulk_people_import_report(role_key)
+    report = _get_bulk_people_import_report(role_key, adult_only=adult_only)
     if not report:
-        return {"status": "idle", "role": role_key}
+        return {"status": "idle", "role": role_key, "adult_only": adult_only}
     return report
 

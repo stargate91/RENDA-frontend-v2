@@ -274,7 +274,16 @@ def search_people_tmdb(query: str, language: str = None, adult_only: bool = Fals
         client = TMDBClient(db)
         results = client.search_person(query=query, language=language, include_adult=include_adult, page=page)
         if adult_only:
+            adult_pref = "all"
+            pref_setting = db.query(UserSetting).filter(UserSetting.key == "adult_gender_preference").first()
+            if pref_setting and pref_setting.value:
+                adult_pref = str(pref_setting.value).strip().lower()
+            
             results = [result for result in (results or []) if bool(result.get("adult"))]
+            if adult_pref == "female":
+                results = [r for r in results if r.get("gender") == 1]
+            elif adult_pref == "male":
+                results = [r for r in results if r.get("gender") == 2]
         person_ids = []
         for result in results:
             try:
@@ -315,6 +324,7 @@ def search_people_tmdb(query: str, language: str = None, adult_only: bool = Fals
                 continue
 
             local_person = local_people.get(person_id)
+            enriched["is_active"] = bool(local_person.is_active) if local_person else False
             enriched["is_pinned"] = bool(local_person.is_favorite) if local_person else False
             enriched["is_linked"] = person_id in linked_person_ids
             enriched_results.append(enriched)

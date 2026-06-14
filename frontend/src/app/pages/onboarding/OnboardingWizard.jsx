@@ -69,7 +69,7 @@ export default function OnboardingWizard() {
   return (
     <div className="onboarding-wizard">
       <div className="onboarding-container">
-        
+
         {/* Header */}
         <div className="onboarding-header">
           <div className={`onboarding-title-group ${isAnyGuideOpen ? 'is-hidden' : ''}`}>
@@ -88,7 +88,7 @@ export default function OnboardingWizard() {
         {/* Content Panel */}
         <div className="onboarding-content">
           <div key={step} className={`step-transition step-transition--${stepDirection}`}>
-            
+
             {/* Step 1: Welcome & Lang */}
             {step === 1 && (
               <WelcomeStep
@@ -183,7 +183,7 @@ export default function OnboardingWizard() {
                 <NavButton className="ui-nav-button--onboarding-back" onClick={handlePrev}>
                   Back
                 </NavButton>
-                <NavButton 
+                <NavButton
                   className="ui-nav-button--onboarding-continue"
                   icon={ArrowRight}
                   iconPosition="right"
@@ -204,7 +204,7 @@ export default function OnboardingWizard() {
               )}
 
               {step < 5 ? (
-                <NavButton 
+                <NavButton
                   className="ui-nav-button--onboarding-continue"
                   icon={ArrowRight}
                   iconPosition="right"
@@ -218,7 +218,7 @@ export default function OnboardingWizard() {
                   Continue
                 </NavButton>
               ) : step === 5 ? (
-                <NavButton 
+                <NavButton
                   className="ui-nav-button--onboarding-continue"
                   icon={ArrowRight}
                   iconPosition="right"
@@ -228,7 +228,7 @@ export default function OnboardingWizard() {
                   Continue
                 </NavButton>
               ) : (
-                <NavButton 
+                <NavButton
                   className="ui-nav-button--onboarding-continue"
                   icon={null}
                   onClick={handleFinish}

@@ -34,6 +34,9 @@ export default function LibraryGrid({
     if (String(path).startsWith('http://') || String(path).startsWith('https://')) {
       return path;
     }
+    if (String(path).startsWith('/media/')) {
+      return `${API_BASE}${path}`;
+    }
     if (String(path).startsWith('/') && !String(path).startsWith('/images/')) {
       return `https://image.tmdb.org/t/p/w342${path}`;
     }
@@ -128,11 +131,18 @@ export default function LibraryGrid({
                    return resolvePosterUrl(singlePreview.backdrop || singlePreview.poster);
                  })();
                 return (
-                <button
+                <div
                   key={item.name}
-                  type="button"
+                  role="button"
+                  tabIndex={0}
                   className={`library-tag-card ${previewCount > 0 ? `library-tag-card--preview-${Math.min(previewCount, 3)}` : ''}`.trim()}
                   onClick={() => onFocusTag?.(item.name)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onFocusTag?.(item.name);
+                    }
+                  }}
                   style={{
                     '--tag-color': item.color || 'var(--color-accent)',
                     '--item-index': index,
@@ -144,7 +154,11 @@ export default function LibraryGrid({
                         <div
                           key={`${item.name}-preview-${index}`}
                           className="library-tag-card__preview-image"
-                          style={{ backgroundImage: `url(${previewCount === 1 ? singlePreviewImage : resolvePosterUrl(preview.poster)})` }}
+                          style={{
+                            backgroundImage: `url(${previewCount === 1 ? singlePreviewImage : resolvePosterUrl(preview.poster)})`,
+                            backgroundPositionX: preview.position_x != null ? `${preview.position_x}%` : 'center',
+                            backgroundPositionY: preview.position_y != null ? `${preview.position_y}%` : 'center',
+                          }}
                         />
                       ))}
                     </div>
@@ -182,7 +196,7 @@ export default function LibraryGrid({
                       {t('library.tags.itemsCount', { count: item.total_count })}
                     </span>
                   </div>
-                </button>
+                  </div>
                 );
               })}
             </div>
@@ -296,18 +310,6 @@ function ExpandedTagPanel({ tag, t, resolvePosterUrl, emptyIcon, isFocusMode = f
             </div>
           </div>
         ) : null}
-        {samplePosterItems.length > 0 ? (
-          <PosterGrid>
-            {samplePosterItems.map((item) => (
-              <PosterCard
-                key={item.id}
-                variant="overlay-title"
-                title={item.title}
-                imageUrl={item.imageUrl}
-              />
-            ))}
-          </PosterGrid>
-        ) : null}
         <EmptyState
           variant="tag-focus"
           title={(t('library.tags.emptyFocusTitle') || 'This tag is ready to use.').replace('{name}', tag.name)}
@@ -341,7 +343,7 @@ function ExpandedTagPanel({ tag, t, resolvePosterUrl, emptyIcon, isFocusMode = f
       </PosterGrid>
 
       {hasMore && (
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
+        <div className="library-grid-load-more">
           <Button variant="secondary" onClick={() => setVisibleCount(prev => prev + 20)}>
             {t('common.showMore') || 'Show More'}
           </Button>

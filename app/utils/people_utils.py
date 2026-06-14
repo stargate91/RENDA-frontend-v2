@@ -60,6 +60,12 @@ def _normalize_person_name(value: Optional[str]) -> str:
     return " ".join(normalized.split())
 
 
+def _bulk_people_report_key(role_key: str, adult_only: bool = False) -> str:
+    mode_key = "nsfw" if adult_only else "sfw"
+    normalized_role_key = str(role_key or "all").strip().lower() or "all"
+    return f"{mode_key}:{normalized_role_key}"
+
+
 def _person_matches_role(department: Optional[str], role: Optional[str]) -> bool:
     if not role:
         return True
@@ -126,7 +132,20 @@ def _add_person_from_tmdb_internal(db, tmdb_id: int) -> tuple[Person, bool]:
 
     db.commit()
 
-    person_service.enrich_person_metadata(person.id, languages=langs)
+    # Trigger background enrichment to prevent blocking the request
+    def _enrich_bg(p_id):
+        bg_db = Session()
+        try:
+            from app.services.person_service import PersonService
+            person_service = PersonService(bg_db)
+            langs = _preferred_person_languages(bg_db)
+            person_service.enrich_person_metadata(p_id, languages=langs)
+        except Exception as e:
+            logger.error(f"Background enrichment failed for {p_id}: {e}")
+        finally:
+            bg_db.close()
+    threading.Thread(target=_enrich_bg, args=(person.id,), daemon=True).start()
+
     person = db.query(Person).options(joinedload(Person.localizations)).filter(Person.id == tmdb_id).first()
     return person, (not was_active)
 
@@ -156,9 +175,10 @@ def _pick_bulk_person_match(results: list[dict[str, Any]], name: str, role: Opti
     return {"status": "no_match"}
 
 
-def _store_bulk_people_import_report(role_key: str, payload: dict[str, Any]):
+def _store_bulk_people_import_report(role_key: str, payload: dict[str, Any], adult_only: bool = False):
+    storage_key = _bulk_people_report_key(role_key, adult_only)
     with bulk_people_import_reports_lock:
-        bulk_people_import_reports[role_key] = payload
+        bulk_people_import_reports[storage_key] = payload
         try:
             DATA_DIR.mkdir(parents=True, exist_ok=True)
             with open(PEOPLE_REPORTS_FILE, "w", encoding="utf-8") as f:
@@ -167,9 +187,10 @@ def _store_bulk_people_import_report(role_key: str, payload: dict[str, Any]):
             logger.error(f"Failed to save bulk people reports: {e}")
 
 
-def _get_bulk_people_import_report(role_key: str) -> Optional[dict[str, Any]]:
+def _get_bulk_people_import_report(role_key: str, adult_only: bool = False) -> Optional[dict[str, Any]]:
+    storage_key = _bulk_people_report_key(role_key, adult_only)
     with bulk_people_import_reports_lock:
-        report = bulk_people_import_reports.get(role_key)
+        report = bulk_people_import_reports.get(storage_key)
         return dict(report) if report else None
 
 
@@ -197,6 +218,13 @@ def _run_bulk_people_import_job(raw_text: str, role: str, adult_only: bool = Fal
         multiple_matches = []
         no_match = []
 
+        # Fetch adult gender preference
+        adult_pref = "all"
+        if adult_only:
+            adult_pref_setting = db.query(UserSetting).filter(UserSetting.key == "adult_gender_preference").first()
+            if adult_pref_setting and adult_pref_setting.value:
+                adult_pref = str(adult_pref_setting.value).strip().lower()
+
         for index, row in enumerate(valid_rows, start=1):
             update_scan_status({
                 "phase": "people_importing",
@@ -205,11 +233,16 @@ def _run_bulk_people_import_job(raw_text: str, role: str, adult_only: bool = Fal
                 "message": f"{index - 1}/{total_rows}",
                 "current_item": row["name"],
                 "people_role": role_key,
+                "people_adult_only": adult_only,
             })
 
             results = tmdb.search_person(query=row["name"], language=language) or []
             if adult_only:
                 results = [result for result in results if bool(result.get("adult"))]
+                if adult_pref == "female":
+                    results = [r for r in results if r.get("gender") == 1]
+                elif adult_pref == "male":
+                    results = [r for r in results if r.get("gender") == 2]
             match = _pick_bulk_person_match(results, row["name"], role)
             if match["status"] == "matched":
                 person, activated = _add_person_from_tmdb_internal(db, int(match["result"]["id"]))
@@ -255,6 +288,7 @@ def _run_bulk_people_import_job(raw_text: str, role: str, adult_only: bool = Fal
                 "message": f"{index}/{total_rows}",
                 "current_item": row["name"],
                 "people_role": role_key,
+                "people_adult_only": adult_only,
             })
 
         report = {
@@ -272,13 +306,13 @@ def _run_bulk_people_import_job(raw_text: str, role: str, adult_only: bool = Fal
             "ignored": ignored_rows,
             "finished_at": time.time(),
         }
-        _store_bulk_people_import_report(role_key, {"status": "completed", "role": role_key, "report": report})
+        _store_bulk_people_import_report(role_key, {"status": "completed", "role": role_key, "adult_only": adult_only, "report": report}, adult_only=adult_only)
     except Exception as e:
         db.rollback()
         logger.error(f"Error bulk importing people: {e}")
         import traceback
         logger.error(traceback.format_exc())
-        _store_bulk_people_import_report(role_key, {"status": "failed", "role": role_key, "error": str(e), "finished_at": time.time()})
+        _store_bulk_people_import_report(role_key, {"status": "failed", "role": role_key, "adult_only": adult_only, "error": str(e), "finished_at": time.time()}, adult_only=adult_only)
     finally:
         from app.scanner.scanner_manager import update_scan_status
         update_scan_status({
@@ -289,6 +323,7 @@ def _run_bulk_people_import_job(raw_text: str, role: str, adult_only: bool = Fal
             "message": "",
             "current_item": "",
             "people_role": None,
+            "people_adult_only": None,
         })
         db.close()
 

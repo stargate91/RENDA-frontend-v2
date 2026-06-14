@@ -332,14 +332,33 @@ class LibraryQueryService:
 
         for tag in result:
             custom_images = tag.get("custom_images") or []
-            if custom_images:
+            # Normalize tag["custom_images"] here as well
+            normalized_custom = []
+            for img in custom_images:
+                if isinstance(img, dict):
+                    normalized_custom.append({
+                        "path": img.get("path", ""),
+                        "position_x": img.get("position_x", 50),
+                        "position_y": img.get("position_y", 50)
+                    })
+                elif isinstance(img, str):
+                    normalized_custom.append({
+                        "path": img,
+                        "position_x": 50,
+                        "position_y": 50
+                    })
+            tag["custom_images"] = normalized_custom
+
+            if normalized_custom:
                 tag["sample_previews"] = [
                     {
-                        "poster": img,
-                        "backdrop": img if len(custom_images) == 1 else None,
+                        "poster": item["path"],
+                        "position_x": item["position_x"],
+                        "position_y": item["position_y"],
+                        "backdrop": item["path"] if len(normalized_custom) == 1 else None,
                         "kind": "custom"
                     }
-                    for img in custom_images
+                    for item in normalized_custom
                 ]
                 tag["sample_posters"] = [entry["poster"] for entry in tag["sample_previews"]]
             else:

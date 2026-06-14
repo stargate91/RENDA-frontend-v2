@@ -3,7 +3,7 @@ import { ArrowUp, ArrowDown, GripVertical } from 'lucide-react';
 import Dropdown from '../../../ui/Dropdown';
 import Input from '../../../ui/Input';
 import SelectableCard from '../../../ui/SelectableCard';
-import { useTranslation } from '../../../providers/LanguageProvider';
+import { useTranslation } from '../../../providers/LanguageContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { useBulkUpdateMediaMutation } from '../../../queries';
 

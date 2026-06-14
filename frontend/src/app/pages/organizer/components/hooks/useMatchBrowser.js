@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useTranslation } from '@/providers/LanguageProvider';
+import { useTranslation } from '@/providers/LanguageContext';
 import { useTvSeasonsQuery, useTvEpisodesQuery } from '@/queries';
 
 const createBrowserState = () => ({

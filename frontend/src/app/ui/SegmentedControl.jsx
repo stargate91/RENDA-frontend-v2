@@ -1,11 +1,12 @@
 import './SegmentedControl.css';
 
-export default function SegmentedControl({ options, value, onChange, ariaLabel, variant = 'default', className = '' }) {
+export default function SegmentedControl({ options, value, onChange, ariaLabel, variant = 'default', className = '', ...props }) {
   return (
     <div
       className={`ui-segmented-control ui-segmented-control--${variant} ${className}`.trim()}
       role="tablist"
       aria-label={ariaLabel}
+      {...props}
     >
       {options.map((option) => {
         const isActive = value === option.value;

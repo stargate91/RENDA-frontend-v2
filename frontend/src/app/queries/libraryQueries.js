@@ -106,6 +106,19 @@ export const usePeopleInfiniteQuery = (params) => useInfiniteQuery({
   },
 });
 
+export const useAddPersonTmdbMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (tmdbId) => api.people.addTmdb(tmdbId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['people'] });
+      queryClient.invalidateQueries({ queryKey: ['people-infinite'] });
+      queryClient.invalidateQueries({ queryKey: ['library'] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
+    },
+  });
+};
+
 export const useUpdatePersonStatusMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({

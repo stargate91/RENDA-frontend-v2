@@ -1,6 +1,6 @@
 import { memo, useMemo } from 'react';
 import { EyeOff, Trash2, Search, Sliders, X } from 'lucide-react';
-import { useTranslation } from '../providers/LanguageProvider';
+import { useTranslation } from '../providers/LanguageContext';
 import EmptyState from './EmptyState';
 import Tooltip from './Tooltip';
 import IconButton from './IconButton';

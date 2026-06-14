@@ -1,8 +1,9 @@
 import { useUi } from '@/providers/UiProvider';
 import Button from '@/ui/Button';
 import AddPeopleModalContent from '../modals/AddPeopleModalContent';
+import BulkImportResolveModalContent from '../modals/BulkImportResolveModalContent';
 import CreateTagModalContent from '../modals/CreateTagModalContent';
-import { Pencil, Tag, Trash2, Users } from 'lucide-react';
+import { Pencil, Tag, Trash2, Users, AlertCircle } from 'lucide-react';
 
 export function useLibraryModals({ state, focusedTagName, setFocusedTagName, deleteTagMutation }) {
   const { openModal, closeModal, toast } = useUi();
@@ -22,6 +23,7 @@ export function useLibraryModals({ state, focusedTagName, setFocusedTagName, del
         <AddPeopleModalContent
           isAdult={isAdult}
           t={state.t}
+          onClose={closeModal}
         />
       ),
       footer: (
@@ -47,7 +49,7 @@ export function useLibraryModals({ state, focusedTagName, setFocusedTagName, del
         />
       ),
       footer: (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', width: '100%' }}>
+        <div className="library-modal-footer">
           <Button variant="secondary-neutral" onClick={closeModal}>
             {state.t('common.close') || 'Close'}
           </Button>
@@ -80,7 +82,7 @@ export function useLibraryModals({ state, focusedTagName, setFocusedTagName, del
         />
       ),
       footer: (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', width: '100%' }}>
+        <div className="library-modal-footer">
           <Button variant="secondary-neutral" onClick={closeModal}>
             {state.t('common.close') || 'Close'}
           </Button>
@@ -97,13 +99,14 @@ export function useLibraryModals({ state, focusedTagName, setFocusedTagName, del
       title: state.t('library.tags.deleteModalTitle') || 'Delete Tag',
       description: state.t('library.tags.deleteModalDescription') || 'Remove this tag from every tagged item.',
       icon: Trash2,
+      variant: 'danger',
       content: (
-        <div style={{ color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
+        <div className="library-modal-confirm-text">
           {(state.t('library.tags.deleteConfirm') || 'Delete "{name}" and remove it from all tagged items?').replace('{name}', tag.name)}
         </div>
       ),
       footer: (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', width: '100%' }}>
+        <div className="library-modal-footer">
           <Button variant="secondary-neutral" onClick={closeModal}>
             {state.t('common.cancel') || 'Cancel'}
           </Button>
@@ -128,10 +131,33 @@ export function useLibraryModals({ state, focusedTagName, setFocusedTagName, del
     });
   };
 
+  const openBulkImportResolveModal = () => {
+    const isAdult = state.activeSessionMode === 'nsfw';
+    openModal({
+      title: state.t(isAdult ? 'library.addPeople.adultResolveModalTitle' : 'library.addPeople.resolveModalTitle'),
+      description: state.t(isAdult ? 'library.addPeople.adultResolveModalDescription' : 'library.addPeople.resolveModalDescription'),
+      icon: AlertCircle,
+      className: 'ui-modal--extra-wide',
+      content: (
+        <BulkImportResolveModalContent
+          onClose={closeModal}
+          t={state.t}
+          isAdult={isAdult}
+        />
+      ),
+      footer: (
+        <Button variant="secondary-neutral" onClick={closeModal}>
+          {state.t('common.close') || 'Close'}
+        </Button>
+      ),
+    });
+  };
+
   return {
     openAddPeopleModal,
     openCreateTagModal,
     openEditTagModal,
     openDeleteTagModal,
+    openBulkImportResolveModal,
   };
 }

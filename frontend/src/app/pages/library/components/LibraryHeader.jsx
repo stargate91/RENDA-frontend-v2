@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, UserPlus, Plus } from 'lucide-react';
 import { Tabs } from '@/ui/Tabs';
 import Input from '@/ui/Input';
@@ -7,13 +7,18 @@ import Dropdown from '@/ui/Dropdown';
 
 const SearchInput = React.memo(({ placeholder, onSearchChange }) => {
   const [value, setValue] = useState('');
+  const onSearchChangeRef = useRef(onSearchChange);
+
+  useEffect(() => {
+    onSearchChangeRef.current = onSearchChange;
+  }, [onSearchChange]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      onSearchChange(value);
+      onSearchChangeRef.current?.(value);
     }, 80);
     return () => clearTimeout(timer);
-  }, [value, onSearchChange]);
+  }, [value]);
 
   return (
     <Input
@@ -53,18 +58,18 @@ export default function LibraryHeader({
   return (
     <>
       {/* Row 1: Title */}
-      <div className="organizer-panel__row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="organizer-panel__row library-header-row">
         <span className="organizer-panel__title">
           {pageTitle || (activeSessionMode === 'nsfw' ? (t('library.adultTitle') || 'Adult Library') : t('library.title'))}
         </span>
         {(resolvedTab === 'people' || resolvedTab === 'adult_people') && hasItems && onAddPeople && (
-          <Button variant={btnVariant} size="sm" onClick={onAddPeople} style={{ height: '28px', minHeight: '28px' }}>
+          <Button variant={btnVariant} size="sm" onClick={onAddPeople} className="library-header-btn">
             <UserPlus size={14} />
             {t('library.people.addPeopleBtn') || 'Add People'}
           </Button>
         )}
         {resolvedTab === 'tags' && hasItems && onCreateTag && (
-          <Button variant={btnVariant} size="sm" onClick={onCreateTag} style={{ height: '28px', minHeight: '28px' }}>
+          <Button variant={btnVariant} size="sm" onClick={onCreateTag} className="library-header-btn">
             <Plus size={14} />
             {t('library.tags.createBtn') || 'Create Tag'}
           </Button>

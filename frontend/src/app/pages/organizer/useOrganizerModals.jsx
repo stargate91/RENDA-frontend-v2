@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { OrganizerModalContext } from './providers/OrganizerModalProvider';
+import { OrganizerModalContext } from './providers/OrganizerModalContext';
 
 export function useOrganizerModals() {
   const context = useContext(OrganizerModalContext);

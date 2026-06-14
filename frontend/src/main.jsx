@@ -109,40 +109,6 @@ const installConsoleLogging = () => {
   };
 };
 
-const installRendererLifecycleLogging = () => {
-  window.addEventListener('DOMContentLoaded', () => {
-    sendRendererLog('INFO', 'Renderer DOMContentLoaded', getRendererRuntimeSnapshot());
-  });
-
-  window.addEventListener('load', () => {
-    sendRendererLog('INFO', 'Renderer window load', getRendererRuntimeSnapshot());
-  });
-
-  window.addEventListener('beforeunload', () => {
-    sendRendererLog('WARN', 'Renderer beforeunload', getRendererRuntimeSnapshot());
-  });
-
-  window.addEventListener('pagehide', () => {
-    sendRendererLog('WARN', 'Renderer pagehide', getRendererRuntimeSnapshot());
-  });
-
-  document.addEventListener('visibilitychange', () => {
-    sendRendererLog('INFO', 'Renderer visibility changed', getRendererRuntimeSnapshot());
-  });
-
-  window.addEventListener('online', () => {
-    sendRendererLog('INFO', 'Renderer online event', getRendererRuntimeSnapshot());
-  });
-
-  window.addEventListener('offline', () => {
-    sendRendererLog('WARN', 'Renderer offline event', getRendererRuntimeSnapshot());
-  });
-
-  window.setInterval(() => {
-    sendRendererLog('INFO', 'Renderer heartbeat', getRendererRuntimeSnapshot());
-  }, 30000);
-};
-
 window.addEventListener('error', (event) => {
   sendRendererLog('ERROR', 'Renderer window error', {
     message: event.message,
@@ -169,10 +135,8 @@ window.addEventListener('unhandledrejection', (event) => {
   sendRendererLog('ERROR', 'Renderer unhandled promise rejection', reason);
 });
 
-sendRendererLog('INFO', 'Renderer bootstrap started');
 installSafePerformanceMeasure();
 installConsoleLogging();
-installRendererLifecycleLogging();
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

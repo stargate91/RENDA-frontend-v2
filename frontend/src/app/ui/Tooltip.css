@@ -18,9 +18,7 @@
   line-height: 1.35;
   box-shadow: var(--tooltip-shadow);
   backdrop-filter: var(--tooltip-blur);
-  white-space: normal;
-  word-break: break-all;
-  overflow-wrap: break-word;
+  white-space: nowrap;
   pointer-events: none;
   transform: translate3d(-50%, -100%, 0);
 }

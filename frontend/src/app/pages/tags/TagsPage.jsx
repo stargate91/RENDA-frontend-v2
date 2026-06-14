@@ -1,5 +1,5 @@
 import LibraryPage from '../library/LibraryPage';
-import { useTranslation } from '@/providers/LanguageProvider';
+import { useTranslation } from '@/providers/LanguageContext';
 
 export default function TagsPage() {
   const { t } = useTranslation();

@@ -9,7 +9,7 @@ import OrganizerBulkOverrideModalContent from './components/OrganizerBulkOverrid
 import api from '../../lib/api';
 import { showItemInFolder } from '../../lib/ipc';
 import { useUi } from '../../providers/UiProvider';
-import { useTranslation } from '../../providers/LanguageProvider';
+import { useTranslation } from '../../providers/LanguageContext';
 import { useOrganizerDeleteActions } from './useOrganizerDeleteActions';
 import { useSettingsQuery } from '../../queries';
 

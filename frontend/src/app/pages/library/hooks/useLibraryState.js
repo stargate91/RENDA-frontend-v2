@@ -5,7 +5,7 @@ import { useSettingsQuery } from '@/queries/settingsQueries';
 import { useLibraryQuery, useCollectionsQuery, useLibraryFiltersQuery } from '@/queries/libraryQueries';
 import { useLibraryTags } from './useLibraryTags';
 import { usePaginationVisibility } from '../../../hooks/usePaginationVisibility';
-import { useTranslation } from '@/providers/LanguageProvider';
+import { useTranslation } from '@/providers/LanguageContext';
 import { useLocalListSearch } from '../../../hooks/useLocalListSearch';
 import { Clapperboard, Tv, Users, Tag, Layers } from 'lucide-react';
 import { sortLibraryItems } from '../utils/librarySort';
@@ -218,6 +218,15 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
     setCurrentPage(1);
   };
 
+  const handlePageChange = (page) => {
+    setCurrentPage(Math.max(1, Number(page) || 1));
+  };
+
+  const handlePageSizeChange = (size) => {
+    setPageSize(size);
+    setCurrentPage(1);
+  };
+
   const getEmptyStateIcon = () => {
     switch (resolvedTab) {
       case 'movies': return Clapperboard;
@@ -365,9 +374,9 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
     timeFilterMode,
     setTimeFilterMode,
     currentPage,
-    setCurrentPage,
+    setCurrentPage: handlePageChange,
     pageSize,
-    setPageSize,
+    setPageSize: handlePageSizeChange,
     sortKey,
     setSortKey,
     sortDirection,

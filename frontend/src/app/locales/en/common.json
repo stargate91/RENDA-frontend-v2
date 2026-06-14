@@ -3,7 +3,8 @@
     "cancel": "Cancel",
     "close": "Close",
     "create": "Create",
-    "save": "Save"
+    "save": "Save",
+    "search": "Search"
   },
   "sidebar": {
     "dashboard": "Dashboard",
@@ -47,7 +48,8 @@
       "downloading": "Downloading images..."
     },
     "people": {
-      "hydrating": "Enriching extra people..."
+      "hydrating": "Enriching extra people...",
+      "importing": "Importing bulk people..."
     },
     "sync": {
       "running": "Syncing metadata languages..."

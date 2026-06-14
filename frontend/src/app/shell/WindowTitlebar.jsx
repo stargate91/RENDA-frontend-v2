@@ -5,7 +5,7 @@ import Button from '../ui/Button';
 import Tooltip from '../ui/Tooltip';
 import api from '../lib/api';
 import { useUi } from '../providers/UiProvider';
-import { useTranslation } from '../providers/LanguageProvider';
+import { useTranslation } from '../providers/LanguageContext';
 import useWindowProgress from './useWindowProgress';
 import useWindowControls from './useWindowControls';
 

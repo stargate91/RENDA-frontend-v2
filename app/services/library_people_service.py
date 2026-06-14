@@ -29,6 +29,7 @@ class LibraryPeopleService:
         normalized_role = self.normalize_role(role)
         include_adult = self._include_adult_enabled()
         target_tab = str(tab or "people").strip().lower()
+
         # Fetch distinct library counts
         links = self.db.query(
             MediaPersonLink.person_id,
@@ -58,145 +59,44 @@ class LibraryPeopleService:
             for pid, (movies_set, series_set) in person_projects.items()
         }
 
-        matched_match_ids = [
-            match.id for match in self.db.query(MediaMatch).join(MediaItem).filter(
-                MediaItem.status.in_([ItemStatus.RENAMED, ItemStatus.ORGANIZED]),
-                MediaMatch.is_active == True,
-            ).all()
-        ]
-
         adult_pref = self._adult_gender_preference()
-        if include_adult and target_tab == "adult_people":
-            if adult_pref == "female":
-                adult_cond = (Person.is_adult == True) & (Person.gender == 1)
-            elif adult_pref == "male":
-                adult_cond = (Person.is_adult == True) & (Person.gender == 2)
-            else:
-                adult_cond = Person.is_adult == True
-        else:
-            adult_cond = Person.is_adult == False
 
-        selected_person_ids = set()
-        if matched_match_ids:
-            # 1. Get Directors (max 2 per match)
-            director_links = self.db.query(MediaPersonLink).join(
-                Person, MediaPersonLink.person_id == Person.id
-            ).filter(
-                MediaPersonLink.media_match_id.in_(matched_match_ids),
-                MediaPersonLink.job.in_(["Director", "Creator"]),
-                adult_cond
-            ).order_by(MediaPersonLink.media_match_id, MediaPersonLink.order).all()
+        query = self.db.query(Person)
 
-            directors_per_match = {}
-            for link in director_links:
-                directors_per_match.setdefault(link.media_match_id, []).append(link.person_id)
-
-            for match_id, pids in directors_per_match.items():
-                selected_person_ids.update(pids[:2])
-
-            # 2. Get Writers (max 2 per match)
-            writer_links = self.db.query(MediaPersonLink).join(
-                Person, MediaPersonLink.person_id == Person.id
-            ).filter(
-                MediaPersonLink.media_match_id.in_(matched_match_ids),
-                MediaPersonLink.job.in_(["Writer", "Screenplay", "Story", "Teleplay"]),
-                adult_cond
-            ).order_by(MediaPersonLink.media_match_id, MediaPersonLink.order).all()
-
-            writers_per_match = {}
-            for link in writer_links:
-                writers_per_match.setdefault(link.media_match_id, []).append(link.person_id)
-
-            for match_id, pids in writers_per_match.items():
-                selected_person_ids.update(pids[:2])
-
-            # 3. Get Actors (20 actors total, sorted by order/popularity)
-            actor_links = self.db.query(MediaPersonLink).join(
-                Person, MediaPersonLink.person_id == Person.id
-            ).filter(
-                MediaPersonLink.media_match_id.in_(matched_match_ids),
-                MediaPersonLink.job == "Actor",
-                adult_cond
-            ).order_by(Person.popularity.desc(), MediaPersonLink.order).all()
-
-            actor_ids = []
-            for link in actor_links:
-                if link.person_id not in actor_ids:
-                    actor_ids.append(link.person_id)
-                if len(actor_ids) >= 20:
-                    break
-            selected_person_ids.update(actor_ids)
-
-        query = self.db.query(Person).outerjoin(
-            MediaPersonLink, MediaPersonLink.person_id == Person.id
-        )
-        if selected_person_ids:
-            query = query.filter(
-                or_(
-                    Person.is_active == True,
-                    Person.id.in_(list(selected_person_ids))
-                )
-            )
-        else:
-            query = query.filter(Person.is_active == True)
-
-        # Apply active/inactive filter
         if filter_status == "active":
             query = query.filter(Person.is_active == True)
         elif filter_status == "inactive":
-            # Inactive people that are linked to library media
             query = query.filter(Person.is_active == False)
-            if matched_match_ids:
-                query = query.filter(MediaPersonLink.media_match_id.in_(matched_match_ids))
-            else:
-                return []
         else:
-            # 'all' - active people + inactive people linked to library media
-            if matched_match_ids:
-                query = query.filter(
-                    or_(
-                        Person.is_active == True,
-                        MediaPersonLink.media_match_id.in_(matched_match_ids),
-                    )
-                )
-            else:
-                query = query.filter(Person.is_active == True)
+            query = query.filter(Person.is_active.in_([True, False]))
+
+        if include_adult and target_tab == "adult_people":
+            query = query.filter(Person.is_adult == True)
+            if adult_pref == "female":
+                query = query.filter(Person.gender == 1)
+            elif adult_pref == "male":
+                query = query.filter(Person.gender == 2)
+        else:
+            query = query.filter(Person.is_adult == False)
 
         role_filters = []
         if normalized_role == "actor":
             role_filters.append(Person.known_for_department == "Acting")
-            if matched_match_ids:
-                role_filters.append(
-                    (MediaPersonLink.job == "Actor") &
-                    (MediaPersonLink.media_match_id.in_(matched_match_ids))
-                )
             fallback_name = "Unknown Actor"
         elif normalized_role == "director":
             role_filters.append(Person.known_for_department.in_(["Directing", "Creator"]))
-            if matched_match_ids:
-                role_filters.append(
-                    (MediaPersonLink.job.in_(["Director", "Creator"])) &
-                    (MediaPersonLink.media_match_id.in_(matched_match_ids))
-                )
             fallback_name = "Unknown Director"
         elif normalized_role == "writer":
             role_filters.append(Person.known_for_department == "Writing")
-            if matched_match_ids:
-                role_filters.append(
-                    (MediaPersonLink.job.in_(["Writer", "Screenplay", "Story", "Teleplay"])) &
-                    (MediaPersonLink.media_match_id.in_(matched_match_ids))
-                )
             fallback_name = "Unknown Writer"
         else:
-            role_filters.append(Person.known_for_department.in_(["Acting", "Directing", "Writing", "Creator"]))
-            if matched_match_ids:
-                role_filters.append(
-                    (MediaPersonLink.job.in_(["Actor", "Director", "Creator", "Writer", "Screenplay", "Story", "Teleplay"])) &
-                    (MediaPersonLink.media_match_id.in_(matched_match_ids))
-                )
+            role_filters.append(True)
             fallback_name = "Unknown Person"
 
-        people = query.filter(or_(*role_filters)).distinct().all()
+        if normalized_role != "all":
+            people = query.filter(or_(*role_filters)).distinct().all()
+        else:
+            people = query.distinct().all()
 
         people_list = []
         for person in people:
@@ -260,7 +160,7 @@ class LibraryPeopleService:
         local_cached = _public_image_path(profile_path, "persons")
         if local_cached:
             return local_cached
-        return profile_path if isinstance(profile_path, str) and profile_path.startswith(("http://", "https://")) else None
+        return profile_path
 
     def _include_adult_enabled(self) -> bool:
         setting = self.db.query(UserSetting).filter(UserSetting.key == "include_adult").first()

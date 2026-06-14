@@ -1,7 +1,5 @@
-import { createContext } from 'react';
 import { useOrganizerModalActions } from '../useOrganizerModalActions';
-
-const OrganizerModalContext = createContext(null);
+import { OrganizerModalContext } from './OrganizerModalContext';
 
 export function OrganizerModalProvider({
   children,
@@ -46,5 +44,3 @@ export function OrganizerModalProvider({
     </OrganizerModalContext.Provider>
   );
 }
-
-export { OrganizerModalContext };

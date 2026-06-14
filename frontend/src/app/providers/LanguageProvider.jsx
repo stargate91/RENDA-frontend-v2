@@ -1,10 +1,10 @@
-/* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useState } from 'react';
+import { useState } from 'react';
 import enCommon from '../locales/en/common.json';
 import enSettings from '../locales/en/settings.json';
 import enOrganizer from '../locales/en/organizer.json';
 import enLibrary from '../locales/en/library.json';
 import enHistory from '../locales/en/history.json';
+import { LanguageContext } from './LanguageContext';
 
 const en = {
   ...enCommon,
@@ -15,8 +15,6 @@ const en = {
 };
 
 const translations = { en };
-
-const LanguageContext = createContext(null);
 
 export function LanguageProvider({ children }) {
   const [locale, setLocale] = useState('en');
@@ -50,12 +48,4 @@ export function LanguageProvider({ children }) {
       {children}
     </LanguageContext.Provider>
   );
-}
-
-export function useTranslation() {
-  const context = useContext(LanguageContext);
-  if (!context) {
-    throw new Error('useTranslation must be used within a LanguageProvider');
-  }
-  return context;
 }

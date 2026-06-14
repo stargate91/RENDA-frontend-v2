@@ -33,8 +33,9 @@ class LibraryFilterSortService:
 
         for item in items:
             title = str(item.get("title") or item.get("displayTitle") or "").lower()
+            name = str(item.get("name") or "").lower()
             display_title = str(item.get("displayTitle") or "").lower()
-            matches_search = not normalized_search or normalized_search in title or normalized_search in display_title
+            matches_search = not normalized_search or normalized_search in title or normalized_search in name or normalized_search in display_title
             item_tags = item.get("custom_tags") if isinstance(item.get("custom_tags"), list) else []
             matches_tags = not selected_tags or all(tag in item_tags for tag in selected_tags)
             
@@ -83,6 +84,9 @@ class LibraryFilterSortService:
         def _title(item):
             return str(item.get("displayTitle") or item.get("title") or "")
 
+        def _person_name(item):
+            return str(item.get("name") or item.get("displayTitle") or item.get("title") or "").lower()
+
         if sort_by == "title_desc":
             return sorted(items, key=_title, reverse=True)
         if sort_by == "year_desc":
@@ -125,6 +129,10 @@ class LibraryFilterSortService:
             return sorted(items, key=lambda item: item.get("birthday") or "0000-00-00", reverse=True)
         if sort_by == "birthday_asc":
             return sorted(items, key=lambda item: item.get("birthday") or "9999-99-99")
+        if sort_by in ("name", "name_asc"):
+            return sorted(items, key=_person_name)
+        if sort_by == "name_desc":
+            return sorted(items, key=_person_name, reverse=True)
         if sort_by in ("library_count", "library_count_desc"):
             return sorted(items, key=lambda item: (item.get("library_count") or 0, item.get("rating") or 0), reverse=True)
         if sort_by == "library_count_asc":

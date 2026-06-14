@@ -7,7 +7,7 @@ import OrganizerHeaderPanel from './OrganizerHeaderPanel';
 import OrganizerResultsPanel from './OrganizerResultsPanel';
 import { useDiscoveryCountQuery, useDiscoveryQuery, useScanStatusQuery, useSettingsQuery, useStatsQuery } from '../../queries';
 import { useUi } from '../../providers/UiProvider';
-import { useTranslation } from '../../providers/LanguageProvider';
+import { useTranslation } from '../../providers/LanguageContext';
 import {
   normalizeStatusTone,
   PAGE_SIZE_OPTIONS,
