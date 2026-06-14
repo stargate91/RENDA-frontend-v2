@@ -45,6 +45,13 @@
   gap: var(--space-2, 8px);
 }
 
+.library-header__inline-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4, 16px);
+  min-width: 0;
+}
+
 .library-sorter-label {
   font-size: var(--font-size-2xs, 11px);
   font-weight: var(--font-weight-bold, 700);

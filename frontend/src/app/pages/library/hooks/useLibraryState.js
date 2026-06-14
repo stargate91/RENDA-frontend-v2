@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSettingsQuery } from '@/queries/settingsQueries';
 import { useLibraryQuery, useCollectionsQuery, useTagsQuery, useLibraryFiltersQuery } from '@/queries/libraryQueries';
 import { usePaginationVisibility } from '../../../hooks/usePaginationVisibility';
@@ -7,10 +7,10 @@ import { useLocalListSearch } from '../../../hooks/useLocalListSearch';
 import { Clapperboard, Tv, Users, Tag, ShieldAlert, Layers } from 'lucide-react';
 import { sortLibraryItems } from '../utils/librarySort';
 
-export function useLibraryState() {
+export function useLibraryState({ initialTab = 'movies', lockTab = false, includeTagsTab = false } = {}) {
   const { data: settings, isLoading } = useSettingsQuery();
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState('movies');
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [searchQuery, setSearchQuery] = useState('');
   const [ownershipFilter, setOwnershipFilter] = useState('owned');
   const [watchedFilter, setWatchedFilter] = useState('all');
@@ -85,14 +85,24 @@ export function useLibraryState() {
       ] : []),
       { value: 'adult_people', label: t('library.tabs.adultPeople'), count: counts.adult_people, icon: Users },
     ] : []),
-    { value: 'tags', label: t('library.tabs.tags'), count: counts.tags, icon: Tag },
+    ...(includeTagsTab ? [
+      { value: 'tags', label: t('library.tabs.tags'), count: counts.tags, icon: Tag },
+    ] : []),
   ];
 
-  const resolvedTab = tabs.some(tab => tab.value === activeTab) ? activeTab : 'movies';
+  const fallbackTab = initialTab === 'tags' ? 'tags' : 'movies';
+  const resolvedTab = tabs.some(tab => tab.value === activeTab) ? activeTab : fallbackTab;
+
+  useEffect(() => {
+    if (lockTab && activeTab !== initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [activeTab, initialTab, lockTab]);
 
   const handleTabChange = (newTab) => {
+    if (lockTab) return;
     setActiveTab(newTab);
-    const tabToUse = tabs.some(tab => tab.value === newTab) ? newTab : 'movies';
+    const tabToUse = tabs.some(tab => tab.value === newTab) ? newTab : fallbackTab;
     if (tabToUse === 'collections' || tabToUse === 'adult_collections') {
       setSortKey('owned_count');
       setSortDirection('desc');
@@ -137,7 +147,7 @@ export function useLibraryState() {
       case 'adult_people': return Users;
       case 'adult': return ShieldAlert;
       case 'tags': return Tag;
-      default: return Clapperboard;
+      default: return initialTab === 'tags' ? Tag : Clapperboard;
     }
   };
 

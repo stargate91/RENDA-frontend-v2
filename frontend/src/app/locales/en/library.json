@@ -94,6 +94,7 @@
     }
   },
   "tags": {
+    "pageTitle": "TAGS",
     "itemsCount": "{{count}} items",
     "focusTitle": "Items tagged with \"{name}\"",
     "backToTags": "Back to Tags",

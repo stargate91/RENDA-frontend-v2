@@ -3,6 +3,7 @@ import { Search, UserPlus, Plus } from 'lucide-react';
 import { Tabs } from '@/ui/Tabs';
 import Input from '@/ui/Input';
 import Button from '@/ui/Button';
+import Dropdown from '@/ui/Dropdown';
 
 const SearchInput = React.memo(({ placeholder, onSearchChange }) => {
   const [value, setValue] = useState('');
@@ -28,6 +29,7 @@ SearchInput.displayName = 'SearchInput';
 
 export default function LibraryHeader({
   t,
+  pageTitle = null,
   tabs,
   resolvedTab,
   setActiveTab,
@@ -35,15 +37,22 @@ export default function LibraryHeader({
   setSearchQuery,
   onAddPeople,
   onCreateTag,
+  showTabs = true,
+  sortKey,
+  setSortKey,
+  sortDirection,
+  setSortDirection,
+  setCurrentPage,
 }) {
   const currentTabObj = tabs.find(tab => tab.value === resolvedTab);
   const hasItems = currentTabObj ? (currentTabObj.count > 0) : false;
+  const showInlineSorter = !showTabs && resolvedTab === 'tags' && setSortKey && setSortDirection && setCurrentPage;
 
   return (
     <>
       {/* Row 1: Title */}
       <div className="organizer-panel__row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span className="organizer-panel__title">{t('library.title')}</span>
+        <span className="organizer-panel__title">{pageTitle || t('library.title')}</span>
         {(resolvedTab === 'people' || resolvedTab === 'adult_people') && hasItems && onAddPeople && (
           <Button variant="primary" size="sm" onClick={onAddPeople} style={{ height: '28px', minHeight: '28px' }}>
             <UserPlus size={14} />
@@ -60,11 +69,38 @@ export default function LibraryHeader({
 
       {/* Row 2: Tabs and Search */}
       <div className="organizer-panel__row">
-        <Tabs
-          tabs={tabs}
-          value={resolvedTab}
-          onChange={setActiveTab}
-        />
+        {showTabs ? (
+          <Tabs
+            tabs={tabs}
+            value={resolvedTab}
+            onChange={setActiveTab}
+          />
+        ) : (
+          <div className="library-header__inline-tools">
+            {showInlineSorter ? (
+              <div className="library-sorter-container">
+                <span className="library-sorter-label">{t('library.sort.label') || 'Sort:'}</span>
+                <Dropdown
+                  variant="sorter"
+                  value={sortKey}
+                  onChange={(e) => {
+                    setSortKey(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  sortDirection={sortDirection}
+                  onSortDirectionToggle={() => {
+                    setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+                    setCurrentPage(1);
+                  }}
+                  options={[
+                    { value: 'total_count', label: t('library.sort.itemCount') || 'Item Count' },
+                    { value: 'name', label: t('library.sort.name') || 'Name' },
+                  ]}
+                />
+              </div>
+            ) : null}
+          </div>
+        )}
         <div className="organizer-search">
           <Search size={14} className="organizer-search__icon" />
           <SearchInput

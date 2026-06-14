@@ -2,6 +2,7 @@
 import { lazy } from 'react';
 
 const LibraryPage = lazy(() => import('../pages/library/LibraryPage'));
+const TagsPage = lazy(() => import('../pages/tags/TagsPage'));
 const HistoryPage = lazy(() => import('../pages/HistoryPage'));
 const RatingsPage = lazy(() => import('../pages/RatingsPage'));
 const WatchedHistoryPage = lazy(() => import('../pages/WatchedHistoryPage'));
@@ -9,6 +10,7 @@ const PlaceholderPage = lazy(() => import('../pages/PlaceholderPage'));
 
 export const libraryRoutes = [
   { path: 'library', element: <LibraryPage /> },
+  { path: 'tags', element: <TagsPage /> },
   {
     path: 'library/movie/:id',
     element: (

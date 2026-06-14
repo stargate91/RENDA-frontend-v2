@@ -13,8 +13,8 @@ import { Pencil, Tag, Trash2, Users } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import './LibraryPage.css';
 
-export default function LibraryPage() {
-  const state = useLibraryState();
+export default function LibraryPage({ initialTab = 'movies', lockTab = false, showTabs = true, pageTitle = null }) {
+  const state = useLibraryState({ initialTab, lockTab, includeTagsTab: false });
   const { openModal, closeModal, toast } = useUi();
   const [focusedTagName, setFocusedTagName] = useState(null);
   const deleteTagMutation = useDeleteTagMutation();
@@ -164,6 +164,7 @@ export default function LibraryPage() {
         <div className="organizer-panel">
           <LibraryHeader
             t={state.t}
+            pageTitle={pageTitle}
             tabs={state.tabs}
             resolvedTab={state.resolvedTab}
             setActiveTab={state.setActiveTab}
@@ -171,41 +172,49 @@ export default function LibraryPage() {
             setSearchQuery={state.setSearchQuery}
             onAddPeople={handleOpenAddPeopleModal}
             onCreateTag={handleOpenCreateTagModal}
-          />
-
-          <LibraryFilters
-            t={state.t}
-            settings={state.settings}
-            resolvedTab={state.resolvedTab}
-            isCollections={state.isCollections}
-            isPeople={state.isPeople}
+            showTabs={showTabs}
             sortKey={state.sortKey}
             setSortKey={state.setSortKey}
             sortDirection={state.sortDirection}
             setSortDirection={state.setSortDirection}
             setCurrentPage={state.setCurrentPage}
-            collectionStatusFilter={state.collectionStatusFilter}
-            setCollectionStatusFilter={state.setCollectionStatusFilter}
-            peopleRoleFilter={state.peopleRoleFilter}
-            setPeopleRoleFilter={state.setPeopleRoleFilter}
-            genderFilter={state.genderFilter}
-            setGenderFilter={state.setGenderFilter}
-            ownershipFilter={state.ownershipFilter}
-            setOwnershipFilter={state.setOwnershipFilter}
-            watchedFilter={state.watchedFilter}
-            setWatchedFilter={state.setWatchedFilter}
-            genreFilter={state.genreFilter}
-            setGenreFilter={state.setGenreFilter}
-            decadeFilter={state.decadeFilter}
-            setDecadeFilter={state.setDecadeFilter}
-            yearFilter={state.yearFilter}
-            setYearFilter={state.setYearFilter}
-            timeFilterMode={state.timeFilterMode}
-            setTimeFilterMode={state.setTimeFilterMode}
-            favoriteFilter={state.favoriteFilter}
-            setFavoriteFilter={state.setFavoriteFilter}
-            filterData={state.filterData}
           />
+
+          {!(state.resolvedTab === 'tags' && !showTabs) ? (
+            <LibraryFilters
+              t={state.t}
+              settings={state.settings}
+              resolvedTab={state.resolvedTab}
+              isCollections={state.isCollections}
+              isPeople={state.isPeople}
+              sortKey={state.sortKey}
+              setSortKey={state.setSortKey}
+              sortDirection={state.sortDirection}
+              setSortDirection={state.setSortDirection}
+              setCurrentPage={state.setCurrentPage}
+              collectionStatusFilter={state.collectionStatusFilter}
+              setCollectionStatusFilter={state.setCollectionStatusFilter}
+              peopleRoleFilter={state.peopleRoleFilter}
+              setPeopleRoleFilter={state.setPeopleRoleFilter}
+              genderFilter={state.genderFilter}
+              setGenderFilter={state.setGenderFilter}
+              ownershipFilter={state.ownershipFilter}
+              setOwnershipFilter={state.setOwnershipFilter}
+              watchedFilter={state.watchedFilter}
+              setWatchedFilter={state.setWatchedFilter}
+              genreFilter={state.genreFilter}
+              setGenreFilter={state.setGenreFilter}
+              decadeFilter={state.decadeFilter}
+              setDecadeFilter={state.setDecadeFilter}
+              yearFilter={state.yearFilter}
+              setYearFilter={state.setYearFilter}
+              timeFilterMode={state.timeFilterMode}
+              setTimeFilterMode={state.setTimeFilterMode}
+              favoriteFilter={state.favoriteFilter}
+              setFavoriteFilter={state.setFavoriteFilter}
+              filterData={state.filterData}
+            />
+          ) : null}
         </div>
 
         {/* Top Pagination Bar */}
