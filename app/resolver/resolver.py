@@ -381,12 +381,21 @@ class Resolver:
                 )
             return candidate_titles_cache[tmdb_id]
 
-        def get_title_rank(candidate: Dict[str, Any], item_type: ItemType) -> int:
+        def get_title_rank_and_best_title(candidate: Dict[str, Any], item_type: ItemType) -> tuple[int, str]:
             tmdb_id = candidate.get("id")
             if not tmdb_id:
-                return 0
+                return 0, parsed_title
             if tmdb_id not in title_rank_cache:
-                title_rank_cache[tmdb_id] = self._title_match_rank(parsed_title, get_candidate_titles(candidate, item_type))
+                max_rank = 0
+                best_t = parsed_title
+                candidate_titles = get_candidate_titles(candidate, item_type)
+                for t in [item.fn_title, item.fd_title, item.it_title]:
+                    if t:
+                        rank = self._title_match_rank(t, candidate_titles)
+                        if rank > max_rank:
+                            max_rank = rank
+                            best_t = t
+                title_rank_cache[tmdb_id] = (max_rank, best_t)
             return title_rank_cache[tmdb_id]
 
         def get_candidate_score(x):
@@ -395,8 +404,8 @@ class Resolver:
             year_match = 0
             raw_type = x.get("item_type") or x.get("media_type", "movie")
             candidate_type = ItemType.SERIES if raw_type in ["series", "tv"] else ItemType.MOVIE
-            title_rank = get_title_rank(x, candidate_type)
-            noise_penalty = self._candidate_noise_penalty(parsed_title, get_candidate_titles(x, candidate_type))
+            title_rank, best_title = get_title_rank_and_best_title(x, candidate_type)
+            noise_penalty = self._candidate_noise_penalty(best_title, get_candidate_titles(x, candidate_type))
             if target_year and date_str:
                 try:
                     c_year = int(date_str.split("-")[0])
@@ -466,7 +475,8 @@ class Resolver:
                 has_season = bool(item.fn_season or item.fd_season or item.it_season)
                 has_episode_num = bool(item.fn_episode or item.fd_episode or item.it_episode)
                 
-                is_exact_title = get_title_rank(data, itype) >= 3
+                is_exact_title, _ = get_title_rank_and_best_title(data, itype)
+                is_exact_title = is_exact_title >= 3
                 cleaned_parsed = self._normalize_title(parsed_title)
 
                 ambiguous_exact_candidates = 0
@@ -477,7 +487,8 @@ class Resolver:
 
                         candidate_raw_type = candidate.get("item_type") or candidate.get("media_type", "movie")
                         candidate_item_type = ItemType.SERIES if candidate_raw_type in ["series", "tv"] else ItemType.MOVIE
-                        if get_title_rank(candidate, candidate_item_type) < 3:
+                        rank, _ = get_title_rank_and_best_title(candidate, candidate_item_type)
+                        if rank < 3:
                             continue
 
                         candidate_date = candidate.get("release_date") or candidate.get("first_air_date")

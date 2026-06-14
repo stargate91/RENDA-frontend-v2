@@ -144,21 +144,21 @@ export default function OrganizerDetailsPanel({
 
   return (
     <aside className="organizer-details" aria-label={t('organizer.details.title')}>
-      <div className="organizer-details__sticky-container">
-        <div className="organizer-details__toggle-row">
-          <Tooltip content={isDetailsCollapsed ? t('organizer.details.expand') : t('organizer.details.collapse')} side="left">
-            <UtilityButton
-              type="button"
-              className="organizer-details__toggle"
-              size="sm"
-              aria-label={isDetailsCollapsed ? t('organizer.details.expand') : t('organizer.details.collapse')}
-              onClick={onToggleDetails}
-            >
-              {isDetailsCollapsed ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
-            </UtilityButton>
-          </Tooltip>
-        </div>
+      <div className="organizer-details__toggle-row">
+        <Tooltip content={isDetailsCollapsed ? t('organizer.details.expand') : t('organizer.details.collapse')} side="left">
+          <UtilityButton
+            type="button"
+            className="organizer-details__toggle"
+            size="sm"
+            aria-label={isDetailsCollapsed ? t('organizer.details.expand') : t('organizer.details.collapse')}
+            onClick={onToggleDetails}
+          >
+            {isDetailsCollapsed ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
+          </UtilityButton>
+        </Tooltip>
+      </div>
 
+      <div className="organizer-details__sticky-container">
         <div className="organizer-details__panel">
           {activeRow ? (
             <>

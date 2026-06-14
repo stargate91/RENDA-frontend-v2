@@ -58,18 +58,18 @@ class LibraryTabService:
         people_role: str = "all",
     ) -> dict:
         normalized_tab = (tab or "movies").lower()
-        if normalized_tab not in {"movies", "series", "adult", "people", "adult_people", "actors", "directors"}:
+        if normalized_tab not in {"movies", "series", "adult", "adult_series", "people", "adult_people", "actors", "directors"}:
             raise ValueError(f"Unsupported library tab: {tab}")
         if normalized_tab in {"actors", "directors"}:
             normalized_tab = "people"
 
         items, total_items, safe_page, safe_page_size, total_pages = [], 0, 1, page_size, 1
 
-        if normalized_tab in {"movies", "series", "adult"} and filter_ownership == "owned":
+        if normalized_tab in {"movies", "series", "adult", "adult_series"} and filter_ownership == "owned":
             items, total_items, safe_page, safe_page_size, total_pages = self.owned_provider.get_page(
                 normalized_tab, page, page_size, sort_by, search, selected_tags, selected_genre, selected_decade, selected_year, filter_favorite, filter_watched, filter_ownership, filter_status, filter_gender
             )
-        elif normalized_tab in {"movies", "series"} and filter_ownership == "unowned":
+        elif normalized_tab in {"movies", "series", "adult_series"} and filter_ownership == "unowned":
             items, total_items, safe_page, safe_page_size, total_pages = self.virtual_provider.get_page(
                 normalized_tab, page, page_size, sort_by, search, selected_tags, selected_genre, selected_decade, selected_year, filter_favorite, filter_watched, filter_ownership, filter_status, filter_gender
             )
@@ -182,6 +182,7 @@ class LibraryTabService:
             "movies": len(self.formatter.format_media_cards("movies", library.get("movies", []))),
             "series": len(self.formatter.format_media_cards("series", library.get("series", []))),
             "adult": len(self.formatter.format_media_cards("adult", library.get("adult", []))),
+            "adult_series": len(self.formatter.format_media_cards("adult_series", library.get("adult_series", []))),
             "adult_people": len(self.formatter.format_media_cards("adult_people", library.get("adult_people", []))),
         }
 
@@ -199,6 +200,7 @@ class LibraryTabService:
             "movies": [],
             "series": [],
             "adult": [],
+            "adult_series": [],
             "adult_people": [],
             "counts": self.repository.get_library_owned_counts(),
         }
@@ -363,7 +365,10 @@ class LibraryTabService:
             active_match = next((match for match in item.matches if match.is_active), None)
             target_group = None
             if active_match and active_match.is_adult:
-                target_group = "adult"
+                if item.item_type in [ItemType.SERIES, ItemType.EPISODE]:
+                    target_group = "adult_series"
+                else:
+                    target_group = "adult"
             elif item.item_type == ItemType.MOVIE:
                 target_group = "movies"
             elif item.item_type in [ItemType.SERIES, ItemType.EPISODE]:
@@ -565,7 +570,7 @@ class LibraryTabService:
 
     def get_library_filter_options(self, tab: str, filter_ownership: str = "owned", filter_status: str = "active") -> dict:
         normalized_tab = (tab or "movies").lower()
-        if normalized_tab not in {"movies", "series", "adult"}:
+        if normalized_tab not in {"movies", "series", "adult", "adult_series"}:
             return {"genres": [], "decades": [], "years": []}
 
         grouped = self.get_grouped_library(requested_tabs={normalized_tab})

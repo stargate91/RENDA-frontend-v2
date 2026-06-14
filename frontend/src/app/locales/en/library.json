@@ -1,6 +1,15 @@
 {
   "title": "Media Library",
   "searchPlaceholder": "Search {{tab}}...",
+  "backToSelector": "Change Mode",
+  "chooser": {
+    "title": "Select Library Mode",
+    "subtitle": "Choose how you want to browse your media library in this session.",
+    "sfwTitle": "Normal Mode (SFW)",
+    "sfwDesc": "Browse your general movies, TV shows, and cast lists.",
+    "nsfwTitle": "Adult Mode (NSFW)",
+    "nsfwDesc": "Browse adult content library, specialized collections, and stars."
+  },
   "tabs": {
     "movies": "Movies",
     "collections": "Collections",
@@ -68,6 +77,10 @@
       "title": "No Adult Content Found",
       "description": "Your adult media library is empty. Ensure files are correctly matched and organized."
     },
+    "adult_series": {
+      "title": "No Adult TV Shows Found",
+      "description": "Your adult TV shows library is empty. Ensure files are correctly matched and organized."
+    },
     "adultPeople": {
       "title": "No Adult Stars Found",
       "description": "No actors or creators from adult media have been registered yet."
@@ -75,6 +88,10 @@
     "adultCollections": {
       "title": "No Adult Collections Found",
       "description": "Your adult collections library is currently empty. Group adult media into custom collections."
+    },
+    "adultTags": {
+      "title": "No Adult Tags Created",
+      "description": "Organize your adult media with custom tags. You can add tags in the media details page."
     },
     "tags": {
       "title": "No Tags Created",

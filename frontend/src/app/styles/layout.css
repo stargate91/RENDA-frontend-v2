@@ -95,7 +95,7 @@
 
 .shell__sidebar-toggle-row {
   position: absolute;
-  top: calc((var(--shell-top-band-height) - var(--sidebar-toggle-size)) / 2);
+  top: calc(var(--utility-bar-top) + (var(--utility-bar-min-height) - var(--sidebar-toggle-size)) / 2);
   left: var(--sidebar-padding-x);
   right: var(--sidebar-padding-x);
   display: flex;

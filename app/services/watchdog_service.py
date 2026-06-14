@@ -13,7 +13,7 @@ from app.db.base import Session as DbSession
 from app.db.models import MediaItem
 from app.db.models.enums import ItemStatus
 from app.scanner.scanner_manager import ScannerManager
-from app.scanner.status import scan_status, scan_status_lock
+from app.scanner.status import scan_status, scan_status_lock, update_scan_status
 from app.utils.config_manager import config_manager
 from app.utils.fs_utils import calculate_fast_hash, to_win_long_path
 
@@ -163,13 +163,15 @@ def _start_watchdog_scan(paths: List[str]):
                 if scan_status.get("active"):
                     logger.info(f"Watchdog: scan already active, skipping new paths: {ready_paths}")
                     return
-                scan_status.update({
-                    "active": True,
-                    "phase": "collecting",
-                    "current": 0,
-                    "total": 0,
-                    "start_time": time.time(),
-                })
+                scan_status["active"] = True
+            
+            update_scan_status({
+                "active": True,
+                "phase": "collecting",
+                "current": 0,
+                "total": 0,
+                "start_time": time.time(),
+            })
             min_duration = config_manager.get_int("min_video_duration_minutes", 12)
             min_size_mb = config_manager.get_int("min_video_size_mb", 50)
             scanner = ScannerManager(

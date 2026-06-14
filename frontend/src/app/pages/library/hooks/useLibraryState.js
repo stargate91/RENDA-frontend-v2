@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useSettingsQuery } from '@/queries/settingsQueries';
 import { useLibraryQuery, useCollectionsQuery, useTagsQuery, useLibraryFiltersQuery } from '@/queries/libraryQueries';
 import { usePaginationVisibility } from '../../../hooks/usePaginationVisibility';
@@ -27,20 +27,64 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
   const [sortKey, setSortKey] = useState('title');
   const [sortDirection, setSortDirection] = useState('asc');
 
-  const isCollections = activeTab === 'collections' || activeTab === 'adult_collections';
+  const [sessionMode, setSessionMode] = useState(() => {
+    try {
+      return sessionStorage.getItem('library_session_mode');
+    } catch {
+      return null;
+    }
+  });
+
+  const hasAdultSupport = settings?.include_adult;
+  const activeSessionMode = hasAdultSupport ? sessionMode : (settings ? 'sfw' : null);
+
+  const handleSetSessionMode = (mode) => {
+    setSessionMode(mode);
+    try {
+      if (mode) {
+        sessionStorage.setItem('library_session_mode', mode);
+      } else {
+        sessionStorage.removeItem('library_session_mode');
+      }
+    } catch {
+      // Ignore storage errors.
+    }
+    setActiveTab('movies');
+    setCurrentPage(1);
+    setSearchQuery('');
+    setGenreFilter('');
+    setCollectionStatusFilter('all');
+    setPeopleRoleFilter('all');
+    setGenderFilter('all');
+    setFavoriteFilter('all');
+    setDecadeFilter('all');
+    setYearFilter('');
+  };
+
+  const isCollections = activeTab === 'collections';
   const isTags = activeTab === 'tags';
-  const isPeople = activeTab === 'people' || activeTab === 'adult_people';
+  const isPeople = activeTab === 'people';
+
+  const backendTab = useMemo(() => {
+    if (activeSessionMode === 'nsfw') {
+      if (activeTab === 'movies') return 'adult';
+      if (activeTab === 'series') return 'adult_series';
+      if (activeTab === 'collections') return 'adult_collections';
+      if (activeTab === 'people') return 'adult_people';
+    }
+    return activeTab;
+  }, [activeTab, activeSessionMode]);
 
   const resolvedGenderFilter = isPeople
-    ? (activeTab === 'adult_people' && settings?.adult_gender_preference && settings.adult_gender_preference !== 'all'
+    ? (activeSessionMode === 'nsfw' && settings?.adult_gender_preference && settings.adult_gender_preference !== 'all'
       ? settings.adult_gender_preference
       : genderFilter)
     : undefined;
 
   const { data: libraryData, isLoading: isLibraryLoading } = useLibraryQuery(
-    !isCollections && !isTags
+    !isCollections && !isTags && activeSessionMode
       ? {
-          tab: activeTab,
+          tab: backendTab,
           page: 1,
           pageSize: 10000,
           filter_ownership: ownershipFilter,
@@ -56,37 +100,70 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
   );
 
   const { data: filterData } = useLibraryFiltersQuery(
-    !isCollections && !isTags
-      ? { tab: activeTab, filter_ownership: ownershipFilter }
+    !isCollections && !isTags && activeSessionMode
+      ? { tab: backendTab, filter_ownership: ownershipFilter }
       : null
   );
 
   const { data: collectionsData, isLoading: isCollectionsLoading } = useCollectionsQuery(
-    isCollections
-      ? { page: 1, pageSize: 10000, tab: activeTab === 'adult_collections' ? 'adult' : 'movies' }
+    isCollections && activeSessionMode
+      ? { page: 1, pageSize: 10000, tab: activeSessionMode === 'nsfw' ? 'adult' : 'movies' }
       : null
   );
 
   const { data: tagsData, isLoading: isTagsLoading } = useTagsQuery();
 
+  const processedTags = useMemo(() => {
+    if (!tagsData) return [];
+    const isNsfw = activeSessionMode === 'nsfw';
+    return tagsData
+      .map(tag => {
+        const localCount = isNsfw
+          ? (tag.adult?.length || 0) + (tag.adult_series?.length || 0) + (tag.adult_people?.length || 0)
+          : (tag.movies?.length || 0) + (tag.series?.length || 0) + (tag.people?.length || 0);
+
+        const modeItems = isNsfw
+          ? [...(tag.adult || []), ...(tag.adult_series || []), ...(tag.adult_people || [])]
+          : [...(tag.movies || []), ...(tag.series || []), ...(tag.people || [])];
+
+        const localPreviews = [];
+        const seenPosters = new Set();
+        for (const item of modeItems) {
+          const poster = item.displayPoster || item.local_poster_path || item.poster_path;
+          const backdrop = item.local_backdrop_path || item.backdrop_path;
+          if ((poster || backdrop) && !seenPosters.has(poster)) {
+            localPreviews.push({
+              poster,
+              backdrop,
+              kind: item.type,
+            });
+            seenPosters.add(poster);
+            if (localPreviews.length >= 3) break;
+          }
+        }
+
+        return {
+          ...tag,
+          total_count: localCount,
+          sample_previews: localPreviews,
+        };
+      })
+      .filter(tag => tag.total_count > 0);
+  }, [tagsData, activeSessionMode]);
+
   const counts = libraryData?.counts || {};
 
   const tabs = [
-    { value: 'movies', label: t('library.tabs.movies'), count: counts.movies, icon: Clapperboard },
+    { value: 'movies', label: t('library.tabs.movies'), count: activeSessionMode === 'nsfw' ? counts.adult : counts.movies, icon: Clapperboard },
     ...(settings?.folder_collection_mode !== 'never' ? [
-      { value: 'collections', label: t('library.tabs.collections'), count: counts.collections, icon: Layers }
+      { value: 'collections', label: t('library.tabs.collections'), count: activeSessionMode === 'nsfw' ? counts.adult_collections : counts.collections, icon: Layers }
     ] : []),
-    { value: 'series', label: t('library.tabs.series'), count: counts.series, icon: Tv },
-    { value: 'people', label: t('library.tabs.people'), count: counts.people, icon: Users },
-    ...(settings?.include_adult ? [
-      { value: 'adult', label: t('library.tabs.adult'), count: counts.adult, icon: ShieldAlert },
-      ...(settings?.folder_collection_mode !== 'never' ? [
-        { value: 'adult_collections', label: t('library.tabs.adultCollections'), count: counts.adult_collections, icon: Layers }
-      ] : []),
-      { value: 'adult_people', label: t('library.tabs.adultPeople'), count: counts.adult_people, icon: Users },
+    ...(activeSessionMode !== 'nsfw' ? [
+      { value: 'series', label: t('library.tabs.series'), count: counts.series, icon: Tv }
     ] : []),
+    { value: 'people', label: t('library.tabs.people'), count: activeSessionMode === 'nsfw' ? counts.adult_people : counts.people, icon: Users },
     ...(includeTagsTab ? [
-      { value: 'tags', label: t('library.tabs.tags'), count: counts.tags, icon: Tag },
+      { value: 'tags', label: t('library.tabs.tags'), count: processedTags.length, icon: Tag },
     ] : []),
   ];
 
@@ -103,13 +180,13 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
     if (lockTab) return;
     setActiveTab(newTab);
     const tabToUse = tabs.some(tab => tab.value === newTab) ? newTab : fallbackTab;
-    if (tabToUse === 'collections' || tabToUse === 'adult_collections') {
+    if (tabToUse === 'collections') {
       setSortKey('owned_count');
       setSortDirection('desc');
     } else if (tabToUse === 'tags') {
       setSortKey('total_count');
       setSortDirection('desc');
-    } else if (tabToUse === 'people' || tabToUse === 'adult_people') {
+    } else if (tabToUse === 'people') {
       setSortKey('library_count');
       setSortDirection('desc');
     } else {
@@ -143,9 +220,7 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
       case 'movies': return Clapperboard;
       case 'collections': return Layers;
       case 'series': return Tv;
-      case 'people':
-      case 'adult_people': return Users;
-      case 'adult': return ShieldAlert;
+      case 'people': return Users;
       case 'tags': return Tag;
       default: return initialTab === 'tags' ? Tag : Clapperboard;
     }
@@ -154,7 +229,7 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
   const allItems = isCollections
     ? (collectionsData?.items || [])
     : isTags
-      ? (tagsData || [])
+      ? processedTags
       : (libraryData?.items || []);
 
   let filteredItems = useLocalListSearch(allItems, searchQuery);
@@ -173,8 +248,12 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
 
   const totalItems = sortedItems.length;
 
-  const translationKey = resolvedTab === 'adult_people' ? 'adultPeople' : resolvedTab;
-  const tabTotalCount = counts[resolvedTab] ?? allItems.length;
+  const translationKey = activeSessionMode === 'nsfw' && resolvedTab === 'people' ? 'adultPeople' : resolvedTab;
+  const emptyStateTranslationKey = activeSessionMode === 'nsfw'
+    ? (resolvedTab === 'movies' ? 'adult' : resolvedTab === 'series' ? 'adult_series' : resolvedTab === 'people' ? 'adultPeople' : resolvedTab === 'collections' ? 'adultCollections' : resolvedTab === 'tags' ? 'adultTags' : resolvedTab)
+    : resolvedTab;
+
+  const tabTotalCount = counts[backendTab] ?? allItems.length;
   const tabLabel = t(`library.tabs.${translationKey}`);
   const searchPlaceholder = t('library.searchPlaceholder').replace('{{tab}}', tabLabel);
   const hasSearchQuery = searchQuery.trim().length > 0;
@@ -201,12 +280,12 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
     ? (t('library.emptyStates.search.title', { tab: tabLabel }) || `No matching ${tabLabel} found`)
     : hasFilterSelection
       ? (t('library.emptyStates.filter.title', { tab: tabLabel }) || 'Nothing fits these filters')
-      : t(`library.emptyStates.${translationKey}.title`);
+      : t(`library.emptyStates.${emptyStateTranslationKey}.title`);
   const emptyDescription = hasSearchQuery
     ? (t('library.emptyStates.search.description', { tab: tabLabel }) || 'Try a different search term or check the spelling.')
     : hasFilterSelection
       ? (t('library.emptyStates.filter.description', { tab: tabLabel }) || `Try clearing or relaxing a few filters to bring ${tabLabel} back into view.`)
-      : t(`library.emptyStates.${translationKey}.description`);
+      : t(`library.emptyStates.${emptyStateTranslationKey}.description`);
   const emptyIcon = getEmptyStateIcon();
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const paginatedItems = sortedItems.slice((currentPage - 1) * pageSize, currentPage * pageSize);
@@ -274,5 +353,8 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
     shouldShowPagination,
     summaryText,
     isDataLoading,
+    sessionMode,
+    activeSessionMode,
+    setSessionMode: handleSetSessionMode,
   };
 }

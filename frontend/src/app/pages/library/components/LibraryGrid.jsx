@@ -27,6 +27,7 @@ export default function LibraryGrid({
   focusedTag,
   onFocusTag,
   onExitTagFocus,
+  activeSessionMode,
 }) {
   const resolvePosterUrl = (path) => {
     if (!path) return '';
@@ -109,6 +110,7 @@ export default function LibraryGrid({
                 resolvePosterUrl={resolvePosterUrl}
                 emptyIcon={emptyIcon}
                 isFocusMode
+                activeSessionMode={activeSessionMode}
               />
             </div>
           ) : (
@@ -197,12 +199,12 @@ export default function LibraryGrid({
           icon={emptyIcon}
           actions={
             (resolvedTab === 'people' || resolvedTab === 'adult_people') && onAddPeople && !hasActiveFilters ? (
-              <Button variant="primary" size="sm" onClick={onAddPeople}>
+              <Button variant={activeSessionMode === 'nsfw' ? 'danger' : 'primary'} size="sm" onClick={onAddPeople}>
                 <UserPlus size={16} />
                 {t('library.people.addPeopleBtn') || 'Add People'}
               </Button>
             ) : resolvedTab === 'tags' && onCreateTag && !hasActiveFilters ? (
-              <Button variant="primary" size="sm" onClick={onCreateTag}>
+              <Button variant={activeSessionMode === 'nsfw' ? 'danger' : 'primary'} size="sm" onClick={onCreateTag}>
                 <Plus size={16} />
                 {t('library.tags.createBtn') || 'Create Tag'}
               </Button>
@@ -214,16 +216,23 @@ export default function LibraryGrid({
   );
 }
 
-function ExpandedTagPanel({ tag, t, resolvePosterUrl, emptyIcon, isFocusMode = false }) {
+function ExpandedTagPanel({ tag, t, resolvePosterUrl, emptyIcon, isFocusMode = false, activeSessionMode }) {
   const allItems = useMemo(() => {
-    return [
-      ...(tag.movies || []),
-      ...(tag.series || []),
-      ...(tag.adult || []),
-      ...(tag.people || []),
-      ...(tag.adult_people || []),
-    ];
-  }, [tag]);
+    const isNsfw = activeSessionMode === 'nsfw';
+    if (isNsfw) {
+      return [
+        ...(tag.adult || []),
+        ...(tag.adult_series || []),
+        ...(tag.adult_people || []),
+      ];
+    } else {
+      return [
+        ...(tag.movies || []),
+        ...(tag.series || []),
+        ...(tag.people || []),
+      ];
+    }
+  }, [tag, activeSessionMode]);
 
   const [visibleCount, setVisibleCount] = useState(20);
   const paginatedItems = allItems.slice(0, visibleCount);

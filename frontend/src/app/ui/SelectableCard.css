@@ -1,36 +1,137 @@
 .ui-selectable-card {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
   width: 100%;
-  padding: var(--space-4);
-  border-radius: var(--ui-control-radius);
-  border: 1.5px solid var(--color-line);
-  background: var(--color-selectable-card-bg, var(--ui-surface-ghost));
   color: inherit;
-  text-align: left;
   cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
-}
-
-.ui-selectable-card:hover:not(:disabled) {
-  border-color: var(--color-line-strong);
-  background: var(--color-selectable-card-bg-hover, var(--ui-surface-soft));
-}
-
-.ui-selectable-card:focus-visible {
-  outline: none;
-  border-color: var(--color-accent);
-  box-shadow: var(--ui-control-focus-ring);
-}
-
-.ui-selectable-card.is-selected {
-  border-color: var(--color-accent);
-  background: var(--color-selectable-card-bg-selected, var(--settings-accent-surface));
-  box-shadow: var(--shadow-selectable-card-selected, var(--settings-accent-shadow));
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
+  user-select: none;
 }
 
 .ui-selectable-card.is-disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+/* Default Variant */
+.ui-selectable-card--default {
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--ui-control-radius);
+  border: 1.5px solid var(--color-line);
+  background: var(--color-selectable-card-bg, var(--ui-surface-ghost));
+  text-align: left;
+}
+
+.ui-selectable-card--default:hover:not(:disabled) {
+  border-color: var(--color-line-strong);
+  background: var(--color-selectable-card-bg-hover, var(--ui-surface-soft));
+}
+
+.ui-selectable-card--default:focus-visible {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: var(--ui-control-focus-ring);
+}
+
+.ui-selectable-card--default.is-selected {
+  border-color: var(--color-accent);
+  background: var(--color-selectable-card-bg-selected, var(--settings-accent-surface));
+  box-shadow: var(--shadow-selectable-card-selected, var(--settings-accent-shadow));
+}
+
+/* Theme Tab Variant */
+.ui-selectable-card--theme {
+  gap: var(--app-shell-space-3);
+  padding: var(--app-shell-space-3);
+  background: var(--ui-control-bg-subtle, rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--app-shell-radius-md);
+  text-align: left;
+}
+
+.ui-selectable-card--theme:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: var(--ui-control-bg-hover, rgba(255, 255, 255, 0.04));
+  border-color: var(--color-border-strong);
+  box-shadow: var(--app-shell-shadow-sm);
+}
+
+.ui-selectable-card--theme:focus-visible {
+  outline: none;
+  border-color: var(--color-accent-blue);
+  box-shadow: var(--ui-control-focus-ring);
+}
+
+.ui-selectable-card--theme.is-selected {
+  background: var(--color-state-info-bg, rgba(59, 130, 246, 0.08));
+  border-color: var(--color-accent-blue);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--color-accent-blue) 20%, transparent);
+}
+
+/* Chooser Option Variant */
+.ui-selectable-card--chooser {
+  align-items: center;
+  text-align: center;
+  gap: 20px;
+  padding: 40px 32px;
+  border-radius: var(--radius-xl, 20px);
+  background: rgba(255, 255, 255, 0.015);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 8px 32px rgba(0, 0, 0, 0.2);
+  border: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.ui-selectable-card--chooser::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), transparent);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.ui-selectable-card--chooser:hover:not(:disabled) {
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.ui-selectable-card--chooser:hover:not(:disabled)::before {
+  opacity: 1;
+}
+
+.ui-selectable-card--chooser.library-chooser-card--sfw:hover:not(:disabled),
+.ui-selectable-card--chooser.library-chooser-card--sfw:focus-visible {
+  box-shadow: 
+    inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 25%, transparent), 
+    0 16px 40px rgba(0, 0, 0, 0.35),
+    0 0 24px color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
+.ui-selectable-card--chooser.library-chooser-card--sfw:hover:not(:disabled) .library-chooser-card__icon-wrapper,
+.ui-selectable-card--chooser.library-chooser-card--sfw:focus-visible .library-chooser-card__icon-wrapper {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  color: var(--color-accent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 20%, transparent);
+}
+
+.ui-selectable-card--chooser.library-chooser-card--nsfw:hover:not(:disabled),
+.ui-selectable-card--chooser.library-chooser-card--nsfw:focus-visible {
+  box-shadow: 
+    inset 0 0 0 1px color-mix(in srgb, var(--color-state-danger) 25%, transparent), 
+    0 16px 40px rgba(0, 0, 0, 0.35),
+    0 0 24px color-mix(in srgb, var(--color-state-danger) 10%, transparent);
+}
+
+.ui-selectable-card--chooser.library-chooser-card--nsfw:hover:not(:disabled) .library-chooser-card__icon-wrapper,
+.ui-selectable-card--chooser.library-chooser-card--nsfw:focus-visible .library-chooser-card__icon-wrapper {
+  background: color-mix(in srgb, var(--color-state-danger) 10%, transparent);
+  color: var(--color-state-danger);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-state-danger) 20%, transparent);
+}
+
+.ui-selectable-card--chooser:hover:not(:disabled) .library-chooser-card__icon,
+.ui-selectable-card--chooser:focus-visible .library-chooser-card__icon {
+  transform: scale(1.1);
 }

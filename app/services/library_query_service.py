@@ -21,7 +21,7 @@ TAG_EMPTY_STATE_SAMPLE_POSTERS = [
     "https://image.tmdb.org/t/p/w500/6ELCZlTA5lGUops70hKdB83WJxH.jpg",
 ]
 
-TAG_PREVIEW_GROUP_ORDER = ("movies", "series", "people", "adult", "adult_people")
+TAG_PREVIEW_GROUP_ORDER = ("movies", "series", "people", "adult", "adult_series", "adult_people")
 
 
 
@@ -113,6 +113,7 @@ class LibraryQueryService:
                 "movies": [],
                 "series": [],
                 "adult": [],
+                "adult_series": [],
                 "people": [],
                 "adult_people": [],
                 "total_count": 0,
@@ -127,6 +128,7 @@ class LibraryQueryService:
                     "movies": [],
                     "series": [],
                     "adult": [],
+                    "adult_series": [],
                     "people": [],
                     "adult_people": [],
                     "total_count": 0,
@@ -144,7 +146,10 @@ class LibraryQueryService:
         for item in tagged_media_items:
             active_match = next((match for match in item.matches if match.is_active), None)
             if active_match and active_match.is_adult:
-                target_group = "adult"
+                if item.item_type in [ItemType.SERIES, ItemType.EPISODE]:
+                    target_group = "adult_series"
+                else:
+                    target_group = "adult"
             elif item.item_type == ItemType.MOVIE:
                 target_group = "movies"
             elif item.item_type in [ItemType.SERIES, ItemType.EPISODE]:
@@ -306,6 +311,7 @@ class LibraryQueryService:
             tag["movies"] = self.formatter.format_media_cards("movies", tag["movies"])
             tag["series"] = self.formatter.format_media_cards("series", tag["series"])
             tag["adult"] = self.formatter.format_media_cards("adult", tag["adult"])
+            tag["adult_series"] = self.formatter.format_media_cards("adult_series", tag["adult_series"])
             tag["people"] = self.formatter.format_media_cards("people", tag["people"])
             tag["adult_people"] = self.formatter.format_media_cards("adult_people", tag["adult_people"])
 

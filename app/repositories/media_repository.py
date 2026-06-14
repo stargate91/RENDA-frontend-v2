@@ -91,7 +91,18 @@ class MediaRepository:
                 query = query.join(
                     MediaMatch,
                     (MediaMatch.media_item_id == MediaItem.id) & (MediaMatch.is_active == True)
-                ).filter(MediaMatch.is_adult == True).distinct()
+                ).filter(
+                    MediaMatch.is_adult == True,
+                    MediaItem.item_type == ItemType.MOVIE
+                ).distinct()
+            elif tab == "adult_series":
+                query = query.join(
+                    MediaMatch,
+                    (MediaMatch.media_item_id == MediaItem.id) & (MediaMatch.is_active == True)
+                ).filter(
+                    MediaMatch.is_adult == True,
+                    MediaItem.item_type.in_([ItemType.SERIES, ItemType.EPISODE])
+                ).distinct()
 
         return query.all()
 
@@ -118,12 +129,24 @@ class MediaRepository:
             ~active_adult_match,
         ).scalar() or 0
 
-        adult = base_query.filter(active_adult_match).count()
+        adult = base_query.filter(
+            MediaItem.item_type == ItemType.MOVIE,
+            active_adult_match,
+        ).count()
+
+        adult_series = self.db.query(
+            func.count(func.distinct(func.coalesce(MediaItem.fd_title, MediaItem.fn_title)))
+        ).filter(
+            MediaItem.status.in_([ItemStatus.ORGANIZED, ItemStatus.RENAMED]),
+            MediaItem.item_type.in_([ItemType.SERIES, ItemType.EPISODE]),
+            active_adult_match,
+        ).scalar() or 0
 
         return {
             "movies": movies,
             "series": series,
             "adult": adult,
+            "adult_series": adult_series,
         }
 
     def get_owned_library_page(
@@ -164,7 +187,15 @@ class MediaRepository:
                 ~active_adult_match,
             )
         elif tab == "adult":
-            query = query.filter(active_adult_match)
+            query = query.filter(
+                MediaItem.item_type == ItemType.MOVIE,
+                active_adult_match,
+            )
+        elif tab == "adult_series":
+            query = query.filter(
+                MediaItem.item_type.in_([ItemType.SERIES, ItemType.EPISODE]),
+                active_adult_match,
+            )
 
         if filter_favorite == "favorites":
             query = query.filter(MediaItem.is_favorite == True)

@@ -8,9 +8,10 @@ export default function SelectableCard({
   disabled = false,
   onClick,
   type = 'button',
+  variant = 'default',
   ...props
 }) {
-  const sharedClassName = `ui-selectable-card${selected ? ' is-selected' : ''}${disabled ? ' is-disabled' : ''} ${className}`.trim();
+  const sharedClassName = `ui-selectable-card ui-selectable-card--${variant}${selected ? ' is-selected' : ''}${disabled ? ' is-disabled' : ''} ${className}`.trim();
 
   if (as === 'div') {
     return (

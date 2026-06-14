@@ -83,6 +83,7 @@ export function useOrganizerScan({
   const wasStopRequestedRef = useRef(false);
   const lastProcessedCountRef = useRef(0);
   const scanStatus = scanStatusQuery?.data || null;
+  const lastCompletedRef = useRef(scanStatus?.last_completed || 0);
 
   useEffect(() => {
     if (isScanActive && scanStatus) {
@@ -97,7 +98,16 @@ export function useOrganizerScan({
 
   useEffect(() => {
     const wasActive = previousScanActiveRef.current;
-    if (wasActive && !isScanActive) {
+    const nextLastCompleted = scanStatus?.last_completed || 0;
+    const prevLastCompleted = lastCompletedRef.current;
+
+    if (scanStatus?.last_completed) {
+      lastCompletedRef.current = scanStatus.last_completed;
+    }
+
+    const isBackgroundScanCompleted = !isScanActive && prevLastCompleted !== 0 && nextLastCompleted > prevLastCompleted;
+
+    if ((wasActive && !isScanActive) || isBackgroundScanCompleted) {
       const finalizeScan = async () => {
         const wasRename = renameStartedRef.current;
         renameStartedRef.current = false;
@@ -147,7 +157,7 @@ export function useOrganizerScan({
       scrollOrganizerToTop();
     }
     previousScanActiveRef.current = isScanActive;
-  }, [isScanActive, onResultsReady, queryClient, t, toast, discoveryQuery, renameStartedRef]);
+  }, [isScanActive, onResultsReady, queryClient, t, toast, discoveryQuery, renameStartedRef, scanStatus]);
 
   const handleScanPaths = async (paths) => {
     if (isScanActive || isBrowseStarting) {

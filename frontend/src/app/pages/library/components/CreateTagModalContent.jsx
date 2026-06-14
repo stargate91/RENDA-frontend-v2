@@ -15,9 +15,9 @@ const PREDEFINED_COLORS = [
   '#14b8a6', // Teal
 ];
 
-export default function CreateTagModalContent({ onClose, t, initialTag = null, mode = 'create', onSuccess }) {
+export default function CreateTagModalContent({ onClose, t, initialTag = null, mode = 'create', onSuccess, defaultColor = '#3b82f6' }) {
   const [name, setName] = useState(initialTag?.name || '');
-  const [color, setColor] = useState(initialTag?.color || '#3b82f6');
+  const [color, setColor] = useState(initialTag?.color || defaultColor);
   const [error, setError] = useState('');
 
   const { data: tags = [] } = useAllTagsQuery();

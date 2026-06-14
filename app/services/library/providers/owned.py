@@ -31,20 +31,20 @@ class OwnedTabProvider(BaseTabProvider):
     ) -> Tuple[list[dict], int, int, Optional[int], int]:
         ui_lang = _preferred_metadata_language(self.db)
 
-        if tab == "series":
-            owned_series_items = self.repository.get_library_items(requested_tabs={"series"})
+        if tab in {"series", "adult_series"}:
+            owned_series_items = self.repository.get_library_items(requested_tabs={tab})
             card_items = []
             for item in owned_series_items:
                 mapped = self.formatter.library_item_to_card(item, ui_lang)
                 if not mapped:
                     continue
                 target_group, data = mapped
-                if target_group == "series":
+                if target_group == tab:
                     card_items.append(data)
 
-            formatted_items = self.formatter.format_media_cards("series", card_items)
+            formatted_items = self.formatter.format_media_cards(tab, card_items)
             filtered_items = self.filter_sort.filter_media_cards(
-                "series",
+                tab,
                 formatted_items,
                 search=search,
                 selected_tags=selected_tags,

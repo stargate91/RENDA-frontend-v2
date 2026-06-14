@@ -1,6 +1,8 @@
 import Page from '@/ui/Page';
 import PaginationBar from '@/ui/PaginationBar';
 import Button from '@/ui/Button';
+import NavButton from '@/ui/NavButton';
+import SelectableCard from '@/ui/SelectableCard';
 import { useLibraryState } from './hooks/useLibraryState';
 import LibraryHeader from './components/LibraryHeader';
 import LibraryFilters from './components/LibraryFilters';
@@ -9,15 +11,25 @@ import AddPeopleModalContent from './components/AddPeopleModalContent';
 import CreateTagModalContent from './components/CreateTagModalContent';
 import { useDeleteTagMutation } from '@/queries';
 import { useUi } from '@/providers/UiProvider';
-import { Pencil, Tag, Trash2, Users } from 'lucide-react';
+import { Pencil, Tag, Trash2, Users, Eye, Flame } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import './LibraryPage.css';
 
 export default function LibraryPage({ initialTab = 'movies', lockTab = false, showTabs = true, pageTitle = null }) {
-  const state = useLibraryState({ initialTab, lockTab, includeTagsTab: false });
+  const state = useLibraryState({ initialTab, lockTab, includeTagsTab: true });
   const { openModal, closeModal, toast } = useUi();
   const [focusedTagName, setFocusedTagName] = useState(null);
   const deleteTagMutation = useDeleteTagMutation();
+  const [utilityBarEl, setUtilityBarEl] = useState(null);
+
+  useEffect(() => {
+    if (state.activeSessionMode && state.settings?.include_adult) {
+      setUtilityBarEl(document.querySelector('.shell__utility-bar-left'));
+    } else {
+      setUtilityBarEl(null);
+    }
+  }, [state.activeSessionMode, state.settings?.include_adult]);
 
   useEffect(() => {
     if (!state.isTags) {
@@ -33,7 +45,7 @@ export default function LibraryPage({ initialTab = 'movies', lockTab = false, sh
   const isTagFocusMode = state.isTags && !!focusedTag;
 
   const handleOpenAddPeopleModal = () => {
-    const isAdult = state.resolvedTab === 'adult_people';
+    const isAdult = state.activeSessionMode === 'nsfw';
     openModal({
       title: isAdult
         ? (state.t('library.addPeople.adultModalTitle') || 'Add Adult People')
@@ -58,14 +70,17 @@ export default function LibraryPage({ initialTab = 'movies', lockTab = false, sh
   };
 
   const handleOpenCreateTagModal = () => {
+    const isAdult = state.activeSessionMode === 'nsfw';
     openModal({
       title: state.t('library.tags.modalTitle') || 'Create Tag',
       description: state.t('library.tags.modalDescription') || 'Create a new custom tag for organizing your media.',
       icon: Tag,
+      className: isAdult ? 'ui-modal--danger' : '',
       content: (
         <CreateTagModalContent
           onClose={closeModal}
           t={state.t}
+          defaultColor={isAdult ? '#ef4444' : '#3b82f6'}
         />
       ),
       footer: (
@@ -73,7 +88,7 @@ export default function LibraryPage({ initialTab = 'movies', lockTab = false, sh
           <Button variant="secondary-neutral" onClick={closeModal}>
             {state.t('common.close') || 'Close'}
           </Button>
-          <Button variant="primary" type="submit" form="create-tag-form">
+          <Button variant={isAdult ? 'danger' : 'primary'} type="submit" form="create-tag-form">
             {state.t('common.create') || 'Create'}
           </Button>
         </div>
@@ -82,10 +97,12 @@ export default function LibraryPage({ initialTab = 'movies', lockTab = false, sh
   };
 
   const handleOpenEditTagModal = (tag) => {
+    const isAdult = state.activeSessionMode === 'nsfw';
     openModal({
       title: state.t('library.tags.editModalTitle') || 'Edit Tag',
       description: state.t('library.tags.editModalDescription') || 'Rename the tag or adjust its color.',
       icon: Pencil,
+      className: isAdult ? 'ui-modal--danger' : '',
       content: (
         <CreateTagModalContent
           mode="edit"
@@ -104,7 +121,7 @@ export default function LibraryPage({ initialTab = 'movies', lockTab = false, sh
           <Button variant="secondary-neutral" onClick={closeModal}>
             {state.t('common.close') || 'Close'}
           </Button>
-          <Button variant="primary" type="submit" form="edit-tag-form">
+          <Button variant={isAdult ? 'danger' : 'primary'} type="submit" form="edit-tag-form">
             {state.t('common.save') || 'Save'}
           </Button>
         </div>
@@ -158,8 +175,60 @@ export default function LibraryPage({ initialTab = 'movies', lockTab = false, sh
     );
   }
 
+  if (state.activeSessionMode === null && initialTab !== 'tags') {
+    return (
+      <Page className="library-page library-page--chooser">
+        <div className="library-chooser-container">
+          <div className="library-chooser-header">
+            <h1 className="library-chooser-title">{state.t('library.chooser.title') || 'Select Library Mode'}</h1>
+            <p className="library-chooser-subtitle">{state.t('library.chooser.subtitle') || 'Choose how you want to browse your media library in this session.'}</p>
+          </div>
+          <div className="library-chooser-options">
+            <SelectableCard
+              variant="chooser"
+              className="library-chooser-card library-chooser-card--sfw"
+              onClick={() => state.setSessionMode('sfw')}
+            >
+              <div className="library-chooser-card__icon-wrapper">
+                <Eye size={40} className="library-chooser-card__icon" />
+              </div>
+              <div className="library-chooser-card__content">
+                <h2 className="library-chooser-card__title">{state.t('library.chooser.sfwTitle') || 'Normal Mode (SFW)'}</h2>
+                <p className="library-chooser-card__description">{state.t('library.chooser.sfwDesc') || 'Browse your general movies, TV shows, and cast lists.'}</p>
+              </div>
+            </SelectableCard>
+            <SelectableCard
+              variant="chooser"
+              className="library-chooser-card library-chooser-card--nsfw"
+              onClick={() => state.setSessionMode('nsfw')}
+            >
+              <div className="library-chooser-card__icon-wrapper">
+                <Flame size={40} className="library-chooser-card__icon" />
+              </div>
+              <div className="library-chooser-card__content">
+                <h2 className="library-chooser-card__title">{state.t('library.chooser.nsfwTitle') || 'Adult Mode (NSFW)'}</h2>
+                <p className="library-chooser-card__description">{state.t('library.chooser.nsfwDesc') || 'Browse adult content library, specialized collections, and stars.'}</p>
+              </div>
+            </SelectableCard>
+          </div>
+        </div>
+      </Page>
+    );
+  }
+
+  const isAdultMode = state.activeSessionMode === 'nsfw';
+
   return (
-    <Page className="library-page">
+    <Page className={`library-page ${isAdultMode ? 'library-page--nsfw' : ''}`}>
+      {utilityBarEl && createPortal(
+        <NavButton
+          onClick={() => state.setSessionMode(null)}
+        >
+          {state.t('library.backToSelector') || 'Back'}
+        </NavButton>,
+        utilityBarEl
+      )}
+
       <div className="library-main">
         <div className="organizer-panel">
           <LibraryHeader
@@ -178,6 +247,7 @@ export default function LibraryPage({ initialTab = 'movies', lockTab = false, sh
             sortDirection={state.sortDirection}
             setSortDirection={state.setSortDirection}
             setCurrentPage={state.setCurrentPage}
+            activeSessionMode={state.activeSessionMode}
           />
 
           {!(state.resolvedTab === 'tags' && !showTabs) ? (
@@ -187,6 +257,7 @@ export default function LibraryPage({ initialTab = 'movies', lockTab = false, sh
               resolvedTab={state.resolvedTab}
               isCollections={state.isCollections}
               isPeople={state.isPeople}
+              activeSessionMode={state.activeSessionMode}
               sortKey={state.sortKey}
               setSortKey={state.setSortKey}
               sortDirection={state.sortDirection}
@@ -252,6 +323,7 @@ export default function LibraryPage({ initialTab = 'movies', lockTab = false, sh
           focusedTag={focusedTag}
           onFocusTag={setFocusedTagName}
           onExitTagFocus={() => setFocusedTagName(null)}
+          activeSessionMode={state.activeSessionMode}
         />
 
         {/* Bottom Pagination Bar */}

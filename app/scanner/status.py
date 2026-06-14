@@ -27,6 +27,7 @@ class StatusManager:
             "start_time": 0,
             "can_stop": False,
             "stop_requested": False,
+            "last_completed": 0.0,
         }
         self._lock = threading.Lock()
         self._listeners: List[Callable[[Dict[str, Any]], None]] = []
@@ -41,6 +42,8 @@ class StatusManager:
         with self._lock:
             if updates.get("active") is True:
                 self._status["message"] = None
+            if self._status.get("active") is True and updates.get("active") is False:
+                updates = {**updates, "last_completed": time.time()}
             self._status.update(updates)
             current_status = self._status.copy()
         

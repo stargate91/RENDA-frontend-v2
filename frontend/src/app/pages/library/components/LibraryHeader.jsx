@@ -43,10 +43,12 @@ export default function LibraryHeader({
   sortDirection,
   setSortDirection,
   setCurrentPage,
+  activeSessionMode,
 }) {
   const currentTabObj = tabs.find(tab => tab.value === resolvedTab);
   const hasItems = currentTabObj ? (currentTabObj.count > 0) : false;
   const showInlineSorter = !showTabs && resolvedTab === 'tags' && setSortKey && setSortDirection && setCurrentPage;
+  const btnVariant = activeSessionMode === 'nsfw' ? 'danger' : 'primary';
 
   return (
     <>
@@ -54,13 +56,13 @@ export default function LibraryHeader({
       <div className="organizer-panel__row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span className="organizer-panel__title">{pageTitle || t('library.title')}</span>
         {(resolvedTab === 'people' || resolvedTab === 'adult_people') && hasItems && onAddPeople && (
-          <Button variant="primary" size="sm" onClick={onAddPeople} style={{ height: '28px', minHeight: '28px' }}>
+          <Button variant={btnVariant} size="sm" onClick={onAddPeople} style={{ height: '28px', minHeight: '28px' }}>
             <UserPlus size={14} />
             {t('library.people.addPeopleBtn') || 'Add People'}
           </Button>
         )}
         {resolvedTab === 'tags' && hasItems && onCreateTag && (
-          <Button variant="primary" size="sm" onClick={onCreateTag} style={{ height: '28px', minHeight: '28px' }}>
+          <Button variant={btnVariant} size="sm" onClick={onCreateTag} style={{ height: '28px', minHeight: '28px' }}>
             <Plus size={14} />
             {t('library.tags.createBtn') || 'Create Tag'}
           </Button>

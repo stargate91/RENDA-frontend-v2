@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { usePeopleInfiniteQuery, useUpdatePersonStatusMutation } from '@/queries';
+import { usePeopleInfiniteQuery, useUpdatePersonStatusMutation, useSettingsQuery } from '@/queries';
 import SegmentedControl from '@/ui/SegmentedControl';
 import Input from '@/ui/Input';
 import Spinner from '@/ui/Spinner';
@@ -54,6 +54,9 @@ export default function AddPeopleModalContent({ isAdult, t }) {
   const [sortBy, setSortBy] = useState('library_count');
   const [sortDirection, setSortDirection] = useState('desc');
 
+  const { data: settings } = useSettingsQuery();
+  const hideGenderFilter = isAdult && settings?.adult_gender_preference && settings.adult_gender_preference !== 'all';
+
   // Fetch people with pagination and infinite scroll
   const {
     data,
@@ -66,7 +69,7 @@ export default function AddPeopleModalContent({ isAdult, t }) {
     adult_only: isAdult,
     search: searchQuery.trim() || undefined,
     role: roleFilter !== 'all' ? (roleFilter === 'actor' ? 'Actor' : roleFilter === 'director' ? 'Director' : 'Writer') : undefined,
-    gender: genderFilter !== 'all' ? genderFilter : undefined,
+    gender: hideGenderFilter ? settings.adult_gender_preference : (genderFilter !== 'all' ? genderFilter : undefined),
     sort_by: sortBy === 'library_count' ? `library_count_${sortDirection}` : `name_${sortDirection}`,
   });
 
@@ -76,7 +79,7 @@ export default function AddPeopleModalContent({ isAdult, t }) {
     return data?.pages.flatMap(page => page.items) || [];
   }, [data]);
   const hasSearchQuery = searchQuery.trim().length > 0;
-  const hasActiveFilters = roleFilter !== 'all' || genderFilter !== 'all';
+  const hasActiveFilters = roleFilter !== 'all' || (!hideGenderFilter && genderFilter !== 'all');
 
   const resolveProfileUrl = (path) => {
     if (!path) return '';
@@ -168,20 +171,22 @@ export default function AddPeopleModalContent({ isAdult, t }) {
               />
             </div>
 
-            <div className="library-sorter-container" style={{ flex: 1 }}>
-              <span className="library-sorter-label">{t('library.filter.genderLabel') || 'Gender:'}</span>
-              <Dropdown
-                className="add-people-dropdown"
-                variant="sorter"
-                value={genderFilter}
-                onChange={(e) => setGenderFilter(e.target.value)}
-                options={[
-                  { value: 'all', label: t('library.filter.all') || 'All Genders' },
-                  { value: 'female', label: t('library.filter.female') || 'Female' },
-                  { value: 'male', label: t('library.filter.male') || 'Male' },
-                ]}
-              />
-            </div>
+            {!hideGenderFilter && (
+              <div className="library-sorter-container" style={{ flex: 1 }}>
+                <span className="library-sorter-label">{t('library.filter.genderLabel') || 'Gender:'}</span>
+                <Dropdown
+                  className="add-people-dropdown"
+                  variant="sorter"
+                  value={genderFilter}
+                  onChange={(e) => setGenderFilter(e.target.value)}
+                  options={[
+                    { value: 'all', label: t('library.filter.all') || 'All Genders' },
+                    { value: 'female', label: t('library.filter.female') || 'Female' },
+                    { value: 'male', label: t('library.filter.male') || 'Male' },
+                  ]}
+                />
+              </div>
+            )}
           </div>
 
           {isLoading ? (

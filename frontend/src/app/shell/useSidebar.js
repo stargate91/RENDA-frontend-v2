@@ -6,7 +6,6 @@ export const navItems = [
   { to: '/dashboard', translationKey: 'sidebar.dashboard', icon: LayoutDashboard },
   { to: '/organizer', translationKey: 'sidebar.organizer', icon: FolderSearch2 },
   { to: '/library', translationKey: 'sidebar.library', icon: Library },
-  { to: '/tags', translationKey: 'sidebar.tags', icon: Tag },
   { to: '/lists', translationKey: 'sidebar.lists', icon: ListTodo },
   { to: '/watched-history', translationKey: 'sidebar.watchedHistory', icon: Clapperboard },
   { to: '/my-ratings', translationKey: 'sidebar.myRatings', icon: Star },

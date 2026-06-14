@@ -8,6 +8,7 @@ export default function LibraryFilters({
   resolvedTab,
   isCollections,
   isPeople,
+  activeSessionMode,
   sortKey,
   setSortKey,
   sortDirection,
@@ -127,7 +128,7 @@ export default function LibraryFilters({
           </div>
         )}
 
-        {isPeople && (resolvedTab !== 'adult_people' || !settings?.adult_gender_preference || settings.adult_gender_preference === 'all') && (
+        {isPeople && (activeSessionMode !== 'nsfw' || !settings?.adult_gender_preference || settings.adult_gender_preference === 'all') && (
           <div className="library-sorter-container">
             <span className="library-sorter-label">{t('library.filter.genderLabel') || 'Gender:'}</span>
             <Dropdown

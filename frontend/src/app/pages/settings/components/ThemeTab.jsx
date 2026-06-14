@@ -1,6 +1,7 @@
 import { Check } from 'lucide-react';
 import { useSettingsViewContext, useSettingsField } from '../SettingsFormContext.jsx';
 import Card from '@/ui/Card';
+import SelectableCard from '@/ui/SelectableCard';
 
 const THEME_LIST = [
   { value: 'dark', translationKey: 'settingsPage.sections.theme.options.dark' },
@@ -42,9 +43,11 @@ export default function ThemeTab() {
             const label = t(theme.translationKey) || theme.value;
 
             return (
-              <div
+              <SelectableCard
                 key={theme.value}
-                className={`theme-card ${isActive ? 'theme-card--active' : ''}`}
+                selected={isActive}
+                variant="theme"
+                className="theme-card"
                 onClick={() => {
                   if (onChange) {
                     onChange({ target: { value: theme.value } });
@@ -57,7 +60,7 @@ export default function ThemeTab() {
                     <Check size={12} strokeWidth={3} />
                   </div>
                 </div>
-              </div>
+              </SelectableCard>
             );
           })}
         </div>

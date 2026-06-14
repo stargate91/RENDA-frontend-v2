@@ -10,7 +10,7 @@ class LibraryFormatterService:
         self.db = db
 
     def format_media_cards(self, tab: str, items: list[dict]) -> list[dict]:
-        if tab == "series":
+        if tab in {"series", "adult_series"}:
             return self._build_series_nodes(items)
 
         folder = "persons" if tab in {"actors", "directors", "people", "adult_people"} else "posters"
@@ -133,7 +133,10 @@ class LibraryFormatterService:
         active_match = next((match for match in item.matches if match.is_active), None)
         target_group = None
         if active_match and active_match.is_adult:
-            target_group = "adult"
+            if item.item_type in [ItemType.SERIES, ItemType.EPISODE]:
+                target_group = "adult_series"
+            else:
+                target_group = "adult"
         elif item.item_type == ItemType.MOVIE:
             target_group = "movies"
         elif item.item_type in [ItemType.SERIES, ItemType.EPISODE]:
