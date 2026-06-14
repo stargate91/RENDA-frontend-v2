@@ -23,7 +23,7 @@
   text-align: left;
 }
 
-.ui-selectable-card--default:hover:not(:disabled) {
+.ui-selectable-card--default:hover:not(:disabled):not(.is-selected) {
   border-color: var(--color-line-strong);
   background: var(--color-selectable-card-bg-hover, var(--ui-surface-soft));
 }
@@ -50,7 +50,7 @@
   text-align: left;
 }
 
-.ui-selectable-card--theme:hover:not(:disabled) {
+.ui-selectable-card--theme:hover:not(:disabled):not(.is-selected) {
   transform: translateY(-2px);
   background: var(--ui-control-bg-hover, rgba(255, 255, 255, 0.04));
   border-color: var(--color-border-strong);

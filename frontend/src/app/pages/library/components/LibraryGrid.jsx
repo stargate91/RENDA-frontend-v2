@@ -199,12 +199,12 @@ export default function LibraryGrid({
           icon={emptyIcon}
           actions={
             (resolvedTab === 'people' || resolvedTab === 'adult_people') && onAddPeople && !hasActiveFilters ? (
-              <Button variant={activeSessionMode === 'nsfw' ? 'danger' : 'primary'} size="sm" onClick={onAddPeople}>
+              <Button variant="primary" size="sm" onClick={onAddPeople}>
                 <UserPlus size={16} />
                 {t('library.people.addPeopleBtn') || 'Add People'}
               </Button>
             ) : resolvedTab === 'tags' && onCreateTag && !hasActiveFilters ? (
-              <Button variant={activeSessionMode === 'nsfw' ? 'danger' : 'primary'} size="sm" onClick={onCreateTag}>
+              <Button variant="primary" size="sm" onClick={onCreateTag}>
                 <Plus size={16} />
                 {t('library.tags.createBtn') || 'Create Tag'}
               </Button>

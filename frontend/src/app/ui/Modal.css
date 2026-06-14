@@ -173,11 +173,9 @@
 
 .ui-modal--danger .ui-modal__header {
   background:
-    linear-gradient(
-      180deg,
+    linear-gradient(180deg,
       color-mix(in srgb, var(--color-state-danger) 22%, rgba(255, 255, 255, 0.02)),
-      color-mix(in srgb, var(--color-state-danger) 10%, rgba(255, 255, 255, 0.005))
-    ),
+      color-mix(in srgb, var(--color-state-danger) 10%, rgba(255, 255, 255, 0.005))),
     transparent;
   border-bottom: 1px solid color-mix(in srgb, var(--color-state-danger) 32%, rgba(255, 255, 255, 0.06));
 }
@@ -347,6 +345,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -357,6 +356,7 @@
     transform: scale(0.95);
     opacity: 0;
   }
+
   to {
     transform: scale(1);
     opacity: 1;

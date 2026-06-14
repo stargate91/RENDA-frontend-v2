@@ -18,7 +18,8 @@ const THEME_LIST = [
   { value: 'bladerunner-la', translationKey: 'settingsPage.sections.theme.options.bladerunnerLA' },
   { value: 'bladerunner-2049', translationKey: 'settingsPage.sections.theme.options.bladerunner2049' },
   { value: 'cyberpunk-dark', translationKey: 'settingsPage.sections.theme.options.cyberpunkDark' },
-  { value: 'solarized-dark', translationKey: 'settingsPage.sections.theme.options.solarizedDark' }
+  { value: 'solarized-dark', translationKey: 'settingsPage.sections.theme.options.solarizedDark' },
+  { value: 'hot-red', translationKey: 'settingsPage.sections.theme.options.hotRed' }
 ];
 
 export default function ThemeTab() {

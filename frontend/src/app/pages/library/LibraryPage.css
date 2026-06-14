@@ -548,8 +548,6 @@
 
 /* NSFW Page overrides */
 .library-page--nsfw {
-  --color-accent: var(--color-state-danger);
-  --color-accent-blue: var(--color-state-danger);
 }
 
 .library-page--nsfw .library-spinner {

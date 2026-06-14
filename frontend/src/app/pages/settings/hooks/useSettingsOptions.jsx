@@ -71,6 +71,7 @@ export default function useSettingsOptions(t) {
     { value: 'classic-dark', label: t('settingsPage.sections.theme.options.classicDark') || 'Classic Dark' },
     { value: 'premium-carbon', label: t('settingsPage.sections.theme.options.premiumCarbon') || 'Premium Carbon' },
     { value: 'amoled-modern', label: t('settingsPage.sections.theme.options.amoledModern') || 'Amoled Modern' },
+    { value: 'hot-red', label: t('settingsPage.sections.theme.options.hotRed') || 'Hot Red' },
   ], [t]);
 
   const collectionModeOptions = useMemo(() =>

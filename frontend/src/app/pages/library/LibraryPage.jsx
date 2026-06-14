@@ -70,17 +70,15 @@ export default function LibraryPage({ initialTab = 'movies', lockTab = false, sh
   };
 
   const handleOpenCreateTagModal = () => {
-    const isAdult = state.activeSessionMode === 'nsfw';
     openModal({
       title: state.t('library.tags.modalTitle') || 'Create Tag',
       description: state.t('library.tags.modalDescription') || 'Create a new custom tag for organizing your media.',
       icon: Tag,
-      className: isAdult ? 'ui-modal--danger' : '',
       content: (
         <CreateTagModalContent
           onClose={closeModal}
           t={state.t}
-          defaultColor={isAdult ? '#ef4444' : '#3b82f6'}
+          defaultColor="#3b82f6"
         />
       ),
       footer: (
@@ -88,7 +86,7 @@ export default function LibraryPage({ initialTab = 'movies', lockTab = false, sh
           <Button variant="secondary-neutral" onClick={closeModal}>
             {state.t('common.close') || 'Close'}
           </Button>
-          <Button variant={isAdult ? 'danger' : 'primary'} type="submit" form="create-tag-form">
+          <Button variant="primary" type="submit" form="create-tag-form">
             {state.t('common.create') || 'Create'}
           </Button>
         </div>
@@ -97,12 +95,10 @@ export default function LibraryPage({ initialTab = 'movies', lockTab = false, sh
   };
 
   const handleOpenEditTagModal = (tag) => {
-    const isAdult = state.activeSessionMode === 'nsfw';
     openModal({
       title: state.t('library.tags.editModalTitle') || 'Edit Tag',
       description: state.t('library.tags.editModalDescription') || 'Rename the tag or adjust its color.',
       icon: Pencil,
-      className: isAdult ? 'ui-modal--danger' : '',
       content: (
         <CreateTagModalContent
           mode="edit"
@@ -121,7 +117,7 @@ export default function LibraryPage({ initialTab = 'movies', lockTab = false, sh
           <Button variant="secondary-neutral" onClick={closeModal}>
             {state.t('common.close') || 'Close'}
           </Button>
-          <Button variant={isAdult ? 'danger' : 'primary'} type="submit" form="edit-tag-form">
+          <Button variant="primary" type="submit" form="edit-tag-form">
             {state.t('common.save') || 'Save'}
           </Button>
         </div>

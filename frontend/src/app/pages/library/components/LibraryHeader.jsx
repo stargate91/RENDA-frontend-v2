@@ -48,7 +48,7 @@ export default function LibraryHeader({
   const currentTabObj = tabs.find(tab => tab.value === resolvedTab);
   const hasItems = currentTabObj ? (currentTabObj.count > 0) : false;
   const showInlineSorter = !showTabs && resolvedTab === 'tags' && setSortKey && setSortDirection && setCurrentPage;
-  const btnVariant = activeSessionMode === 'nsfw' ? 'danger' : 'primary';
+  const btnVariant = 'primary';
 
   return (
     <>

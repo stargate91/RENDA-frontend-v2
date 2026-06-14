@@ -312,11 +312,10 @@
     linear-gradient(180deg, rgba(255, 255, 255, 0.022), rgba(255, 255, 255, 0.008));
   --ui-floating-surface-border: color-mix(in srgb, var(--color-line-strong) 72%, rgba(255, 255, 255, 0.04));
   --ui-floating-surface-shadow:
-    0 6px 18px color-mix(in srgb, var(--app-shell-color-accent) 8%, transparent),
-    0 3px 8px rgba(0, 0, 0, 0.16),
+    0 12px 32px rgba(0, 0, 0, 0.4),
+    0 4px 12px rgba(0, 0, 0, 0.22),
     0 0 0 1px var(--color-border-subtle),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    inset 0 -10px 20px color-mix(in srgb, var(--color-bg-canvas) 30%, transparent);
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
   --ui-floating-surface-bg:
     radial-gradient(120% 150% at 50% -20%, rgba(255, 255, 255, 0.025), transparent 38%),
     radial-gradient(140% 180% at 0% 100%, rgba(255, 255, 255, 0.018), transparent 44%),

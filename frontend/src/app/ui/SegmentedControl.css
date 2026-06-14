@@ -1,12 +1,13 @@
 .ui-segmented-control {
   display: inline-flex;
   align-items: stretch;
-  height: 48px;
-  padding: 0;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-md);
-  background: var(--ui-control-bg, rgba(9, 12, 16, 0.98));
-  overflow: hidden;
+  height: var(--ui-control-height-md, 36px);
+  padding: 3px;
+  border: 1px solid var(--ui-control-border, rgba(255, 255, 255, 0.06));
+  border-radius: var(--ui-control-radius, 8px);
+  background: var(--ui-control-bg, var(--ui-surface-ghost));
+  gap: 2px;
+  box-sizing: border-box;
 }
 
 .ui-segmented-control__option {
@@ -16,22 +17,26 @@
   flex: 1;
   padding: 0 16px;
   border: 0;
-  border-radius: 0;
+  border-radius: calc(var(--ui-control-radius, 8px) - 3px);
   background: transparent;
-  color: var(--color-muted);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted, #94a3b8);
+  font-size: var(--font-size-xs, 12px);
+  font-weight: var(--font-weight-semibold, 600);
   cursor: pointer;
-  transition: background 160ms ease, color 160ms ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .ui-segmented-control__option:hover:not(.is-active) {
-  color: var(--color-ink);
+  color: var(--color-text-primary, #ffffff);
+  background: var(--ui-surface-soft);
 }
 
 .ui-segmented-control__option.is-active {
-  background: color-mix(in srgb, var(--color-accent) 28%, rgba(255, 255, 255, 0.06));
-  color: var(--color-ink);
+  background: var(--ui-surface-soft-strong);
+  color: var(--color-text-primary, #ffffff);
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.2), 
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .ui-segmented-control__option:focus-visible {
@@ -65,4 +70,5 @@
 .ui-segmented-control--filter .ui-segmented-control__option.is-active {
   background-color: var(--color-surface-glass-strong);
   color: var(--color-text-primary, #ffffff);
+  box-shadow: none;
 }
