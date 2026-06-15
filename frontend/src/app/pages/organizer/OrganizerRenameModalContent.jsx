@@ -84,14 +84,14 @@ export default function OrganizerRenameModalContent({ items = [], t }) {
               <tr key={item.id} className="organizer-rename-modal__row">
                 <td className="organizer-rename-modal__col organizer-rename-modal__col--source">
                   <Tooltip content={item.sourcePath} side="top" align="start">
-                    <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <span className="organizer-rename-modal__cell-text">
                       {item.source}
                     </span>
                   </Tooltip>
                 </td>
                 <td className="organizer-rename-modal__col organizer-rename-modal__col--target">
                   <Tooltip content={item.targetPath} side="top" align="start">
-                    <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <span className="organizer-rename-modal__cell-text">
                       {item.target}
                     </span>
                   </Tooltip>

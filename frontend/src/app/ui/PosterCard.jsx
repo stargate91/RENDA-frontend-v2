@@ -31,6 +31,7 @@ export default function PosterCard({
   const cardClassName = `ui-poster-card ${isOverlayTitle ? 'ui-poster-card--overlay-title' : ''} ${active ? 'is-active' : ''} ${className}`.trim();
 
   return (
+    /* eslint-disable-next-line react/forbid-dom-props */
     <div className={cardClassName} style={style}>
       <DefaultComponent
         type={DefaultComponent === 'button' ? 'button' : undefined}
@@ -45,6 +46,7 @@ export default function PosterCard({
           ) : (
             <div 
               className="ui-poster-card__placeholder" 
+              /* eslint-disable-next-line react/forbid-dom-props */
               style={backgroundColor ? { background: backgroundColor } : undefined}
             >
               {IconComponent && <IconComponent size={32} className="ui-poster-card__placeholder-icon" />}

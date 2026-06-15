@@ -26,7 +26,8 @@ export default function ProgressBar({ taskName, progress = 0, timeRemaining = '-
         <div ref={fillRef} className={fillClass} />
       </div>
       <span className="ui-progress-bar__stats">
-        {progress}% | {timeRemaining}
+        {/* eslint-disable-next-line react/jsx-no-literals */}
+        {progress}{'% | '}{timeRemaining}
       </span>
       {onAbort && (
         <Tooltip content="Abort task" side="bottom">

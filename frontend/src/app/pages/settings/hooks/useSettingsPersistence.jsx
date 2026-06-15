@@ -82,7 +82,7 @@ export default function useSettingsPersistence({
           variant: 'info',
           content: (
             <div className="ui-modal__body-text">
-              <p style={{ marginBottom: '16px', lineHeight: '1.5' }}>
+              <p className="ui-modal__body-paragraph">
                 {t('settingsPage.languageChangeInfo.description')}
               </p>
               <Checkbox onChange={(e) => { dontShowAgain = e.target.checked; }}>
@@ -91,7 +91,7 @@ export default function useSettingsPersistence({
             </div>
           ),
           footer: (
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', width: '100%' }}>
+            <>
               <Button
                 variant="secondary-neutral"
                 onClick={() => {
@@ -120,7 +120,7 @@ export default function useSettingsPersistence({
               >
                 {t('settingsPage.languageChangeInfo.syncButton')}
               </Button>
-            </div>
+            </>
           ),
         });
       }

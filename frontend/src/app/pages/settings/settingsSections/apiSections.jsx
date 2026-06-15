@@ -1,5 +1,8 @@
 import SettingsInstructionsBox from '../components/SettingsInstructionsBox.jsx';
 
+const TMDB_DOMAIN = 'themoviedb.org';
+
+
 export function createApiTmdbSection(t) {
   return {
     title: t('settingsPage.sections.api.tmdbHeader'),
@@ -27,7 +30,7 @@ export function createApiTmdbSection(t) {
           <SettingsInstructionsBox
             title={t('settingsPage.sections.api.tmdbStepsTitle')}
             steps={[
-              <>{t('settingsPage.sections.api.tmdbStep1Start')}<a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer" className="settings-link">themoviedb.org</a>{t('settingsPage.sections.api.tmdbStep1End')}</>,
+              <>{t('settingsPage.sections.api.tmdbStep1Start')}<a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer" className="settings-link">{TMDB_DOMAIN}</a>{t('settingsPage.sections.api.tmdbStep1End')}</>,
               <>{t('settingsPage.sections.api.tmdbStep2Start')}<a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener noreferrer" className="settings-link">{t('settingsPage.sections.api.tmdbStep2Link')}</a>{t('settingsPage.sections.api.tmdbStep2End')}</>,
               <>{t('settingsPage.sections.api.tmdbStep3Start')}<strong>{t('settingsPage.sections.api.tmdbStep3Bold1')}</strong>{t('settingsPage.sections.api.tmdbStep3Mid')}<strong>{t('settingsPage.sections.api.tmdbStep3Bold2')}</strong>{t('settingsPage.sections.api.tmdbStep3End')}</>,
               <>{t('settingsPage.sections.api.tmdbStep4Start')}<strong>{t('settingsPage.sections.api.tmdbStep4Bold1')}</strong>{t('settingsPage.sections.api.tmdbStep4Mid')}<strong>{t('settingsPage.sections.api.tmdbStep4Bold2')}</strong>{t('settingsPage.sections.api.tmdbStep4End')}</>,

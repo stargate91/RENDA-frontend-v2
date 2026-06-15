@@ -248,3 +248,37 @@
   color: var(--color-positive-muted);
   font-weight: var(--font-weight-bold);
 }
+
+.history-undo-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  width: 100%;
+}
+
+.history-page__loading-container {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-8);
+}
+
+.history-page__empty-container {
+  margin-top: var(--space-5);
+}
+
+.history-page__undo-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--ui-surface-soft);
+  border: 1px solid var(--ui-border-soft);
+  padding: var(--space-4);
+  border-radius: var(--border-radius-md);
+  margin-bottom: var(--space-6);
+}
+
+.history-page__undo-banner-text {
+  color: var(--text-color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}

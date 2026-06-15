@@ -13,6 +13,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Search, Plus, Check, Minus } from 'lucide-react';
 import { API_BASE } from '@/lib/backend';
 
+const QUESTION_MARK = '?';
+
 function ActivationButton({ isActive, onClick, disabled }) {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -308,7 +310,7 @@ export default function AddPeopleModalContent({ isAdult, t, onClose }) {
                           />
                         ) : (
                           <div className="add-people-modal__avatar-placeholder">
-                            ?
+                            {QUESTION_MARK}
                           </div>
                         )}
                       </div>
@@ -422,7 +424,7 @@ export default function AddPeopleModalContent({ isAdult, t, onClose }) {
                           />
                         ) : (
                           <div className="add-people-modal__avatar-placeholder">
-                            ?
+                            {QUESTION_MARK}
                           </div>
                         )}
                       </div>

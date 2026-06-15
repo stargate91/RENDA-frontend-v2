@@ -51,7 +51,7 @@ export const useUpdateMediaStatusMutation = () => {
 export const useBulkUpdateWatchedMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ itemIds, isWatched, seriesId }) => api.media.bulkWatched(itemIds, isWatched),
+    mutationFn: ({ itemIds, isWatched }) => api.media.bulkWatched(itemIds, isWatched),
     onSuccess: (data, variables) => {
       if (variables.seriesId) {
         queryClient.invalidateQueries({ queryKey: ['library-series-detail', variables.seriesId] });

@@ -110,6 +110,7 @@ export default function OnboardingOrbitHero({
         <div
           key={`${chip.label}-${index}`}
           className="welcome-hero-chip-orbit"
+          /* eslint-disable-next-line react/forbid-dom-props */
           style={{
             left: `${chipLayout[index]?.x ?? 160}px`,
             top: `${chipLayout[index]?.y ?? 84}px`,

@@ -39,12 +39,13 @@ export default function HistoryCard({
 }) {
   const { t } = useTranslation();
   const isUndone = batch.status === 'undone';
-  const isRevertDisabled = isUndone || isAnyTaskActive || !isLatestReversible;
+  const isRevertDisabled = isUndone || isAnyTaskActive;
   const { icon, accentColor } = getCardIconAndClass(batch.status);
 
   return (
     <div
       className={`history-card history-card--${batch.status}`}
+      /* eslint-disable-next-line react/forbid-dom-props */
       style={{ '--item-index': index, '--accent-color': accentColor }}
     >
       <div className="history-card__icon-wrapper">
@@ -104,7 +105,7 @@ export default function HistoryCard({
           </div>
           <div className="history-card__meta-item">
             <Clock size={14} />
-            <span>ID: #{batch.id}</span>
+            <span>{t('historyPage.batchIdLabel', { defaultValue: 'ID: #{{id}}', id: batch.id })}</span>
           </div>
         </div>
       </div>
@@ -114,7 +115,7 @@ export default function HistoryCard({
             content={
               isUndone
                 ? (t('historyPage.alreadyRevertedTooltip') || 'This batch has already been reverted.')
-                : (!isLatestReversible ? (t('historyPage.revertDisabledTooltip') || 'Only the most recent batch can be reverted to prevent file structure conflicts.') : null)
+                : null
             }
             side="left"
           >

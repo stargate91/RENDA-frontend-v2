@@ -1,6 +1,7 @@
 import Button from '@/ui/Button';
 import OnboardingPanelCard from '../OnboardingPanelCard';
 import { OMDB_GUIDE_STEPS } from '../onboarding.constants';
+import { useTranslation } from '@/providers/LanguageContext';
 
 export default function OmdbStep({
   omdbApiKey,
@@ -18,37 +19,39 @@ export default function OmdbStep({
   openGuideLink,
   step,
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className={`onboarding-split-layout onboarding-split-layout--tmdb ${isOmdbGuideOpen ? 'is-guided' : ''}`}>
       <OnboardingPanelCard
         className={`tmdb-guide-panel ${isOmdbGuideOpen ? 'is-guided' : ''}`}
         eyebrow="Step 4"
-        title={isOmdbGuideOpen ? activeOmdbGuideStep.title : 'Activate OMDb ratings to continue'}
+        title={isOmdbGuideOpen ? t(`onboarding.omdbGuide.steps.${omdbGuideStep}.title`, { defaultValue: activeOmdbGuideStep.title }) : t('onboarding.omdbGuide.activateRatings', { defaultValue: 'Activate OMDb ratings to continue' })}
         meta={(
           <div className="welcome-lang-pill">
-            {isOmdbGuideOpen ? `${omdbGuideStep + 1} / ${OMDB_GUIDE_STEPS.length}` : 'Required one-time setup'}
+            {isOmdbGuideOpen ? `${omdbGuideStep + 1} / ${OMDB_GUIDE_STEPS.length}` : t('onboarding.omdbGuide.requiredOneTimeSetup', { defaultValue: 'Required one-time setup' })}
           </div>
         )}
         description={isOmdbGuideOpen
-          ? activeOmdbGuideStep.description
-          : 'RENDA uses OMDb for IMDb, Metascore, and Rotten Tomatoes ratings during enrichment.'}
-        footerLabel={isOmdbGuideOpen ? activeOmdbGuideStep.eyebrow : 'Why this is required'}
-        footerValue={isOmdbGuideOpen ? 'Guided mode active' : 'Ratings provide the metrics displayed on movie details.'}
+          ? t(`onboarding.omdbGuide.steps.${omdbGuideStep}.description`, { defaultValue: activeOmdbGuideStep.description })
+          : t('onboarding.omdbGuide.ratingsPurposeDesc', { defaultValue: 'RENDA uses OMDb for IMDb, Metascore, and Rotten Tomatoes ratings during enrichment.' })}
+        footerLabel={isOmdbGuideOpen ? t(`onboarding.omdbGuide.steps.${omdbGuideStep}.eyebrow`, { defaultValue: activeOmdbGuideStep.eyebrow }) : t('onboarding.omdbGuide.whyThisIsRequired', { defaultValue: 'Why this is required' })}
+        footerValue={isOmdbGuideOpen ? t('onboarding.omdbGuide.guidedModeActive', { defaultValue: 'Guided mode active' }) : t('onboarding.omdbGuide.ratingsMetricsDesc', { defaultValue: 'Ratings provide the metrics displayed on movie details.' })}
       >
         {!isOmdbGuideOpen ? (
           <div className="tmdb-guide-intro">
-            <div className="feature-list" style={{ marginTop: '2rem' }}>
+            <div className="feature-list onboarding-feature-list-margin">
               <div className="feature-item">
-                <div style={{ paddingLeft: 0 }}>
-                  <strong>Optional but highly recommended</strong>
-                  <p>A free OMDb API key lets you pull complete IMDb ratings and Rotten Tomatoes scores dynamically.</p>
+                <div className="onboarding-feature-item-no-padding">
+                  <strong>{t('onboarding.omdb.optionalButRecommended')}</strong>
+                  <p>{t('onboarding.omdb.optionalButRecommendedDesc')}</p>
                 </div>
               </div>
             </div>
 
             <div className="tmdb-guide-intro-actions">
               <Button variant="primary" onClick={openOmdbGuide}>
-                Get an OMDb key
+                {t('onboarding.omdb.getOmdbKey')}
               </Button>
             </div>
           </div>
@@ -62,8 +65,8 @@ export default function OmdbStep({
                   <span />
                 </div>
                 <div className="tmdb-guide-browser-bar">
-                  <span className="tmdb-guide-browser-url">{activeOmdbGuideStep.browserLabel}</span>
-                  <span className="tmdb-guide-browser-chip">{activeOmdbGuideStep.browserAccent}</span>
+                  <span className="tmdb-guide-browser-url">{t(`onboarding.omdbGuide.steps.${omdbGuideStep}.browserLabel`, { defaultValue: activeOmdbGuideStep.browserLabel })}</span>
+                  <span className="tmdb-guide-browser-chip">{t(`onboarding.omdbGuide.steps.${omdbGuideStep}.browserAccent`, { defaultValue: activeOmdbGuideStep.browserAccent })}</span>
                 </div>
                 <div className="tmdb-guide-browser-body">
                   <div className="tmdb-guide-browser-sidebar">
@@ -72,13 +75,13 @@ export default function OmdbStep({
                     <span />
                   </div>
                   <div className="tmdb-guide-browser-focus">
-                    <strong>{activeOmdbGuideStep.eyebrow}</strong>
-                    <p>{activeOmdbGuideStep.detail}</p>
+                    <strong>{t(`onboarding.omdbGuide.steps.${omdbGuideStep}.eyebrow`, { defaultValue: activeOmdbGuideStep.eyebrow })}</strong>
+                    <p>{t(`onboarding.omdbGuide.steps.${omdbGuideStep}.detail`, { defaultValue: activeOmdbGuideStep.detail })}</p>
                     <div className="tmdb-guide-browser-lines">
-                      {activeOmdbGuideStep.lines.map((line) => (
+                      {activeOmdbGuideStep.lines.map((line, index) => (
                         <div key={line} className="tmdb-guide-browser-line">
                           <span className="tmdb-guide-browser-line-dot" />
-                          <span>{line}</span>
+                          <span>{t(`onboarding.omdbGuide.steps.${omdbGuideStep}.lines.${index}`, { defaultValue: line })}</span>
                         </div>
                       ))}
                     </div>
@@ -88,18 +91,18 @@ export default function OmdbStep({
             </div>
 
             <div className="tmdb-guide-stage-copy">
-              <span className="tmdb-guide-stage-kicker">{activeOmdbGuideStep.eyebrow}</span>
-              <p>{activeOmdbGuideStep.detail}</p>
+              <span className="tmdb-guide-stage-kicker">{t(`onboarding.omdbGuide.steps.${omdbGuideStep}.eyebrow`, { defaultValue: activeOmdbGuideStep.eyebrow })}</span>
+              <p>{t(`onboarding.omdbGuide.steps.${omdbGuideStep}.detail`, { defaultValue: activeOmdbGuideStep.detail })}</p>
             </div>
 
             {activeOmdbGuideStep.supportTitle ? (
               <div className="tmdb-guide-support">
-                <strong>{activeOmdbGuideStep.supportTitle}</strong>
+                <strong>{t(`onboarding.omdbGuide.steps.${omdbGuideStep}.supportTitle`, { defaultValue: activeOmdbGuideStep.supportTitle })}</strong>
                 <div className="tmdb-guide-support-list">
-                  {activeOmdbGuideStep.supportItems?.map((item) => (
+                  {activeOmdbGuideStep.supportItems?.map((item, index) => (
                     <div key={item} className="tmdb-guide-support-item">
                       <span className="tmdb-guide-support-dot" />
-                      <span>{item}</span>
+                      <span>{t(`onboarding.omdbGuide.steps.${omdbGuideStep}.supportItems.${index}`, { defaultValue: item })}</span>
                     </div>
                   ))}
                 </div>
@@ -112,14 +115,14 @@ export default function OmdbStep({
                   variant="secondary-neutral"
                   onClick={() => (omdbGuideStep === 0 ? closeOmdbGuide() : goToOmdbGuideStep(omdbGuideStep - 1, 'backward'))}
                 >
-                  {omdbGuideStep === 0 ? 'Close guide' : 'Back'}
+                  {omdbGuideStep === 0 ? t('onboarding.omdbGuide.closeGuide', { defaultValue: 'Close guide' }) : t('onboarding.omdbGuide.back', { defaultValue: 'Back' })}
                 </Button>
                 {activeOmdbGuideStep.actionHref ? (
                   <Button
                     variant="secondary"
                     onClick={() => openGuideLink(activeOmdbGuideStep.actionHref)}
                   >
-                    {activeOmdbGuideStep.actionLabel}
+                    {t(`onboarding.omdbGuide.steps.${omdbGuideStep}.actionLabel`, { defaultValue: activeOmdbGuideStep.actionLabel })}
                   </Button>
                 ) : null}
               </div>
@@ -132,7 +135,7 @@ export default function OmdbStep({
                     : goToOmdbGuideStep(omdbGuideStep + 1, 'forward')
                 )}
               >
-                {omdbGuideStep === OMDB_GUIDE_STEPS.length - 1 ? 'Back to form' : 'Ready'}
+                {omdbGuideStep === OMDB_GUIDE_STEPS.length - 1 ? t('onboarding.omdbGuide.backToForm', { defaultValue: 'Back to form' }) : t('onboarding.omdbGuide.ready', { defaultValue: 'Ready' })}
               </Button>
             </div>
           </div>
@@ -144,13 +147,13 @@ export default function OmdbStep({
           className={`tmdb-credentials-panel ${isOmdbGuideOpen ? 'is-guided' : ''}`}
           eyebrow="OMDb key"
           title="Paste your OMDb key to unlock ratings"
-          meta={<div className="welcome-lang-pill">1 field required</div>}
+          meta={<div className="welcome-lang-pill">{t('onboarding.omdb.oneFieldRequired')}</div>}
           description="This key is required before RENDA can enrich items with ratings data."
           footerLabel="This step blocks the next one"
           footerValue="Validate the OMDb key to continue onboarding"
         >
           <div className="onboarding-form-group">
-            <label>OMDb API Key</label>
+            <label>{t('onboarding.omdb.apiKeyLabel')}</label>
             <div className="onboarding-input-wrapper">
               <input 
                 type="text" 

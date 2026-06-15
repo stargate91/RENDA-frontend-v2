@@ -93,7 +93,7 @@ export function createAdvancedLanguageSection(t, metadataLanguageOptions, target
         type: 'custom',
         key: 'sync_language_button_container',
         render: () => (
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+          <div className="settings-action-row-right">
             <Button
               variant="secondary"
               type="button"

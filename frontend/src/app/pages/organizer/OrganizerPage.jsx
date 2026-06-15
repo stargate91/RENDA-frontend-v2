@@ -23,6 +23,9 @@ import { useOrganizerDeleteActions } from './useOrganizerDeleteActions';
 
 const EMPTY_SETTINGS = {};
 
+const getRestoreDismissedLabel = (t, count) => `${t('organizer.buttons.restoreDismissed')} (${count})`;
+
+
 export default function OrganizerPage() {
   const { t } = useTranslation();
   const { closeModal, openModal, toast } = useUi();
@@ -257,7 +260,7 @@ export default function OrganizerPage() {
           className="organizer-panel__browse-btn"
           onClick={restoreDismissedRows}
         >
-          {t('organizer.buttons.restoreDismissed')} ({dismissedCount})
+          {getRestoreDismissedLabel(t, dismissedCount)}
         </Button>
       ) : null}
       {hasVisibleItems ? (

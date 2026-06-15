@@ -37,13 +37,15 @@ export default function HistoryPage() {
             </div>
             <div className="history-undo-modal__row">
               <span className="history-undo-modal__label">{t('historyPage.filesLabel') || 'Files:'}</span>
-              <span className="history-undo-modal__value--success">{batch.success_count} succeeded</span>
+              <span className="history-undo-modal__value--success">
+                {t('historyPage.succeededCount', { defaultValue: '{{count}} succeeded', count: batch.success_count })}
+              </span>
             </div>
           </div>
         </div>
       ),
       footer: (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', width: '100%' }}>
+        <div className="history-undo-modal__footer">
           <Button variant="secondary-neutral" onClick={closeModal}>
             {t('common.cancel') || 'Cancel'}
           </Button>
@@ -71,7 +73,7 @@ export default function HistoryPage() {
   const renderContent = () => {
     if (isHistoryLoading) {
       return (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-8)' }}>
+        <div className="history-page__loading-container">
           <Spinner size={32} />
         </div>
       );
@@ -79,7 +81,7 @@ export default function HistoryPage() {
 
     if (!history || history.length === 0) {
       return (
-        <div style={{ marginTop: 'var(--space-5)' }}>
+        <div className="history-page__empty-container">
           <EmptyState
             title={t('historyPage.emptyTitle') || 'No action history'}
             description={t('historyPage.emptyDesc') || 'Reversible file organization batches will be listed here.'}
@@ -117,9 +119,9 @@ export default function HistoryPage() {
         />
 
         {isUndoing && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', background: 'var(--ui-surface-soft)', border: '1px solid var(--ui-border-soft)', padding: 'var(--space-4)', borderRadius: 'var(--border-radius-md)', marginBottom: 'var(--space-6)' }}>
+          <div className="history-page__undo-banner">
             <Spinner size={16} />
-            <span style={{ color: 'var(--text-color-primary)', fontSize: 'var(--font-size-sm)', fontWeight: 'var(--font-weight-medium)' }}>
+            <span className="history-page__undo-banner-text">
               {t('historyPage.undoActiveProgress') || 'Reverting batch organization files in the background...'}
             </span>
           </div>

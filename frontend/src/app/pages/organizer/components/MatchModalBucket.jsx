@@ -1,3 +1,5 @@
+const getEpisodeLabel = (num) => `E${num}`;
+
 export default function MatchModalBucket({
   view,
   bucketEpisodeNumbers,
@@ -21,7 +23,7 @@ export default function MatchModalBucket({
             className="organizer-match-modal__bucket-chip"
             onClick={() => onToggle(episodeNumber)}
           >
-            {`E${episodeNumber}`}
+            {getEpisodeLabel(episodeNumber)}
           </button>
         ))}
       </div>

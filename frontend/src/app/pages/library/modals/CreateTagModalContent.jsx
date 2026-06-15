@@ -6,6 +6,9 @@ import Pill from '@/ui/Pill';
 import { Paintbrush } from 'lucide-react';
 import { API_BASE } from '@/lib/backend';
 
+const REMOVE_SYMBOL = '✕';
+const BULLET_POINT = '• ';
+
 const PREDEFINED_COLORS = [
   '#3b82f6', // Blue
   '#10b981', // Emerald
@@ -175,6 +178,7 @@ export default function CreateTagModalContent({ onClose, t, initialTag = null, m
                 <div key={idx} className="create-tag-form__image-preview-wrapper">
                   <div
                     className="create-tag-form__image-preview"
+                    /* eslint-disable-next-line react/forbid-dom-props */
                     style={{
                       backgroundImage: `url(${imageUrl})`,
                       backgroundPosition: `${imgObj.position_x ?? 50}% ${imgObj.position_y ?? 50}%`,
@@ -188,7 +192,7 @@ export default function CreateTagModalContent({ onClose, t, initialTag = null, m
                     onClick={() => setCustomImages(customImages.filter((_, i) => i !== idx))}
                     className="create-tag-form__remove-image-btn"
                   >
-                    ✕
+                    {REMOVE_SYMBOL}
                   </button>
                 </div>
               );
@@ -227,9 +231,9 @@ export default function CreateTagModalContent({ onClose, t, initialTag = null, m
 
         <div className="create-tag-form__help-text">
           {customImages.length <= 1 ? (
-            <div>• {t('library.tags.aspectRatioOne') || 'Ideal aspect ratio is 16:9 (landscape/backdrop)'}</div>
+            <div>{BULLET_POINT}{t('library.tags.aspectRatioOne') || 'Ideal aspect ratio is 16:9 (landscape/backdrop)'}</div>
           ) : (
-            <div>• {t('library.tags.aspectRatioMultiple') || 'Ideal aspect ratio is 2:3 (portrait/poster)'}</div>
+            <div>{BULLET_POINT}{t('library.tags.aspectRatioMultiple') || 'Ideal aspect ratio is 2:3 (portrait/poster)'}</div>
           )}
         </div>
       </div>
@@ -247,6 +251,7 @@ export default function CreateTagModalContent({ onClose, t, initialTag = null, m
                   onClick={() => setColor(c)}
                   aria-label={c}
                   className="create-tag-form__color-btn"
+                  /* eslint-disable-next-line react/forbid-dom-props */
                   style={{
                     backgroundColor: c,
                     border: isSelected ? '2px solid var(--color-accent-blue, #1493ff)' : '2px solid transparent',
@@ -261,6 +266,7 @@ export default function CreateTagModalContent({ onClose, t, initialTag = null, m
           {/* Custom Color Selector */}
           <label
             className={`create-tag-form__custom-color-label ${!PREDEFINED_COLORS.includes(color) ? 'is-active' : ''}`.trim()}
+            /* eslint-disable-next-line react/forbid-dom-props */
             style={{
               background: !PREDEFINED_COLORS.includes(color)
                 ? color

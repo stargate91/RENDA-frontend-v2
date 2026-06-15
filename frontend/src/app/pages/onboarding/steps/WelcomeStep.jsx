@@ -2,6 +2,7 @@ import { Globe, Languages, SlidersHorizontal, Search, CheckCircle, Check } from 
 import OnboardingInfoCard from '../OnboardingInfoCard';
 import OnboardingOrbitHero from '../OnboardingOrbitHero';
 import OnboardingPanelCard from '../OnboardingPanelCard';
+import { useTranslation } from '@/providers/LanguageContext';
 
 export default function WelcomeStep({
   locale,
@@ -11,6 +12,8 @@ export default function WelcomeStep({
   setLangSearch,
   availableLanguages,
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="onboarding-split-layout">
       <OnboardingInfoCard
@@ -45,7 +48,7 @@ export default function WelcomeStep({
         eyebrow="Step 1"
         title="Choose your interface language"
         meta={(
-          <div className="welcome-lang-pill">{filteredLanguages.length} options</div>
+          <div className="welcome-lang-pill">{filteredLanguages.length} {t('onboarding.welcome.options')}</div>
         )}
         description="Select your interface language to begin setup."
         footerLabel="Current selection"
@@ -63,7 +66,7 @@ export default function WelcomeStep({
 
         <div className="welcome-lang-active-note">
           <CheckCircle size={16} />
-          English is available now. More languages are staged next.
+          {t('onboarding.welcome.englishOnlyActiveNote')}
         </div>
 
         <div className="language-list-scroll">
@@ -81,7 +84,7 @@ export default function WelcomeStep({
                 <span className="lang-row-name">{lang.name}</span>
               </div>
               {locale === lang.code && <Check size={16} className="lang-checked-icon" />}
-              {!lang.active && <span className="lang-coming-soon">Soon</span>}
+              {!lang.active && <span className="lang-coming-soon">{t('onboarding.welcome.comingSoon')}</span>}
             </div>
           ))}
         </div>

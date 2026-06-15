@@ -3,6 +3,10 @@ import { useTranslation } from '../providers/LanguageContext';
 import Button from './Button';
 import './PaginationBar.css';
 
+const SLASH_SEPARATOR = '/ ';
+const SLASH_SPACED = ' / ';
+
+
 function PaginationPageSizes({ pageSize, pageSizeOptions, onPageSizeChange, ariaLabel }) {
   return (
     <div className="ui-pagination__sizes" role="group" aria-label={ariaLabel}>
@@ -74,7 +78,7 @@ function PaginationPageEditor({ currentPage, totalPages, onPageChange }) {
               }
             }}
           />
-          <span>/ {totalPages}</span>
+          <span>{SLASH_SEPARATOR}{totalPages}</span>
         </>
       ) : (
         <Button
@@ -84,7 +88,7 @@ function PaginationPageEditor({ currentPage, totalPages, onPageChange }) {
           className="ui-pagination__page-display"
           onClick={() => setIsEditing(true)}
         >
-          {currentPage} / {totalPages}
+          {currentPage}{SLASH_SPACED}{totalPages}
         </Button>
       )}
     </div>

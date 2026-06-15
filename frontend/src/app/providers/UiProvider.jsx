@@ -2,12 +2,14 @@ import { createContext, useContext, useMemo, useState, useCallback } from 'react
 import ToastViewport from '../ui/ToastViewport';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
+import { useTranslation } from './LanguageContext';
 
 const UiContext = createContext(null);
 
 export const UiProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
   const [modal, setModal] = useState(null);
+  const { t } = useTranslation();
 
   const removeToast = useCallback((id) => {
     setToasts((current) => current.filter((toast) => toast.id !== id));
@@ -39,7 +41,7 @@ export const UiProvider = ({ children }) => {
         onClose={() => setModal(null)}
         footer={modal?.footer ?? (
           <Button variant="secondary-neutral" onClick={() => setModal(null)}>
-            Close
+            {t('common.close')}
           </Button>
         )}
       >

@@ -362,3 +362,8 @@
     opacity: 1;
   }
 }
+
+.ui-modal__body-paragraph {
+  margin-bottom: var(--space-4);
+  line-height: 1.5;
+}

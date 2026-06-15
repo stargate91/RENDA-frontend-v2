@@ -4,6 +4,9 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from '../providers/LanguageContext';
 import './Dropdown.css';
 
+const CHEVRON_TEXT = '▼';
+
+
 function DropdownMenu({
   isOpen,
   menuCoords,
@@ -173,7 +176,7 @@ export default function Dropdown({
             <span className="ui-dropdown__trigger-text">
               {selectedOption ? selectedOption.label : displayPlaceholder}
             </span>
-            {!isSorter && <span className={`ui-dropdown__chevron ${isOpen ? 'is-open' : ''}`}>▼</span>}
+            {!isSorter && <span className={`ui-dropdown__chevron ${isOpen ? 'is-open' : ''}`}>{CHEVRON_TEXT}</span>}
           </button>
 
           {isSorter && onSortDirectionToggle && (

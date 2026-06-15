@@ -4,6 +4,7 @@ import enSettings from '../locales/en/settings.json';
 import enOrganizer from '../locales/en/organizer.json';
 import enLibrary from '../locales/en/library.json';
 import enHistory from '../locales/en/history.json';
+import enOnboarding from '../locales/en/onboarding.json';
 import { LanguageContext } from './LanguageContext';
 
 const en = {
@@ -12,6 +13,7 @@ const en = {
   organizer: enOrganizer,
   library: enLibrary,
   historyPage: enHistory,
+  onboarding: enOnboarding,
 };
 
 const translations = { en };

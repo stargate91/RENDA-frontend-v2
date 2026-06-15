@@ -187,7 +187,7 @@ class MetadataEnricher:
         match.series_type = series_details.get("type")  # Scripted, Documentary, Miniseries, Reality
         match.number_of_seasons = series_details.get("number_of_seasons")
         match.number_of_episodes = series_details.get("number_of_episodes")
-        match.networks = [n["name"] for n in series_details.get("networks", [])]
+        match.networks = [{"name": n.get("name"), "logo_path": n.get("logo_path")} for n in series_details.get("networks", [])]
         match.series_tmdb_id = match.tmdb_id
         series_first_air_date = series_details.get("first_air_date")
         if series_first_air_date:

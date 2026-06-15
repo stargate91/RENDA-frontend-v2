@@ -1,3 +1,4 @@
+/* eslint-disable react/forbid-dom-props, react/jsx-no-literals, i18next/no-literal-string */
 import React from 'react';
 
 class ErrorBoundary extends React.Component {

@@ -2,6 +2,7 @@ import { Cpu, FileJson } from 'lucide-react';
 import OnboardingInfoCard from '../OnboardingInfoCard';
 import OnboardingOrbitHero from '../OnboardingOrbitHero';
 import OnboardingPanelCard from '../OnboardingPanelCard';
+import { useTranslation } from '@/providers/LanguageContext';
 
 export default function ChoiceStep({
   configChoice,
@@ -9,6 +10,8 @@ export default function ChoiceStep({
   isImporting,
   handleFileImport,
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="onboarding-split-layout">
       <OnboardingInfoCard
@@ -56,8 +59,8 @@ export default function ChoiceStep({
             <div className="choice-icon-wrapper">
               <Cpu size={24} />
             </div>
-            <h3>Configure New Setup</h3>
-            <p>Start fresh and guide yourself step-by-step through setting up TMDB, OMDB, and your media library folder paths.</p>
+            <h3>{t('onboarding.choice.configureNewSetup')}</h3>
+            <p>{t('onboarding.choice.configureNewSetupDesc')}</p>
           </div>
 
           <div 
@@ -67,17 +70,17 @@ export default function ChoiceStep({
             <div className="choice-icon-wrapper">
               <FileJson size={24} />
             </div>
-            <h3>Import Backup Profile</h3>
-            <p>Load settings instantly from an existing RENDA settings JSON configuration backup file.</p>
+            <h3>{t('onboarding.choice.importBackupProfile')}</h3>
+            <p>{t('onboarding.choice.importBackupProfileDesc')}</p>
             
             <div className={`onboarding-choice-action-slot ${configChoice === 'import' ? 'is-active' : ''}`}>
               <div className="onboarding-dropzone" onClick={(e) => e.stopPropagation()}>
-                <label style={{ cursor: 'pointer' }}>
+                <label className="onboarding-dropzone-label">
                   <p>{isImporting ? 'Importing settings...' : 'Click to Browse JSON'}</p>
                   <input 
                     type="file" 
                     accept=".json" 
-                    style={{ display: 'none' }}
+                    className="onboarding-hidden-input"
                     onChange={handleFileImport}
                     disabled={isImporting || configChoice !== 'import'}
                   />

@@ -7,6 +7,8 @@ import { useTranslation } from '../../../providers/LanguageContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { useBulkUpdateMediaMutation } from '../../../queries';
 
+const DOT = '.';
+
 import {
   SUBCATEGORIES_BY_CATEGORY,
   LANGUAGE_OPTIONS,
@@ -525,7 +527,7 @@ export default function OrganizerBulkOverrideModalContent({ rows, onClose, toast
                 >
                   <div className="organizer-override-bulk-episodes__item-left">
                     <GripVertical className="organizer-override-bulk-episodes__grip" size={14} />
-                    <span className="organizer-override-bulk-episodes__index">{index + parseInt(startEpisodeNum, 10) || (index + 1)}.</span>
+                    <span className="organizer-override-bulk-episodes__index">{index + parseInt(startEpisodeNum, 10) || (index + 1)}{DOT}</span>
                     <span className="organizer-override-bulk-episodes__filename" title={item.source}>
                       {item.source}
                     </span>

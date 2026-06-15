@@ -3,6 +3,7 @@ import Button from '@/ui/Button';
 import OnboardingOrbitHero from '../OnboardingOrbitHero';
 import OnboardingPanelCard from '../OnboardingPanelCard';
 import { TMDB_GUIDE_STEPS } from '../onboarding.constants';
+import { useTranslation } from '@/providers/LanguageContext';
 
 export default function TmdbStep({
   tmdbApiKey,
@@ -22,22 +23,24 @@ export default function TmdbStep({
   openGuideLink,
   step,
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className={`onboarding-split-layout onboarding-split-layout--tmdb ${isTmdbGuideOpen ? 'is-guided' : ''}`}>
       <OnboardingPanelCard
         className={`tmdb-guide-panel ${isTmdbGuideOpen ? 'is-guided' : ''}`}
         eyebrow="Step 3"
-        title={isTmdbGuideOpen ? activeTmdbGuideStep.title : 'Activate TMDB access to continue'}
+        title={isTmdbGuideOpen ? t(`onboarding.tmdbGuide.steps.${tmdbGuideStep}.title`, { defaultValue: activeTmdbGuideStep.title }) : t('onboarding.tmdbGuide.activateTmdb', { defaultValue: 'Activate TMDB access to continue' })}
         meta={(
           <div className="welcome-lang-pill">
-            {isTmdbGuideOpen ? `${tmdbGuideStep + 1} / ${TMDB_GUIDE_STEPS.length}` : 'Required one-time setup'}
+            {isTmdbGuideOpen ? `${tmdbGuideStep + 1} / ${TMDB_GUIDE_STEPS.length}` : t('onboarding.tmdbGuide.requiredOneTimeSetup', { defaultValue: 'Required one-time setup' })}
           </div>
         )}
         description={isTmdbGuideOpen
-          ? activeTmdbGuideStep.description
-          : 'RENDA needs TMDB before scanning can do real metadata matching, artwork lookups, and clean organization.'}
-        footerLabel={isTmdbGuideOpen ? activeTmdbGuideStep.eyebrow : 'Why this is required'}
-        footerValue={isTmdbGuideOpen ? 'Guided mode active' : 'Without TMDB, scanning stays limited to technical file data only.'}
+          ? t(`onboarding.tmdbGuide.steps.${tmdbGuideStep}.description`, { defaultValue: activeTmdbGuideStep.description })
+          : t('onboarding.tmdbGuide.scanningLimitedDesc', { defaultValue: 'RENDA needs TMDB before scanning can do real metadata matching, artwork lookups, and clean organization.' })}
+        footerLabel={isTmdbGuideOpen ? t(`onboarding.tmdbGuide.steps.${tmdbGuideStep}.eyebrow`, { defaultValue: activeTmdbGuideStep.eyebrow }) : t('onboarding.tmdbGuide.whyThisIsRequired', { defaultValue: 'Why this is required' })}
+        footerValue={isTmdbGuideOpen ? t('onboarding.tmdbGuide.guidedModeActive', { defaultValue: 'Guided mode active' }) : t('onboarding.tmdbGuide.scanningLimited', { defaultValue: 'Without TMDB, scanning stays limited to technical file data only.' })}
       >
         {!isTmdbGuideOpen ? (
           <div className="tmdb-guide-intro">
@@ -55,25 +58,25 @@ export default function TmdbStep({
               <div className="feature-item">
                 <span className="feature-icon"><CheckCircle size={18} /></span>
                 <div>
-                  <strong>Required to continue</strong>
-                  <p>This is the activation step that unlocks real title matching, posters, backdrops, and cast data.</p>
+                  <strong>{t('onboarding.tmdb.requiredToContinue')}</strong>
+                  <p>{t('onboarding.tmdb.requiredToContinueDesc')}</p>
                 </div>
               </div>
               <div className="feature-item">
                 <span className="feature-icon"><Key size={18} /></span>
                 <div>
-                  <strong>Only needs to be done once</strong>
-                  <p>You need both the TMDB API Key (v3) and the Read Access Token (v4), then RENDA remembers them.</p>
+                  <strong>{t('onboarding.tmdb.onlyOnce')}</strong>
+                  <p>{t('onboarding.tmdb.onlyOnceDesc')}</p>
                 </div>
               </div>
             </div>
 
             <div className="tmdb-guide-intro-actions">
               <Button variant="primary" onClick={openTmdbGuide}>
-                Show me where to get it
+                {t('onboarding.tmdb.showMe')}
               </Button>
               <Button variant="secondary" onClick={() => openGuideLink('https://www.themoviedb.org/settings/api')}>
-                Open TMDB API page
+                {t('onboarding.tmdb.openApiPage')}
               </Button>
             </div>
           </div>
@@ -87,8 +90,8 @@ export default function TmdbStep({
                   <span />
                 </div>
                 <div className="tmdb-guide-browser-bar">
-                  <span className="tmdb-guide-browser-url">{activeTmdbGuideStep.browserLabel}</span>
-                  <span className="tmdb-guide-browser-chip">{activeTmdbGuideStep.browserAccent}</span>
+                  <span className="tmdb-guide-browser-url">{t(`onboarding.tmdbGuide.steps.${tmdbGuideStep}.browserLabel`, { defaultValue: activeTmdbGuideStep.browserLabel })}</span>
+                  <span className="tmdb-guide-browser-chip">{t(`onboarding.tmdbGuide.steps.${tmdbGuideStep}.browserAccent`, { defaultValue: activeTmdbGuideStep.browserAccent })}</span>
                 </div>
                 <div className="tmdb-guide-browser-body">
                   <div className="tmdb-guide-browser-sidebar">
@@ -97,13 +100,13 @@ export default function TmdbStep({
                     <span />
                   </div>
                   <div className="tmdb-guide-browser-focus">
-                    <strong>{activeTmdbGuideStep.eyebrow}</strong>
-                    <p>{activeTmdbGuideStep.detail}</p>
+                    <strong>{t(`onboarding.tmdbGuide.steps.${tmdbGuideStep}.eyebrow`, { defaultValue: activeTmdbGuideStep.eyebrow })}</strong>
+                    <p>{t(`onboarding.tmdbGuide.steps.${tmdbGuideStep}.detail`, { defaultValue: activeTmdbGuideStep.detail })}</p>
                     <div className="tmdb-guide-browser-lines">
-                      {activeTmdbGuideStep.lines.map((line) => (
+                      {activeTmdbGuideStep.lines.map((line, index) => (
                         <div key={line} className="tmdb-guide-browser-line">
                           <span className="tmdb-guide-browser-line-dot" />
-                          <span>{line}</span>
+                          <span>{t(`onboarding.tmdbGuide.steps.${tmdbGuideStep}.lines.${index}`, { defaultValue: line })}</span>
                         </div>
                       ))}
                     </div>
@@ -113,18 +116,18 @@ export default function TmdbStep({
             </div>
 
             <div className="tmdb-guide-stage-copy">
-              <span className="tmdb-guide-stage-kicker">{activeTmdbGuideStep.eyebrow}</span>
-              <p>{activeTmdbGuideStep.detail}</p>
+              <span className="tmdb-guide-stage-kicker">{t(`onboarding.tmdbGuide.steps.${tmdbGuideStep}.eyebrow`, { defaultValue: activeTmdbGuideStep.eyebrow })}</span>
+              <p>{t(`onboarding.tmdbGuide.steps.${tmdbGuideStep}.detail`, { defaultValue: activeTmdbGuideStep.detail })}</p>
             </div>
 
             {activeTmdbGuideStep.supportTitle ? (
               <div className="tmdb-guide-support">
-                <strong>{activeTmdbGuideStep.supportTitle}</strong>
+                <strong>{t(`onboarding.tmdbGuide.steps.${tmdbGuideStep}.supportTitle`, { defaultValue: activeTmdbGuideStep.supportTitle })}</strong>
                 <div className="tmdb-guide-support-list">
-                  {activeTmdbGuideStep.supportItems?.map((item) => (
+                  {activeTmdbGuideStep.supportItems?.map((item, index) => (
                     <div key={item} className="tmdb-guide-support-item">
                       <span className="tmdb-guide-support-dot" />
-                      <span>{item}</span>
+                      <span>{t(`onboarding.tmdbGuide.steps.${tmdbGuideStep}.supportItems.${index}`, { defaultValue: item })}</span>
                     </div>
                   ))}
                 </div>
@@ -137,14 +140,14 @@ export default function TmdbStep({
                   variant="secondary-neutral"
                   onClick={() => (tmdbGuideStep === 0 ? closeTmdbGuide() : goToTmdbGuideStep(tmdbGuideStep - 1, 'backward'))}
                 >
-                  {tmdbGuideStep === 0 ? 'Close guide' : 'Back'}
+                  {tmdbGuideStep === 0 ? t('onboarding.tmdbGuide.closeGuide', { defaultValue: 'Close guide' }) : t('onboarding.tmdbGuide.back', { defaultValue: 'Back' })}
                 </Button>
                 {activeTmdbGuideStep.actionHref ? (
                   <Button
                     variant="secondary"
                     onClick={() => openGuideLink(activeTmdbGuideStep.actionHref)}
                   >
-                    {activeTmdbGuideStep.actionLabel}
+                    {t(`onboarding.tmdbGuide.steps.${tmdbGuideStep}.actionLabel`, { defaultValue: activeTmdbGuideStep.actionLabel })}
                   </Button>
                 ) : null}
               </div>
@@ -157,7 +160,7 @@ export default function TmdbStep({
                     : goToTmdbGuideStep(tmdbGuideStep + 1, 'forward')
                 )}
               >
-                {tmdbGuideStep === TMDB_GUIDE_STEPS.length - 1 ? 'Back to form' : 'Ready'}
+                {tmdbGuideStep === TMDB_GUIDE_STEPS.length - 1 ? t('onboarding.tmdbGuide.backToForm', { defaultValue: 'Back to form' }) : t('onboarding.tmdbGuide.ready', { defaultValue: 'Ready' })}
               </Button>
             </div>
           </div>
@@ -169,13 +172,13 @@ export default function TmdbStep({
           className={`tmdb-credentials-panel ${isTmdbGuideOpen ? 'is-guided' : ''}`}
           eyebrow="TMDB credentials"
           title="Paste your TMDB keys to unlock scanning"
-          meta={<div className="welcome-lang-pill">2 fields required</div>}
+          meta={<div className="welcome-lang-pill">{t('onboarding.tmdb.twoFieldsRequired')}</div>}
           description="Both values are required before RENDA can move past this step."
           footerLabel="This step blocks the next one"
           footerValue="Validate both keys to continue onboarding"
         >
           <div className="onboarding-form-group">
-            <label>TMDB API Key (v3)</label>
+            <label>{t('onboarding.tmdb.apiKeyLabel')}</label>
             <div className="onboarding-input-wrapper">
               <input 
                 type="text" 
@@ -186,7 +189,7 @@ export default function TmdbStep({
             </div>
           </div>
           <div className="onboarding-form-group">
-            <label>TMDB Read Access Token (v4)</label>
+            <label>{t('onboarding.tmdb.readAccessTokenLabel')}</label>
             <div className="onboarding-input-wrapper">
               <input 
                 type="text" 

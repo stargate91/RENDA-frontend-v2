@@ -178,6 +178,8 @@ class ItemDetailProvider(BaseDetailProvider):
                     "vote_count_tmdb": tmdb_data.get("vote_count"),
                     "budget": tmdb_data.get("budget"),
                     "revenue": tmdb_data.get("revenue"),
+                    "companies": [{"name": c.get("name"), "logo_path": c.get("logo_path")} for c in tmdb_data.get("production_companies", [])] if tmdb_data.get("production_companies") else [],
+                    "networks": [{"name": n.get("name"), "logo_path": n.get("logo_path")} for n in tmdb_data.get("networks", [])] if tmdb_data.get("networks") else [],
                     "collection": (tmdb_data.get("belongs_to_collection") or {}).get("name"),
                     "collection_data": {
                         "tmdb_id": (tmdb_data.get("belongs_to_collection") or {}).get("id"),
@@ -363,12 +365,22 @@ class ItemDetailProvider(BaseDetailProvider):
         
             # Extract Trailer Key from Localization
             trailer_key = loc.trailer_url if loc else None
+            cache_type = "tv" if item.item_type in (ItemType.SERIES, ItemType.SEASON, ItemType.EPISODE) else "movie"
+            target_tmdb_id = active_match.series_tmdb_id if (item.item_type in (ItemType.SERIES, ItemType.SEASON, ItemType.EPISODE) and active_match.series_tmdb_id) else active_match.tmdb_id
             movie_cache = _pick_tmdb_cache(
                 db,
-                active_match.tmdb_id,
-                "movie",
+                target_tmdb_id,
+                cache_type,
                 _preferred_metadata_languages(db),
-            ) if active_match.tmdb_id else None
+            ) if target_tmdb_id else None
+
+            companies_fallback = active_match.companies
+            if not companies_fallback and movie_cache and movie_cache.raw_data:
+                companies_fallback = [{"name": c.get("name"), "logo_path": c.get("logo_path")} for c in movie_cache.raw_data.get("production_companies", [])]
+
+            networks_fallback = active_match.networks
+            if not networks_fallback and movie_cache and movie_cache.raw_data:
+                networks_fallback = [{"name": n.get("name"), "logo_path": n.get("logo_path")} for n in movie_cache.raw_data.get("networks", [])]
 
             preferred_logo_path = _pick_logo_path(movie_cache.raw_data if movie_cache else None, ui_lang) if movie_cache else None
             effective_logo_path = preferred_logo_path or (loc.logo_path if loc else None)
@@ -407,6 +419,8 @@ class ItemDetailProvider(BaseDetailProvider):
                 "vote_count_imdb": active_match.vote_count_imdb,
                 "budget": active_match.budget,
                 "revenue": active_match.revenue,
+                "companies": companies_fallback,
+                "networks": networks_fallback,
                 "collection": active_match.collection,
                 "collection_data": self.formatter.serialize_collection(active_match.collection_entity, active_match.collection, ui_lang),
                 "poster_path": (_public_image_path(loc.local_poster_path, "posters") or loc.poster_path) if loc else None,

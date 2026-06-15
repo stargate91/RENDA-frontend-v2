@@ -252,3 +252,9 @@
   margin-top: -8px;
   margin-bottom: var(--space-sm);
 }
+
+.settings-action-row-right {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-sm);
+}

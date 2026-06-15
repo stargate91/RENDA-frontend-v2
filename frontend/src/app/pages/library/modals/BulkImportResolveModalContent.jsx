@@ -8,6 +8,10 @@ import { API_BASE } from '@/lib/backend';
 
 const getBulkImportResolveStatePrefix = (isAdult) => `bulkImportResolvedRows:${isAdult ? 'nsfw' : 'sfw'}:`;
 
+const BULLET_POINT = '• ';
+const QUESTION_MARK = '?';
+
+
 export default function BulkImportResolveModalContent({ t, isAdult = false }) {
   const [bulkReport, setBulkReport] = useState(null);
   const [isLoadingReport, setIsLoadingReport] = useState(true);
@@ -86,16 +90,16 @@ export default function BulkImportResolveModalContent({ t, isAdult = false }) {
         <strong className="bulk-people-resolve-modal__report-title">
           {t(textKey('library.addPeople.adultImportResults', 'library.addPeople.importResults'))}
         </strong>
-        <div>{`\u2022 ${t('library.addPeople.addedCount')} ${bulkReport.added_count}`}</div>
-        <div>{`\u2022 ${t('library.addPeople.alreadyInLibraryCount')} ${bulkReport.already_in_library_count}`}</div>
+        <div>{BULLET_POINT}{t('library.addPeople.addedCount')} {bulkReport.added_count}</div>
+        <div>{BULLET_POINT}{t('library.addPeople.alreadyInLibraryCount')} {bulkReport.already_in_library_count}</div>
         {bulkReport.multiple_match_count > 0 && (
           <div className="bulk-people-resolve-modal__report-line bulk-people-resolve-modal__report-line--warning">
-            {`\u2022 ${t('library.addPeople.multipleMatchCountBanner')} ${bulkReport.multiple_match_count}`}
+            {BULLET_POINT}{t('library.addPeople.multipleMatchCountBanner')} {bulkReport.multiple_match_count}
           </div>
         )}
         {bulkReport.no_match_count > 0 && (
           <div className="bulk-people-resolve-modal__report-line bulk-people-resolve-modal__report-line--danger">
-            {`\u2022 ${t('library.addPeople.noMatchCountBanner')} ${bulkReport.no_match_count}`}
+            {BULLET_POINT}{t('library.addPeople.noMatchCountBanner')} {bulkReport.no_match_count}
           </div>
         )}
       </div>
@@ -184,7 +188,7 @@ export default function BulkImportResolveModalContent({ t, isAdult = false }) {
                                   className="bulk-people-candidate-card__avatar-image"
                                 />
                               ) : (
-                                <div className="bulk-people-candidate-card__avatar-placeholder">?</div>
+                                <div className="bulk-people-candidate-card__avatar-placeholder">{QUESTION_MARK}</div>
                               )}
                             </div>
                             <div className="bulk-people-candidate-card__copy">

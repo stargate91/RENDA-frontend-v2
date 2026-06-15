@@ -6,13 +6,13 @@ import Pill from '@/ui/Pill';
 import Button from '@/ui/Button';
 import {
   Calendar, Clock, Star, Play, Check, Video, Eye, EyeOff, FolderOpen,
-  X, Users, Info, Tv, Film, ChevronRight, ChevronDown, Sliders, PenLine
+  Users, Info, Tv, Film, ChevronRight, ChevronDown, PenLine
 } from 'lucide-react';
 import { useTranslation } from '@/providers/LanguageContext';
 import { useUi } from '@/providers/UiProvider';
-import { useFullMetadataQuery, useLibraryItemDetailQuery, useLibrarySeriesDetailQuery } from '@/queries/metadataQueries';
+import { useLibraryItemDetailQuery, useLibrarySeriesDetailQuery } from '@/queries/metadataQueries';
 import {
-  useUpdateMediaStatusMutation, usePlayMediaMutation, useResetProgressMutation,
+  useUpdateMediaStatusMutation, usePlayMediaMutation,
   useBulkUpdateWatchedMutation, usePreviewMediaMutation
 } from '@/queries/mediaQueries';
 import { useSettingsQuery } from '@/queries/settingsQueries';
@@ -62,11 +62,53 @@ const getDurationText = (seconds, t) => {
   return t('library.details.durationMinutes', { minutes, count: minutes, defaultValue: '{{minutes}}m' });
 };
 
+const formatEpisodeNumber = (epNum) => {
+  if (epNum === undefined || epNum === null) return '';
+  const str = String(epNum).trim();
+  
+  if (str.includes(',')) {
+    const parts = str.split(',').map(s => s.trim()).filter(Boolean);
+    if (parts.length > 1) {
+      return `${parts[0]}-${parts[parts.length - 1]}`;
+    }
+  }
+  
+  if (str.includes('-')) {
+    return str.split('-').map(s => s.trim()).filter(Boolean).join('-');
+  }
+  
+  return str;
+};
+
+const countEpisodesInNumber = (epNum) => {
+  if (epNum === undefined || epNum === null) return 1;
+  const str = String(epNum).trim();
+  if (!str) return 1;
+  
+  if (str.includes(',')) {
+    const parts = str.split(',').map(s => s.trim()).filter(Boolean);
+    return parts.length > 0 ? parts.length : 1;
+  }
+  
+  if (str.includes('-')) {
+    const parts = str.split('-').map(s => s.trim()).filter(Boolean);
+    if (parts.length === 2) {
+      const start = parseInt(parts[0], 10);
+      const end = parseInt(parts[1], 10);
+      if (!isNaN(start) && !isNaN(end) && end >= start) {
+        return end - start + 1;
+      }
+    }
+  }
+  
+  return 1;
+};
+
 export default function MediaDetailPage({ type = 'movie' }) {
   const { id } = useParams();
   const cleanId = id?.startsWith('series_') ? id.replace('series_', '') : id;
   const navigate = useNavigate();
-  const { t, locale } = useTranslation();
+  const { t } = useTranslation();
   const { openModal, closeModal } = useUi();
 
   const [hoveredRating, setHoveredRating] = useState(null);
@@ -83,7 +125,6 @@ export default function MediaDetailPage({ type = 'movie' }) {
   const { data: settings } = useSettingsQuery();
 
   const playMutation = usePlayMediaMutation();
-  const resetProgressMutation = useResetProgressMutation();
   const previewMutation = usePreviewMediaMutation();
 
   const [activePanel, setActivePanel] = useState(null);
@@ -149,7 +190,7 @@ export default function MediaDetailPage({ type = 'movie' }) {
                     </span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-text-secondary)' }}>
                       <span style={{ fontSize: 'var(--font-size-xs)' }}>
-                        {season.episodes?.length || 0} {t('library.details.episodes') || 'Episodes'}
+                        {season.episodes ? season.episodes.reduce((sum, ep) => sum + countEpisodesInNumber(ep.episode_number), 0) : 0} {t('library.details.episodes') || 'Episodes'}
                       </span>
                       {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                     </div>
@@ -171,7 +212,7 @@ export default function MediaDetailPage({ type = 'movie' }) {
                         >
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
                             <span style={{ fontWeight: 500, color: 'var(--color-text-primary)', fontSize: 'var(--font-size-sm)' }}>
-                              {episode.episode_number}. {episode.title}
+                              {formatEpisodeNumber(episode.episode_number)}. {episode.title}
                             </span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                               <button
@@ -391,6 +432,8 @@ export default function MediaDetailPage({ type = 'movie' }) {
     }
 
     if (activePanel === 'details') {
+      const tmdbId = item?.tmdb_id || item?.series_tmdb_id;
+      const imdbId = item?.imdb_id;
       const hasImdb = item?.rating_imdb != null;
       const hasTmdb = item?.rating_tmdb != null;
       const hasRotten = item?.rating_rotten != null && item?.rating_rotten !== '';
@@ -449,7 +492,35 @@ export default function MediaDetailPage({ type = 'movie' }) {
           .join(':');
       };
 
+      const formatCurrency = (num) => {
+        if (num === undefined || num === null || num === 0) return '-';
+        return new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'USD',
+          maximumFractionDigits: 0
+        }).format(num);
+      };
+
+      const hasBoxOffice = !!((item.budget && item.budget > 0) || (item.revenue && item.revenue > 0));
+
       const hasSpecs = isMovie && item.technical;
+
+      const companies = item.companies || [];
+      const networks = item.networks || [];
+      const itemsToShow = networks.length > 0 ? networks : companies;
+      const blockTitle = networks.length > 0 ? 'Platforms & Networks' : 'Production Companies';
+
+      const nonSpecialSeasons = !isMovie && Array.isArray(item?.seasons)
+        ? item.seasons.filter(s => s.season_number !== 0)
+        : [];
+      const seasonCount = nonSpecialSeasons.length;
+      const episodeCount = nonSpecialSeasons.reduce((acc, s) => {
+        if (s.episodes && s.episodes.length > 0) {
+          return acc + s.episodes.reduce((sum, ep) => sum + countEpisodesInNumber(ep.episode_number), 0);
+        }
+        return acc + 0;
+      }, 0);
+      const seriesStatus = item?.release_status;
 
       return (
         <div className="details-panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -485,6 +556,30 @@ export default function MediaDetailPage({ type = 'movie' }) {
             </div>
           )}
 
+          {!isMovie && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <h4 style={{ margin: '0 0 4px 0', fontSize: 'var(--font-size-xs)', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+                Series Info
+              </h4>
+              <div className="specs-grid">
+                <div className="specs-card" style={{ display: 'flex', flexDirection: 'column', gap: '6px', minHeight: '78px', padding: '12px 14px' }}>
+                  <span className="specs-card__label">Seasons</span>
+                  <span className="specs-card__value" title={seasonCount}>{seasonCount}</span>
+                </div>
+                <div className="specs-card" style={{ display: 'flex', flexDirection: 'column', gap: '6px', minHeight: '78px', padding: '12px 14px' }}>
+                  <span className="specs-card__label">Episodes</span>
+                  <span className="specs-card__value" title={episodeCount}>{episodeCount}</span>
+                </div>
+                {seriesStatus && (
+                  <div className="specs-card" style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: '6px', minHeight: '78px', padding: '12px 14px' }}>
+                    <span className="specs-card__label">Status</span>
+                    <span className="specs-card__value" title={seriesStatus}>{seriesStatus}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {isMovie && (item.technical?.edition && item.technical.edition !== 'none' || item.technical?.source && item.technical.source !== 'none' || item.technical?.audio_type && item.technical.audio_type !== 'none') && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <h4 style={{ margin: '0 0 4px 0', fontSize: 'var(--font-size-xs)', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
@@ -515,6 +610,107 @@ export default function MediaDetailPage({ type = 'movie' }) {
                     </span>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+
+          {hasBoxOffice && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <h4 style={{ margin: '0 0 4px 0', fontSize: 'var(--font-size-xs)', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+                Box Office
+              </h4>
+              <div className="specs-grid">
+                {item.budget > 0 && (
+                  <div className="specs-card">
+                    <span className="specs-card__label">Budget</span>
+                    <span className="specs-card__value" title={formatCurrency(item.budget)}>
+                      {formatCurrency(item.budget)}
+                    </span>
+                  </div>
+                )}
+                {item.revenue > 0 && (
+                  <div className="specs-card">
+                    <span className="specs-card__label">Revenue</span>
+                    <span className="specs-card__value" title={formatCurrency(item.revenue)}>
+                      {formatCurrency(item.revenue)}
+                    </span>
+                  </div>
+                )}
+                {item.budget > 0 && item.revenue > 0 && (
+                  <div className="specs-card" style={{ gridColumn: 'span 2' }}>
+                    <span className="specs-card__label">Profit</span>
+                    <span
+                      className="specs-card__value"
+                      title={formatCurrency(item.revenue - item.budget)}
+                      style={{ color: (item.revenue - item.budget) >= 0 ? 'var(--color-state-success)' : 'var(--color-state-danger)' }}
+                    >
+                      {formatCurrency(item.revenue - item.budget)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {itemsToShow.length > 0 && (
+            <div>
+              <h4 style={{ margin: '0 0 10px 0', fontSize: 'var(--font-size-xs)', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+                {blockTitle}
+              </h4>
+              <div className="companies-networks-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {itemsToShow.map((it, idx) => {
+                  const logoUrl = it.logo_path
+                    ? (it.logo_path.startsWith('http') || it.logo_path.startsWith('/media/') || it.logo_path.startsWith('data/'))
+                      ? it.logo_path
+                      : `https://image.tmdb.org/t/p/w154${it.logo_path}`
+                    : null;
+                  return (
+                    <div
+                      key={idx}
+                      className="specs-card"
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '12px',
+                        minHeight: '58px',
+                        padding: '10px 14px',
+                        flex: '1 1 calc(50% - 4px)',
+                        minWidth: '140px'
+                      }}
+                      title={it.name}
+                    >
+                      {logoUrl && (
+                        <img
+                          src={logoUrl}
+                          alt={it.name}
+                          style={{
+                            maxHeight: '26px',
+                            maxWidth: '60px',
+                            objectFit: 'contain',
+                            filter: 'invert(1) opacity(0.82)',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.filter = 'invert(1) opacity(1)';
+                            e.currentTarget.style.transform = 'scale(1.04)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.filter = 'invert(1) opacity(0.82)';
+                            e.currentTarget.style.transform = 'scale(1)';
+                          }}
+                        />
+                      )}
+                      {!logoUrl && (
+                        <span style={{ fontSize: 'var(--font-size-xs)', fontWeight: 600, color: 'var(--color-text-primary)', lineBreak: 'anywhere' }}>
+                          {it.name}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -576,6 +772,35 @@ export default function MediaDetailPage({ type = 'movie' }) {
                       {parseFloat(item.technical.framerate).toFixed(3)} fps
                     </span>
                   </div>
+                )}
+              </div>
+            </div>
+          )}
+          {(imdbId || tmdbId) && (
+            <div>
+              <h4 style={{ margin: '0 0 10px 0', fontSize: 'var(--font-size-xs)', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>
+                External Links
+              </h4>
+              <div className="external-links-container" style={{ display: 'flex', gap: '10px' }}>
+                {imdbId && (
+                  <a
+                    href={`https://www.imdb.com/title/${imdbId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="external-link-btn external-link-btn--imdb"
+                  >
+                    IMDb
+                  </a>
+                )}
+                {tmdbId && (
+                  <a
+                    href={`https://www.themoviedb.org/${isMovie ? 'movie' : 'tv'}/${tmdbId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="external-link-btn external-link-btn--tmdb"
+                  >
+                    TMDb
+                  </a>
                 )}
               </div>
             </div>
@@ -693,6 +918,7 @@ export default function MediaDetailPage({ type = 'movie' }) {
 
     openModal({
       title: t('library.details.writeReview') || 'Write Review',
+      icon: PenLine,
       content: (
         <ReviewModalContent
           initialComment={currentComment}
@@ -714,7 +940,7 @@ export default function MediaDetailPage({ type = 'movie' }) {
           <Button variant="ghost" onClick={closeModal}>
             {t('common.close') || 'Close'}
           </Button>
-          <Button variant="secondary" type="submit" form="review-modal-form">
+          <Button variant="primary" type="submit" form="review-modal-form">
             {t('common.save') || 'Save'}
           </Button>
         </div>
@@ -754,7 +980,12 @@ export default function MediaDetailPage({ type = 'movie' }) {
   if (!isMovie && item?.seasons) {
     const regularSeasons = item.seasons.filter(s => s.season_number > 0);
     seasonsCount = regularSeasons.length;
-    episodesCount = regularSeasons.reduce((acc, s) => acc + (s.episodes?.length || s.episode_count || 0), 0);
+    episodesCount = regularSeasons.reduce((acc, s) => {
+      if (s.episodes && s.episodes.length > 0) {
+        return acc + s.episodes.reduce((sum, ep) => sum + countEpisodesInNumber(ep.episode_number), 0);
+      }
+      return acc + (s.episode_count || 0);
+    }, 0);
   }
 
   const seasonsText = !isMovie && seasonsCount > 0
@@ -882,17 +1113,23 @@ export default function MediaDetailPage({ type = 'movie' }) {
   const handleReadMore = () => {
     openModal({
       title: title,
+      icon: Info,
+      variant: 'wide',
       description: t('library.details.overview') || 'Overview',
       content: (
         <div style={{
-          fontSize: 'var(--font-size-md, 16px)',
-          lineHeight: '1.6',
-          color: 'color-mix(in srgb, var(--color-text-primary, #fff) 85%, transparent)',
+          fontSize: '15px',
+          lineHeight: '1.65',
+          color: 'var(--color-text-primary)',
           maxHeight: '60vh',
           overflowY: 'auto',
-          paddingRight: '8px'
+          paddingRight: '12px',
+          fontFamily: 'var(--font-family-base)',
+          textAlign: 'justify'
         }}>
-          {overview}
+          {overview.split('\n\n').map((paragraph, index) => (
+            <p key={index} style={{ margin: '0 0 16px 0', textIndent: '16px' }}>{paragraph}</p>
+          ))}
         </div>
       )
     });
@@ -1191,7 +1428,7 @@ export default function MediaDetailPage({ type = 'movie' }) {
                     disabled={playMutation.isPending}
                   >
                     <Play size={16} fill="currentColor" />
-                    {t('library.details.continueEpisode', { defaultValue: 'Continue S{{season}} E{{episode}}', season: nextEpisodeInfo.seasonNumber, episode: nextEpisodeInfo.episode.episode_number })}
+                    {t('library.details.continueEpisode', { defaultValue: 'Continue S{{season}} E{{episode}}', season: nextEpisodeInfo.seasonNumber, episode: formatEpisodeNumber(nextEpisodeInfo.episode.episode_number) })}
                   </Button>
                 )
               )}
@@ -1269,6 +1506,7 @@ export default function MediaDetailPage({ type = 'movie' }) {
 
 function ReviewModalContent({ initialComment, onSave, t }) {
   const [comment, setComment] = useState(initialComment || '');
+  const maxChars = 2000;
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -1276,26 +1514,46 @@ function ReviewModalContent({ initialComment, onSave, t }) {
   };
 
   return (
-    <form id="review-modal-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', padding: '4px 0' }}>
-      <textarea
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        placeholder={t('library.details.reviewPlaceholder') || 'Write your review here...'}
-        style={{
-          width: '100%',
-          minHeight: '140px',
-          background: 'rgba(0, 0, 0, 0.25)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          borderRadius: 'var(--radius-md)',
-          padding: '12px',
-          color: '#fff',
-          fontFamily: 'inherit',
-          fontSize: 'var(--font-size-sm, 14px)',
-          resize: 'vertical',
-          outline: 'none',
-          boxSizing: 'border-box'
-        }}
-      />
+    <form id="review-modal-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', padding: '4px 0' }}>
+      <div style={{ position: 'relative', width: '100%' }}>
+        <textarea
+          value={comment}
+          onChange={(e) => setComment(e.target.value.slice(0, maxChars))}
+          placeholder={t('library.details.reviewPlaceholder') || 'Write your review here...'}
+          style={{
+            width: '100%',
+            minHeight: '180px',
+            background: 'rgba(0, 0, 0, 0.25)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: 'var(--radius-lg, 16px)',
+            padding: '16px 16px 36px 16px',
+            color: '#fff',
+            fontFamily: 'inherit',
+            fontSize: 'var(--font-size-sm, 14px)',
+            lineHeight: '1.5',
+            resize: 'vertical',
+            outline: 'none',
+            boxSizing: 'border-box',
+            transition: 'border-color 0.2s ease',
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = 'var(--color-accent-blue)';
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+          }}
+        />
+        <div style={{
+          position: 'absolute',
+          bottom: '12px',
+          right: '16px',
+          fontSize: '11px',
+          color: comment.length >= maxChars ? 'var(--color-state-danger)' : 'var(--color-text-muted)',
+          pointerEvents: 'none'
+        }}>
+          {comment.length} / {maxChars}
+        </div>
+      </div>
     </form>
   );
 }

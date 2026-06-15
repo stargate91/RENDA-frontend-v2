@@ -1,8 +1,12 @@
 import NavButton from '@/ui/NavButton';
 import { ArrowRight } from 'lucide-react';
 import './OnboardingWizard.css';
+import { useTranslation } from '@/providers/LanguageContext';
 
 import useOnboardingState from './hooks/useOnboardingState';
+
+const BRAND_TEXT = 'RENDA';
+
 import WelcomeStep from './steps/WelcomeStep';
 import ChoiceStep from './steps/ChoiceStep';
 import TmdbStep from './steps/TmdbStep';
@@ -11,6 +15,7 @@ import FolderStep from './steps/FolderStep';
 import CompletionStep from './steps/CompletionStep';
 
 export default function OnboardingWizard() {
+  const { t } = useTranslation();
   const {
     locale,
     setLocale,
@@ -73,7 +78,7 @@ export default function OnboardingWizard() {
         {/* Header */}
         <div className="onboarding-header">
           <div className={`onboarding-title-group ${isAnyGuideOpen ? 'is-hidden' : ''}`}>
-            <h1>RENDA</h1>
+            <h1>{BRAND_TEXT}</h1>
           </div>
           <div className={`onboarding-timeline ${isAnyGuideOpen ? 'is-hidden' : ''}`}>
             {[1, 2, 3, 4, 5, 6].map((num) => (
@@ -181,7 +186,7 @@ export default function OnboardingWizard() {
               <div />
               <div className="onboarding-footer-actions-cluster">
                 <NavButton className="ui-nav-button--onboarding-back" onClick={handlePrev}>
-                  Back
+                  {t('onboarding.buttons.back')}
                 </NavButton>
                 <NavButton
                   className="ui-nav-button--onboarding-continue"
@@ -189,7 +194,7 @@ export default function OnboardingWizard() {
                   iconPosition="right"
                   onClick={handleNext}
                 >
-                  Continue
+                  {t('onboarding.buttons.continue')}
                 </NavButton>
               </div>
             </>
@@ -197,7 +202,7 @@ export default function OnboardingWizard() {
             <>
               {step > 1 && step < 6 ? (
                 <NavButton className="ui-nav-button--onboarding-back" onClick={handlePrev}>
-                  Back
+                  {t('onboarding.buttons.back')}
                 </NavButton>
               ) : (
                 <div />
@@ -215,7 +220,7 @@ export default function OnboardingWizard() {
                     (step === 4 && omdbValidation.valid !== true)
                   }
                 >
-                  Continue
+                  {t('onboarding.buttons.continue')}
                 </NavButton>
               ) : step === 5 ? (
                 <NavButton
@@ -225,7 +230,7 @@ export default function OnboardingWizard() {
                   onClick={handleNext}
                   disabled={folderValidation.valid !== true}
                 >
-                  Continue
+                  {t('onboarding.buttons.continue')}
                 </NavButton>
               ) : (
                 <NavButton
@@ -234,7 +239,7 @@ export default function OnboardingWizard() {
                   onClick={handleFinish}
                   disabled={isFinishing}
                 >
-                  {isFinishing ? 'Saving...' : 'Finish Setup'}
+                  {isFinishing ? t('onboarding.buttons.saving') : t('onboarding.buttons.finishSetup')}
                 </NavButton>
               )}
             </>

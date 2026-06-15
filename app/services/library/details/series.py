@@ -390,6 +390,8 @@ class SeriesDetailProvider(BaseDetailProvider):
             "directors": directors,
             "writers": writers,
             "seasons": seasons_list,
+            "companies": [{"name": c.get("name"), "logo_path": self.formatter.resolve_logo_response_path(logo_path=c.get("logo_path"))} for c in tmdb_data.get("production_companies", [])] if tmdb_data.get("production_companies") else [],
+            "networks": [{"name": n.get("name"), "logo_path": self.formatter.resolve_logo_response_path(logo_path=n.get("logo_path"))} for n in tmdb_data.get("networks", [])] if tmdb_data.get("networks") else [],
             "is_adult": tmdb_data.get("adult", False),
             "is_favorite": bool(virtual_state.is_favorite) if virtual_state else False,
             "user_rating": virtual_state.user_rating if virtual_state else None,
@@ -452,6 +454,16 @@ class SeriesDetailProvider(BaseDetailProvider):
             VirtualMediaState.media_type == "tv"
         ).first()
 
+        if (not cached_series or not cached_series.get("networks")) and series_tmdb_id_int:
+            try:
+                from app.api.tmdb_client import TMDBClient
+                tmdb_client = TMDBClient(db)
+                api_data = tmdb_client.get_details(series_tmdb_id_int, "series", language=ui_lang)
+                if api_data:
+                    cached_series = api_data
+            except Exception as e:
+                logger.error(f"Failed to fetch series details from TMDB API on the fly: {e}")
+
         preferred_logo_path = _pick_logo_path(cached_series, ui_lang) if cached_series else None
         effective_logo_path = preferred_logo_path or (base_loc.logo_path if base_loc else None)
         effective_local_logo_path = (
@@ -466,6 +478,56 @@ class SeriesDetailProvider(BaseDetailProvider):
             if base_loc and effective_backdrop_path and effective_backdrop_path == base_loc.backdrop_path
             else None
         )
+
+        cached_companies = {}
+        if cached_series and cached_series.get("production_companies"):
+            for cc in cached_series.get("production_companies"):
+                if isinstance(cc, dict) and cc.get("name"):
+                    cached_companies[cc["name"].lower()] = cc.get("logo_path")
+
+        companies_fallback = []
+        raw_companies = base_match.companies if base_match else None
+        if not raw_companies and cached_series:
+            raw_companies = cached_series.get("production_companies")
+        if raw_companies:
+            for c in raw_companies:
+                if isinstance(c, str):
+                    logo = cached_companies.get(c.lower())
+                    companies_fallback.append({
+                        "name": c,
+                        "logo_path": self.formatter.resolve_logo_response_path(logo_path=logo)
+                    })
+                elif isinstance(c, dict):
+                    logo = c.get("logo_path") or cached_companies.get(c.get("name", "").lower())
+                    companies_fallback.append({
+                        "name": c.get("name"),
+                        "logo_path": self.formatter.resolve_logo_response_path(logo_path=logo, local_logo_path=c.get("local_logo_path"))
+                    })
+
+        cached_networks = {}
+        if cached_series and cached_series.get("networks"):
+            for cn in cached_series.get("networks"):
+                if isinstance(cn, dict) and cn.get("name"):
+                    cached_networks[cn["name"].lower()] = cn.get("logo_path")
+
+        networks_fallback = []
+        raw_networks = base_match.networks if base_match else None
+        if not raw_networks and cached_series:
+            raw_networks = cached_series.get("networks")
+        if raw_networks:
+            for n in raw_networks:
+                if isinstance(n, str):
+                    logo = cached_networks.get(n.lower())
+                    networks_fallback.append({
+                        "name": n,
+                        "logo_path": self.formatter.resolve_logo_response_path(logo_path=logo)
+                    })
+                elif isinstance(n, dict):
+                    logo = n.get("logo_path") or cached_networks.get(n.get("name", "").lower())
+                    networks_fallback.append({
+                        "name": n.get("name"),
+                        "logo_path": self.formatter.resolve_logo_response_path(logo_path=logo, local_logo_path=n.get("local_logo_path"))
+                    })
 
         series_data = {
             "id": base_item.id,
@@ -495,6 +557,8 @@ class SeriesDetailProvider(BaseDetailProvider):
             "rating_rotten": base_match.rating_rotten if base_match else None,
             "rating_meta": base_match.rating_meta if base_match else None,
             "genres": _split_genres([g["name"] for g in cached_series.get("genres", [])] if cached_series.get("genres") else (base_loc.genres if base_loc else [])),
+            "companies": companies_fallback,
+            "networks": networks_fallback,
             "cast": [],
             "directors": [],
             "writers": [],

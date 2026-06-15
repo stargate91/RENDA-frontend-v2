@@ -160,6 +160,7 @@ export default function LibraryGrid({
                       onFocusTag?.(item.name);
                     }
                   }}
+                  /* eslint-disable-next-line react/forbid-dom-props */
                   style={{
                     '--tag-color': item.color || 'var(--color-accent)',
                     '--item-index': index,
@@ -171,6 +172,7 @@ export default function LibraryGrid({
                         <div
                           key={`${item.name}-preview-${index}`}
                           className="library-tag-card__preview-image"
+                          /* eslint-disable-next-line react/forbid-dom-props */
                           style={{
                             backgroundImage: `url(${previewCount === 1 ? singlePreviewImage : resolvePosterUrl(preview.poster)})`,
                             backgroundPositionX: preview.position_x != null ? `${preview.position_x}%` : 'center',
@@ -309,6 +311,7 @@ function ExpandedTagPanel({ tag, t, resolvePosterUrl, emptyIcon, isFocusMode = f
     return (
       <div
         className={`library-tag-expanded-panel ${isFocusMode ? 'is-focus-mode' : ''}`.trim()}
+        /* eslint-disable-next-line react/forbid-dom-props */
         style={{ '--tag-color': tag.color || 'var(--color-accent)' }}
       >
         {isFocusMode ? (
@@ -332,6 +335,7 @@ function ExpandedTagPanel({ tag, t, resolvePosterUrl, emptyIcon, isFocusMode = f
   return (
     <div
       className={`library-tag-expanded-panel ${isFocusMode ? 'is-focus-mode' : ''}`.trim()}
+      /* eslint-disable-next-line react/forbid-dom-props */
       style={{ '--tag-color': tag.color || 'var(--color-accent)' }}
     >
       {isFocusMode ? (

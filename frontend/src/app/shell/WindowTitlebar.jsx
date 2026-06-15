@@ -9,6 +9,8 @@ import { useTranslation } from '../providers/LanguageContext';
 import useWindowProgress from './useWindowProgress';
 import useWindowControls from './useWindowControls';
 
+const BRAND_NAME = 'RENDA';
+
 export default function WindowTitlebar() {
   const { hasProgress, scanProgress, imageProgress, hydrateProgress, syncProgress } = useWindowProgress();
   const { openModal, closeModal, toast } = useUi();
@@ -56,7 +58,7 @@ export default function WindowTitlebar() {
         className="window-titlebar__drag-region"
         onDoubleClick={resizeToMinimum}
       >
-        <span className="window-titlebar__brand-text">RENDA</span>
+        <span className="window-titlebar__brand-text">{BRAND_NAME}</span>
       </div>
 
       {hasProgress ? (

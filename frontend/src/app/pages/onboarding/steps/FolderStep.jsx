@@ -3,6 +3,7 @@ import Button from '@/ui/Button';
 import OnboardingInfoCard from '../OnboardingInfoCard';
 import OnboardingPanelCard from '../OnboardingPanelCard';
 import OnboardingOrbitHero from '../OnboardingOrbitHero';
+import { useTranslation } from '@/providers/LanguageContext';
 
 export default function FolderStep({
   scanDir,
@@ -15,6 +16,8 @@ export default function FolderStep({
   isValidatingFolders,
   folderValidation,
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="onboarding-split-layout">
       <OnboardingInfoCard
@@ -48,13 +51,13 @@ export default function FolderStep({
       <OnboardingPanelCard
         eyebrow="Step 5"
         title="Set your library folders"
-        meta={<div className="welcome-lang-pill">Paths required</div>}
+        meta={<div className="welcome-lang-pill">{t('onboarding.folder.pathsRequired')}</div>}
         description="Pick the folders RENDA should read from and organize into."
         footerLabel="Required to continue"
         footerValue="Validate the folder setup first"
       >
         <div className="onboarding-form-group">
-          <label>Scan Source Directory (Optional)</label>
+          <label>{t('onboarding.folder.scanSourceDirectory')}</label>
           <div className="onboarding-input-wrapper">
             <input 
               type="text" 
@@ -62,11 +65,11 @@ export default function FolderStep({
               onChange={(e) => setScanDir(e.target.value)}
               placeholder="Select source folder (optional)"
             />
-            <Button variant="secondary" onClick={pickScanDir}>Browse</Button>
+            <Button variant="secondary" onClick={pickScanDir}>{t('onboarding.folder.browse')}</Button>
           </div>
         </div>
         <div className="onboarding-form-group">
-          <label>Target Library Directory</label>
+          <label>{t('onboarding.folder.targetLibraryDirectory')}</label>
           <div className="onboarding-input-wrapper">
             <input 
               type="text" 
@@ -74,7 +77,7 @@ export default function FolderStep({
               onChange={(e) => setLibraryPath(e.target.value)}
               placeholder="Select target library folder"
             />
-            <Button variant="secondary" onClick={pickLibraryPath}>Browse</Button>
+            <Button variant="secondary" onClick={pickLibraryPath}>{t('onboarding.folder.browse')}</Button>
           </div>
         </div>
         <Button 
