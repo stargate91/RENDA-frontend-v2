@@ -1,0 +1,451 @@
+.seasons-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  user-select: none;
+  overflow-x: hidden;
+}
+
+/* Header & Nav Arrows */
+.seasons-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.seasons-panel__nav-arrows {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.seasons-panel__nav-arrow-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: none;
+}
+
+.seasons-panel__nav-arrow-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-primary);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.seasons-panel__nav-arrow-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+/* Seasons Carousel */
+.seasons-carousel-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: 0 -8px;
+  padding: 0 8px;
+}
+
+.seasons-carousel {
+  display: flex;
+  overflow-x: auto;
+  gap: var(--space-md);
+  padding: var(--space-xs) 0 var(--space-md) 0;
+  scroll-behavior: smooth;
+  flex: 1;
+}
+
+/* Season Poster Card */
+.season-poster-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  width: 86px;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  outline: none;
+  text-align: center;
+}
+
+.season-poster-card__image-wrapper {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: var(--radius-md, 8px);
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+  transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+.season-poster-card:hover .season-poster-card__image-wrapper {
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
+}
+
+.season-poster-card.is-active .season-poster-card__image-wrapper {
+  border-color: var(--color-accent-blue);
+  box-shadow: 0 0 12px rgba(0, 168, 255, 0.32), 0 4px 12px rgba(0, 0, 0, 0.35);
+  transform: translateY(-2px);
+}
+
+.season-poster-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.season-poster-card__placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+}
+
+.season-poster-card__title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  width: 100%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  transition: color 0.2s ease;
+}
+
+.season-poster-card:hover .season-poster-card__title {
+  color: var(--color-text-primary);
+}
+
+.season-poster-card.is-active .season-poster-card__title {
+  color: var(--color-accent-blue);
+  font-weight: 700;
+}
+
+/* Active Season Info */
+.active-season-info {
+  background: var(--media-detail-panel-section-bg, rgba(255, 255, 255, 0.015));
+  border: 1px solid var(--media-detail-panel-section-border, rgba(255, 255, 255, 0.04));
+  border-radius: var(--radius-lg, 16px);
+  padding: var(--space-lg) var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
+}
+
+.active-season-info__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.active-season-info__title {
+  margin: 0;
+  font-size: var(--font-size-md, 16px);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.active-season-info__meta {
+  font-size: var(--font-size-xs, 12px);
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xl, 14px);
+  margin-top: 2px;
+}
+
+.active-season-info__meta-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 90px;
+  flex-shrink: 0;
+}
+
+.active-season-info__meta-episodes {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.active-season-info__meta-date svg,
+.active-season-info__meta-episodes svg {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.active-season-info__overview {
+  margin: var(--space-xs) 0 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+/* Season Watch Toggle Button */
+.season-watch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm, 6px);
+  font-size: var(--font-size-xs, 12px);
+  font-weight: 600;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--color-text-secondary);
+  transition: all 0.2s ease;
+}
+
+.season-watch-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: var(--color-text-primary);
+}
+
+.season-watch-btn--watched {
+  background: color-mix(in srgb, var(--color-state-success) 12%, transparent);
+  border-color: color-mix(in srgb, var(--color-state-success) 24%, transparent);
+  color: var(--color-state-success);
+}
+
+.season-watch-btn--watched:hover {
+  background: color-mix(in srgb, var(--color-state-success) 18%, transparent);
+  border-color: color-mix(in srgb, var(--color-state-success) 36%, transparent);
+  color: var(--color-state-success);
+}
+
+/* Episode Cards List */
+.episodes-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
+}
+
+/* Individual Episode Card */
+.episode-card {
+  display: flex;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--media-detail-panel-card-bg, rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--media-detail-panel-card-border, rgba(255, 255, 255, 0.06));
+  border-radius: var(--radius-lg, 12px);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.episode-card:hover {
+  background: var(--media-detail-panel-card-bg-hover, rgba(255, 255, 255, 0.04));
+  border-color: var(--media-detail-panel-card-border-hover, rgba(255, 255, 255, 0.12));
+}
+
+.episode-card.is-virtual {
+  border-color: color-mix(in srgb, var(--color-accent-yellow, #ffc107) 12%, var(--media-detail-panel-card-border, rgba(255, 255, 255, 0.06)));
+}
+
+.episode-card.is-virtual:hover {
+  border-color: color-mix(in srgb, var(--color-accent-yellow, #ffc107) 22%, var(--media-detail-panel-card-border-hover, rgba(255, 255, 255, 0.12)));
+}
+
+.episode-card.is-virtual.is-expanded {
+  border-color: color-mix(in srgb, var(--color-accent-yellow, #ffc107) 28%, rgba(255, 255, 255, 0.14));
+}
+
+.episode-card.is-expanded {
+  background: rgba(255, 255, 255, 0.035);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+/* Episode Still Image */
+.episode-card__still-wrapper {
+  width: 130px;
+  height: 73px;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-sm, 6px);
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+  position: relative;
+}
+
+.episode-card__still-wrapper .ui-icon-button--play-overlay {
+  width: 32px;
+  height: 32px;
+}
+
+.episode-card__still {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.episode-card__still-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+}
+
+.episode-card__still-watched-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-state-success);
+  backdrop-filter: blur(1px);
+}
+
+/* Episode Details Copy */
+.episode-card__details {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 3px;
+}
+
+.episode-card__title {
+  margin: 0;
+  font-size: var(--font-size-sm, 14px);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.25;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.episode-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  margin-top: 1px;
+}
+
+.episode-card__meta-item {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.episode-card__overview {
+  margin: var(--space-xs) 0 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+}
+
+.episode-card__overview.is-truncated {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Episode Actions */
+.episode-card__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  align-self: flex-start;
+  flex-shrink: 0;
+}
+
+.episode-card__action-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.episode-card__action-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-primary);
+}
+
+.episode-card__action-btn--watch.is-watched {
+  color: var(--color-state-success);
+  background: color-mix(in srgb, var(--color-state-success) 12%, transparent);
+}
+
+.episode-card__action-btn--watch.is-watched:hover {
+  background: color-mix(in srgb, var(--color-state-success) 20%, transparent);
+}
+
+
+
+.episode-card__action-btn--chevron {
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.episode-card__action-btn--chevron.is-expanded {
+  transform: rotate(180deg);
+}
+
+/* Empty states */
+.seasons-panel__empty,
+.episodes-list__empty {
+  padding: var(--space-xl);
+  text-align: center;
+  color: var(--color-text-muted);
+  font-style: italic;
+  font-size: var(--font-size-sm);
+}
+
+@media (max-width: 480px) {
+  .episode-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .episode-card__still-wrapper {
+    width: 100%;
+    height: auto;
+  }
+
+  .episode-card__actions {
+    align-self: flex-end;
+    margin-top: var(--space-sm);
+  }
+}

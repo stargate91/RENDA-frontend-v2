@@ -43,6 +43,12 @@ export const useUpdateMediaStatusMutation = () => {
       queryClient.invalidateQueries({ queryKey: ['full-metadata', variables.itemId] });
       queryClient.invalidateQueries({ queryKey: ['library-item-detail', variables.itemId] });
       queryClient.invalidateQueries({ queryKey: ['library-series-detail', variables.itemId] });
+      if (variables.seriesId) {
+        queryClient.invalidateQueries({ queryKey: ['library-series-detail', variables.seriesId] });
+        queryClient.invalidateQueries({ queryKey: ['library-series-detail', `series_${variables.seriesId}`] });
+        queryClient.invalidateQueries({ queryKey: ['library-item-detail', variables.seriesId] });
+        queryClient.invalidateQueries({ queryKey: ['library-item-detail', `series_${variables.seriesId}`] });
+      }
       queryClient.invalidateQueries({ queryKey: ['library'] });
       queryClient.invalidateQueries({ queryKey: ['libraryTags'] });
       queryClient.invalidateQueries({ queryKey: ['allTags'] });

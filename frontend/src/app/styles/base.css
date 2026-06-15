@@ -38,7 +38,7 @@
   --space-9: var(--app-shell-space-9);
   --space-10: var(--app-shell-space-10);
   --sidebar-padding-top: var(--sidebar-first-nav-y);
-  --sidebar-padding-bottom: 24px;
+  --sidebar-padding-bottom: 30px;
   --sidebar-padding-x: 18px;
   --sidebar-toggle-size: 28px;
   --sidebar-nav-link-padding-y: 11px;

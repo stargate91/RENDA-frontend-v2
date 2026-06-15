@@ -1,0 +1,73 @@
+.rating-stars-container {
+  position: relative;
+  cursor: pointer;
+  display: inline-flex;
+}
+
+.rating-stars-underlay {
+  display: flex;
+  gap: var(--space-2xs);
+  color: color-mix(in srgb, var(--color-text-primary) 58%, var(--color-text-muted));
+}
+
+.rating-stars-overlay {
+  display: flex;
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  color: var(--color-brand-imdb);
+  pointer-events: none;
+}
+
+.rating-stars-overlay-inner {
+  display: flex;
+  gap: var(--space-2xs);
+  width: 106px;
+  flex-shrink: 0;
+}
+
+.user-rating-label {
+  margin-left: var(--space-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  transition: color 150ms ease, font-weight 150ms ease;
+  color: color-mix(in srgb, var(--color-text-primary) 58%, var(--color-text-muted));
+}
+
+.user-rating-label.has-value {
+  color: color-mix(in srgb, var(--color-ink) 84%, var(--color-text-secondary));
+  font-weight: 700;
+}
+
+.rating-pill--large {
+  width: auto;
+  justify-content: flex-start;
+  color: color-mix(in srgb, var(--color-text-primary) 64%, var(--color-text-muted));
+  border-color: color-mix(in srgb, var(--color-border-subtle, rgba(255, 255, 255, 0.05)) 78%, transparent);
+}
+
+.review-trigger-btn {
+  --btn-padding: 2px;
+  background: none;
+  border: none;
+  color: color-mix(in srgb, var(--color-text-primary) 58%, var(--color-text-muted));
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: var(--btn-padding);
+  margin-right: var(--btn-padding);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.review-trigger-btn:hover {
+  color: var(--color-text-primary);
+}
+
+.pill-vertical-separator {
+  margin: 0 var(--space-sm) 0 var(--space-xs);
+  color: rgba(255, 255, 255, 0.1);
+  user-select: none;
+}

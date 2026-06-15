@@ -1,0 +1,35 @@
+.review-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  width: 100%;
+  padding: var(--space-2xs) 0;
+}
+
+.review-modal-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.review-modal-textarea {
+  width: 100%;
+  height: 140px;
+  background: var(--color-bg-canvas);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg) var(--space-xl);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-family: inherit;
+  resize: none;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.review-modal-char-count {
+  position: absolute;
+  bottom: 10px;
+  right: 12px;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}

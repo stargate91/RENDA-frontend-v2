@@ -323,6 +323,9 @@
     "chooseBackdrop": "Choose Backdrop",
     "noBackdropsAvailable": "No neutral Full HD backdrops available.",
     "backdropUpdated": "Backdrop updated successfully!",
-    "backdropUpdateFailed": "Failed to update backdrop"
+    "backdropUpdateFailed": "Failed to update backdrop",
+    "keywords": "Keywords",
+    "virtual": "Virtual"
   }
 }
+

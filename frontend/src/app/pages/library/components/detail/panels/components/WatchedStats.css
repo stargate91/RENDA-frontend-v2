@@ -1,0 +1,264 @@
+.watched-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xl);
+}
+
+.watched-panel .specs-card__value.status-watched {
+  color: var(--color-state-success);
+}
+
+.watched-panel .specs-card__value.status-progress {
+  color: var(--color-accent-blue);
+}
+
+.watched-panel .specs-card__value.status-unwatched {
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.4));
+}
+
+.specs-card--progress {
+  grid-column: span 2;
+  min-height: 84px;
+}
+
+.specs-card__progress-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.specs-card__progress {
+  width: 100%;
+  height: 6px;
+  margin-top: var(--space-xs);
+  border-radius: 3px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+}
+
+.specs-card__progress::-webkit-progress-bar {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+}
+
+.specs-card__progress::-webkit-progress-value {
+  --progress-cyan: #00d2ff;
+  background: linear-gradient(90deg, var(--color-accent-blue) 0%, var(--progress-cyan) 100%);
+  border-radius: 3px;
+}
+
+.specs-card__progress::-moz-progress-bar {
+  --progress-cyan: #00d2ff;
+  background: linear-gradient(90deg, var(--color-accent-blue) 0%, var(--progress-cyan) 100%);
+  border-radius: 3px;
+}
+
+.watched-panel__activity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-glass);
+  border: 1px solid var(--media-detail-panel-card-border);
+  transition: all 160ms ease;
+  user-select: none;
+}
+
+.watched-panel__activity-header:hover {
+  background: var(--color-surface-glass-strong);
+  border-color: var(--media-detail-panel-card-border-hover);
+}
+
+.watched-panel__activity-header svg {
+  color: var(--color-text-secondary);
+  transition: transform 160ms ease;
+  display: block;
+  flex-shrink: 0;
+}
+
+.watched-panel__activity-header .watched-panel__activity-title {
+  margin: 0;
+  padding: 0;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  line-height: 1;
+}
+
+.watched-panel__activity-header:hover .watched-panel__activity-title {
+  color: var(--color-text-primary);
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--media-detail-panel-card-border);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.015);
+  box-shadow: var(--shadow-sm);
+  margin-top: var(--space-sm);
+}
+
+.activity-item {
+  padding: var(--space-sm) var(--space-2xs);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.activity-item+.activity-item {
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.activity-item__dot {
+  display: none;
+}
+
+.activity-item__date {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.activity-list__empty {
+  padding: var(--space-lg) var(--space-2xl);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-style: italic;
+}
+
+.specs-card__value--in-progress {
+  font-size: 13px;
+  white-space: normal;
+  line-break: anywhere;
+}
+
+.watched-panel__seasons-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.watched-panel .season-progress-card {
+  padding: var(--space-lg) var(--space-2xl);
+  border: 1px solid var(--media-detail-panel-card-border) !important;
+  border-radius: var(--radius-lg, 16px) !important;
+  background: var(--media-detail-panel-card-bg) !important;
+  box-shadow: var(--media-detail-panel-card-shadow) !important;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.watched-panel .season-progress-card:hover {
+  background: var(--media-detail-panel-card-bg-hover) !important;
+  border-color: var(--media-detail-panel-card-border-hover) !important;
+  box-shadow: var(--media-detail-panel-card-shadow-hover) !important;
+  transform: translateY(-1px);
+}
+
+.season-progress-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.season-progress-card__title {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+}
+
+.season-progress-card__meta {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.season-progress-card__progress {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+  border: none;
+}
+
+.season-progress-card__progress::-webkit-progress-bar {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+}
+
+.season-progress-card__progress::-webkit-progress-value {
+  --progress-cyan: #00d2ff;
+  background: linear-gradient(90deg, var(--color-accent-blue) 0%, var(--progress-cyan) 100%);
+  border-radius: 2px;
+}
+
+.season-progress-card__progress::-moz-progress-bar {
+  --progress-cyan: #00d2ff;
+  background: linear-gradient(90deg, var(--color-accent-blue) 0%, var(--progress-cyan) 100%);
+  border-radius: 2px;
+}
+
+.activity-item--series {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-xs);
+}
+
+.activity-item__series-top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.activity-item__token {
+  --token-pad-y: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--token-pad-y) var(--space-sm);
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--color-accent-blue) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent-blue) 30%, transparent);
+  color: var(--color-accent-blue);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  height: 18px;
+  line-height: 18px;
+}
+
+.activity-item__token--movie {
+  background: color-mix(in srgb, var(--color-state-success) 12%, transparent);
+  border-color: color-mix(in srgb, var(--color-state-success) 30%, transparent);
+  color: var(--color-state-success);
+}
+
+.activity-item__title {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.activity-item .activity-item__date {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-left: 0;
+  padding-left: 0;
+}

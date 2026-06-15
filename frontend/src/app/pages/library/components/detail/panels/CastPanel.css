@@ -1,0 +1,87 @@
+.cast-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xl);
+}
+
+.cast-panel__title {
+  margin: 0 0 var(--space-md) 0;
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.cast-panel__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.cast-panel__list--actors {
+  gap: var(--space-lg);
+}
+
+.person-card {
+  position: relative;
+  padding: var(--space-sm) var(--space-lg);
+  border: 1px solid var(--media-detail-panel-card-border);
+  border-radius: var(--radius-lg, 16px);
+  background: var(--media-detail-panel-card-bg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  overflow: hidden;
+  box-shadow: var(--media-detail-panel-card-shadow);
+}
+
+.person-card:hover {
+  background: var(--media-detail-panel-card-bg-hover);
+  border-color: var(--media-detail-panel-card-border-hover);
+  box-shadow: var(--media-detail-panel-card-shadow-hover);
+  transform: translateY(-2px);
+}
+
+.person-card__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.person-card__avatar--actor {
+  width: 45px;
+  height: 45px;
+}
+
+.person-card__avatar-fallback {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  display: grid;
+  place-items: center;
+}
+
+.person-card__avatar-fallback--actor {
+  width: 45px;
+  height: 45px;
+}
+
+.person-card__info {
+  display: flex;
+  flex-direction: column;
+}
+
+.person-card__name {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+}
+
+.person-card__role {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}

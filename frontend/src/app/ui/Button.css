@@ -282,3 +282,41 @@
 .ui-icon-button--danger:focus-visible {
   box-shadow: var(--button-danger-focus-ring);
 }
+
+/* Play Overlay Variant for Posters & Stills */
+.ui-icon-button--play-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-panel, #151619);
+  background-image: var(--button-secondary-bg);
+  color: var(--button-secondary-color);
+  border: 1px solid var(--button-secondary-border);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  z-index: 5;
+}
+
+.ui-poster-card__image-wrapper:hover .ui-icon-button--play-overlay,
+.episode-card__still-wrapper:hover .ui-icon-button--play-overlay {
+  opacity: 1;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+
+.ui-icon-button--play-overlay:hover {
+  transform: translate(-50%, -50%) !important;
+  background-color: var(--color-panel-strong, #1f2023);
+  background-image: var(--button-secondary-hover-bg);
+  border-color: var(--button-secondary-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}

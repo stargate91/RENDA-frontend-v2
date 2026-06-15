@@ -1111,7 +1111,7 @@
 
 .create-tag-form__color-list {
   display: flex;
-  gap: var(--space-md);
+  gap: var(--space-lg);
   align-items: center;
   flex-wrap: wrap;
   width: 100%;
