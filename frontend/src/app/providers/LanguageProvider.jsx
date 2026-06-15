@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import enCommon from '../locales/en/common.json';
+import enDashboard from '../locales/en/dashboard.json';
 import enSettings from '../locales/en/settings.json';
 import enOrganizer from '../locales/en/organizer.json';
 import enLibrary from '../locales/en/library.json';
@@ -9,6 +10,7 @@ import { LanguageContext } from './LanguageContext';
 
 const en = {
   ...enCommon,
+  dashboard: enDashboard,
   settingsPage: enSettings,
   organizer: enOrganizer,
   library: enLibrary,

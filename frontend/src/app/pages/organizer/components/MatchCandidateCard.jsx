@@ -1,6 +1,6 @@
 import { Clapperboard } from 'lucide-react';
+import Badge from '@/ui/Badge';
 import MetaRow from '@/ui/MetaRow';
-import StatusBadge from '@/ui/StatusBadge';
 import PosterCard from '@/ui/PosterCard';
 
 const TMDB_IMAGE_SIZE_POSTER = 'w154';
@@ -75,13 +75,13 @@ export default function MatchCandidateCard({
         badge={
           candidate.is_active ? (
             rowStatus === 'uncertain' ? (
-              <StatusBadge variant="overlay" tone="warning">
+              <Badge family="status" variant="overlay" tone="warning" className="ui-status-badge ui-status-badge--warning ui-status-badge--overlay">
                 {t('organizer.status.uncertain')}
-              </StatusBadge>
+              </Badge>
             ) : (
-              <StatusBadge variant="overlay">
+              <Badge family="status" variant="overlay" tone="accent" className="ui-status-badge ui-status-badge--accent ui-status-badge--overlay">
                 {t('organizer.details.matchModal.current')}
-              </StatusBadge>
+              </Badge>
             )
           ) : null
         }
@@ -111,13 +111,13 @@ export default function MatchCandidateCard({
           <strong className="organizer-match-modal__result-title">{displayTitle}</strong>
           {candidate.is_active ? (
             rowStatus === 'uncertain' ? (
-              <StatusBadge tone="warning">
+              <Badge family="status" tone="warning" variant="inline" className="ui-status-badge ui-status-badge--warning ui-status-badge--inline">
                 {t('organizer.status.uncertain')}
-              </StatusBadge>
+              </Badge>
             ) : (
-              <StatusBadge>
+              <Badge family="status" tone="accent" variant="inline" className="ui-status-badge ui-status-badge--accent ui-status-badge--inline">
                 {t('organizer.details.matchModal.current')}
-              </StatusBadge>
+              </Badge>
             )
           ) : null}
         </div>

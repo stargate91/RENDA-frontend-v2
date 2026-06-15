@@ -1,26 +1,38 @@
 import { useState, useRef, useEffect } from 'react';
-import { ChevronDown, ChevronRight, ChevronLeft, Check, Eye, Play, Clapperboard, Calendar, Tv } from 'lucide-react';
+import { ChevronDown, ChevronRight, ChevronLeft, Check, Eye, Play, Clapperboard, Calendar, Tv, Star } from 'lucide-react';
 import IconButton from '@/ui/IconButton';
+import Pill from '@/ui/Pill';
 import { countEpisodesInNumber, formatEpisodeNumber } from '../../../utils/detailUtils';
 import { useMediaDetailContext } from '../MediaDetailContext';
 import './SeasonsPanel.css';
 
+const EPISODES_BATCH_SIZE = 20;
+
 export default function SeasonsPanel() {
   const { state, actions, mutations, t } = useMediaDetailContext();
-  const { item, cleanId } = state;
+  const { item, cleanId, nextEpisodeInfo } = state;
   const { updateStatusMutation, playMutation, bulkUpdateWatchedMutation } = mutations;
 
   const seasonsList = item.seasons || [];
   const seasonsCount = seasonsList.length;
+  const initialSeasonNumber = nextEpisodeInfo?.seasonNumber ?? seasonsList[0]?.season_number ?? 1;
+  const initialExpandedEpisodes = nextEpisodeInfo?.episode?.id
+    ? { [nextEpisodeInfo.episode.id]: true }
+    : {};
+  const initialTargetSeason = seasonsList.find((season) => season.season_number === initialSeasonNumber);
+  const initialTargetEpisodeIndex = nextEpisodeInfo?.episode?.id
+    ? initialTargetSeason?.episodes?.findIndex((episode) => episode.id === nextEpisodeInfo.episode.id) ?? -1
+    : -1;
+  const initialVisibleEpisodesCount = initialTargetEpisodeIndex >= 0
+    ? Math.max(EPISODES_BATCH_SIZE, initialTargetEpisodeIndex + 1)
+    : EPISODES_BATCH_SIZE;
 
-  // Track currently selected season (default to first season if available)
-  const initialSeasonNumber = seasonsList[0]?.season_number ?? 1;
   const [selectedSeasonNumber, setSelectedSeasonNumber] = useState(initialSeasonNumber);
-  
-  // Track expanded state of episode overviews (key is episode.id)
-  const [expandedEpisodes, setExpandedEpisodes] = useState({});
+  const [expandedEpisodes, setExpandedEpisodes] = useState(initialExpandedEpisodes);
+  const [visibleEpisodesCount, setVisibleEpisodesCount] = useState(initialVisibleEpisodesCount);
 
   const scrollContainerRef = useRef(null);
+  const loadMoreTriggerRef = useRef(null);
 
   // Automatically scroll the selected season card into view without affecting outer scroll containers
   useEffect(() => {
@@ -37,6 +49,29 @@ export default function SeasonsPanel() {
       });
     }
   }, [selectedSeasonNumber]);
+
+  useEffect(() => {
+    const targetSeason = seasonsList.find((season) => season.season_number === selectedSeasonNumber);
+    const targetEpisodeIndex = selectedSeasonNumber === nextEpisodeInfo?.seasonNumber
+      ? targetSeason?.episodes?.findIndex((episode) => episode.id === nextEpisodeInfo?.episode?.id) ?? -1
+      : -1;
+
+    setVisibleEpisodesCount(
+      targetEpisodeIndex >= 0
+        ? Math.max(EPISODES_BATCH_SIZE, targetEpisodeIndex + 1)
+        : EPISODES_BATCH_SIZE
+    );
+  }, [nextEpisodeInfo, seasonsList, selectedSeasonNumber]);
+
+  useEffect(() => {
+    if (!nextEpisodeInfo?.episode?.id) return;
+
+    setSelectedSeasonNumber(nextEpisodeInfo.seasonNumber);
+    setExpandedEpisodes((prev) => ({
+      ...prev,
+      [nextEpisodeInfo.episode.id]: true,
+    }));
+  }, [nextEpisodeInfo, seasonsList]);
 
   const getPosterUrl = (path) => {
     if (!path) return '';
@@ -93,6 +128,34 @@ export default function SeasonsPanel() {
   const isSeasonWatched = activeSeason.episodes
     ? activeSeason.episodes.length > 0 && activeSeason.episodes.every((ep) => ep.is_watched)
     : false;
+
+  const visibleEpisodes = activeSeason.episodes?.slice(0, visibleEpisodesCount) || [];
+  const hasMoreEpisodes = visibleEpisodes.length < (activeSeason.episodes?.length || 0);
+
+  useEffect(() => {
+    const trigger = loadMoreTriggerRef.current;
+    if (!trigger || !hasMoreEpisodes) return undefined;
+
+    const scrollRoot = trigger.closest('.media-detail-page__side-panel-content');
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const firstEntry = entries[0];
+        if (!firstEntry?.isIntersecting) return;
+
+        setVisibleEpisodesCount((prev) => (
+          Math.min(prev + EPISODES_BATCH_SIZE, activeSeason.episodes?.length || prev)
+        ));
+      },
+      {
+        root: scrollRoot || null,
+        rootMargin: '0px 0px 960px 0px',
+        threshold: 0.01,
+      }
+    );
+
+    observer.observe(trigger);
+    return () => observer.disconnect();
+  }, [activeSeason.episodes?.length, hasMoreEpisodes, visibleEpisodes.length]);
 
   const handleSeasonWatchedToggle = (e) => {
     e.stopPropagation();
@@ -217,11 +280,12 @@ export default function SeasonsPanel() {
 
       {/* Episode Cards List */}
       <div className="episodes-cards-list">
-        {activeSeason.episodes?.map((episode) => {
+        {visibleEpisodes.map((episode) => {
           const isExpanded = !!expandedEpisodes[episode.id];
           const stillUrl = getStillUrl(episode.still_path);
           const formattedEpNum = formatEpisodeNumber(episode.episode_number);
           const episodeText = `${formattedEpNum.padStart(2, '0')}. ${episode.title || `Episode ${episode.episode_number}`}`;
+          const episodeTmdbRating = episode.vote_average ?? episode.rating_tmdb ?? episode.rating;
 
           // Format metadata tags
           const durationMins = episode.runtime
@@ -246,30 +310,40 @@ export default function SeasonsPanel() {
               onClick={() => toggleEpisodeOverview(episode.id)}
             >
               {/* Left Side: Still Image */}
-              <div className="episode-card__still-wrapper">
-                {stillUrl ? (
-                  <img src={stillUrl} alt="" className="episode-card__still" />
-                ) : (
-                  <div className="episode-card__still-placeholder">
-                    <Clapperboard size={24} />
-                  </div>
-                )}
-                {episode.is_watched && (
-                  <div className="episode-card__still-watched-overlay">
-                    <Check size={16} />
-                  </div>
-                )}
-                {episode.path && !episode.is_missing && (
-                  <IconButton
-                    variant="play-overlay"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      playMutation.mutate(episode.id);
-                    }}
-                    title="Play episode"
-                  >
-                    <Play size={12} fill="currentColor" />
-                  </IconButton>
+              <div className="episode-card__media-column">
+                <div className="episode-card__still-wrapper">
+                  {stillUrl ? (
+                    <img src={stillUrl} alt="" className="episode-card__still" />
+                  ) : (
+                    <div className="episode-card__still-placeholder">
+                      <Clapperboard size={24} />
+                    </div>
+                  )}
+                  {episode.is_watched && (
+                    <div className="episode-card__still-watched-overlay">
+                      <Check size={16} />
+                    </div>
+                  )}
+                  {episode.path && !episode.is_missing && (
+                    <IconButton
+                      variant="play-overlay"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        playMutation.mutate(episode.id);
+                      }}
+                      title="Play episode"
+                    >
+                      <Play size={12} fill="currentColor" />
+                    </IconButton>
+                  )}
+                </div>
+                {(episodeTmdbRating !== undefined && episodeTmdbRating !== null && episodeTmdbRating !== '') && (
+                  <Pill variant="tmdb" className="episode-card__tmdb-pill">
+                    <Star size={10} fill="currentColor" strokeWidth={1.8} />
+                    {isNaN(parseFloat(episodeTmdbRating))
+                      ? episodeTmdbRating
+                      : parseFloat(episodeTmdbRating).toFixed(1)}
+                  </Pill>
                 )}
               </div>
 
@@ -343,6 +417,10 @@ export default function SeasonsPanel() {
           <div className="episodes-list__empty">
             {t('library.details.noEpisodesFound') || 'No episodes found.'}
           </div>
+        )}
+
+        {hasMoreEpisodes && (
+          <div ref={loadMoreTriggerRef} className="episodes-list__load-more-trigger" aria-hidden="true" />
         )}
       </div>
     </div>

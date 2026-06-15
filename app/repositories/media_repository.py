@@ -1,5 +1,6 @@
 from itertools import combinations
 from typing import List, Optional, Dict, Any, Tuple
+from pathlib import Path
 from sqlalchemy.orm import Session, joinedload, aliased
 from sqlalchemy import func, or_
 from app.db.deletion import delete_extra_files_by_ids, delete_media_items_by_ids
@@ -9,6 +10,16 @@ from app.utils.library_utils import _split_genres
 class MediaRepository:
     def __init__(self, db: Session):
         self.db = db
+
+    @staticmethod
+    def _safe_file_size(path_str: Optional[str]) -> int:
+        if not path_str:
+            return 0
+        try:
+            path = Path(path_str)
+            return path.stat().st_size if path.exists() else 0
+        except OSError:
+            return 0
 
     def _preferred_metadata_language(self) -> str:
         primary = self.db.query(UserSetting).filter(UserSetting.key == "primary_metadata_language").first()
@@ -272,29 +283,107 @@ class MediaRepository:
             delete_extra_files_by_ids(self.db, extra_ids)
 
     def get_stats(self) -> Dict[str, Any]:
-        # Movies count
+        library_statuses = [ItemStatus.RENAMED, ItemStatus.ORGANIZED]
+        review_statuses = [
+            ItemStatus.NEW,
+            ItemStatus.ERROR,
+            ItemStatus.UNCERTAIN,
+            ItemStatus.NO_MATCH,
+            ItemStatus.MULTIPLE,
+        ]
+        active_adult_match = self.db.query(MediaMatch.id).filter(
+            MediaMatch.media_item_id == MediaItem.id,
+            MediaMatch.is_active == True,
+            MediaMatch.is_adult == True,
+        ).exists()
+
         total_movies = self.db.query(func.count(MediaItem.id)).filter(
-            MediaItem.status.in_([ItemStatus.RENAMED, ItemStatus.ORGANIZED]),
-            MediaItem.item_type == ItemType.MOVIE
+            MediaItem.status.in_(library_statuses),
+            MediaItem.item_type == ItemType.MOVIE,
+            ~active_adult_match,
         ).scalar() or 0
 
-        # Series count (distinct titles)
+        total_adult_movies = self.db.query(func.count(func.distinct(MediaItem.id))).join(
+            MediaMatch,
+            (MediaMatch.media_item_id == MediaItem.id) &
+            (MediaMatch.is_active == True) &
+            (MediaMatch.is_adult == True),
+        ).filter(
+            MediaItem.status.in_(library_statuses),
+            MediaItem.item_type == ItemType.MOVIE,
+        ).scalar() or 0
+
         total_series = self.db.query(
             func.count(func.distinct(func.coalesce(MediaItem.fd_title, MediaItem.fn_title)))
         ).filter(
-            MediaItem.status.in_([ItemStatus.RENAMED, ItemStatus.ORGANIZED]),
-            MediaItem.item_type.in_([ItemType.SERIES, ItemType.EPISODE])
+            MediaItem.status.in_(library_statuses),
+            MediaItem.item_type.in_([ItemType.SERIES, ItemType.EPISODE]),
+            ~active_adult_match,
         ).scalar() or 0
 
-        # Episodes count
         total_episodes = self.db.query(func.count(MediaItem.id)).filter(
-            MediaItem.status.in_([ItemStatus.RENAMED, ItemStatus.ORGANIZED]),
-            MediaItem.item_type.in_([ItemType.SERIES, ItemType.EPISODE])
+            MediaItem.status.in_(library_statuses),
+            MediaItem.item_type.in_([ItemType.SERIES, ItemType.EPISODE]),
+            ~active_adult_match,
         ).scalar() or 0
 
-        # Storage & items for drive calculation
-        items = self.db.query(MediaItem.current_path, MediaItem.size).all()
-        total_bytes = sum(i.size for i in items if i.size)
+        library_items = self.db.query(MediaItem).options(
+            joinedload(MediaItem.matches).joinedload(MediaMatch.localizations)
+        ).filter(
+            MediaItem.status.in_(library_statuses)
+        ).all()
+
+        movie_bytes = 0
+        series_bytes = 0
+        adult_bytes = 0
+        drives = set()
+
+        for item in library_items:
+            item_size = item.size or 0
+            if item.current_path:
+                if ":" in item.current_path:
+                    drives.add(item.current_path.split(":")[0].upper() + ":")
+                elif item.current_path.startswith("/"):
+                    parts = item.current_path.split("/")
+                    if len(parts) > 2 and parts[1] in ["mnt", "media", "Volumes"]:
+                        drives.add("/" + parts[1] + "/" + parts[2])
+                    else:
+                        drives.add("/")
+
+            active_match = next((match for match in item.matches if match.is_active), None)
+            is_adult_item = bool(active_match and active_match.is_adult)
+
+            if is_adult_item and item.item_type == ItemType.MOVIE:
+                adult_bytes += item_size
+            elif item.item_type == ItemType.MOVIE:
+                movie_bytes += item_size
+            elif item.item_type in [ItemType.SERIES, ItemType.EPISODE]:
+                series_bytes += item_size
+
+        extra_rows = self.db.query(ExtraFile.current_path, ExtraFile.original_path).join(
+            MediaItem, ExtraFile.parent_item_id == MediaItem.id
+        ).filter(
+            MediaItem.status.in_(library_statuses)
+        ).all()
+
+        extras_bytes = 0
+        for extra in extra_rows:
+            current_path = getattr(extra, "current_path", None)
+            original_path = getattr(extra, "original_path", None)
+            extras_bytes += self._safe_file_size(current_path or original_path)
+
+            effective_path = current_path or original_path
+            if effective_path:
+                if ":" in effective_path:
+                    drives.add(effective_path.split(":")[0].upper() + ":")
+                elif effective_path.startswith("/"):
+                    parts = effective_path.split("/")
+                    if len(parts) > 2 and parts[1] in ["mnt", "media", "Volumes"]:
+                        drives.add("/" + parts[1] + "/" + parts[2])
+                    else:
+                        drives.add("/")
+
+        total_bytes = movie_bytes + series_bytes + adult_bytes + extras_bytes
         
         # Unmatched count
         unmatched = self.db.query(func.count(MediaItem.id)).filter(
@@ -305,13 +394,16 @@ class MediaRepository:
             ])
         ).scalar() or 0
 
+        manual_review_breakdown = {
+            "new": self.db.query(func.count(MediaItem.id)).filter(MediaItem.status == ItemStatus.NEW).scalar() or 0,
+            "error": self.db.query(func.count(MediaItem.id)).filter(MediaItem.status == ItemStatus.ERROR).scalar() or 0,
+            "uncertain": self.db.query(func.count(MediaItem.id)).filter(MediaItem.status == ItemStatus.UNCERTAIN).scalar() or 0,
+            "no_match": self.db.query(func.count(MediaItem.id)).filter(MediaItem.status == ItemStatus.NO_MATCH).scalar() or 0,
+            "multiple": self.db.query(func.count(MediaItem.id)).filter(MediaItem.status == ItemStatus.MULTIPLE).scalar() or 0,
+        }
+        manual_review_total = sum(manual_review_breakdown.values())
+
         # Genre and Decade distribution
-        library_items = self.db.query(MediaItem).options(
-            joinedload(MediaItem.matches).joinedload(MediaMatch.localizations)
-        ).filter(
-            MediaItem.status.in_([ItemStatus.ORGANIZED, ItemStatus.RENAMED])
-        ).all()
-        
         preferred_lang = self._preferred_metadata_language()
         genre_dist = {}
         genre_dist_ids = {}
@@ -403,8 +495,17 @@ class MediaRepository:
             "total_movies": total_movies,
             "total_series": total_series,
             "total_episodes": total_episodes,
+            "total_adult_movies": total_adult_movies,
             "total_bytes": total_bytes,
             "unmatched": unmatched,
+            "storage_breakdown": {
+                "movies": movie_bytes,
+                "series": series_bytes,
+                "extras": extras_bytes,
+                "adult": adult_bytes,
+            },
+            "manual_review_total": manual_review_total,
+            "manual_review_breakdown": manual_review_breakdown,
             "genre_distribution": genre_dist,
             "genre_distribution_ids": genre_dist_ids,
             "genre_labels": genre_labels,
@@ -413,7 +514,7 @@ class MediaRepository:
                 "links": constellation_links,
             },
             "decade_distribution": decade_dist,
-            "items": items
+            "items": [item.current_path for item in library_items if item.current_path]
         }
 
     def commit(self):

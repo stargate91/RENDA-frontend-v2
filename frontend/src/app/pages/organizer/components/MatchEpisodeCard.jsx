@@ -1,8 +1,8 @@
 import { useRef, useEffect } from 'react';
 import { Clapperboard, Check } from 'lucide-react';
+import Badge from '../../../ui/Badge';
 import MediaCard from '../../../ui/MediaCard';
 import MetaRow from '../../../ui/MetaRow';
-import StatusBadge from '../../../ui/StatusBadge';
 import Button from '../../../ui/Button';
 
 const TMDB_IMAGE_SIZE_STILL = 'w300';
@@ -62,9 +62,9 @@ export default function MatchEpisodeCard({
             </div>
           ) : null}
           {isActive ? (
-            <StatusBadge variant="overlay">
+            <Badge family="status" variant="overlay" tone="accent" className="ui-status-badge ui-status-badge--accent ui-status-badge--overlay">
               {t('organizer.details.matchModal.current')}
-            </StatusBadge>
+            </Badge>
           ) : null}
         </MediaCard>
       </button>

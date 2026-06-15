@@ -26,6 +26,7 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
   const [isTruncated, setIsTruncated] = useState(false);
 
   const overviewRef = useRef(null);
+  const lastIdRef = useRef(null);
 
   const updateStatusMutation = useUpdateMediaStatusMutation();
   const overrideBackdropMutation = useOverrideBackdropMutation();
@@ -36,7 +37,26 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
   const { data: seriesDetail, isLoading: isSeriesLoading } = useLibrarySeriesDetailQuery(cleanId, { enabled: !isMovie });
   const item = isMovie ? movieDetail : seriesDetail;
   const isLoading = isMovie ? isMovieLoading : isSeriesLoading;
+  const effectiveId = (item && item.in_library !== false) ? item.id : cleanId;
   const { data: settings } = useSettingsQuery();
+
+  useEffect(() => {
+    if (!item) return;
+    if (lastIdRef.current === cleanId) return;
+    lastIdRef.current = cleanId;
+
+    if (isMovie) {
+      setActivePanel(item?.cast?.length ? 'cast' : 'details');
+      return;
+    }
+
+    if (item?.seasons?.length) {
+      setActivePanel('seasons');
+      return;
+    }
+
+    setActivePanel(item?.cast?.length ? 'cast' : 'details');
+  }, [cleanId, isMovie, item]);
 
   const togglePanel = (panelName) => {
     setActivePanel(prev => prev === panelName ? null : panelName);
@@ -82,8 +102,12 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
       const isSame = currentRating !== null && currentRating !== undefined && Number(currentRating) === Number(hoveredRating);
       const targetRating = isSame ? null : hoveredRating;
       updateStatusMutation.mutate({
-        itemId: cleanId,
-        payload: { user_rating: targetRating }
+        itemId: effectiveId,
+        seriesId: cleanId,
+        payload: {
+          user_rating: targetRating,
+          media_type: type
+        }
       });
     }
   };
@@ -99,7 +123,8 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
           initialComment={currentComment}
           onSave={(newComment) => {
             updateStatusMutation.mutate({
-              itemId: cleanId,
+              itemId: effectiveId,
+              seriesId: cleanId,
               payload: {
                 user_comment: newComment || null,
                 media_type: type
@@ -289,7 +314,8 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
   const handleToggleWatched = () => {
     if (isMovie) {
       updateStatusMutation.mutate({
-        itemId: cleanId,
+        itemId: effectiveId,
+        seriesId: cleanId,
         payload: {
           is_watched: !item?.is_watched,
           media_type: type
@@ -378,7 +404,8 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
       item,
       isLoading,
       settings,
-      cleanId
+      cleanId,
+      effectiveId
     },
     actions: {
       togglePanel,

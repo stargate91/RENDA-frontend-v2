@@ -14,7 +14,7 @@
 
 .page-header__title {
   margin: 0;
-  font: var(--text-hero);
+  font: var(--text-title);
   font-family: var(--font-display);
 }
 
@@ -31,7 +31,8 @@
 .page-header__description {
   margin: 0;
   max-width: 72ch;
-  color: var(--color-muted);
+  font-size: var(--font-size-sm);
+  color: var(--text-color-secondary);
 }
 
 .page-header__actions {

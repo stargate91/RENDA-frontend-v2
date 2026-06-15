@@ -1,4 +1,4 @@
-/* Status Badge */
+.ui-badge,
 .ui-status-badge {
   display: inline-flex;
   align-items: center;
@@ -14,36 +14,46 @@
   text-transform: uppercase;
 }
 
-.ui-status-badge--accent {
-  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
-  color: var(--color-accent);
-}
-
-.ui-status-badge--success {
-  background: var(--color-state-success-bg);
-  color: var(--color-state-success);
-}
-
-.ui-status-badge--danger {
-  background: var(--color-state-danger-bg);
-  color: var(--color-state-danger);
-}
-
-.ui-status-badge--warning {
-  background: var(--color-state-warning-bg);
-  color: var(--color-state-warning);
-}
-
+.ui-badge--inline,
 .ui-status-badge--inline {
   position: static;
 }
 
+.ui-badge--overlay,
 .ui-status-badge--overlay {
   position: absolute;
   left: var(--space-3);
   right: var(--space-3);
   bottom: var(--status-badge-bottom);
   min-height: 22px;
+}
+
+.ui-badge--status.ui-badge--accent,
+.ui-status-badge--accent {
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  color: var(--color-accent);
+}
+
+.ui-badge--status.ui-badge--success,
+.ui-status-badge--success {
+  background: var(--color-state-success-bg);
+  color: var(--color-state-success);
+}
+
+.ui-badge--status.ui-badge--danger,
+.ui-status-badge--danger {
+  background: var(--color-state-danger-bg);
+  color: var(--color-state-danger);
+}
+
+.ui-badge--status.ui-badge--warning,
+.ui-status-badge--warning {
+  background: var(--color-state-warning-bg);
+  color: var(--color-state-warning);
+}
+
+.ui-badge--status.ui-badge--overlay,
+.ui-status-badge--overlay {
   background: var(--status-badge-overlay-bg);
   color: white;
 }

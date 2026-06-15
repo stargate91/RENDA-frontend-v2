@@ -2,8 +2,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Page from '@/ui/Page';
 import NavButton from '@/ui/NavButton';
 import {
-  Eye, EyeOff, Users, Info, Tv, Tag, Film, Cpu, History,
-  Image as ImageIcon
+  Eye, EyeOff, Users, BadgeInfo, Layers3, Tags, Clapperboard,
+  SlidersHorizontal, CheckCheck, Image as ImageIcon
 } from 'lucide-react';
 import { useTranslation } from '@/providers/LanguageContext';
 import { useUi } from '@/providers/UiProvider';
@@ -155,14 +155,14 @@ export default function MediaDetailPage({ type = 'movie' }) {
                       <Users size={20} />
                     </button>
                   )}
-                  <button
-                    onClick={() => togglePanel('details')}
-                    className={`media-detail-page__side-nav-btn ${activePanel === 'details' ? 'active' : ''}`}
-                    title={t('library.details.details') || 'Details'}
-                  >
-                    <Info size={20} />
-                  </button>
-                </>
+                    <button
+                      onClick={() => togglePanel('details')}
+                      className={`media-detail-page__side-nav-btn ${activePanel === 'details' ? 'active' : ''}`}
+                      title={t('library.details.details') || 'Details'}
+                    >
+                      <BadgeInfo size={20} />
+                    </button>
+                  </>
               ) : (
                 <>
                   {!isMovie && item?.seasons && item.seasons.length > 0 && (
@@ -171,7 +171,7 @@ export default function MediaDetailPage({ type = 'movie' }) {
                       className={`media-detail-page__side-nav-btn ${activePanel === 'seasons' ? 'active' : ''}`}
                       title={t('library.details.seasons') || 'Seasons'}
                     >
-                      <Tv size={20} />
+                      <Layers3 size={20} />
                     </button>
                   )}
                   {item?.cast && item.cast.length > 0 && (
@@ -188,7 +188,7 @@ export default function MediaDetailPage({ type = 'movie' }) {
                     className={`media-detail-page__side-nav-btn ${activePanel === 'details' ? 'active' : ''}`}
                     title={t('library.details.details') || 'Details'}
                   >
-                    <Info size={20} />
+                    <BadgeInfo size={20} />
                   </button>
                 </>
               )}
@@ -198,7 +198,7 @@ export default function MediaDetailPage({ type = 'movie' }) {
                 className={`media-detail-page__side-nav-btn ${activePanel === 'tags' ? 'active' : ''}`}
                 title={t('library.details.tagger') || 'Tagger'}
               >
-                <Tag size={20} />
+                <Tags size={20} />
               </button>
 
               {item?.extras && item.extras.length > 0 && (
@@ -207,7 +207,7 @@ export default function MediaDetailPage({ type = 'movie' }) {
                   className={`media-detail-page__side-nav-btn ${activePanel === 'extras' ? 'active' : ''}`}
                   title={t('library.details.extras') || 'Film Extras'}
                 >
-                  <Film size={20} />
+                  <Clapperboard size={20} />
                 </button>
               )}
 
@@ -225,7 +225,7 @@ export default function MediaDetailPage({ type = 'movie' }) {
                   className={`media-detail-page__side-nav-btn ${activePanel === 'watched' ? 'active' : ''}`}
                   title={t('library.details.watchedPanel') || 'Watched Panel'}
                 >
-                  <History size={20} />
+                  <CheckCheck size={20} />
                 </button>
               )}
 
@@ -235,7 +235,7 @@ export default function MediaDetailPage({ type = 'movie' }) {
                   className={`media-detail-page__side-nav-btn ${activePanel === 'technical' ? 'active' : ''}`}
                   title={t('library.details.technicalInfo') || 'Technical Info'}
                 >
-                  <Cpu size={20} />
+                  <SlidersHorizontal size={20} />
                 </button>
               )}
             </div>

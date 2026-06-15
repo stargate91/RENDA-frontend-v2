@@ -11,17 +11,7 @@
 }
 
 .history-page {
-  padding: var(--space-6) var(--space-4);
-}
-
-.history-page .page-header__title {
-  font: var(--text-title);
-}
-
-.history-page .page-header__description {
-  font-size: var(--font-size-sm);
-  color: var(--text-color-secondary);
-  margin-top: var(--space-2xs);
+  padding: 0;
 }
 
 .history-list {

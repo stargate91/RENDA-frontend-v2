@@ -1,5 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { usePlayMediaMutation } from '@/queries';
+import api from '@/lib/api';
+import Badge from '@/ui/Badge';
 import PosterGrid from '@/ui/PosterGrid';
 import PosterCard from '@/ui/PosterCard';
 import EmptyState from '@/ui/EmptyState';
@@ -7,7 +10,18 @@ import Button from '@/ui/Button';
 import IconButton from '@/ui/IconButton';
 import NavButton from '@/ui/NavButton';
 import { API_BASE } from '@/lib/backend';
-import { Pencil, Plus, Trash2, UserPlus } from 'lucide-react';
+import { Pencil, Play, Plus, Trash2, UserPlus, Check } from 'lucide-react';
+
+const renderUserRatingBadge = (item) => {
+  const rating = Number(item?.user_rating);
+  if (!Number.isFinite(rating) || rating <= 0) return null;
+  const label = Number.isInteger(rating) ? String(rating) : rating.toFixed(1);
+  return (
+    <Badge className="ui-poster-card__user-rating-badge">
+      {label}
+    </Badge>
+  );
+};
 
 export default function LibraryGrid({
   t,
@@ -31,6 +45,54 @@ export default function LibraryGrid({
   activeSessionMode,
 }) {
   const navigate = useNavigate();
+  const playMutation = usePlayMediaMutation();
+
+  const getNextOwnedEpisode = (seriesDetail) => {
+    const seasons = Array.isArray(seriesDetail?.seasons) ? seriesDetail.seasons : [];
+
+    for (const season of seasons) {
+      const ownedEpisodes = (season.episodes || []).filter((episode) => episode.path && !episode.is_missing);
+      const inProgress = ownedEpisodes.find((episode) => episode.resume_position > 0);
+      if (inProgress) return inProgress;
+    }
+
+    for (const season of seasons) {
+      const ownedEpisodes = (season.episodes || []).filter((episode) => episode.path && !episode.is_missing);
+      const unwatched = ownedEpisodes.find((episode) => !episode.is_watched);
+      if (unwatched) return unwatched;
+    }
+
+    for (const season of seasons) {
+      const ownedEpisodes = (season.episodes || []).filter((episode) => episode.path && !episode.is_missing);
+      if (ownedEpisodes.length > 0) return ownedEpisodes[0];
+    }
+
+    return null;
+  };
+
+  const handlePlayOverlayClick = async (event, item) => {
+    event.stopPropagation();
+
+    if (playMutation.isPending) return;
+
+    if (resolvedTab === 'movies') {
+      playMutation.mutate(item.id);
+      return;
+    }
+
+    if (resolvedTab !== 'series') return;
+
+    try {
+      const seriesId = String(item.id).startsWith('series_') ? String(item.id).slice(7) : item.id;
+      const seriesDetail = await api.library.getSeriesDetail(seriesId);
+      const nextEpisode = getNextOwnedEpisode(seriesDetail);
+      if (nextEpisode?.id) {
+        playMutation.mutate(nextEpisode.id);
+      }
+    } catch {
+      // Ignore overlay play failures and leave normal card navigation intact.
+    }
+  };
 
   const handleItemClick = (item) => {
     if (isTags) return;
@@ -58,6 +120,8 @@ export default function LibraryGrid({
     }
     return `${API_BASE}${path}`;
   };
+
+
 
   const getCardProps = (item) => {
     if (isTags) {
@@ -97,8 +161,24 @@ export default function LibraryGrid({
       imageUrl: resolvePosterUrl(item.displayPoster || item.poster_path || item.local_poster_path),
       icon: emptyIcon,
       backgroundColor: item.color,
+      badge: renderUserRatingBadge(item),
       ratingImdb: item.rating_imdb,
       ratingTmdb: item.rating,
+      playOverlay: item.in_library !== false && (resolvedTab === 'movies' || resolvedTab === 'series')
+        ? {
+            onClick: (event) => {
+              void handlePlayOverlayClick(event, item);
+            },
+            title: resolvedTab === 'series'
+              ? (t('library.details.continue') || 'Continue')
+              : ((item.resume_position || 0) > 0 ? (t('library.details.resume') || 'Resume') : (t('library.details.play') || 'Play')),
+            label: resolvedTab === 'series'
+              ? (t('library.details.continue') || 'Continue')
+              : ((item.resume_position || 0) > 0 ? (t('library.details.resume') || 'Resume') : (t('library.details.play') || 'Play')),
+            disabled: playMutation.isPending,
+            icon: <Play size={12} fill="currentColor" />,
+          }
+        : null,
     };
   };
 
@@ -227,6 +307,7 @@ export default function LibraryGrid({
                 key={item.id}
                 customStyle={{ '--item-index': index }}
                 onClick={() => handleItemClick(item)}
+                isWatched={item.is_watched}
                 {...getCardProps(item)}
               />
             ))}
@@ -305,6 +386,7 @@ function ExpandedTagPanel({ tag, t, resolvePosterUrl, emptyIcon, isFocusMode = f
       imageUrl: resolvePosterUrl(item.displayPoster || item.poster_path || item.local_poster_path),
       icon: emptyIcon,
       backgroundColor: item.color,
+      badge: renderUserRatingBadge(item),
       ratingImdb: item.rating_imdb,
       ratingTmdb: item.rating,
     };
@@ -354,6 +436,7 @@ function ExpandedTagPanel({ tag, t, resolvePosterUrl, emptyIcon, isFocusMode = f
         {paginatedItems.map((item) => (
           <PosterCard
             key={item.id}
+            isWatched={item.is_watched}
             onClick={() => {
               const isPerson = item.type === 'person' || item.type === 'adult_star';
               if (isPerson) {

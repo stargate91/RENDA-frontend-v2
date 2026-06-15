@@ -306,11 +306,23 @@
   z-index: 5;
 }
 
-.ui-poster-card__image-wrapper:hover .ui-icon-button--play-overlay,
+.ui-poster-card__media-shell > .ui-icon-button--play-overlay {
+  top: auto;
+  bottom: 12px;
+  transform: translateX(-50%);
+}
+
+.ui-poster-card__media-shell:hover .ui-icon-button--play-overlay,
+.ui-poster-card__media-shell:focus-within .ui-icon-button--play-overlay,
 .episode-card__still-wrapper:hover .ui-icon-button--play-overlay {
   opacity: 1;
   transform: translate(-50%, -50%);
   pointer-events: auto;
+}
+
+.ui-poster-card__media-shell:hover > .ui-icon-button--play-overlay,
+.ui-poster-card__media-shell:focus-within > .ui-icon-button--play-overlay {
+  transform: translateX(-50%);
 }
 
 .ui-icon-button--play-overlay:hover {
@@ -319,4 +331,8 @@
   background-image: var(--button-secondary-hover-bg);
   border-color: var(--button-secondary-border);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.ui-poster-card__media-shell > .ui-icon-button--play-overlay:hover {
+  transform: translateX(-50%) !important;
 }

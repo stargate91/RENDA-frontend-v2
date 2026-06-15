@@ -5,6 +5,10 @@
   width: 100%;
 }
 
+.ui-poster-card__media-shell {
+  position: relative;
+}
+
 .ui-poster-card__image-wrapper {
   position: relative;
   display: block;
@@ -84,6 +88,42 @@ div.ui-poster-card__image-wrapper:focus-visible {
   opacity: 0.8;
   pointer-events: none;
   z-index: 1;
+}
+
+.ui-poster-card__user-rating-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--button-secondary-border);
+  background-color: color-mix(in srgb, var(--color-panel, #151619) 82%, transparent);
+  background-image: var(--button-secondary-bg);
+  color: var(--button-secondary-color);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(10px);
+  letter-spacing: 0;
+  text-transform: none;
+  z-index: 5;
+}
+
+.ui-poster-card__watched-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full, 9999px);
+  border: 1px solid color-mix(in srgb, var(--color-state-success, #10b981) 48%, var(--button-secondary-border));
+  background-color: color-mix(in srgb, var(--color-panel, #151619) 82%, transparent);
+  background-image: var(--button-secondary-bg);
+  color: var(--color-state-success, #10b981);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
 }
 
 .ui-poster-card__title-overlay {

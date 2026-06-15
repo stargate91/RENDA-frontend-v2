@@ -133,9 +133,13 @@ class LibraryStatsDTO(BaseModel):
     total_movies: int
     total_series: int
     total_episodes: int
+    total_adult_movies: int = 0
     storage: str
     drive_count: int
     unmatched: int
+    storage_breakdown: Dict[str, str] = {}
+    manual_review_total: int = 0
+    manual_review_breakdown: Dict[str, int] = {}
     genre_distribution: Dict[str, int] = {}
     genre_distribution_ids: Dict[str, int] = {}
     genre_labels: Dict[str, str] = {}

@@ -1,6 +1,7 @@
 import MediaCard from './MediaCard';
 import Pill from './Pill';
-import { Star } from 'lucide-react';
+import IconButton from './IconButton';
+import { Star, Check } from 'lucide-react';
 import './PosterCard.css';
 
 export default function PosterCard({
@@ -14,7 +15,9 @@ export default function PosterCard({
   title,
   subtitle,
   badge,
+  isWatched = false,
   overlay,
+  playOverlay,
   ratingImdb,
   ratingTmdb,
   onClick,
@@ -34,37 +37,55 @@ export default function PosterCard({
   return (
     /* eslint-disable-next-line react/forbid-dom-props */
     <div className={cardClassName} style={customStyle || style}>
-      <DefaultComponent
-        type={DefaultComponent === 'button' ? 'button' : undefined}
-        className="ui-poster-card__image-wrapper"
-        onClick={onClick}
-        disabled={disabled || undefined}
-        {...props}
-      >
-        <MediaCard className="ui-poster-card__media">
-          {imageUrl ? (
-            <img src={imageUrl} alt="" className="ui-poster-card__image" />
-          ) : (
-            <div 
-              className="ui-poster-card__placeholder" 
-              /* eslint-disable-next-line react/forbid-dom-props */
-              style={backgroundColor ? { background: backgroundColor } : undefined}
-            >
-              {IconComponent && <IconComponent size={32} className="ui-poster-card__placeholder-icon" />}
-              {placeholderText && <span className="ui-poster-card__placeholder-text">{placeholderText}</span>}
-            </div>
-          )}
-          {overlay}
-          {badge}
-          {isOverlayTitle && title ? (
-            <div className="ui-poster-card__title-overlay">
-              <div className="ui-poster-card__title-overlay-gradient" />
-              <div className="ui-poster-card__title-overlay-label" title={title}>{title}</div>
-            </div>
-          ) : null}
-          {children}
-        </MediaCard>
-      </DefaultComponent>
+      <div className="ui-poster-card__media-shell">
+        <DefaultComponent
+          type={DefaultComponent === 'button' ? 'button' : undefined}
+          className="ui-poster-card__image-wrapper"
+          onClick={onClick}
+          disabled={disabled || undefined}
+          {...props}
+        >
+          <MediaCard className="ui-poster-card__media">
+            {imageUrl ? (
+              <img src={imageUrl} alt="" className="ui-poster-card__image" />
+            ) : (
+              <div
+                className="ui-poster-card__placeholder"
+                /* eslint-disable-next-line react/forbid-dom-props */
+                style={backgroundColor ? { background: backgroundColor } : undefined}
+              >
+                {IconComponent && <IconComponent size={32} className="ui-poster-card__placeholder-icon" />}
+                {placeholderText && <span className="ui-poster-card__placeholder-text">{placeholderText}</span>}
+              </div>
+            )}
+            {overlay}
+            {badge}
+            {isWatched && (
+              <div className="ui-poster-card__watched-badge">
+                <Check size={14} strokeWidth={3} />
+              </div>
+            )}
+            {isOverlayTitle && title ? (
+              <div className="ui-poster-card__title-overlay">
+                <div className="ui-poster-card__title-overlay-gradient" />
+                <div className="ui-poster-card__title-overlay-label" title={title}>{title}</div>
+              </div>
+            ) : null}
+            {children}
+          </MediaCard>
+        </DefaultComponent>
+        {playOverlay ? (
+          <IconButton
+            variant="play-overlay"
+            onClick={playOverlay.onClick}
+            title={playOverlay.title}
+            label={playOverlay.label}
+            disabled={playOverlay.disabled}
+          >
+            {playOverlay.icon}
+          </IconButton>
+        ) : null}
+      </div>
 
       {!isOverlayTitle && (title || subtitle || ratingImdb || ratingTmdb) && (
         <div className="ui-poster-card__details">

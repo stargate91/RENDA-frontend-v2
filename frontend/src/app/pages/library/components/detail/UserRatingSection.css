@@ -34,6 +34,10 @@
   font-weight: 500;
   transition: color 150ms ease, font-weight 150ms ease;
   color: color-mix(in srgb, var(--color-text-primary) 58%, var(--color-text-muted));
+  min-width: 6.5ch;
+  text-align: left;
+  white-space: nowrap;
+  flex: 1 0 auto;
 }
 
 .user-rating-label.has-value {
@@ -42,8 +46,9 @@
 }
 
 .rating-pill--large {
-  width: auto;
+  width: 286px;
   justify-content: flex-start;
+  flex-wrap: nowrap;
   color: color-mix(in srgb, var(--color-text-primary) 64%, var(--color-text-muted));
   border-color: color-mix(in srgb, var(--color-border-subtle, rgba(255, 255, 255, 0.05)) 78%, transparent);
 }

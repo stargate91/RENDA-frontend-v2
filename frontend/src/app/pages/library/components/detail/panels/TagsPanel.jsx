@@ -11,7 +11,8 @@ export default function TagsPanel() {
   const { state, mutations, type, t } = useMediaDetailContext();
   const {
     item,
-    cleanId
+    cleanId,
+    effectiveId
   } = state;
 
   const {
@@ -40,7 +41,8 @@ export default function TagsPanel() {
       : [...currentTags, tagName];
 
     updateStatusMutation.mutate({
-      itemId: cleanId,
+      itemId: effectiveId,
+      seriesId: cleanId,
       payload: {
         custom_tags: nextTags,
         media_type: type
@@ -68,7 +70,8 @@ export default function TagsPanel() {
       });
 
       await updateStatusMutation.mutateAsync({
-        itemId: cleanId,
+        itemId: effectiveId,
+        seriesId: cleanId,
         payload: {
           custom_tags: [...currentTags, trimmedName],
           media_type: type

@@ -22,12 +22,12 @@ class LibraryStatsService:
         stats = self.repository.get_stats()
 
         drives = set()
-        for item in stats["items"]:
-            if item.current_path:
-                if ":" in item.current_path:
-                    drives.add(item.current_path.split(":")[0].upper() + ":")
-                elif item.current_path.startswith("/"):
-                    parts = item.current_path.split("/")
+        for path_str in stats["items"]:
+            if path_str:
+                if ":" in path_str:
+                    drives.add(path_str.split(":")[0].upper() + ":")
+                elif path_str.startswith("/"):
+                    parts = path_str.split("/")
                     if len(parts) > 2 and parts[1] in ["mnt", "media", "Volumes"]:
                         drives.add("/" + parts[1] + "/" + parts[2])
                     else:
@@ -35,14 +35,22 @@ class LibraryStatsService:
 
         total_bytes = stats["total_bytes"]
         storage_str = self._format_size(total_bytes)
+        storage_breakdown = {
+            key: self._format_size(value)
+            for key, value in stats.get("storage_breakdown", {}).items()
+        }
 
         return LibraryStatsDTO(
             total_movies=stats["total_movies"],
             total_series=stats["total_series"],
             total_episodes=stats["total_episodes"],
+            total_adult_movies=stats.get("total_adult_movies", 0),
             storage=storage_str,
             drive_count=len(drives) if drives else 0,
             unmatched=stats["unmatched"],
+            storage_breakdown=storage_breakdown,
+            manual_review_total=stats.get("manual_review_total", 0),
+            manual_review_breakdown=stats.get("manual_review_breakdown", {}),
             genre_distribution=stats.get("genre_distribution", {}),
             genre_distribution_ids=stats.get("genre_distribution_ids", {}),
             genre_labels=stats.get("genre_labels", {}),

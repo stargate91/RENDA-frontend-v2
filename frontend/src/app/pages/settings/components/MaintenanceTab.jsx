@@ -43,12 +43,12 @@ export default function MaintenanceTab({
         </Stack>
       </Card>
 
-      <Card title={t('settingsPage.dangerZone.title')} eyebrow={t('settingsPage.dangerZone.eyebrow')} className="ui-card--danger">
+      <Card title={t('settingsPage.dangerZone.title')} eyebrow={t('settingsPage.dangerZone.eyebrow')} className="ui-card--danger settings-danger-zone-card">
         <Stack>
-          <span className="ui-field__hint">
+          <span className="ui-field__hint settings-danger-zone-card__hint">
             {t('settingsPage.dangerZone.desc')}
           </span>
-          <Inline className="settings-inline-actions">
+          <Inline className="settings-inline-actions settings-danger-zone-card__actions">
             <Button variant="danger" onClick={handleWipeDatabase} disabled={isWiping || isSaving || isScanActive}>
               {isWiping ? t('settingsPage.dangerZone.buttonWiping') : t('settingsPage.dangerZone.button')}
             </Button>
