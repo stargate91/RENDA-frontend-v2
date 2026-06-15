@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from '../providers/LanguageContext';
 import Button from './Button';
 import './PaginationBar.css';
 
@@ -101,6 +102,8 @@ export default function PaginationBar({
   onPageSizeChange,
   labels = {},
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="ui-pagination">
       <div className="ui-pagination__meta">
@@ -112,7 +115,7 @@ export default function PaginationBar({
             pageSize={pageSize}
             pageSizeOptions={pageSizeOptions}
             onPageSizeChange={onPageSizeChange}
-            ariaLabel={labels.pageSizesAriaLabel ?? 'Rows per page'}
+            ariaLabel={labels.pageSizesAriaLabel ?? t('pagination.rowsPerPage')}
           />
         ) : null}
         <div className="ui-pagination__nav">

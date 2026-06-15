@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAllTagsQuery, useCreateTagMutation, useUpdateTagMutation } from '@/queries';
 import Input from '@/ui/Input';
 import Tooltip from '@/ui/Tooltip';
@@ -61,7 +61,7 @@ export default function CreateTagModalContent({ onClose, t, initialTag = null, m
     setDragStartPercentY(currentImg.position_y ?? 50);
   };
 
-  const handleDragMove = (e) => {
+  const handleDragMove = useCallback((e) => {
     if (draggingIndex === null) return;
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
@@ -76,11 +76,11 @@ export default function CreateTagModalContent({ onClose, t, initialTag = null, m
     setCustomImages((prev) =>
       prev.map((img, idx) => (idx === draggingIndex ? { ...img, position_x: newPercentX, position_y: newPercentY } : img))
     );
-  };
+  }, [draggingIndex, dragStartX, dragStartY, dragStartPercentX, dragStartPercentY]);
 
-  const handleDragEnd = () => {
+  const handleDragEnd = useCallback(() => {
     setDraggingIndex(null);
-  };
+  }, []);
 
   useEffect(() => {
     if (draggingIndex !== null) {
@@ -95,7 +95,7 @@ export default function CreateTagModalContent({ onClose, t, initialTag = null, m
         window.removeEventListener('touchend', handleDragEnd);
       };
     }
-  }, [draggingIndex, dragStartX, dragStartY, dragStartPercentX, dragStartPercentY]);
+  }, [draggingIndex, handleDragMove, handleDragEnd]);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];

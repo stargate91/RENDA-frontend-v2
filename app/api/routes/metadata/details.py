@@ -35,12 +35,34 @@ def _resolve_logo_path(path: str | None, local_path: str | None) -> str | None:
 router = APIRouter()
 
 @router.get("/item/{item_id}/full-metadata")
-def get_full_item_metadata(item_id: int, db: Session = Depends(get_db)):
+def get_full_item_metadata(item_id: str, db: Session = Depends(get_db)):
     """Get all metadata details for a specific item"""
     try:
+        target_item_id = None
+        if isinstance(item_id, str) and item_id.startswith("series_"):
+            try:
+                series_tmdb_id = int(item_id.split("_")[1])
+            except (ValueError, IndexError):
+                raise HTTPException(status_code=400, detail="Invalid series ID format")
+            
+            # Find any media match for this series to get the associated media item
+            match_row = db.query(MediaMatch).filter(
+                (MediaMatch.series_tmdb_id == series_tmdb_id) | (MediaMatch.tmdb_id == series_tmdb_id),
+                MediaMatch.is_active == True
+            ).first()
+            
+            if not match_row:
+                raise HTTPException(status_code=404, detail="Series not found in library")
+            target_item_id = match_row.media_item_id
+        else:
+            try:
+                target_item_id = int(item_id)
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Invalid item ID format")
+
         item = db.query(MediaItem).options(
             joinedload(MediaItem.matches).joinedload(MediaMatch.localizations)
-        ).filter(MediaItem.id == item_id).first()
+        ).filter(MediaItem.id == target_item_id).first()
         
         if not item:
             raise HTTPException(status_code=404, detail="Item not found")
@@ -68,9 +90,20 @@ def get_full_item_metadata(item_id: int, db: Session = Depends(get_db)):
         matches_data = []
         for match in item.matches:
             api_responses = {}
-            tmdb_caches = db.query(TMDBCache).filter(TMDBCache.tmdb_id == match.tmdb_id).all()
+            series_api_responses = {}
+            # Retrieve caches for both match.tmdb_id and match.series_tmdb_id
+            cache_ids = [match.tmdb_id]
+            if match.series_tmdb_id:
+                cache_ids.append(match.series_tmdb_id)
+            
+            tmdb_caches = db.query(TMDBCache).filter(TMDBCache.tmdb_id.in_(cache_ids)).all()
             for cache in tmdb_caches:
-                api_responses[cache.target_language] = cache.raw_data
+                if match.series_tmdb_id and cache.tmdb_id == match.series_tmdb_id:
+                    series_api_responses[cache.target_language] = cache.raw_data
+                if cache.tmdb_id == match.tmdb_id:
+                    api_responses[cache.target_language] = cache.raw_data
+                elif not match.series_tmdb_id:
+                    api_responses[cache.target_language] = cache.raw_data
 
             localizations = []
             for loc in match.localizations:
@@ -98,7 +131,7 @@ def get_full_item_metadata(item_id: int, db: Session = Depends(get_db)):
                     "local_still_path": _resolve_still_path(loc.still_path, loc.local_still_path),
                     "is_primary": loc.is_primary
                 })
-
+ 
             match_info = {
                 "id": match.id,
                 "tmdb_id": match.tmdb_id,
@@ -106,20 +139,21 @@ def get_full_item_metadata(item_id: int, db: Session = Depends(get_db)):
                 "is_active": match.is_active,
                 "localizations": localizations,
                 "api_responses": api_responses,
+                "series_api_responses": series_api_responses,
                 "confidence": match.confidence_score,
                 "director": match.director,
                 "cast": match.cast,
                 "collection": match.collection,
                 "networks": [
                     {
-                        "name": net.get("name"),
-                        "logo_path": _resolve_logo_path(net.get("logo_path"), net.get("local_logo_path"))
+                        "name": net.get("name") if isinstance(net, dict) else str(net),
+                        "logo_path": _resolve_logo_path(net.get("logo_path"), net.get("local_logo_path")) if isinstance(net, dict) else None
                     } for net in (match.networks or [])
                 ],
                 "companies": [
                     {
-                        "name": comp.get("name"),
-                        "logo_path": _resolve_logo_path(comp.get("logo_path"), comp.get("local_logo_path"))
+                        "name": comp.get("name") if isinstance(comp, dict) else str(comp),
+                        "logo_path": _resolve_logo_path(comp.get("logo_path"), comp.get("local_logo_path")) if isinstance(comp, dict) else None
                     } for comp in (match.companies or [])
                 ],
                 "series_type": match.series_type,
@@ -163,7 +197,8 @@ def get_full_item_metadata(item_id: int, db: Session = Depends(get_db)):
                 "target_language": item.target_language,
                 "source": item.source.value if item.source else None,
                 "edition": item.edition.value if item.edition else None,
-                "audio_type": item.audio_type.value if item.audio_type else None
+                "audio_type": item.audio_type.value if item.audio_type else None,
+                "user_rating": item.user_rating
             },
             "matches": matches_data
         }

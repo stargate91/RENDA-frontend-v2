@@ -369,15 +369,16 @@ class ImageWorker:
                     companies_updated = False
                     updated_companies = []
                     for comp in match.companies:
-                        logo_path = comp.get("logo_path")
-                        if logo_path:
-                            local_logo = comp.get("local_logo_path")
-                            if not local_logo or not os.path.exists(local_logo):
-                                local_logo = self.download_image(logo_path, "logos", size="original")
-                                if local_logo:
-                                    comp = dict(comp)
-                                    comp["local_logo_path"] = local_logo
-                                    companies_updated = True
+                        if hasattr(comp, "get"):
+                            logo_path = comp.get("logo_path")
+                            if logo_path:
+                                local_logo = comp.get("local_logo_path")
+                                if not local_logo or not os.path.exists(local_logo):
+                                    local_logo = self.download_image(logo_path, "logos", size="original")
+                                    if local_logo:
+                                        comp = dict(comp)
+                                        comp["local_logo_path"] = local_logo
+                                        companies_updated = True
                         updated_companies.append(comp)
                     if companies_updated:
                         match.companies = updated_companies
@@ -390,15 +391,16 @@ class ImageWorker:
                     networks_updated = False
                     updated_networks = []
                     for net in match.networks:
-                        logo_path = net.get("logo_path")
-                        if logo_path:
-                            local_logo = net.get("local_logo_path")
-                            if not local_logo or not os.path.exists(local_logo):
-                                local_logo = self.download_image(logo_path, "logos", size="original")
-                                if local_logo:
-                                    net = dict(net)
-                                    net["local_logo_path"] = local_logo
-                                    networks_updated = True
+                        if hasattr(net, "get"):
+                            logo_path = net.get("logo_path")
+                            if logo_path:
+                                local_logo = net.get("local_logo_path")
+                                if not local_logo or not os.path.exists(local_logo):
+                                    local_logo = self.download_image(logo_path, "logos", size="original")
+                                    if local_logo:
+                                        net = dict(net)
+                                        net["local_logo_path"] = local_logo
+                                        networks_updated = True
                         updated_networks.append(net)
                     if networks_updated:
                         match.networks = updated_networks
@@ -545,21 +547,35 @@ class ImageWorker:
         """Downloads additional profile pictures for a person."""
         from ..db.base import Session as DbSession
         from ..api.tmdb_client import TMDBClient
+        
+        profile_path = None
         local_db = DbSession()
         try:
             person = local_db.query(Person).filter(Person.id == person_id).first()
-            if not person: return
+            if person:
+                profile_path = person.profile_path
+        except Exception as e:
+            logger.error(f"Error reading person for alternate images (ID: {person_id}): {e}")
+        finally:
+            local_db.close()
             
-            api = TMDBClient(local_db)
-            data = api.get_person_images(person_id)
+        if profile_path is None:
+            return
+
+        downloaded_paths = []
+        try:
+            api_db = DbSession()
+            try:
+                api = TMDBClient(api_db)
+                data = api.get_person_images(person_id)
+            finally:
+                api_db.close()
+                
             profiles = data.get("profiles", [])
-            
-            downloaded_paths = []
-            # Fetch up to 10 alternate images (excluding the primary one)
             count = 0
             for profile in profiles:
                 file_path = profile.get("file_path")
-                if not file_path or file_path == person.profile_path:
+                if not file_path or file_path == profile_path:
                     continue
                     
                 local_path = self.download_image(file_path, "persons", size="h632")
@@ -569,50 +585,65 @@ class ImageWorker:
                 
                 if count >= 10:
                     break
-                    
-            person.images = downloaded_paths
-            local_db.commit()
         except Exception as e:
-            logger.error(f"Error downloading alternate person images (ID: {person_id}): {e}")
-            local_db.rollback()
-            try:
-                person = local_db.query(Person).filter(Person.id == person_id).first()
-                if person:
-                    person.images = []
-                    local_db.commit()
-            except:
-                pass
-        finally:
-            local_db.close()
-    def _download_person_image(self, person_id: int):
-        """Downloads a single person's profile image (threaded)."""
-        from ..db.base import Session as DbSession
+            logger.error(f"Error fetching/downloading alt images (ID: {person_id}): {e}")
+            return
+
         local_db = DbSession()
         try:
             person = local_db.query(Person).filter(Person.id == person_id).first()
-            if not person:
-                return
+            if person:
+                person.images = downloaded_paths
+                local_db.commit()
+        except Exception as e:
+            logger.error(f"Error committing alternate person images (ID: {person_id}): {e}")
+            local_db.rollback()
+        finally:
+            local_db.close()
 
-            if person.profile_path and not person.local_profile_path:
-                local_path = self.download_image(person.profile_path, "persons", size="h632")
+    def _download_person_image(self, person_id: int):
+        """Downloads a single person's profile image (threaded)."""
+        from ..db.base import Session as DbSession
+        
+        profile_path = None
+        local_profile_path = None
+        local_db = DbSession()
+        try:
+            person = local_db.query(Person).filter(Person.id == person_id).first()
+            if person:
+                profile_path = person.profile_path
+                local_profile_path = person.local_profile_path
+        finally:
+            local_db.close()
+
+        if not profile_path:
+            local_db = DbSession()
+            try:
+                person = local_db.query(Person).filter(Person.id == person_id).first()
+                if person:
+                    person.image_status = ImageStatus.COMPLETED
+                    local_db.commit()
+            finally:
+                local_db.close()
+            return
+
+        if local_profile_path:
+            return
+
+        local_path = self.download_image(profile_path, "persons", size="h632")
+
+        local_db = DbSession()
+        try:
+            person = local_db.query(Person).filter(Person.id == person_id).first()
+            if person:
                 if local_path:
                     person.local_profile_path = local_path
                     person.image_status = ImageStatus.COMPLETED
                 else:
                     person.image_status = ImageStatus.FAILED
-            else:
-                person.image_status = ImageStatus.COMPLETED
-            
-            local_db.commit()
+                local_db.commit()
         except Exception as e:
-            logger.error(f"Error downloading person image (ID: {person_id}): {e}")
+            logger.error(f"Error updating person image (ID: {person_id}): {e}")
             local_db.rollback()
-            try:
-                person = local_db.query(Person).filter(Person.id == person_id).first()
-                if person:
-                    person.image_status = ImageStatus.FAILED
-                    local_db.commit()
-            except:
-                pass
         finally:
             local_db.close()

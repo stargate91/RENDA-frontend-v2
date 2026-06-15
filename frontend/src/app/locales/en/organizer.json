@@ -115,7 +115,9 @@
     "title": "Confirm Rename",
     "description": "Double-check the files before we rename them.",
     "showing": "Showing {count} of {total} files to rename",
-    "noMatching": "No matching files found!"
+    "noMatching": "No matching files found!",
+    "currentFilename": "Current Filename",
+    "newFilename": "New Filename"
   },
   "overrideModal": {
     "title": "Change settings for this {type}",

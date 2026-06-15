@@ -27,7 +27,7 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
   const [yearFilter, setYearFilter] = useState('');
   const [timeFilterMode, setTimeFilterMode] = useState('decade'); // 'decade' or 'year'
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(40);
   const [sortKey, setSortKey] = useState('title');
   const [sortDirection, setSortDirection] = useState('asc');
 
@@ -180,9 +180,11 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
     } else if (tabToUse === 'people') {
       setSortKey('library_count');
       setSortDirection('desc');
+      setPageSize(40);
     } else {
       setSortKey('title');
       setSortDirection('asc');
+      setPageSize(40);
     }
     setCurrentPage(1);
     setSearchQuery('');

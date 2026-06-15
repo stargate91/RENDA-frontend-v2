@@ -776,10 +776,14 @@
 
 .library-tag-card:hover {
   transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--tag-color) 40%, transparent);
   box-shadow:
     var(--shadow-lg),
     0 0 16px color-mix(in srgb, var(--tag-color) 12%, transparent);
+}
+
+/* Disable hover border for cards in the library page */
+.library-page .ui-poster-card button.ui-poster-card__image-wrapper:hover:not(:disabled) {
+  box-shadow: none;
 }
 
 .library-tag-card:hover::before {

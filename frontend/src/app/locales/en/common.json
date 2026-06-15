@@ -1,10 +1,30 @@
 {
   "common": {
+    "back": "Back",
     "cancel": "Cancel",
     "close": "Close",
     "create": "Create",
     "save": "Save",
-    "search": "Search"
+    "search": "Search",
+    "noData": "No data available"
+  },
+  "dropzone": {
+    "label": "Drop files or folders here",
+    "description": "Drag and drop your media files right here to scan them."
+  },
+  "pagination": {
+    "rowsPerPage": "Rows per page"
+  },
+  "dropdown": {
+    "search": "Search...",
+    "noResults": "No results found",
+    "placeholder": "Select...",
+    "ascending": "Ascending",
+    "descending": "Descending"
+  },
+  "input": {
+    "hidePassword": "Hide password",
+    "showPassword": "Show password"
   },
   "sidebar": {
     "dashboard": "Dashboard",
@@ -24,7 +44,10 @@
   "titlebar": {
     "minimize": "Minimize",
     "maximize": "Maximize",
-    "close": "Close"
+    "close": "Close",
+    "minimizeWindow": "Minimize window",
+    "maximizeWindow": "Maximize window",
+    "closeWindow": "Close window"
   },
   "progress": {
     "abortConfirm": {

@@ -98,6 +98,7 @@ def get_scan_status() -> Dict[str, Any]:
 def request_scan_stop():
     status_manager.update({
         "stop_requested": True,
+        "message": "Stopping safely...",
     })
 
 def clear_scan_stop():

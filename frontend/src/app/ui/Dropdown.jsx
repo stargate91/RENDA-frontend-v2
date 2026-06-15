@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useTranslation } from '../providers/LanguageContext';
 import './Dropdown.css';
 
 function DropdownMenu({
@@ -12,6 +13,7 @@ function DropdownMenu({
   searchable,
   variant,
 }) {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const searchInputRef = useRef(null);
   const menuRef = useRef(null);
@@ -53,7 +55,7 @@ function DropdownMenu({
             ref={searchInputRef}
             type="text"
             className="ui-dropdown__search-input"
-            placeholder="Search..."
+            placeholder={t('dropdown.search')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onClick={(e) => e.stopPropagation()}
@@ -74,7 +76,7 @@ function DropdownMenu({
         ))}
         {filteredOptions.length === 0 ? (
           <div className="ui-dropdown__no-results">
-            No results found
+            {t('dropdown.noResults')}
           </div>
         ) : null}
       </div>
@@ -90,7 +92,7 @@ export default function Dropdown({
   onChange,
   hint,
   className = '',
-  placeholder = 'Select...',
+  placeholder,
   searchable = false,
   disabled = false,
   variant = 'default',
@@ -102,6 +104,8 @@ export default function Dropdown({
   const triggerRef = useRef(null);
   const [menuCoords, setMenuCoords] = useState({ top: 0, left: 0, width: 0 });
 
+  const { t } = useTranslation();
+  const displayPlaceholder = placeholder ?? t('dropdown.placeholder');
   const selectedOption = options.find((opt) => opt.value === value);
   const isSorter = variant === 'sorter';
 
@@ -167,7 +171,7 @@ export default function Dropdown({
             disabled={disabled}
           >
             <span className="ui-dropdown__trigger-text">
-              {selectedOption ? selectedOption.label : placeholder}
+              {selectedOption ? selectedOption.label : displayPlaceholder}
             </span>
             {!isSorter && <span className={`ui-dropdown__chevron ${isOpen ? 'is-open' : ''}`}>▼</span>}
           </button>
@@ -180,7 +184,7 @@ export default function Dropdown({
                 e.stopPropagation();
                 if (onSortDirectionToggle) onSortDirectionToggle();
               }}
-              title={sortDirection === 'asc' ? 'Ascending' : 'Descending'}
+              title={sortDirection === 'asc' ? t('dropdown.ascending') : t('dropdown.descending')}
             >
               {sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             </button>

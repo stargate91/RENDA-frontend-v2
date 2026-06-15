@@ -42,3 +42,15 @@ export const useFullMetadataQuery = (itemId, options = {}) => useQuery({
 export const useSyncLanguageMutation = () => useMutation({
   mutationFn: () => api.metadata.syncLanguage(),
 });
+
+export const useLibraryItemDetailQuery = (itemId, options = {}) => useQuery({
+  queryKey: ['library-item-detail', itemId],
+  queryFn: () => api.library.getItemDetail(itemId),
+  ...options,
+});
+
+export const useLibrarySeriesDetailQuery = (seriesId, options = {}) => useQuery({
+  queryKey: ['library-series-detail', seriesId],
+  queryFn: () => api.library.getSeriesDetail(seriesId),
+  ...options,
+});

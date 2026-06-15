@@ -437,6 +437,20 @@ class MetadataEnricher:
             self._link_person(match, person, job="Actor", character=char, order=i)
             processed_people.append(p["id"])
 
+        # C. Writers processing
+        writers = []
+        for p in crew:
+            if "jobs" in p:
+                if any(j.get("job") in ["Writer", "Screenplay", "Story", "Teleplay"] for j in p["jobs"] if isinstance(j, dict)):
+                    writers.append(p)
+            elif p.get("job") in ["Writer", "Screenplay", "Story", "Teleplay"]:
+                writers.append(p)
+        for p in writers[:2]:
+            if p.get("id") in processed_people: continue
+            person = self._get_or_create_person(p)
+            self._link_person(match, person, job="Writer")
+            processed_people.append(p.get("id"))
+
     def _get_or_create_person(self, p_data: Dict[str, Any]) -> "Person":
         from ..db.models import Person, PersonLocalization
         from sqlalchemy.exc import IntegrityError

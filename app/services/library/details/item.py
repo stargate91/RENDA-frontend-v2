@@ -65,9 +65,16 @@ class ItemDetailProvider(BaseDetailProvider):
                 for crew in raw_directors:
                     if crew.get("profile_path"):
                         cast_profiles.append(crew.get("profile_path"))
+
+                raw_writers = [c for c in credits.get("crew", []) if c.get("job") in ("Writer", "Screenplay", "Story", "Teleplay")][:2]
+                for crew in raw_writers:
+                    if crew.get("profile_path"):
+                        cast_profiles.append(crew.get("profile_path"))
                     
                 director_ids = {d["id"] for d in raw_directors}
-                raw_cast = [a for a in credits.get("cast", []) if a.get("id") not in director_ids][:10]
+                writer_ids = {w["id"] for w in raw_writers}
+                exclude_ids = director_ids | writer_ids
+                raw_cast = [a for a in credits.get("cast", []) if a.get("id") not in exclude_ids][:10]
                 for actor in raw_cast:
                     if actor.get("profile_path"):
                         cast_profiles.append(actor.get("profile_path"))
@@ -82,6 +89,7 @@ class ItemDetailProvider(BaseDetailProvider):
 
                 cast = []
                 directors = []
+                writers = []
                 for crew in raw_directors:
                     profile_path = _ensure_person_cached(
                         db,
@@ -96,11 +104,32 @@ class ItemDetailProvider(BaseDetailProvider):
                         "name": crew.get("name"),
                         "job": crew.get("job"),
                         "profile_path": profile_path,
-                        "popularity": crew.get("popularity", 0)
+                        "popularity": crew.get("popularity", 0),
+                        "gender": crew.get("gender")
                     })
-            
+
+                for crew in raw_writers:
+                    profile_path = _ensure_person_cached(
+                        db,
+                        crew.get("id"),
+                        crew.get("name"),
+                        crew.get("profile_path"),
+                        crew.get("popularity", 0),
+                        ui_lang
+                    )
+                    writers.append({
+                        "id": crew.get("id"),
+                        "name": crew.get("name"),
+                        "job": crew.get("job"),
+                        "profile_path": profile_path,
+                        "popularity": crew.get("popularity", 0),
+                        "gender": crew.get("gender")
+                    })
+             
                 director_ids = {d["id"] for d in directors}
-                raw_cast = [a for a in credits.get("cast", []) if a.get("id") not in director_ids][:10]
+                writer_ids = {w["id"] for w in writers}
+                exclude_ids = director_ids | writer_ids
+                raw_cast = [a for a in credits.get("cast", []) if a.get("id") not in exclude_ids][:10]
                 for actor in raw_cast:
                     profile_path = _ensure_person_cached(
                         db,
@@ -116,7 +145,8 @@ class ItemDetailProvider(BaseDetailProvider):
                         "character": actor.get("character"),
                         "job": "Actor",
                         "profile_path": profile_path,
-                        "popularity": actor.get("popularity", 0)
+                        "popularity": actor.get("popularity", 0),
+                        "gender": actor.get("gender")
                     })
 
                 trailer_key = _pick_trailer_key(tmdb_data, ui_lang, tmdb_data.get("original_language"))
@@ -168,9 +198,11 @@ class ItemDetailProvider(BaseDetailProvider):
                     "rating_meta": _parse_omdb_int(omdb_data.get("metascore")),
                     "cast": cast,
                     "directors": directors,
+                    "writers": writers,
                     "is_adult": tmdb_data.get("adult", False),
                     "is_favorite": bool(virtual_state.is_favorite) if virtual_state else False,
                     "user_rating": virtual_state.user_rating if virtual_state else None,
+                    "user_comment": virtual_state.user_comment if virtual_state else None,
                     "custom_tags": (virtual_state.custom_tags or []) if virtual_state else [],
                     "tags": [],
                     "is_tracked": is_tracked,
@@ -286,6 +318,7 @@ class ItemDetailProvider(BaseDetailProvider):
             # Build cast list with person images
             cast = []
             directors = []
+            writers = []
             for link in sorted(active_match.people, key=lambda x: x.order):
                 person = link.person
                 p_loc = None
@@ -301,11 +334,14 @@ class ItemDetailProvider(BaseDetailProvider):
                     "character": link.character_name,
                     "job": link.job,
                     "profile_path": _resolve_person_profile_path(person),
-                    "popularity": person.popularity or 0
+                    "popularity": person.popularity or 0,
+                    "gender": person.gender
                 }
 
                 if link.job in ("Director", "Creator"):
                     directors.append(person_data)
+                elif link.job == "Writer":
+                    writers.append(person_data)
                 elif link.job == "Actor":
                     cast.append(person_data)
 
@@ -322,6 +358,7 @@ class ItemDetailProvider(BaseDetailProvider):
                 "size_bytes": item.size,
                 "source": item.source.value if item.source else None,
                 "edition": item.edition.value if item.edition else None,
+                "audio_type": item.audio_type.value if item.audio_type else None,
             }
         
             # Extract Trailer Key from Localization
@@ -386,10 +423,12 @@ class ItemDetailProvider(BaseDetailProvider):
                 "imdb_id": active_match.imdb_id,
                 "cast": cast[:10],  # Top 10 cast members
                 "directors": directors[:2],
+                "writers": writers[:2],
                 "technical": technical,
                 "is_adult": active_match.is_adult,
                 "is_favorite": item.is_favorite or False,
                 "user_rating": item.user_rating,
+                "user_comment": item.user_comment,
                 "custom_tags": [t.name for t in item.tags] if item.tags else [],
                 "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in item.tags],
                 "watch_count": getattr(item, "watch_count", 0),

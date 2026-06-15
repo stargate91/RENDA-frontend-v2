@@ -1,5 +1,6 @@
 import { useId, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+import { useTranslation } from '../providers/LanguageContext';
 import './Input.css';
 
 export default function Input({ label, hint, error, type, className = '', inputRef, ...props }) {
@@ -9,6 +10,8 @@ export default function Input({ label, hint, error, type, className = '', inputR
 
   const isPassword = type === 'password';
   const inputType = isPassword ? (showPassword ? 'text' : 'password') : type;
+
+  const { t } = useTranslation();
 
   return (
     <label className={`ui-field ui-input-field ${className}`.trim()}>
@@ -32,7 +35,7 @@ export default function Input({ label, hint, error, type, className = '', inputR
             onClick={() => setShowPassword(!showPassword)}
             className="ui-input__toggle"
             tabIndex={-1}
-            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            aria-label={showPassword ? t('input.hidePassword') : t('input.showPassword')}
           >
             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>

@@ -8,7 +8,7 @@ import { API_BASE } from '@/lib/backend';
 
 const getBulkImportResolveStatePrefix = (isAdult) => `bulkImportResolvedRows:${isAdult ? 'nsfw' : 'sfw'}:`;
 
-export default function BulkImportResolveModalContent({ onClose, t, isAdult = false }) {
+export default function BulkImportResolveModalContent({ t, isAdult = false }) {
   const [bulkReport, setBulkReport] = useState(null);
   const [isLoadingReport, setIsLoadingReport] = useState(true);
   const [resolvedRows, setResolvedRows] = useState({});
@@ -36,6 +36,21 @@ export default function BulkImportResolveModalContent({ onClose, t, isAdult = fa
     ? `${getBulkImportResolveStatePrefix(isAdult)}${bulkReport.finished_at}`
     : null;
 
+  const [prevResolveStateStorageKey, setPrevResolveStateStorageKey] = useState(resolveStateStorageKey);
+  if (resolveStateStorageKey !== prevResolveStateStorageKey) {
+    setPrevResolveStateStorageKey(resolveStateStorageKey);
+    let parsed = {};
+    if (resolveStateStorageKey) {
+      try {
+        const saved = localStorage.getItem(resolveStateStorageKey);
+        parsed = saved ? JSON.parse(saved) : {};
+      } catch {
+        parsed = {};
+      }
+    }
+    setResolvedRows(parsed);
+  }
+
   const resolveProfileUrl = (path) => {
     if (!path) return '';
     if (String(path).startsWith('http://') || String(path).startsWith('https://')) {
@@ -48,18 +63,6 @@ export default function BulkImportResolveModalContent({ onClose, t, isAdult = fa
   };
 
   const textKey = (adultKey, defaultKey) => (isAdult ? adultKey : defaultKey);
-
-  useEffect(() => {
-    if (!resolveStateStorageKey) {
-      return;
-    }
-    try {
-      const saved = localStorage.getItem(resolveStateStorageKey);
-      setResolvedRows(saved ? JSON.parse(saved) : {});
-    } catch {
-      setResolvedRows({});
-    }
-  }, [resolveStateStorageKey]);
 
   if (isLoadingReport) {
     return (

@@ -34,3 +34,57 @@ export const useBulkUpdateMediaMutation = () => {
     },
   });
 };
+
+export const useUpdateMediaStatusMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ itemId, payload }) => api.media.updateStatus(itemId, payload),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['full-metadata', variables.itemId] });
+      queryClient.invalidateQueries({ queryKey: ['library-item-detail', variables.itemId] });
+      queryClient.invalidateQueries({ queryKey: ['library-series-detail', variables.itemId] });
+      queryClient.invalidateQueries({ queryKey: ['library'] });
+    },
+  });
+};
+
+export const useBulkUpdateWatchedMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ itemIds, isWatched, seriesId }) => api.media.bulkWatched(itemIds, isWatched),
+    onSuccess: (data, variables) => {
+      if (variables.seriesId) {
+        queryClient.invalidateQueries({ queryKey: ['library-series-detail', variables.seriesId] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['library'] });
+    },
+  });
+};
+
+export const usePlayMediaMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (itemId) => api.media.play(itemId),
+    onSuccess: (data, itemId) => {
+      queryClient.invalidateQueries({ queryKey: ['library-item-detail', itemId] });
+      queryClient.invalidateQueries({ queryKey: ['library-series-detail', itemId] });
+    },
+  });
+};
+
+export const useResetProgressMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (itemId) => api.media.resetProgress(itemId),
+    onSuccess: (data, itemId) => {
+      queryClient.invalidateQueries({ queryKey: ['library-item-detail', itemId] });
+      queryClient.invalidateQueries({ queryKey: ['library-series-detail', itemId] });
+    },
+  });
+};
+
+export const usePreviewMediaMutation = () => {
+  return useMutation({
+    mutationFn: (filePath) => api.media.preview(filePath),
+  });
+};

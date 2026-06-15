@@ -32,6 +32,9 @@ export function LanguageProvider({ children }) {
     }
     let result = value;
     if (result === undefined) {
+      if (import.meta.env.DEV) {
+        console.warn(`[i18n] Missing translation key: "${key}" for locale: "${locale}"`);
+      }
       result = (options && options.defaultValue) ? options.defaultValue : key;
     }
     if (typeof result === 'string' && options) {

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { usePeopleInfiniteQuery, useUpdatePersonStatusMutation, useSettingsQuery, useAddPersonTmdbMutation } from '@/queries';
 import api from '@/lib/api';
 import { useUi } from '@/providers/UiProvider';
@@ -69,7 +69,6 @@ export default function AddPeopleModalContent({ isAdult, t, onClose }) {
 
   // Bulk Add States
   const [bulkText, setBulkText] = useState('');
-  const [bulkRole, setBulkRole] = useState('all');
 
   const { data: settings } = useSettingsQuery();
   const hideGenderFilter = isAdult && settings?.adult_gender_preference && settings.adult_gender_preference !== 'all';
@@ -492,7 +491,7 @@ export default function AddPeopleModalContent({ isAdult, t, onClose }) {
               try {
                 await api.people.bulkImport({
                   raw_text: bulkText,
-                  role: bulkRole,
+                  role: 'all',
                   adult_only: isAdult
                 });
                 queryClient.invalidateQueries({ queryKey: ['scan-status'] });

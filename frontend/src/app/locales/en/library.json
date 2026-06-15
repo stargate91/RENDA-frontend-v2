@@ -26,7 +26,8 @@
     "roles": {
       "actor": "Actor",
       "director": "Director",
-      "writer": "Writer"
+      "writer": "Writer",
+      "creator": "Creator"
     }
   },
   "addPeople": {
@@ -247,5 +248,37 @@
     "yearLabel": "Year:",
     "allYears": "All Years",
     "yearMode": "Year"
+  },
+  "details": {
+    "durationHours": "{{hours}}h",
+    "durationMinutes": "{{minutes}}m",
+    "durationHoursMinutes": "{{hours}}h {{minutes}}m",
+    "seasonSingular": "1 Season",
+    "seasonPlural": "{{count}} Seasons",
+    "episodeSingular": "1 Episode",
+    "episodePlural": "{{count}} Episodes",
+    "yourRating": "Your Rating",
+    "readMore": "Read More",
+    "overview": "Overview",
+    "play": "Play",
+    "resume": "Resume",
+    "continueEpisode": "Continue S{{season}} E{{episode}}",
+    "trailer": "Trailer",
+    "markWatched": "Mark as Watched",
+    "watched": "Watched",
+    "collection": "Collection",
+    "resolution": "Resolution",
+    "videoCodec": "Video Codec",
+    "audioCodec": "Audio Codec",
+    "duration": "Duration",
+    "fileSize": "File Size",
+    "cast": "Cast & Crew",
+    "directors": "Directors",
+    "writers": "Writers",
+    "actors": "Actors",
+    "details": "Details",
+    "writeReview": "Write Review",
+    "reviewPlaceholder": "Write your review here...",
+    "ratingsSection": "Ratings"
   }
 }

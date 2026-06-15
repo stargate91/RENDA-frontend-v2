@@ -117,7 +117,7 @@ class SeriesDetailProvider(BaseDetailProvider):
             from sqlalchemy import or_
         
             # Parse virtual/real tmdb_id
-            if isinstance(series_tmdb_id, str) and series_tmdb_id.startswith("tmdb_"):
+            if isinstance(series_tmdb_id, str) and (series_tmdb_id.startswith("tmdb_") or series_tmdb_id.startswith("series_")):
                 try:
                     series_tmdb_id_int = int(series_tmdb_id.split("_")[1])
                 except (ValueError, IndexError):
@@ -194,12 +194,18 @@ class SeriesDetailProvider(BaseDetailProvider):
                 c for c in credits.get("crew", [])
                 if c.get("job") in ("Director", "Creator", "Executive Producer")
             ][:2]
-        for crew in raw_directors:
+        raw_writers = [
+            c for c in credits.get("crew", [])
+            if c.get("job") in ("Writer", "Screenplay", "Story", "Teleplay")
+        ][:2]
+        for crew in raw_writers:
             if crew.get("profile_path"):
                 cast_profiles.append(crew.get("profile_path"))
             
         director_ids = {d["id"] for d in raw_directors}
-        raw_cast = [a for a in credits.get("cast", []) if a.get("id") not in director_ids][:10]
+        writer_ids = {w["id"] for w in raw_writers}
+        exclude_ids = director_ids | writer_ids
+        raw_cast = [a for a in credits.get("cast", []) if a.get("id") not in exclude_ids][:10]
         for actor in raw_cast:
             if actor.get("profile_path"):
                 cast_profiles.append(actor.get("profile_path"))
@@ -293,11 +299,33 @@ class SeriesDetailProvider(BaseDetailProvider):
                 "name": crew.get("name"),
                 "job": crew.get("job"),
                 "profile_path": profile_path,
-                "popularity": crew.get("popularity", 0)
+                "popularity": crew.get("popularity", 0),
+                "gender": crew.get("gender")
+            })
+
+        writers = []
+        for crew in raw_writers:
+            profile_path = _ensure_person_cached(
+                db,
+                crew.get("id"),
+                crew.get("name"),
+                crew.get("profile_path"),
+                crew.get("popularity", 0),
+                ui_lang
+            )
+            writers.append({
+                "id": crew.get("id"),
+                "name": crew.get("name"),
+                "job": crew.get("job"),
+                "profile_path": profile_path,
+                "popularity": crew.get("popularity", 0),
+                "gender": crew.get("gender")
             })
 
         director_ids = {d["id"] for d in directors}
-        raw_cast = [a for a in credits.get("cast", []) if a.get("id") not in director_ids][:10]
+        writer_ids = {w["id"] for w in writers}
+        exclude_ids = director_ids | writer_ids
+        raw_cast = [a for a in credits.get("cast", []) if a.get("id") not in exclude_ids][:10]
         for actor in raw_cast:
             profile_path = _ensure_person_cached(
                 db,
@@ -314,7 +342,8 @@ class SeriesDetailProvider(BaseDetailProvider):
                 "character": char,
                 "job": "Actor",
                 "profile_path": profile_path,
-                "popularity": actor.get("popularity", 0)
+                "popularity": actor.get("popularity", 0),
+                "gender": actor.get("gender")
             })
 
         for season in seasons_list:
@@ -359,9 +388,12 @@ class SeriesDetailProvider(BaseDetailProvider):
             "type": "tv",
             "cast": cast,
             "directors": directors,
+            "writers": writers,
             "seasons": seasons_list,
+            "is_adult": tmdb_data.get("adult", False),
             "is_favorite": bool(virtual_state.is_favorite) if virtual_state else False,
             "user_rating": virtual_state.user_rating if virtual_state else None,
+            "user_comment": virtual_state.user_comment if virtual_state else None,
             "custom_tags": (virtual_state.custom_tags or []) if virtual_state else [],
             "is_tracked": is_tracked,
             "watch_count": 1 if ((virtual_state and virtual_state.is_watched) or derived_series_watched) else 0,
@@ -465,9 +497,12 @@ class SeriesDetailProvider(BaseDetailProvider):
             "genres": _split_genres([g["name"] for g in cached_series.get("genres", [])] if cached_series.get("genres") else (base_loc.genres if base_loc else [])),
             "cast": [],
             "directors": [],
+            "writers": [],
             "seasons": {},
+            "is_adult": base_match.is_adult if base_match else False,
             "is_favorite": virtual_state.is_favorite if virtual_state else (base_item.is_favorite or False),
             "user_rating": virtual_state.user_rating if virtual_state else base_item.user_rating,
+            "user_comment": virtual_state.user_comment if virtual_state else base_item.user_comment,
             "custom_tags": (virtual_state.custom_tags or []) if virtual_state else ([t.name for t in base_item.tags] if base_item.tags else []),
             "trailer_key": base_loc.trailer_url if base_loc else None,
             "path": _series_folder_path(base_item),
@@ -584,7 +619,8 @@ class SeriesDetailProvider(BaseDetailProvider):
                         "job": link.job,
                         "profile_path": _resolve_person_profile_path(person),
                         "popularity": person.popularity or 0,
-                        "order": link.order
+                        "order": link.order,
+                        "gender": person.gender
                     }
                     series_cast_map[person.id] = person_data
 
@@ -603,11 +639,14 @@ class SeriesDetailProvider(BaseDetailProvider):
         for p in sorted(series_cast_map.values(), key=lambda x: x["order"]):
             if p["job"] in ("Director", "Creator"):
                 series_data["directors"].append(p)
+            elif p["job"] == "Writer":
+                series_data["writers"].append(p)
             elif p["job"] == "Actor":
                 series_data["cast"].append(p)
 
         series_data["cast"] = series_data["cast"][:10]
         series_data["directors"] = series_data["directors"][:2]
+        series_data["writers"] = series_data["writers"][:2]
         series_data["extras"] = sorted(series_extras, key=lambda extra: (str(extra.get("parent_label") or "").lower(), str(extra.get("name") or "").lower()))
         self._annotate_series_availability(series_data)
 

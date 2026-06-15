@@ -94,7 +94,7 @@ export default function Table({
   rows = [],
   onRowClick,
   activeRowId = null,
-  emptyText = 'No data available',
+  emptyText,
   emptyContent = null,
   rowActions = [],
   selectedRows = [],
@@ -113,6 +113,7 @@ export default function Table({
   } = useContextMenu(selectedRows);
 
   const { t } = useTranslation();
+  const displayEmptyText = emptyText ?? t('common.noData');
 
   const contextMenuItems = useMemo(() => {
     const items = [];
@@ -200,7 +201,7 @@ export default function Table({
           {rows.length === 0 ? (
             <tr className="is-empty">
               <td colSpan={columns.length} className="ui-table__empty">
-                {emptyContent || <EmptyState variant="inline" title={emptyText} />}
+                {emptyContent || <EmptyState variant="inline" title={displayEmptyText} />}
               </td>
             </tr>
           ) : (

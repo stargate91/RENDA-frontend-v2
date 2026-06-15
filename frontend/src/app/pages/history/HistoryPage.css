@@ -208,3 +208,43 @@
 .history-card__actions .history-card__revert-btn {
   min-width: 120px;
 }
+
+/* Reversion Modal Styles */
+.history-undo-modal {
+  padding: var(--space-2) 0;
+}
+
+.history-undo-modal__warning {
+  color: var(--text-color-primary);
+  font-size: var(--font-size-md);
+  margin: 0 0 var(--space-4) 0;
+}
+
+.history-undo-modal__details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  background: var(--ui-surface-soft);
+  padding: var(--space-3);
+  border-radius: var(--border-radius-md);
+}
+
+.history-undo-modal__row {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-sm);
+}
+
+.history-undo-modal__label {
+  color: var(--text-color-secondary);
+}
+
+.history-undo-modal__value {
+  color: var(--text-color-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.history-undo-modal__value--success {
+  color: var(--color-positive-muted);
+  font-weight: var(--font-weight-bold);
+}

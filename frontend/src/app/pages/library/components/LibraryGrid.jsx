@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PosterGrid from '@/ui/PosterGrid';
 import PosterCard from '@/ui/PosterCard';
 import EmptyState from '@/ui/EmptyState';
@@ -29,6 +30,21 @@ export default function LibraryGrid({
   onExitTagFocus,
   activeSessionMode,
 }) {
+  const navigate = useNavigate();
+
+  const handleItemClick = (item) => {
+    if (isTags) return;
+
+    if (isCollections) {
+      navigate(`/library/collection/${item.id}`);
+    } else if (resolvedTab === 'people' || resolvedTab === 'adult_people') {
+      navigate(`/library/people/${item.id}`);
+    } else if (resolvedTab === 'movies') {
+      navigate(`/library/movie/${item.id}`);
+    } else if (resolvedTab === 'series') {
+      navigate(`/library/series/${item.id}`);
+    }
+  };
   const resolvePosterUrl = (path) => {
     if (!path) return '';
     if (String(path).startsWith('http://') || String(path).startsWith('https://')) {
@@ -67,6 +83,7 @@ export default function LibraryGrid({
         subtitle: item.people_role ? t(`library.people.roles.${item.people_role}`, { defaultValue: item.people_role }) : '',
         imageUrl: resolvePosterUrl(item.displayPoster || item.poster_path),
         icon: emptyIcon,
+        className: 'library-person-card',
       };
     }
     const subtitleParts = [];
@@ -207,6 +224,7 @@ export default function LibraryGrid({
               <PosterCard
                 key={item.id}
                 style={{ '--item-index': index }}
+                onClick={() => handleItemClick(item)}
                 {...getCardProps(item)}
               />
             ))}
@@ -238,6 +256,7 @@ export default function LibraryGrid({
 }
 
 function ExpandedTagPanel({ tag, t, resolvePosterUrl, emptyIcon, isFocusMode = false, activeSessionMode }) {
+  const navigate = useNavigate();
   const allItems = useMemo(() => {
     const isNsfw = activeSessionMode === 'nsfw';
     if (isNsfw) {
@@ -258,16 +277,6 @@ function ExpandedTagPanel({ tag, t, resolvePosterUrl, emptyIcon, isFocusMode = f
   const [visibleCount, setVisibleCount] = useState(20);
   const paginatedItems = allItems.slice(0, visibleCount);
   const hasMore = allItems.length > visibleCount;
-  const samplePosterItems = useMemo(() => {
-    if (!Array.isArray(tag.sample_previews) || tag.sample_previews.length === 0) {
-      return [];
-    }
-    return tag.sample_previews.slice(0, 3).map((preview, index) => ({
-      id: `sample_${tag.id || tag.name}_${index}`,
-      title: tag.name,
-      imageUrl: resolvePosterUrl(preview.backdrop || preview.poster),
-    }));
-  }, [tag, resolvePosterUrl]);
 
   const getCardProps = (item) => {
     const isPerson = item.type === 'person' || item.type === 'adult_star';
@@ -278,6 +287,7 @@ function ExpandedTagPanel({ tag, t, resolvePosterUrl, emptyIcon, isFocusMode = f
         subtitle: item.people_role ? t(`library.people.roles.${item.people_role}`, { defaultValue: item.people_role }) : '',
         imageUrl: resolvePosterUrl(item.displayPoster || item.poster_path),
         icon: emptyIcon,
+        className: 'library-person-card',
       };
     }
     const subtitleParts = [];
@@ -337,6 +347,19 @@ function ExpandedTagPanel({ tag, t, resolvePosterUrl, emptyIcon, isFocusMode = f
         {paginatedItems.map((item) => (
           <PosterCard
             key={item.id}
+            onClick={() => {
+              const isPerson = item.type === 'person' || item.type === 'adult_star';
+              if (isPerson) {
+                navigate(`/library/people/${item.id}`);
+                return;
+              }
+              const type = item.type;
+              if (type === 'movie' || type === 'adult') {
+                navigate(`/library/movie/${item.id}`);
+              } else if (type === 'series' || type === 'adult_series') {
+                navigate(`/library/series/${item.id}`);
+              }
+            }}
             {...getCardProps(item)}
           />
         ))}

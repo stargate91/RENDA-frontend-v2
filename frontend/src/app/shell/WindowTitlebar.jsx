@@ -75,7 +75,7 @@ export default function WindowTitlebar() {
             className="window-titlebar__button"
             size="titlebar"
             tabIndex={-1}
-            aria-label="Minimize window"
+            aria-label={t('titlebar.minimizeWindow')}
             onClick={minimize}
           >
             <Minus size={16} />
@@ -87,7 +87,7 @@ export default function WindowTitlebar() {
             className="window-titlebar__button"
             size="titlebar"
             tabIndex={-1}
-            aria-label="Maximize window"
+            aria-label={t('titlebar.maximizeWindow')}
             onClick={toggleMaximize}
           >
             <Square size={14} />
@@ -100,7 +100,7 @@ export default function WindowTitlebar() {
             size="titlebar"
             danger
             tabIndex={-1}
-            aria-label="Close window"
+            aria-label={t('titlebar.closeWindow')}
             onClick={close}
           >
             <X size={16} />

@@ -3,53 +3,30 @@ import { lazy } from 'react';
 
 const LibraryPage = lazy(() => import('../pages/library/LibraryPage'));
 const TagsPage = lazy(() => import('../pages/tags/TagsPage'));
+const MediaDetailPage = lazy(() => import('../pages/library/MediaDetailPage'));
+const PeopleCollectionDetailPage = lazy(() => import('../pages/library/PeopleCollectionDetailPage'));
 const HistoryPage = lazy(() => import('../pages/history/HistoryPage'));
 const RatingsPage = lazy(() => import('../pages/RatingsPage'));
 const WatchedHistoryPage = lazy(() => import('../pages/WatchedHistoryPage'));
-const PlaceholderPage = lazy(() => import('../pages/PlaceholderPage'));
 
 export const libraryRoutes = [
   { path: 'library', element: <LibraryPage /> },
   { path: 'tags', element: <TagsPage /> },
   {
     path: 'library/movie/:id',
-    element: (
-      <PlaceholderPage
-        eyebrow="Planned page"
-        title="Movie Details"
-        description="Detailed information about the selected movie."
-      />
-    ),
+    element: <MediaDetailPage type="movie" />,
   },
   {
     path: 'library/series/:id',
-    element: (
-      <PlaceholderPage
-        eyebrow="Planned page"
-        title="Series Details"
-        description="Detailed information about the selected TV series."
-      />
-    ),
+    element: <MediaDetailPage type="series" />,
   },
   {
     path: 'library/people/:id',
-    element: (
-      <PlaceholderPage
-        eyebrow="Planned page"
-        title="Person Profile"
-        description="Information and filmography of the selected actor or crew member."
-      />
-    ),
+    element: <PeopleCollectionDetailPage type="people" />,
   },
   {
     path: 'library/collection/:id',
-    element: (
-      <PlaceholderPage
-        eyebrow="Planned page"
-        title="Collection Details"
-        description="Detailed information about the selected collection."
-      />
-    ),
+    element: <PeopleCollectionDetailPage type="collection" />,
   },
   { path: 'undo', element: <HistoryPage /> },
   { path: 'my-ratings', element: <RatingsPage /> },

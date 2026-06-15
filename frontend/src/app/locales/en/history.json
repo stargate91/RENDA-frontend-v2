@@ -25,5 +25,7 @@
   "revertButton": "Revert Batch",
   "revertDisabledTooltip": "Only the most recent batch can be reverted to prevent file structure conflicts.",
   "alreadyRevertedTooltip": "This batch has already been reverted.",
-  "undoActiveProgress": "Reverting batch organization files in the background..."
+  "undoActiveProgress": "Reverting batch organization files in the background...",
+  "batchLabel": "Batch:",
+  "filesLabel": "Files:"
 }

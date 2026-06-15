@@ -26,18 +26,18 @@ export default function HistoryPage() {
       description: t('historyPage.confirmDesc') || 'This will physically move and rename all successfully organized files back to their previous naming scheme and folders.',
       icon: AlertTriangle,
       content: (
-        <div style={{ padding: 'var(--space-2) 0' }}>
-          <p style={{ color: 'var(--text-color-primary)', fontSize: 'var(--font-size-md)', margin: '0 0 var(--space-4) 0' }}>
+        <div className="history-undo-modal">
+          <p className="history-undo-modal__warning">
             {t('historyPage.confirmWarning') || 'Are you sure you want to revert this batch?'}
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', background: 'var(--ui-surface-soft)', padding: 'var(--space-3)', borderRadius: 'var(--border-radius-md)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--font-size-sm)' }}>
-              <span style={{ color: 'var(--text-color-secondary)' }}>Batch:</span>
-              <span style={{ color: 'var(--text-color-primary)', fontWeight: 'var(--font-weight-semibold)' }}>{batch.name}</span>
+          <div className="history-undo-modal__details">
+            <div className="history-undo-modal__row">
+              <span className="history-undo-modal__label">{t('historyPage.batchLabel') || 'Batch:'}</span>
+              <span className="history-undo-modal__value">{batch.name}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--font-size-sm)' }}>
-              <span style={{ color: 'var(--text-color-secondary)' }}>Files:</span>
-              <span style={{ color: 'var(--color-positive-muted)', fontWeight: 'var(--font-weight-bold)' }}>{batch.success_count} succeeded</span>
+            <div className="history-undo-modal__row">
+              <span className="history-undo-modal__label">{t('historyPage.filesLabel') || 'Files:'}</span>
+              <span className="history-undo-modal__value--success">{batch.success_count} succeeded</span>
             </div>
           </div>
         </div>

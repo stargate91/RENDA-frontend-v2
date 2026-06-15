@@ -1,13 +1,18 @@
+import { useTranslation } from '../providers/LanguageContext';
 import { useDropzone } from './useDropzone';
 
 export default function FileDropZone({
   children,
   onDropPaths,
   disabled = false,
-  label = 'Drop files or folders here',
-  description = 'Drag and drop your media files right here to scan them.',
+  label,
+  description,
   className = '',
 }) {
+  const { t } = useTranslation();
+  const displayLabel = label ?? t('dropzone.label');
+  const displayDescription = description ?? t('dropzone.description');
+
   const { dropzoneProps, isDropActive } = useDropzone({
     disabled,
     onDropPaths,
@@ -17,8 +22,8 @@ export default function FileDropZone({
     <div className={`ui-file-drop-zone ${className}`.trim()} {...dropzoneProps}>
       <div className={`organizer-drop-overlay ${isDropActive ? 'is-active' : ''}`}>
         <div className="organizer-drop-overlay__panel">
-          <span className="organizer-drop-overlay__label">{label}</span>
-          <span className="organizer-drop-overlay__description">{description}</span>
+          <span className="organizer-drop-overlay__label">{displayLabel}</span>
+          <span className="organizer-drop-overlay__description">{displayDescription}</span>
         </div>
       </div>
       {children}

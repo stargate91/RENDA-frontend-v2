@@ -62,17 +62,26 @@ class ScanResolver:
             max_attempts = 3
             try:
                 for attempt in range(max_attempts):
+                    if is_scan_stop_requested():
+                        return
                     local_db = DbSession()
                     try:
                         item = local_db.query(MediaItem).filter(MediaItem.id == item_id).first()
                         if not item:
                             return
 
+                        if is_scan_stop_requested():
+                            return
                         resolver = Resolver(local_db)
                         resolver.resolve_item(item, language=primary_lang)
+                        
+                        if is_scan_stop_requested():
+                            return
                         resolver.propagate_match(item)
 
                         if item.status == ItemStatus.MATCHED:
+                            if is_scan_stop_requested():
+                                return
                             enricher = MetadataEnricher(local_db)
                             enricher.enrich_matched_item(item, language=primary_lang, fallback_language=fallback_lang)
 
@@ -84,6 +93,8 @@ class ScanResolver:
                                 ).all()
                                 for sib in siblings:
                                     try:
+                                        if is_scan_stop_requested():
+                                            return
                                         enricher.enrich_matched_item(sib, language=primary_lang, fallback_language=fallback_lang)
                                     except Exception as sib_ex:
                                         logger.warning(f"Failed to enrich sibling item {sib.id}: {sib_ex}")

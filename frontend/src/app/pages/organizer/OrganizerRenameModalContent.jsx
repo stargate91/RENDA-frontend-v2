@@ -56,7 +56,7 @@ export default function OrganizerRenameModalContent({ items = [], t }) {
               <th className="organizer-rename-modal__header-col organizer-rename-modal__header-col--source">
                 <SortButton
                   isActive={sortConfig.key === 'source'}
-                  label={t('organizer.table.originalFilename') || 'Current Filename'}
+                  label={t('organizer.renameModal.currentFilename') || 'Current Filename'}
                   onToggle={() => handleSortToggle('source')}
                   sortDirection={sortConfig.direction}
                 />
@@ -64,7 +64,7 @@ export default function OrganizerRenameModalContent({ items = [], t }) {
               <th className="organizer-rename-modal__header-col organizer-rename-modal__header-col--target">
                 <SortButton
                   isActive={sortConfig.key === 'target'}
-                  label={t('organizer.table.proposedFilename') || 'New Filename'}
+                  label={t('organizer.renameModal.newFilename') || 'New Filename'}
                   onToggle={() => handleSortToggle('target')}
                   sortDirection={sortConfig.direction}
                 />

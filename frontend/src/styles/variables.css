@@ -337,6 +337,52 @@
   --ui-floating-action-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
     0 8px 16px rgba(0, 0, 0, 0.18);
+  --media-detail-hero-overlay:
+    radial-gradient(84% 108% at 14% 52%, color-mix(in srgb, var(--color-surface-overlay-heavy) 82%, transparent) 0%, color-mix(in srgb, var(--color-surface-overlay-heavy) 60%, transparent) 18%, color-mix(in srgb, var(--color-surface-overlay-strong) 30%, transparent) 36%, color-mix(in srgb, var(--color-surface-overlay) 8%, transparent) 54%, transparent 74%),
+    radial-gradient(44% 54% at 72% 32%, rgba(255, 184, 132, 0.12) 0%, transparent 66%),
+    radial-gradient(38% 48% at 82% 70%, color-mix(in srgb, var(--app-shell-color-accent) 14%, transparent) 0%, transparent 68%),
+    linear-gradient(135deg, rgba(5, 7, 12, 0.58) 0%, rgba(6, 9, 14, 0.34) 18%, rgba(8, 12, 18, 0.14) 34%, rgba(8, 12, 18, 0.06) 48%, rgba(8, 12, 18, 0.02) 58%, transparent 72%),
+    linear-gradient(180deg, rgba(10, 12, 18, 0.14) 0%, transparent 20%, transparent 66%, rgba(6, 8, 12, 0.42) 100%),
+    linear-gradient(to top, rgba(5, 7, 12, 0.82) 0%, rgba(5, 7, 12, 0.22) 32%, transparent 62%);
+  --media-detail-side-nav-bg: color-mix(in srgb, var(--app-shell-color-panel) 82%, transparent);
+  --media-detail-side-nav-bg-hover: color-mix(in srgb, var(--app-shell-color-panel-strong) 88%, transparent);
+  --media-detail-side-nav-border: color-mix(in srgb, var(--color-border-default) 92%, transparent);
+  --media-detail-side-nav-border-hover: color-mix(in srgb, var(--color-border-strong) 96%, transparent);
+  --media-detail-side-nav-shadow: 0 18px 34px rgba(0, 0, 0, 0.22);
+  --media-detail-side-nav-blur: blur(14px) saturate(130%);
+  --media-detail-side-panel-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.024) 0%, rgba(255, 255, 255, 0.006) 100%),
+    linear-gradient(180deg, color-mix(in srgb, var(--app-shell-color-panel-strong) 86%, transparent) 0%, color-mix(in srgb, var(--app-shell-color-panel) 82%, transparent) 100%);
+  --media-detail-side-panel-border: color-mix(in srgb, var(--app-shell-color-line) 92%, transparent);
+  --media-detail-side-panel-shadow:
+    0 22px 54px rgba(0, 0, 0, 0.34),
+    0 8px 22px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.028),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.01);
+  --media-detail-side-panel-blur: blur(24px) saturate(122%);
+  --media-detail-side-panel-highlight:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.022) 0%, rgba(255, 255, 255, 0.008) 14%, transparent 30%);
+  --media-detail-panel-section-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.014) 0%, rgba(255, 255, 255, 0.005) 100%);
+  --media-detail-panel-section-border: color-mix(in srgb, var(--app-shell-color-line) 78%, transparent);
+  --media-detail-panel-section-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.02),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.008);
+  --media-detail-panel-card-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.012) 0%, rgba(255, 255, 255, 0.004) 100%);
+  --media-detail-panel-card-bg-hover:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.016) 0%, rgba(255, 255, 255, 0.006) 100%);
+  --media-detail-panel-card-border: color-mix(in srgb, var(--app-shell-color-line) 72%, transparent);
+  --media-detail-panel-card-border-hover: color-mix(in srgb, var(--app-shell-color-line-strong) 86%, transparent);
+  --media-detail-panel-card-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.014);
+  --media-detail-panel-card-shadow-hover:
+    0 14px 30px rgba(0, 0, 0, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  --media-detail-panel-pill-bg: rgba(255, 255, 255, 0.01);
+  --media-detail-panel-pill-border: color-mix(in srgb, var(--app-shell-color-line) 80%, transparent);
+  --media-detail-panel-accent: var(--app-shell-color-accent);
   --ui-utility-button-bg: rgba(255, 255, 255, 0.035);
   --ui-utility-button-bg-hover: rgba(255, 255, 255, 0.06);
   --ui-utility-button-inset-border: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
