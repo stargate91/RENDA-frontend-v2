@@ -222,7 +222,6 @@ def process_queue_loop():
             last_process_time = current_time
             
             if events_to_process:
-                scan_candidates = []
                 # Run the actual DB updates in a session
                 db = DbSession()
                 try:
@@ -230,9 +229,7 @@ def process_queue_loop():
                         if evt_type == "deleted":
                             handle_deleted(db, path)
                         elif evt_type == "created":
-                            restored = handle_created(db, path)
-                            if not restored and _should_scan_created_path(path):
-                                scan_candidates.append(path)
+                            handle_created(db, path)
                     db.commit()
                 except Exception as e:
                     db.rollback()
@@ -240,7 +237,6 @@ def process_queue_loop():
                 finally:
                     db.close()
                     DbSession.remove()
-                _start_watchdog_scan(scan_candidates)
 
 
 def handle_deleted(db, path: str):
