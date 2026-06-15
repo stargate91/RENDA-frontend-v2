@@ -1,10 +1,12 @@
 import { useSettingsQuery } from '@/queries/settingsQueries';
 import Card from '@/ui/Card';
 import Page from '@/ui/Page';
+import { useTranslation } from '@/providers/LanguageContext';
 import './DashboardPage.css';
 
 export default function DashboardPage() {
   const { data: settings, isLoading } = useSettingsQuery();
+  const { t } = useTranslation();
 
   if (isLoading) {
     return (
@@ -22,13 +24,13 @@ export default function DashboardPage() {
     <Page className="dashboard-page" contentBottom>
       <div className="dashboard-container">
         <div className="dashboard-welcome-banner">
-          <h1>Hello, <span className="highlight">{displayName}</span>!</h1>
-          <p>Your media library is looking great. What are we watching today?</p>
+          <h1>{t('dashboard.welcome', { name: displayName })}</h1>
+          <p>{t('dashboard.subtitle')}</p>
         </div>
         <div className="dashboard-grid">
           <Card className="dashboard-stat-card">
-            <h3>Welcome to your Dashboard</h3>
-            <p>Select scan source or target folder in settings to start organizing your files.</p>
+            <h3>{t('dashboard.cardTitle')}</h3>
+            <p>{t('dashboard.cardDescription')}</p>
           </Card>
         </div>
       </div>

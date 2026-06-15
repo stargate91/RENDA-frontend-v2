@@ -46,96 +46,7 @@
     "closeGuide": "Close guide",
     "back": "Back",
     "ready": "Ready",
-    "backToForm": "Back to form",
-    "steps": [
-      {
-        "eyebrow": "Account first",
-        "title": "Open TMDB and get into your account",
-        "description": "Start at TMDB, then create an account or sign in before you try to access the API area.",
-        "detail": "If you are brand new, the flow is: Join TMDB, fill the sign-up form, confirm the email, then log in.",
-        "actionLabel": "Open TMDB",
-        "browserLabel": "Join TMDB / Login",
-        "browserAccent": "Start",
-        "lines": ["Open TMDB", "Sign up or log in", "Activate the account email if needed"],
-        "supportTitle": "Exact path if you do not have an account yet",
-        "supportItems": [
-          "Open the Join TMDB page from the website.",
-          "Fill username, password, confirm password, and an existing email address.",
-          "Click Sign Up, then open the email from TMDB.",
-          "Click Activate My Account in the email.",
-          "When TMDB opens again, log in with your username and password."
-        ]
-      },
-      {
-        "eyebrow": "Open API area",
-        "title": "Go straight to the API section",
-        "description": "You can use the direct TMDB API settings link, or reach it from your profile settings.",
-        "detail": "The shortest route is the direct API link. If you navigate manually, open your profile picture menu, then Settings, then API.",
-        "actionLabel": "Open API settings",
-        "browserLabel": "Settings / API",
-        "browserAccent": "API",
-        "lines": ["Use the direct API link", "Or profile picture > Settings", "Then choose API in the left menu"],
-        "supportTitle": "Manual path inside TMDB",
-        "supportItems": [
-          "Click your profile picture in the top bar.",
-          "Open Settings.",
-          "In the left menu, click API."
-        ]
-      },
-      {
-        "eyebrow": "Request access",
-        "title": "Start the personal API request",
-        "description": "On the API page, begin the request flow and confirm that the key is only for your own personal use.",
-        "detail": "This is the part where TMDB asks whether you want to generate a new API key and whether the usage is personal.",
-        "actionLabel": "Open API settings",
-        "browserLabel": "API request",
-        "browserAccent": "Personal use",
-        "lines": ["Click generate new API key", "Choose personal use only", "Confirm the personal-use prompt"],
-        "supportTitle": "What to click on this screen",
-        "supportItems": [
-          "Click \"To generate a new API key, click here\".",
-          "Choose \"Yes This is for my own personal use only\".",
-          "Confirm again that it is for personal use."
-        ]
-      },
-      {
-        "eyebrow": "Application form",
-        "title": "Fill the TMDB application form",
-        "description": "TMDB asks for a longer form here. The values do not need to be fancy, but the fields do need real-looking information.",
-        "detail": "This is usually the most technical-looking step. A simple desktop-app explanation is enough as long as the form is filled out properly.",
-        "actionLabel": "Stay on this step",
-        "browserLabel": "Application details",
-        "browserAccent": "Subscribe",
-        "lines": ["Use a simple application name", "Choose Desktop Application", "Write a normal short summary"],
-        "supportTitle": "Example values that usually work",
-        "supportItems": [
-          "Application Name: application",
-          "Application URL: https://amazingsite.com",
-          "Type of Use: Desktop Application",
-          "Application Summary: I want to use it to see beautiful movie and tv show posters.",
-          "First Name / Last Name: your own real name",
-          "Email / Phone / Address fields: fill them with normal-looking personal details",
-          "Tick the final understanding checkbox, then click Subscribe"
-        ]
-      },
-      {
-        "eyebrow": "Copy credentials",
-        "title": "Open the key details page and copy both values",
-        "description": "After the form is accepted, open the key details page and copy the TMDB API Key and API Read Access Token.",
-        "detail": "These are the two values RENDA needs on the right side. Copy both, paste both, then validate them here.",
-        "actionLabel": "Open API settings",
-        "browserLabel": "API key details",
-        "browserAccent": "v3 + v4",
-        "lines": ["Open the API key details page", "Copy API Key", "Copy Read Access Token and paste both here"],
-        "supportTitle": "Final exact action",
-        "supportItems": [
-          "Open \"access your API key details here\".",
-          "Copy the API Read Access Token.",
-          "Copy the API Key.",
-          "Paste both values into RENDA on the right, then validate them."
-        ]
-      }
-    ]
+    "backToForm": "Back to form"
   },
   "omdbGuide": {
     "activateRatings": "Activate OMDb ratings to continue",
@@ -147,42 +58,7 @@
     "closeGuide": "Close guide",
     "back": "Back",
     "ready": "Ready",
-    "backToForm": "Back to form",
-    "steps": [
-      {
-        "eyebrow": "Request the key",
-        "title": "Open OMDb and request the free key by email",
-        "description": "OMDb is the source RENDA uses for IMDb rating, Metascore, and Rotten Tomatoes ratings.",
-        "detail": "Open the OMDb key page, choose the free email option, and submit your email address there.",
-        "actionLabel": "Open OMDb key page",
-        "browserLabel": "omdbapi.com/apikey.aspx",
-        "browserAccent": "Request",
-        "lines": ["Open the OMDb key page", "Choose the free email option", "Submit your email address"],
-        "supportTitle": "What this unlocks in RENDA",
-        "supportItems": [
-          "IMDb ratings",
-          "Metascore values",
-          "Rotten Tomatoes ratings"
-        ]
-      },
-      {
-        "eyebrow": "Activate and paste it",
-        "title": "Open the email, activate the key, then paste it here",
-        "description": "Once the email is activated, paste the OMDb API key into RENDA and validate it.",
-        "detail": "Open the OMDb email, click the activation link first, then copy the key and paste it into RENDA.",
-        "actionLabel": "Back to form",
-        "browserLabel": "Activation + key",
-        "browserAccent": "Validated",
-        "lines": ["Open the OMDb email", "Click the activation link first", "Copy and paste the key into RENDA"],
-        "supportTitle": "Important note",
-        "supportItems": [
-          "If the email does not arrive, check spam or promotions.",
-          "Do not paste the key before the activation link is opened.",
-          "Ctrl+C the key from the email, then Ctrl+V it into RENDA.",
-          "If validation fails, double-check that the activation link was opened first."
-        ]
-      }
-    ]
+    "backToForm": "Back to form"
   },
   "buttons": {
     "back": "Back",

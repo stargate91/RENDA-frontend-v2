@@ -22,7 +22,7 @@ _LOGO_PROBE_SESSION = requests.Session()
 _IMAGE_PROBE_SESSION = requests.Session()
 LOGO_DARK_PIXEL_THRESHOLD = 0.2
 LOGO_MIN_AVERAGE_LUMINANCE = 0.32
-BACKDROP_MIN_WIDTH = 2560
+BACKDROP_MIN_WIDTH = 1920
 BACKDROP_WHITE_PIXEL_THRESHOLD = 0.58
 
 def _preferred_metadata_language(db) -> str:
@@ -242,12 +242,28 @@ def _pick_backdrop_path(raw_data, preferred_language: Optional[str] = None, min_
 
     ranked_backdrops = sorted(neutral_backdrops, key=backdrop_score)
 
+    # 1. Try to find a good backdrop >= 2560px first
     fallback_candidate = None
     fallback_tone = None
     for backdrop in ranked_backdrops:
         file_path = backdrop.get("file_path")
         width = int(backdrop.get("width") or 0)
-        if not file_path or width < min_width:
+        if not file_path or width < 2560:
+            continue
+        tone = _probe_backdrop_tone(file_path)
+        if tone is None:
+            return file_path
+        if tone[0] <= BACKDROP_WHITE_PIXEL_THRESHOLD:
+            return file_path
+        if fallback_candidate is None or fallback_tone is None or tone[0] < fallback_tone[0]:
+            fallback_candidate = file_path
+            fallback_tone = tone
+
+    # 2. If no candidate >= 2560px passed the threshold, look for a good one >= 1920px
+    for backdrop in ranked_backdrops:
+        file_path = backdrop.get("file_path")
+        width = int(backdrop.get("width") or 0)
+        if not file_path or width < 1920:
             continue
         tone = _probe_backdrop_tone(file_path)
         if tone is None:

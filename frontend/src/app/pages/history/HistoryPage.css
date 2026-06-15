@@ -21,7 +21,7 @@
 .history-page .page-header__description {
   font-size: var(--font-size-sm);
   color: var(--text-color-secondary);
-  margin-top: 4px;
+  margin-top: var(--space-2xs);
 }
 
 .history-list {
@@ -37,7 +37,7 @@
   justify-content: space-between;
   padding: var(--space-5);
   border-radius: var(--radius-lg, 12px);
-  background: var(--color-bg-elevated, #171d25);
+  background: var(--color-bg-elevated);
   border: 1px solid var(--color-border-subtle, rgba(255, 255, 255, 0.04));
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -68,7 +68,7 @@
   border-radius: 10px;
   background: var(--ui-surface-soft);
   box-shadow: inset 0 0 0 1px var(--color-border-subtle);
-  color: var(--accent-color, var(--color-accent, #1493ff));
+  color: var(--accent-color, var(--color-accent));
   flex-shrink: 0;
   margin-right: var(--space-4);
   position: relative;
@@ -100,7 +100,7 @@
   font-size: var(--font-size-sm);
   color: var(--text-color-secondary);
   flex-wrap: wrap;
-  margin-top: 1px;
+  margin-top: 0.0625rem;
 }
 
 .history-card__meta-item {
@@ -126,10 +126,10 @@
 .history-card__stat-badge {
   display: inline-flex;
   align-items: baseline;
-  gap: 4px;
+  gap: var(--space-2xs);
   background: var(--ui-control-bg-subtle);
   border: 1px solid color-mix(in srgb, var(--accent-color) 12%, var(--color-border-subtle));
-  padding: 4px 10px;
+  padding: var(--space-2xs) var(--space-md);
   border-radius: 6px;
   font-size: var(--font-size-xs);
 }
@@ -149,7 +149,7 @@
 }
 
 .history-card__stat-badge--failed .history-card__badge-val {
-  color: var(--color-state-danger, #ef4444) !important;
+  color: var(--color-state-danger) !important;
 }
 
 .history-card__stat-badge--undone {
@@ -158,7 +158,7 @@
 }
 
 .history-card__stat-badge--undone .history-card__badge-val {
-  color: var(--color-text-muted, #94a3b8) !important;
+  color: var(--color-text-muted) !important;
 }
 
 .history-card__stat-badge--remaining {
@@ -167,17 +167,17 @@
 }
 
 .history-card__stat-badge--remaining .history-card__badge-val {
-  color: var(--color-state-warning, #f59e0b) !important;
+  color: var(--color-state-warning) !important;
 }
 
 .history-card__badge-val {
-  font-weight: var(--font-weight-bold, 700);
-  color: var(--text-color-primary, #ffffff);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-color-primary);
 }
 
 .history-card__badge-lbl {
-  color: var(--text-color-secondary, #94a3b8);
-  font-size: 9px;
+  color: var(--text-color-secondary);
+  font-size: var(--font-size-xs);
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
@@ -252,7 +252,7 @@
 .history-undo-modal__footer {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
+  gap: var(--space-lg);
   width: 100%;
 }
 

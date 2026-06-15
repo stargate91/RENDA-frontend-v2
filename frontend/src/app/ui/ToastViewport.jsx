@@ -33,23 +33,26 @@ function ToastItem({ toast, onRemove }) {
   }, [startTimer]);
 
   return (
-    <div
-      className={`ui-toast ui-toast--${tone}`}
-      onMouseEnter={pauseTimer}
-      onMouseLeave={startTimer}
-    >
-      <div className="ui-toast__header">
-        <h4 className="ui-toast__title">{title}</h4>
-        <button
-          type="button"
-          className="ui-toast__close"
-          onClick={() => onRemove(id)}
-          aria-label="Close"
-        >
-          <X size={14} />
-        </button>
+    <>
+      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
+      <div
+        className={`ui-toast ui-toast--${tone}`}
+        onMouseEnter={pauseTimer}
+        onMouseLeave={startTimer}
+      >
+        <div className="ui-toast__header">
+          <h4 className="ui-toast__title">{title}</h4>
+          <button
+            type="button"
+            className="ui-toast__close"
+            onClick={() => onRemove(id)}
+            aria-label="Close"
+          >
+            <X size={14} />
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

@@ -4,6 +4,7 @@
     "cancel": "Cancel",
     "close": "Close",
     "create": "Create",
+    "remove": "Remove",
     "save": "Save",
     "search": "Search",
     "noData": "No data available"
@@ -30,7 +31,6 @@
     "dashboard": "Dashboard",
     "organizer": "Organizer",
     "library": "Library",
-    "tags": "Tags",
     "undoHistory": "Undo",
     "myRatings": "My Ratings",
     "watchedHistory": "Watched History",
@@ -59,14 +59,6 @@
     },
     "ready": "Ready",
     "working": "Working...",
-    "scan": {
-      "collecting": "Scanning files...",
-      "probing": "Probing media...",
-      "enriching": "Formatting names...",
-      "resolving": "Resolving metadata...",
-      "organizing": "Organizing matched media...",
-      "undoing": "Reverting batch organization..."
-    },
     "images": {
       "downloading": "Downloading images..."
     },

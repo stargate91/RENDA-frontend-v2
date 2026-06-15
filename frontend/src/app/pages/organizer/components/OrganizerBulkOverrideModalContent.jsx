@@ -516,40 +516,43 @@ export default function OrganizerBulkOverrideModalContent({ rows, onClose, toast
             </span>
 
             <div className="organizer-override-bulk-episodes__list organizer-override-bulk-episodes__list--sidebar">
-              {orderedItems.map((item, index) => (
-                <div
-                  key={item.id}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, index)}
-                  onDragOver={(e) => handleDragOver(e, index)}
-                  onDragEnd={handleDragEnd}
-                  className={`organizer-override-bulk-episodes__item ${draggedIndex === index ? 'is-dragging' : ''}`}
-                >
-                  <div className="organizer-override-bulk-episodes__item-left">
-                    <GripVertical className="organizer-override-bulk-episodes__grip" size={14} />
-                    <span className="organizer-override-bulk-episodes__index">{index + parseInt(startEpisodeNum, 10) || (index + 1)}{DOT}</span>
-                    <span className="organizer-override-bulk-episodes__filename" title={item.source}>
-                      {item.source}
-                    </span>
+              {orderedItems.map((item, index) => {
+                return (
+                  // eslint-disable-next-line jsx-a11y/no-static-element-interactions
+                  <div
+                    key={item.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, index)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDragEnd={handleDragEnd}
+                    className={`organizer-override-bulk-episodes__item ${draggedIndex === index ? 'is-dragging' : ''}`}
+                  >
+                    <div className="organizer-override-bulk-episodes__item-left">
+                      <GripVertical className="organizer-override-bulk-episodes__grip" size={14} />
+                      <span className="organizer-override-bulk-episodes__index">{index + parseInt(startEpisodeNum, 10) || (index + 1)}{DOT}</span>
+                      <span className="organizer-override-bulk-episodes__filename" title={item.source}>
+                        {item.source}
+                      </span>
+                    </div>
+                    <div className="organizer-override-bulk-episodes__item-actions">
+                      <IconButton
+                        type="button"
+                        onClick={() => handleMoveUp(index)}
+                        disabled={index === 0}
+                      >
+                        <ArrowUp size={12} />
+                      </IconButton>
+                      <IconButton
+                        type="button"
+                        onClick={() => handleMoveDown(index)}
+                        disabled={index === orderedItems.length - 1}
+                      >
+                        <ArrowDown size={12} />
+                      </IconButton>
+                    </div>
                   </div>
-                  <div className="organizer-override-bulk-episodes__item-actions">
-                    <IconButton
-                      type="button"
-                      onClick={() => handleMoveUp(index)}
-                      disabled={index === 0}
-                    >
-                      <ArrowUp size={12} />
-                    </IconButton>
-                    <IconButton
-                      type="button"
-                      onClick={() => handleMoveDown(index)}
-                      disabled={index === orderedItems.length - 1}
-                    >
-                      <ArrowDown size={12} />
-                    </IconButton>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

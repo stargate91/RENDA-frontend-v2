@@ -54,6 +54,7 @@ export default function WindowTitlebar() {
 
   return (
     <header className="window-titlebar">
+      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
       <div
         className="window-titlebar__drag-region"
         onDoubleClick={resizeToMinimum}

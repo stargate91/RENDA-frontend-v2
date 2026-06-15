@@ -52,7 +52,7 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
           <span className="people-collection-detail-page__eyebrow">{displayTypeLabel}</span>
           
           <h1 className="people-collection-detail-page__title">
-            {isPeople ? 'Person Name Placeholder' : 'Collection Title Placeholder'}
+            {isPeople ? t('library.details.personNamePlaceholder') : t('library.details.collectionTitlePlaceholder')}
           </h1>
 
           <div className="people-collection-detail-page__section">
@@ -60,7 +60,7 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
               {isPeople ? t('library.details.biographyTitle') || 'Biography' : t('library.details.collectionOverviewTitle') || 'Overview'}
             </h2>
             <p className="people-collection-detail-page__overview-text">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+              {t('library.details.dummyBiography')}
             </p>
           </div>
 
@@ -75,7 +75,7 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
                   key={item.id}
                   title={item.title}
                   subtitle={`${item.year} • ${item.info}`}
-                  style={{ '--item-index': index }}
+                  customStyle={{ '--item-index': index }}
                   icon={Film}
                   onClick={() => navigate(`/library/movie/${item.id}`)}
                 />

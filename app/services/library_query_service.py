@@ -24,6 +24,30 @@ TAG_EMPTY_STATE_SAMPLE_POSTERS = [
 TAG_PREVIEW_GROUP_ORDER = ("movies", "series", "people", "adult", "adult_series", "adult_people")
 
 
+def _library_year(item, active_match):
+    if not active_match:
+        return item.fn_year or item.fd_year
+    if item.item_type in [ItemType.SERIES, ItemType.EPISODE]:
+        if active_match.first_air_date:
+            return active_match.first_air_date.year
+        if active_match.release_date:
+            return active_match.release_date.year
+        return item.fn_year or item.fd_year
+    if active_match.release_date:
+        return active_match.release_date.year
+    if active_match.first_air_date:
+        return active_match.first_air_date.year
+    return item.fn_year or item.fd_year
+
+
+def _library_release_date(active_match):
+    if not active_match:
+        return ""
+    if active_match.item_type in [ItemType.SERIES, ItemType.EPISODE]:
+        return active_match.first_air_date.isoformat() if active_match.first_air_date else ""
+    return active_match.release_date.isoformat() if active_match.release_date else ""
+
+
 
 
 class LibraryQueryService:
@@ -141,7 +165,7 @@ class LibraryQueryService:
             joinedload(MediaItem.tags),
             joinedload(MediaItem.matches).joinedload(MediaMatch.localizations),
         ).filter(
-            MediaItem.status.in_([ItemStatus.RENAMED, ItemStatus.ORGANIZED]),
+            MediaItem.status.in_([ItemStatus.MATCHED, ItemStatus.RENAMED, ItemStatus.ORGANIZED]),
             MediaItem.tags.any(Tag.is_adult == is_adult),
         ).all()
 

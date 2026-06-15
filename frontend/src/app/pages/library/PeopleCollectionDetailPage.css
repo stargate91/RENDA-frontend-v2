@@ -1,8 +1,8 @@
 .people-collection-detail-page {
-  padding: 24px;
+  padding: var(--space-4xl);
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--space-3xl);
   position: relative;
   min-height: 100vh;
 }
@@ -14,7 +14,7 @@
 .people-collection-detail-page__back-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-sm);
 }
 
 .people-collection-detail-page__hero {
@@ -43,13 +43,13 @@
   left: 0;
   right: 0;
   height: 100%;
-  background: linear-gradient(to bottom, transparent, var(--color-bg, #111));
+  background: linear-gradient(to bottom, transparent, var(--color-bg, black));
 }
 
 .people-collection-detail-page__container {
   display: flex;
-  gap: 40px;
-  margin-top: 40px;
+  gap: var(--space-6xl);
+  margin-top: var(--space-6xl);
   z-index: 2;
   position: relative;
 }
@@ -58,14 +58,14 @@
   .people-collection-detail-page__container {
     flex-direction: column;
     align-items: center;
-    gap: 24px;
+    gap: var(--space-4xl);
   }
 }
 
 .people-collection-detail-page__poster-column {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--space-3xl);
   width: 240px;
   flex-shrink: 0;
 }
@@ -79,7 +79,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-text-muted, #888);
+  color: var(--color-text-muted);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
 }
 
@@ -87,7 +87,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--space-3xl);
 }
 
 .people-collection-detail-page__eyebrow {
@@ -95,28 +95,28 @@
   text-transform: uppercase;
   letter-spacing: 0.15em;
   font-weight: 700;
-  color: var(--color-accent-blue, #1493ff);
+  color: var(--color-accent-blue);
 }
 
 .people-collection-detail-page__title {
   font-size: 36px;
   font-weight: 800;
   margin: 0;
-  color: var(--color-text, #fff);
+  color: var(--color-text);
   line-height: 1.2;
 }
 
 .people-collection-detail-page__section {
   border-top: 1px solid var(--color-border-subtle, rgba(255, 255, 255, 0.05));
-  padding-top: 24px;
-  margin-top: 10px;
+  padding-top: var(--space-4xl);
+  margin-top: var(--space-md);
 }
 
 .people-collection-detail-page__section-title {
   font-size: 16px;
   font-weight: 700;
-  margin: 0 0 16px 0;
-  color: var(--color-text, #fff);
+  margin: 0 0 var(--space-2xl) 0;
+  color: var(--color-text);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -124,6 +124,6 @@
 .people-collection-detail-page__overview-text {
   font-size: 15px;
   line-height: 1.6;
-  color: var(--color-text-secondary, #ccc);
+  color: var(--color-text-secondary);
   margin: 0;
 }

@@ -3,7 +3,7 @@
   gap: var(--space-4);
   min-width: 0;
   overflow-y: hidden;
-  padding-top: 4px;
+  padding-top: var(--space-2xs);
 }
 
 .organizer-match-modal__search {
@@ -59,8 +59,8 @@
   justify-content: flex-end;
   align-items: flex-end;
   flex: 0 0 auto;
-  padding-top: 4px;
-  margin-top: -4px;
+  padding-top: var(--space-2xs);
+  margin-top: calc(-1 * var(--space-2xs));
 }
 
 .organizer-match-modal__search-button {
@@ -80,7 +80,7 @@
 
 .organizer-match-modal__section-header {
   display: grid;
-  gap: 2px;
+  gap: 0.125rem;
 }
 
 .organizer-match-modal__section-header strong {
@@ -98,7 +98,7 @@
   gap: var(--space-3);
   max-height: 360px;
   overflow: auto;
-  padding: 4px 4px 4px 2px;
+  padding: var(--space-2xs) var(--space-2xs) var(--space-2xs) 0.125rem;
 }
 
 .organizer-match-modal__poster-results {
@@ -108,7 +108,7 @@
   gap: var(--space-3);
   overflow-x: auto;
   overflow-y: visible;
-  padding: 3px;
+  padding: 0.1875rem;
 }
 
 .organizer-match-modal__poster-card {
@@ -162,7 +162,7 @@
 
 .organizer-match-modal__poster-card-copy {
   display: grid;
-  gap: 4px;
+  gap: var(--space-2xs);
   min-width: 0;
 }
 
@@ -178,7 +178,7 @@
 .organizer-match-modal__poster-card-meta {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-2xs);
   color: var(--color-muted);
   font-size: var(--font-size-2xs);
   line-height: 1.4;
@@ -189,7 +189,7 @@
   grid-template-columns: 64px minmax(0, 1fr);
   gap: var(--space-3);
   width: 100%;
-  padding: 12px;
+  padding: var(--space-lg);
   border: 1px solid var(--color-border-default);
   border-radius: var(--radius-md);
   background: var(--color-surface-glass);
@@ -252,7 +252,7 @@
 .organizer-match-modal__result-copy {
   min-width: 0;
   display: grid;
-  gap: 6px;
+  gap: var(--space-xs);
   align-content: start;
 }
 
@@ -274,7 +274,7 @@
 .organizer-match-modal__result-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: var(--space-2xs);
   color: var(--color-muted);
   font-size: var(--font-size-xs);
 }
@@ -328,7 +328,7 @@
 .organizer-match-modal__browser-copy {
   min-width: 0;
   display: grid;
-  gap: 4px;
+  gap: var(--space-2xs);
 }
 
 .organizer-match-modal__browser-title {
@@ -354,7 +354,7 @@
   gap: var(--space-3);
   max-height: 440px;
   overflow-y: auto;
-  padding: 3px 4px 3px 3px;
+  padding: 0.1875rem var(--space-2xs) 0.1875rem 0.1875rem;
 }
 
 .organizer-match-modal__browser-grid--seasons {
@@ -367,12 +367,12 @@
 
 .organizer-match-modal__load-more-sentinel {
   height: 20px;
-  margin: 10px 0;
+  margin: var(--space-md) 0;
 }
 
 .organizer-match-modal__browser-card {
   display: grid;
-  gap: 10px;
+  gap: var(--space-md);
   width: 100%;
   padding: 0;
   border: 0;
@@ -454,7 +454,7 @@
 
 .organizer-match-modal__browser-card-copy {
   display: grid;
-  gap: 4px;
+  gap: var(--space-2xs);
   min-width: 0;
 }
 
@@ -480,7 +480,7 @@
 .organizer-match-modal__bucket {
   display: grid;
   gap: var(--space-2);
-  padding: 12px;
+  padding: var(--space-lg);
   border: 1px solid var(--color-border-default);
   border-radius: var(--radius-md);
   background: var(--color-surface-card);
@@ -499,7 +499,7 @@
 
 .organizer-match-modal__bucket-chip {
   min-height: 28px;
-  padding: 0 10px;
+  padding: 0 var(--space-md);
   border: 1px solid var(--color-border-default);
   border-radius: var(--radius-input);
   background: var(--color-surface-glass-strong);
@@ -756,7 +756,7 @@
 }
 
 .organizer-override-icon-button {
-  padding: 4px;
+  padding: var(--space-2xs);
   background: transparent;
   border: 0;
   color: var(--color-text-secondary);
@@ -879,5 +879,5 @@
 .match-action-option__description {
   font-size: var(--font-size-xs);
   color: var(--color-muted);
-  margin-left: 20px;
+  margin-left: var(--space-3xl);
 }

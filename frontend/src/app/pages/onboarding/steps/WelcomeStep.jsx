@@ -70,23 +70,26 @@ export default function WelcomeStep({
         </div>
 
         <div className="language-list-scroll">
-          {filteredLanguages.map((lang) => (
-            <div 
-              key={lang.code}
-              className={`language-row-item ${locale === lang.code ? 'is-selected' : ''} ${!lang.active ? 'is-disabled' : ''}`}
-              onClick={() => lang.active && setLocale(lang.code)}
-            >
-              <div className="lang-row-left">
-                <span className="lang-row-flag-frame">
-                  <span className="lang-row-flag-glow" />
-                  <img src={lang.flagUrl} alt={lang.name} className="lang-row-flag-img" />
-                </span>
-                <span className="lang-row-name">{lang.name}</span>
+          {filteredLanguages.map((lang) => {
+            return (
+              // eslint-disable-next-line jsx-a11y/no-static-element-interactions
+              <div 
+                key={lang.code}
+                className={`language-row-item ${locale === lang.code ? 'is-selected' : ''} ${!lang.active ? 'is-disabled' : ''}`}
+                onClick={() => lang.active && setLocale(lang.code)}
+              >
+                <div className="lang-row-left">
+                  <span className="lang-row-flag-frame">
+                    <span className="lang-row-flag-glow" />
+                    <img src={lang.flagUrl} alt={lang.name} className="lang-row-flag-img" />
+                  </span>
+                  <span className="lang-row-name">{lang.name}</span>
+                </div>
+                {locale === lang.code && <Check size={16} className="lang-checked-icon" />}
+                {!lang.active && <span className="lang-coming-soon">{t('onboarding.welcome.comingSoon')}</span>}
               </div>
-              {locale === lang.code && <Check size={16} className="lang-checked-icon" />}
-              {!lang.active && <span className="lang-coming-soon">{t('onboarding.welcome.comingSoon')}</span>}
-            </div>
-          ))}
+            );
+          })}
         </div>
       </OnboardingPanelCard>
     </div>

@@ -176,6 +176,7 @@ export default function CreateTagModalContent({ onClose, t, initialTag = null, m
                 : `${API_BASE}${imgObj.path}`;
               return (
                 <div key={idx} className="create-tag-form__image-preview-wrapper">
+                  {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
                   <div
                     className="create-tag-form__image-preview"
                     /* eslint-disable-next-line react/forbid-dom-props */
@@ -295,7 +296,7 @@ export default function CreateTagModalContent({ onClose, t, initialTag = null, m
           <Pill
             variant="default"
             className="create-tag-form__color-hex-pill"
-            style={{
+            customStyle={{
               borderColor: color,
               borderWidth: '1px',
               borderStyle: 'solid',

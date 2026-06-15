@@ -75,7 +75,6 @@
     "noMediaPlayerConfigured": "No media player configured. Please set the VLC or MPC-HC path in Settings.",
     "abortTaskFailed": "Oops! We couldn't stop the active process.",
     "showInFolderFailed": "Oops! We couldn't open that folder.",
-    "deleteActionSuccess": "Done!",
     "deleteIgnoreSuccess": "Hidden from list!",
     "deleteIgnoreSuccessPlural": "{count} items hidden!",
     "deleteDbOnlySuccess": "Forgotten!",
@@ -255,7 +254,6 @@
     "type": "Type",
     "status": "Status",
     "emptyLoading": "Loading organizer items...",
-    "emptyDefault": "No organizer items yet",
     "emptySearch": "No items match your search in {context}.",
     "emptyCategory": "No items in {context}."
   },
@@ -303,8 +301,7 @@
       "title": "Inspection Data",
       "description": "Combined discovery data, extracted info, and matched metadata for the selected item.",
       "copy": "Copy",
-      "download": "Download JSON",
-      "loading": "Loading data..."
+      "download": "Download JSON"
     },
     "matchModal": {
       "title": "Find the right match",
@@ -312,21 +309,16 @@
       "description": "Search and apply a different movie or series match for this item.",
       "descriptionBulk": "Search and apply a new match for all selected items.",
       "query": "Title",
-      "queryPlaceholder": "Search movie or series title",
       "queryPlaceholderMovie": "Enter movie title",
       "queryPlaceholderSeries": "Enter series title",
       "type": "Type",
       "movie": "Movie",
       "series": "Series",
       "year": "Year",
-      "yearPlaceholder": "Optional",
       "seasonShort": "S",
       "episodeShort": "E",
-      "numericPlaceholder": "Optional",
       "search": "Search",
       "searching": "Searching...",
-      "searchRequiredTitle": "Search for a series",
-      "searchRequiredDesc": "Type a title above and press Search to find matches for the selected items.",
       "bulkSearchIntroTitle": "Search for the right series",
       "bulkSearchIntroDesc": "Bulk matching starts with a manual series search. Enter a title above to review shared match options for the selected episodes.",
       "detectedMatches": "Detected matches",
@@ -346,7 +338,6 @@
       "seasonsHint": "Choose a season to browse its episodes, or simply match the whole series.",
       "episodes": "Episodes",
       "episodesHint": "Choose an episode to match it directly, or match the whole season.",
-      "noResults": "No results found",
       "noResultsSeriesTitle": "No matching series found",
       "noResultsMovieTitle": "No matching movies found",
       "noResultsSeriesDesc": "We could not find any series matching your search. Try adjusting the title or year.",
@@ -358,10 +349,7 @@
       "useSeason": "Use season",
       "useBucket": "Use selected episodes",
       "bucketTitle": "Episode bucket",
-      "addToBucket": "Add to bucket",
-      "removeFromBucket": "Remove from bucket",
       "loading": "Loading...",
-      "useMatch": "Use this match",
       "select": "Select",
       "applying": "Applying...",
       "current": "Current",
@@ -390,32 +378,14 @@
       }
     },
     "posterPlaceholder": "Poster preview",
-    "imageKinds": {
-      "poster": "Poster",
-      "still": "Still",
-      "seasonPoster": "Season Poster",
-      "seriesPoster": "Series Poster"
-    },
     "fields": {
       "source": "Original Path",
-      "target": "Planned Path",
-      "type": "Type",
-      "status": "Status",
-      "subcategory": "Subcategory",
-      "language": "Language",
-      "extension": "Extension"
+      "target": "Planned Path"
     }
   },
   "bulkBar": {
     "title": "{count} selected",
     "clear": "Clear"
-  },
-  "pagination": {
-    "pageSizesAriaLabel": "Rows per page",
-    "first": "First",
-    "prev": "Prev",
-    "next": "Next",
-    "last": "Last"
   },
   "status": {
     "ready": "Ready",

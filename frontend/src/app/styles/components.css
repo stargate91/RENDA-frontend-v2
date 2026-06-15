@@ -59,7 +59,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-2xs);
 }
 
 .ui-meta-row__item {
@@ -69,7 +69,7 @@
 
 .ui-meta-row__item + .ui-meta-row__item::before {
   content: "\2022";
-  margin-right: 4px;
+  margin-right: var(--space-2xs);
   opacity: 0.4;
 }
 
@@ -92,7 +92,7 @@
   font: var(--text-caption);
   text-transform: none;
   letter-spacing: normal;
-  margin-top: 2px;
+  margin-top: 0.125rem;
 }
 
 

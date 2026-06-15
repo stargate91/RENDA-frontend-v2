@@ -3,7 +3,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: inherit;
-  gap: 6px;
+  gap: var(--space-xs);
   border: 0;
   background: transparent;
   color: inherit;

@@ -33,6 +33,17 @@ from app.db.models import *
 
 logger = logging.getLogger(__name__)
 
+
+def _get_series_keywords(cached_series, base_match):
+    if base_match and base_match.keywords:
+        return base_match.keywords
+    keywords_data = (cached_series or {}).get("keywords", {})
+    if isinstance(keywords_data, dict):
+        keyword_list = keywords_data.get("results") or keywords_data.get("keywords") or []
+        if isinstance(keyword_list, list):
+            return [keyword.get("name") for keyword in keyword_list if isinstance(keyword, dict) and keyword.get("name")]
+    return []
+
 class SeriesDetailProvider(BaseDetailProvider):
     def _collect_episode_numbers(self, episode_number):
         if isinstance(episode_number, list):
@@ -472,7 +483,7 @@ class SeriesDetailProvider(BaseDetailProvider):
             else None
         )
         preferred_backdrop_path = _pick_backdrop_path(cached_series, ui_lang) if cached_series else None
-        effective_backdrop_path = preferred_backdrop_path or (base_loc.backdrop_path if base_loc else None)
+        effective_backdrop_path = (base_loc.backdrop_path if base_loc and base_loc.backdrop_path else None) or preferred_backdrop_path
         effective_local_backdrop_path = (
             base_loc.local_backdrop_path
             if base_loc and effective_backdrop_path and effective_backdrop_path == base_loc.backdrop_path
@@ -557,6 +568,7 @@ class SeriesDetailProvider(BaseDetailProvider):
             "rating_rotten": base_match.rating_rotten if base_match else None,
             "rating_meta": base_match.rating_meta if base_match else None,
             "genres": _split_genres([g["name"] for g in cached_series.get("genres", [])] if cached_series.get("genres") else (base_loc.genres if base_loc else [])),
+            "keywords": _get_series_keywords(cached_series, base_match),
             "companies": companies_fallback,
             "networks": networks_fallback,
             "cast": [],

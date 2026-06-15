@@ -125,7 +125,7 @@
   display: none;
   align-items: center;
   justify-content: flex-end;
-  gap: 6px;
+  gap: var(--space-xs);
   width: max-content;
   padding: 0 var(--space-4);
   background: transparent;

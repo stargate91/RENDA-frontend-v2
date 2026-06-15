@@ -67,7 +67,7 @@
   justify-content: center;
   min-width: 20px;
   height: 20px;
-  padding: 0 6px;
+  padding: 0 var(--space-xs);
   border-radius: var(--radius-full);
   background: var(--color-surface-glass-strong);
   color: inherit;

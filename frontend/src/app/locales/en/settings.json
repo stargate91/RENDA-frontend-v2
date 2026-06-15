@@ -129,10 +129,8 @@
       "eyebrow": "Organizer",
       "scanFolder": "Scan Folder",
       "scanFolderPlaceholder": "Where RENDA should look for files",
-      "browseScan": "Browse Scan Folder",
       "targetFolder": "Target Folder",
       "targetFolderPlaceholder": "Where RENDA should build your library",
-      "browseTarget": "Browse Target Folder",
       "browse": "Browse"
     },
     "organization": {
@@ -193,8 +191,6 @@
       "videoExtsHint": "List the video file extensions RENDA should treat as video files, separated by commas."
     },
     "folderStructure": {
-      "title": "Folders and Layout",
-      "eyebrow": "Organization",
       "behaviorTitle": "Basic Rules",
       "behaviorEyebrow": "Organizer Settings",
       "destinationTitle": "Where Organized Files Go",
@@ -203,7 +199,6 @@
       "orgEnabledHint": "If this is off, RENDA only renames files and won't sort them into folders.",
       "moveToLibrary": "Move Organized Files to the Target Folder",
       "moveToLibraryHint": "If this is on, RENDA moves files into your target folder. If it's off, RENDA organizes them inside the scan folder.",
-      "moveToLibraryDisabledHint": "You need a target folder before RENDA can sort files into a library.",
       "sortByType": "Separate Movies and TV Shows",
       "sortByTypeHint": "RENDA will split movies, shows, and adult content into their own top-level folders.",
       "moviesDirName": "Movies Folder Name",
@@ -260,8 +255,7 @@
       },
       "collectionThreshold": "Minimum Number of Movies",
       "collectionThresholdHint": "RENDA will only create a collection folder if you have at least this many movies from it.",
-      "collectionTemplate": "Collection Folder Template",
-      "collectionTemplateHint": "Choose how collection folder names should be built."
+      "collectionTemplate": "Collection Folder Template"
     },
     "extras": {
       "title": "Extras",
@@ -270,7 +264,6 @@
       "extrasEnabledHint": "RENDA will also organize subtitles, trailers, images, and other extra files.",
       "folderModeLabel": "Where to Put Extras",
       "folderModeHint": "Choose whether extras go into their own folder or stay next to the video file.",
-      "folderModeDisabledHint": "You need a target folder for this. With in-place renaming, extras stay next to the media file.",
       "inplaceInfo": "With in-place renaming, subtitles and other extras stay next to the main media file.",
       "folderModeOptions": {
         "subfolder": "In a separate folder (for example Extras/)",
@@ -311,14 +304,11 @@
       "eyebrow": "Playback",
       "vlcPath": "VLC Path",
       "vlcPlaceholder": "Detected automatically if possible",
-      "browseVlc": "Browse VLC",
       "mpcPath": "MPC-HC Path",
       "mpcPlaceholder": "Detected automatically if possible",
-      "browseMpc": "Browse MPC-HC",
       "browse": "Browse"
     },
     "api": {
-      "title": "API Keys",
       "eyebrow": "Online Services",
       "tmdbHeader": "The Movie Database (TMDB)",
       "omdbHeader": "Open Movie Database (OMDb)",
@@ -328,7 +318,6 @@
       "tmdbTokenPlaceholder": "TMDB v4 bearer token",
       "omdbKey": "OMDb API Key",
       "omdbKeyPlaceholder": "OMDb API key",
-      "save": "Save",
       "saving": "Saving...",
       "tmdbStepsTitle": "How to Get a TMDB Key",
       "tmdbStep1Start": "Create an account or sign in at ",

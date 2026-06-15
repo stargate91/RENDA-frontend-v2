@@ -12,7 +12,7 @@
   padding: var(--space-1);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 0.125rem;
   animation: contextMenuScaleIn 0.12s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   transform-origin: top left;
   pointer-events: auto;
@@ -34,7 +34,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: 8px var(--space-3);
+  padding: var(--space-sm) var(--space-3);
   background: transparent;
   border: 0;
   border-radius: calc(var(--radius-md) - 3px);

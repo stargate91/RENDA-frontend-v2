@@ -78,6 +78,9 @@ export const useDeleteTagMutation = () => {
       queryClient.invalidateQueries({ queryKey: ['libraryTags'] });
       queryClient.invalidateQueries({ queryKey: ['allTags'] });
       queryClient.invalidateQueries({ queryKey: ['library'] });
+      queryClient.invalidateQueries({ queryKey: ['library-item-detail'] });
+      queryClient.invalidateQueries({ queryKey: ['library-series-detail'] });
+      queryClient.invalidateQueries({ queryKey: ['full-metadata'] });
       queryClient.invalidateQueries({ queryKey: ['libraryFilters'] });
       queryClient.invalidateQueries({ queryKey: ['stats'] });
     },
@@ -230,6 +233,8 @@ export const useUpdatePersonStatusMutation = () => {
       queryClient.invalidateQueries({ queryKey: ['people'] });
       queryClient.invalidateQueries({ queryKey: ['people-infinite'] });
       queryClient.invalidateQueries({ queryKey: ['library'] });
+      queryClient.invalidateQueries({ queryKey: ['libraryTags'] });
+      queryClient.invalidateQueries({ queryKey: ['allTags'] });
       queryClient.invalidateQueries({ queryKey: ['stats'] });
     },
   });

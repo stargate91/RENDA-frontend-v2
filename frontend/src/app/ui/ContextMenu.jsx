@@ -44,6 +44,7 @@ export default function ContextMenu({ x, y, onClose, items = [] }) {
   return createPortal(
     <div
       ref={menuRef}
+      role="menu"
       className="ui-context-menu"
       onClick={(e) => e.stopPropagation()}
     >

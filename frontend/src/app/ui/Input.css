@@ -28,7 +28,7 @@
 }
 
 .ui-input--password {
-  padding-right: 44px;
+  padding-right: 2.75rem;
 }
 
 .ui-input:hover:not(:focus):not(.ui-input--error),
@@ -59,7 +59,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px;
+  padding: var(--space-2xs);
   border: 0;
   background: none;
   color: var(--color-text-secondary);
@@ -81,7 +81,7 @@
   width: 1px;
   height: 1px;
   padding: 0;
-  margin: -1px;
+  margin: -0.0625rem;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;

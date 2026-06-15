@@ -2,7 +2,7 @@
   background: var(--settings-preview-panel-bg);
   border: 1px solid var(--color-line);
   border-radius: 8px;
-  padding: 16px;
+  padding: var(--space-2xl);
   font-family: var(--settings-font-family-mono);
   font-size: 12.5px;
   line-height: 1.6;
@@ -13,7 +13,7 @@
 .structure-preview-root {
   color: var(--color-accent);
   font-weight: bold;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-sm);
 }
 
 .structure-preview-indent {
@@ -23,7 +23,7 @@
 .structure-preview-branch {
   margin-left: var(--space-2xl);
   border-left: 1.5px dashed var(--color-line);
-  padding-left: 12px;
+  padding-left: var(--space-lg);
 }
 
 .structure-preview-line {
@@ -103,7 +103,7 @@
   background: var(--settings-preview-badge-bg);
   border: 1px solid var(--settings-preview-badge-border);
   border-radius: 6px;
-  padding: 6px 12px;
+  padding: var(--space-xs) var(--space-lg);
   margin-top: var(--space-md);
   font-family: var(--settings-font-family-mono);
   display: flex;
@@ -115,7 +115,7 @@
   font-weight: bold;
   text-transform: uppercase;
   font-size: 9px;
-  padding: 1px 4px;
+  padding: 0.0625rem var(--space-2xs);
   border-radius: 3px;
   background: var(--settings-preview-label-bg);
   flex-shrink: 0;

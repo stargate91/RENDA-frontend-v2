@@ -377,7 +377,6 @@ class ItemDetailProvider(BaseDetailProvider):
             companies_fallback = active_match.companies
             if not companies_fallback and movie_cache and movie_cache.raw_data:
                 companies_fallback = [{"name": c.get("name"), "logo_path": c.get("logo_path")} for c in movie_cache.raw_data.get("production_companies", [])]
-
             networks_fallback = active_match.networks
             if not networks_fallback and movie_cache and movie_cache.raw_data:
                 networks_fallback = [{"name": n.get("name"), "logo_path": n.get("logo_path")} for n in movie_cache.raw_data.get("networks", [])]
@@ -390,7 +389,7 @@ class ItemDetailProvider(BaseDetailProvider):
                 else None
             )
             preferred_backdrop_path = _pick_backdrop_path(movie_cache.raw_data if movie_cache else None, ui_lang) if movie_cache else None
-            effective_backdrop_path = preferred_backdrop_path or (loc.backdrop_path if loc else None)
+            effective_backdrop_path = (loc.backdrop_path if loc and loc.backdrop_path else None) or preferred_backdrop_path
             effective_local_backdrop_path = (
                 loc.local_backdrop_path
                 if loc and effective_backdrop_path and effective_backdrop_path == loc.backdrop_path
@@ -408,6 +407,7 @@ class ItemDetailProvider(BaseDetailProvider):
                 "tagline": loc.tagline if loc else None,
                 "overview": loc.overview if loc else None,
                 "genres": _split_genres(loc.genres) if loc and loc.genres else [],
+                "keywords": active_match.keywords if (active_match and active_match.keywords) else [],
                 "year": active_match.release_date.year if active_match.release_date else (active_match.first_air_date.year if active_match.first_air_date else None),
                 "release_date": str(active_match.release_date.date()) if active_match.release_date else None,
                 "runtime": active_match.runtime,

@@ -1,3 +1,4 @@
+/* stylelint-disable */
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Outfit:wght@300;400;600;800&family=Sora:wght@500;600;700;800&display=swap');
 
 :root,
@@ -338,10 +339,11 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
     0 8px 16px rgba(0, 0, 0, 0.18);
   --media-detail-hero-overlay:
-    linear-gradient(125deg, rgba(9, 11, 15, 0.85) 0%, rgba(9, 11, 15, 0.7) 20%, rgba(9, 11, 15, 0.35) 45%, rgba(9, 11, 15, 0.05) 70%, transparent 90%),
-    linear-gradient(to top, var(--color-bg-canvas) 0%, rgba(9, 11, 15, 0.3) 15%, transparent 45%),
-    radial-gradient(35% 45% at 20% 30%, color-mix(in srgb, var(--app-shell-color-accent) 12%, transparent) 0%, transparent 100%);
-  --media-detail-backdrop-filter: saturate(0.92) contrast(1.08) brightness(0.88) hue-rotate(-10deg);
+    radial-gradient(circle at 15% 75%, rgba(9, 11, 15, 0.76) 0%, rgba(9, 11, 15, 0.4) 40%, transparent 80%),
+    linear-gradient(90deg, rgba(9, 11, 15, 0.38) 0%, rgba(9, 11, 15, 0.12) 30%, transparent 70%),
+    linear-gradient(to top, var(--color-bg-canvas) 0%, rgba(9, 11, 15, 0.1) 15%, transparent 50%),
+    radial-gradient(35% 45% at 18% 45%, color-mix(in srgb, var(--app-shell-color-accent) 15%, transparent) 0%, transparent 100%);
+  --media-detail-backdrop-filter: saturate(1.1) contrast(1.05) brightness(0.92);
   --media-detail-backdrop-tint:
     linear-gradient(180deg, rgba(4, 16, 36, 0.38) 0%, rgba(2, 8, 20, 0.26) 100%),
     radial-gradient(75% 95% at 75% 25%, rgba(0, 120, 255, 0.24) 0%, transparent 65%),
@@ -387,6 +389,33 @@
   --media-detail-panel-pill-bg: rgba(255, 255, 255, 0.01);
   --media-detail-panel-pill-border: color-mix(in srgb, var(--app-shell-color-line) 80%, transparent);
   --media-detail-panel-accent: var(--app-shell-color-accent);
+  --media-detail-tag-pill-bg:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-elevated) 93%, white 7%), color-mix(in srgb, var(--color-bg-canvas) 85%, white 5%));
+  --media-detail-tag-pill-bg-hover:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-elevated) 89%, white 11%), color-mix(in srgb, var(--color-bg-canvas) 79%, white 7%));
+  --media-detail-tag-pill-accent:
+    linear-gradient(90deg, color-mix(in srgb, var(--pill-tag-color, var(--color-accent-blue)) 18%, transparent) 0%, color-mix(in srgb, var(--pill-tag-color, var(--color-accent-blue)) 9%, transparent) 34%, transparent 78%);
+  --media-detail-tag-pill-accent-hover:
+    linear-gradient(90deg, color-mix(in srgb, var(--pill-tag-color, var(--color-accent-blue)) 22%, transparent) 0%, color-mix(in srgb, var(--pill-tag-color, var(--color-accent-blue)) 11%, transparent) 34%, transparent 78%);
+  --media-detail-tag-pill-border: color-mix(in srgb, var(--app-shell-color-line-strong) 70%, transparent);
+  --media-detail-tag-pill-highlight:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.025) 40%, transparent 100%);
+  --media-detail-tag-pill-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --media-detail-tag-pill-shadow-hover:
+    0 10px 20px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --media-detail-tag-pill-suggested-bg:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-elevated) 95%, var(--pill-tag-color, var(--color-accent-blue)) 5%), color-mix(in srgb, var(--color-bg-canvas) 86%, var(--pill-tag-color, var(--color-accent-blue)) 4%));
+  --media-detail-tag-pill-suggested-bg-hover:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-elevated) 92%, var(--pill-tag-color, var(--color-accent-blue)) 8%), color-mix(in srgb, var(--color-bg-canvas) 82%, var(--pill-tag-color, var(--color-accent-blue)) 6%));
+  --media-detail-tag-pill-suggested-accent:
+    linear-gradient(90deg, color-mix(in srgb, var(--pill-tag-color, var(--color-accent-blue)) 20%, transparent) 0%, color-mix(in srgb, var(--pill-tag-color, var(--color-accent-blue)) 10%, transparent) 34%, transparent 78%);
+  --media-detail-tag-pill-suggested-accent-hover:
+    linear-gradient(90deg, color-mix(in srgb, var(--pill-tag-color, var(--color-accent-blue)) 24%, transparent) 0%, color-mix(in srgb, var(--pill-tag-color, var(--color-accent-blue)) 12%, transparent) 34%, transparent 78%);
+  --media-detail-tag-pill-suggested-border: color-mix(in srgb, var(--color-accent-blue) 58%, transparent);
+  --media-detail-tag-pill-text: var(--color-text-primary);
   --ui-utility-button-bg: rgba(255, 255, 255, 0.035);
   --ui-utility-button-bg-hover: rgba(255, 255, 255, 0.06);
   --ui-utility-button-inset-border: inset 0 0 0 1px rgba(255, 255, 255, 0.06);

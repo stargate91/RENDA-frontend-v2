@@ -21,7 +21,7 @@
   gap: var(--space-4);
   flex: 1 1 auto;
   min-width: 0;
-  padding: 0 0 0 24px;
+  padding: 0 0 0 var(--space-4xl);
   -webkit-app-region: drag;
 }
 
@@ -54,7 +54,7 @@
 .window-titlebar__actions {
   display: flex;
   align-items: center;
-  gap: 1px;
+  gap: 0.0625rem;
   -webkit-app-region: no-drag;
 }
 
@@ -69,7 +69,7 @@
   display: grid;
   grid-template-columns: 236px minmax(0, 1fr);
   height: 100vh;
-  padding-top: 46px;
+  padding-top: var(--layout-window-titlebar-height);
   transition: grid-template-columns 160ms ease;
 }
 
@@ -150,7 +150,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--sidebar-nav-link-padding-y) 14px;
+  padding: var(--sidebar-nav-link-padding-y) var(--space-xl);
   border-radius: var(--radius-md);
   text-decoration: none;
   color: var(--color-muted);
@@ -210,8 +210,8 @@
 }
 
 .shell.is-sidebar-collapsed .shell__sidebar {
-  padding-left: 12px;
-  padding-right: 12px;
+  padding-left: var(--space-lg);
+  padding-right: var(--space-lg);
 }
 
 .shell.is-sidebar-collapsed .shell__sidebar-toggle-row {
@@ -245,7 +245,7 @@
   width: 1px;
   height: 1px;
   padding: 0;
-  margin: -1px;
+  margin: -0.0625rem;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   border: 0;
@@ -282,8 +282,8 @@
 }
 
 .shell__utility-bar .shell__stat-pill {
-  gap: 6px;
-  padding: 0 14px;
+  gap: var(--space-xs);
+  padding: 0 var(--space-xl);
   height: 100%;
   justify-content: center;
   background: linear-gradient(180deg, rgba(18, 21, 26, 0.82), rgba(10, 12, 16, 0.72));
@@ -316,7 +316,7 @@
   justify-content: center;
   align-items: center;
   height: 100%;
-  padding: 40px;
+  padding: var(--space-6xl);
 }
 
 .ui-page {
@@ -353,7 +353,7 @@
 }
 
 .shell__close-prompt-copy {
-  margin-bottom: 16px;
+  margin-bottom: var(--space-2xl);
 }
 
 .ui-inline,

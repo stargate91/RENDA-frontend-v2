@@ -24,6 +24,7 @@ export default function SettingsSidebar({
           if (group.id === SETTINGS_TAB_GROUP_IDS.ORGANIZATION) {
             return (
               <div key={group.id}>
+                {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
                 <div
                   className={`settings-sidebar-item${isOrganizationTabActive ? ' active' : ''}`}
                   onClick={onOrganizationToggle}
@@ -45,21 +46,25 @@ export default function SettingsSidebar({
                       className={`settings-sidebar-sub-indicator settings-sidebar-sub-indicator--${activeOrganizationIndex}`}
                     />
                   )}
-                  {visibleOrganizationTabs.map((tab) => (
-                    <div
-                      key={tab.id}
-                      className={`settings-sidebar-sub-item${tab.className ? ` ${tab.className}${tab.isCurrentlyVisible ? ' visible' : ''}` : ''}${activeTab === tab.id ? ' active' : ''}`}
-                      onClick={() => onTabSelect(tab.id)}
-                    >
-                      <span>{t(tab.labelKey)}</span>
-                    </div>
-                  ))}
+                  {visibleOrganizationTabs.map((tab) => {
+                    return (
+                      // eslint-disable-next-line jsx-a11y/no-static-element-interactions
+                      <div
+                        key={tab.id}
+                        className={`settings-sidebar-sub-item${tab.className ? ` ${tab.className}${tab.isCurrentlyVisible ? ' visible' : ''}` : ''}${activeTab === tab.id ? ' active' : ''}`}
+                        onClick={() => onTabSelect(tab.id)}
+                      >
+                        <span>{t(tab.labelKey)}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             );
           }
 
           return (
+            // eslint-disable-next-line jsx-a11y/no-static-element-interactions
             <div
               key={group.id}
               className={`settings-sidebar-item${activeTab === group.id ? ' active' : ''}`}

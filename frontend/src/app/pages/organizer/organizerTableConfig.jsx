@@ -7,6 +7,7 @@ import { mapCollisionStrategyLabel, shouldShowCollisionStrategy } from './organi
 const renderSelectColumn = (paginatedRows, selectedRowIds, handleToggleAll, handleToggleRow) => ({
   key: 'select',
   label: (
+    /* eslint-disable-next-line jsx-a11y/no-static-element-interactions */
     <div onClick={(event) => event.stopPropagation()}>
       <Checkbox
         checked={paginatedRows.length > 0 && paginatedRows.every((row) => selectedRowIds.has(row.id))}
@@ -17,6 +18,7 @@ const renderSelectColumn = (paginatedRows, selectedRowIds, handleToggleAll, hand
   width: '48px',
   align: 'center',
   render: (value, row) => (
+    /* eslint-disable-next-line jsx-a11y/no-static-element-interactions */
     <div onClick={(event) => event.stopPropagation()}>
       <Checkbox
         checked={selectedRowIds.has(row.id)}

@@ -44,6 +44,10 @@ export const useUpdateMediaStatusMutation = () => {
       queryClient.invalidateQueries({ queryKey: ['library-item-detail', variables.itemId] });
       queryClient.invalidateQueries({ queryKey: ['library-series-detail', variables.itemId] });
       queryClient.invalidateQueries({ queryKey: ['library'] });
+      queryClient.invalidateQueries({ queryKey: ['libraryTags'] });
+      queryClient.invalidateQueries({ queryKey: ['allTags'] });
+      queryClient.invalidateQueries({ queryKey: ['libraryFilters'] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
     },
   });
 };
@@ -86,5 +90,21 @@ export const useResetProgressMutation = () => {
 export const usePreviewMediaMutation = () => {
   return useMutation({
     mutationFn: (filePath) => api.media.preview(filePath),
+  });
+};
+
+export const useOverrideBackdropMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ itemId, backdropPath }) => api.media.overrideBackdrop(itemId, backdropPath),
+    onSuccess: (data, variables) => {
+      const cleanId = String(variables.itemId).replace('series_', '');
+      queryClient.invalidateQueries({ queryKey: ['full-metadata', variables.itemId] });
+      queryClient.invalidateQueries({ queryKey: ['full-metadata', cleanId] });
+      queryClient.invalidateQueries({ queryKey: ['library-item-detail', variables.itemId] });
+      queryClient.invalidateQueries({ queryKey: ['library-item-detail', cleanId] });
+      queryClient.invalidateQueries({ queryKey: ['library-series-detail', variables.itemId] });
+      queryClient.invalidateQueries({ queryKey: ['library-series-detail', cleanId] });
+    },
   });
 };

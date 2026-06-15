@@ -106,7 +106,7 @@
 .settings-close-esc-hint {
   font-size: var(--font-size-2xs);
   color: var(--color-text-muted);
-  margin-top: 8px;
+  margin-top: var(--space-sm);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   pointer-events: none;

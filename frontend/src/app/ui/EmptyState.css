@@ -198,7 +198,7 @@
 
 .ui-empty-state--tag-focus .ui-empty-state__body {
   max-width: 520px;
-  gap: 6px;
+  gap: var(--space-xs);
 }
 
 .ui-empty-state--tag-focus .ui-empty-state__title {

@@ -13,8 +13,8 @@
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
-  padding-left: 14px;
-  margin-bottom: 20px;
+  padding-left: var(--space-xl);
+  margin-bottom: var(--space-3xl);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -29,7 +29,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--sidebar-nav-link-padding-y) 14px;
+  padding: var(--sidebar-nav-link-padding-y) var(--space-xl);
   border-radius: var(--radius-md);
   color: var(--color-muted);
   font-weight: var(--font-weight-medium);
@@ -53,11 +53,11 @@
 .settings-sidebar-sub-menu {
   display: flex;
   flex-direction: column;
-  margin-left: 23px;
+  margin-left: 1.4375rem;
   padding-left: var(--space-2xl);
   border-left: 1.5px solid var(--color-line);
-  margin-top: 2px;
-  margin-bottom: 6px;
+  margin-top: 0.125rem;
+  margin-bottom: var(--space-xs);
   position: relative;
   overflow: hidden;
   max-height: 320px;
@@ -103,7 +103,7 @@
   align-items: center;
   height: 28px;
   margin-bottom: var(--space-2xs);
-  padding: 0 14px;
+  padding: 0 var(--space-xl);
   border-radius: var(--radius-md);
   color: var(--color-muted);
   font-weight: var(--font-weight-medium);

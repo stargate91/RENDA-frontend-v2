@@ -21,6 +21,7 @@ export default function PosterCard({
   disabled = false,
   active = false,
   style,
+  customStyle,
   children,
   ...props
 }) {
@@ -32,7 +33,7 @@ export default function PosterCard({
 
   return (
     /* eslint-disable-next-line react/forbid-dom-props */
-    <div className={cardClassName} style={style}>
+    <div className={cardClassName} style={customStyle || style}>
       <DefaultComponent
         type={DefaultComponent === 'button' ? 'button' : undefined}
         className="ui-poster-card__image-wrapper"

@@ -1,15 +1,45 @@
 import { useMemo } from 'react';
-import { useTagsQuery } from '@/queries/libraryQueries';
+import { useAllTagsQuery, useTagsQuery } from '@/queries/libraryQueries';
 
 export function useLibraryTags({ activeSessionMode }) {
   const isNsfw = activeSessionMode === 'nsfw';
   const { data: tagsData, isLoading: isTagsLoading } = useTagsQuery(isNsfw);
+  const { data: allTags = [], isLoading: isAllTagsLoading } = useAllTagsQuery(isNsfw);
 
   const processedTags = useMemo(() => {
-    if (!tagsData) return [];
+    const usageTags = Array.isArray(tagsData) ? tagsData : [];
+    const allDefinedTags = Array.isArray(allTags) ? allTags : [];
     const isNsfw = activeSessionMode === 'nsfw';
-    return tagsData
-      .map(tag => {
+    const usageByName = new Map(
+      usageTags.map((tag) => [tag.name?.toLowerCase?.() || '', tag])
+    );
+
+    const mergedTags = [...allDefinedTags];
+    const seen = new Set();
+
+    usageTags.forEach((tag) => {
+      const key = tag.name?.toLowerCase?.() || '';
+      if (!key || allDefinedTags.some((definedTag) => (definedTag.name?.toLowerCase?.() || '') === key)) {
+        return;
+      }
+      mergedTags.push(tag);
+    });
+
+    return mergedTags
+      .filter((tag) => {
+        const key = tag.name?.toLowerCase?.() || '';
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .map((definedTag) => {
+        const usageTag = usageByName.get(definedTag.name?.toLowerCase?.() || '') || definedTag;
+        const tag = {
+          ...definedTag,
+          ...usageTag,
+          custom_images: usageTag.custom_images ?? definedTag.custom_images,
+          color: usageTag.color ?? definedTag.color,
+        };
         const localCount = isNsfw
           ? (tag.adult?.length || 0) + (tag.adult_series?.length || 0) + (tag.adult_people?.length || 0)
           : (tag.movies?.length || 0) + (tag.series?.length || 0) + (tag.people?.length || 0);
@@ -43,14 +73,15 @@ export function useLibraryTags({ activeSessionMode }) {
         return {
           ...tag,
           total_count: localCount,
+          mode_items: modeItems,
           sample_previews: localPreviews,
         };
       });
-  }, [tagsData, activeSessionMode]);
+  }, [tagsData, allTags, activeSessionMode]);
 
   return {
     tagsData,
     processedTags,
-    isTagsLoading,
+    isTagsLoading: isTagsLoading || isAllTagsLoading,
   };
 }

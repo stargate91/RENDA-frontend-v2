@@ -715,7 +715,13 @@ def update_person_status(person_id: int, payload: dict):
         if "user_rating" in payload:
             person.user_rating = _normalize_user_rating(payload["user_rating"])
         if "custom_tags" in payload:
-            person.custom_tags = payload["custom_tags"]
+            is_adult = bool(getattr(person, "is_adult", False))
+            new_tag_names = [str(t).strip() for t in payload["custom_tags"] if str(t).strip()]
+            for name in new_tag_names:
+                existing = db.query(Tag).filter(Tag.name == name, Tag.is_adult == is_adult).first()
+                if not existing:
+                    db.add(Tag(name=name, is_adult=is_adult))
+            person.custom_tags = new_tag_names
             
         if person.is_active and person.profile_path and (not person.local_profile_path or not _public_image_path(person.local_profile_path, "persons")):
             person.image_status = ImageStatus.PENDING

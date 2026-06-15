@@ -32,7 +32,6 @@ const getCardIconAndClass = (status) => {
 export default function HistoryCard({
   batch,
   index,
-  isLatestReversible,
   isAnyTaskActive,
   isUndoing,
   onConfirmUndo,

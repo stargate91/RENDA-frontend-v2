@@ -90,9 +90,6 @@ export default function HistoryPage() {
         </div>
       );
     }
-    const mostRecentReversibleBatch = history.find(b => b.status !== 'undone');
-    const mostRecentReversibleBatchId = mostRecentReversibleBatch ? mostRecentReversibleBatch.id : null;
-
     return (
       <div className="history-list">
         {history.map((batch, index) => (
@@ -100,7 +97,6 @@ export default function HistoryPage() {
             key={batch.id}
             batch={batch}
             index={index}
-            isLatestReversible={batch.id === mostRecentReversibleBatchId}
             isAnyTaskActive={isAnyTaskActive}
             isUndoing={isUndoing}
             onConfirmUndo={handleConfirmUndo}

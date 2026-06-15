@@ -1,5 +1,5 @@
 .ui-tag-button {
-  padding: 3px 8px;
+  padding: 0.1875rem var(--space-sm);
   border-radius: 4px;
   border: 1px solid var(--color-line);
   background: var(--color-tag-button-bg, rgba(255, 255, 255, 0.04));
@@ -13,7 +13,7 @@
 .ui-tag-button:hover:not(:disabled) {
   background: var(--color-tag-button-bg-hover, rgba(0, 136, 255, 0.08));
   border-color: var(--color-tag-button-border-hover, rgba(0, 136, 255, 0.4));
-  color: var(--color-accent, #0088ff);
+  color: var(--color-accent);
 }
 
 .ui-tag-button:focus-visible {

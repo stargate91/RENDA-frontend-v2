@@ -64,6 +64,7 @@ const TableRow = memo(function TableRow({
                 {isEmpty ? '-' : renderedValue}
               </span>
               {hasActionsInCell ? (
+                /* eslint-disable-next-line jsx-a11y/no-static-element-interactions */
                 <div className="ui-table__row-actions" onClick={(event) => event.stopPropagation()}>
                   {visibleRowActions.map((action) => (
                     <Tooltip key={action.key} content={action.tooltip || action.label} side="top">

@@ -2,11 +2,11 @@
   display: inline-flex;
   align-items: stretch;
   height: var(--ui-control-height-md, 36px);
-  padding: 3px;
+  padding: 0.1875rem;
   border: 1px solid var(--ui-control-border, rgba(255, 255, 255, 0.06));
   border-radius: var(--ui-control-radius, 8px);
   background: var(--ui-control-bg, var(--ui-surface-ghost));
-  gap: 2px;
+  gap: 0.125rem;
   box-sizing: border-box;
 }
 
@@ -15,11 +15,11 @@
   align-items: center;
   justify-content: center;
   flex: 1;
-  padding: 0 16px;
+  padding: 0 var(--space-2xl);
   border: 0;
   border-radius: calc(var(--ui-control-radius, 8px) - 3px);
   background: transparent;
-  color: var(--color-text-muted, #94a3b8);
+  color: var(--color-text-muted);
   font-size: var(--font-size-xs, 12px);
   font-weight: var(--font-weight-semibold, 600);
   cursor: pointer;
@@ -27,13 +27,13 @@
 }
 
 .ui-segmented-control__option:hover:not(.is-active) {
-  color: var(--color-text-primary, #ffffff);
+  color: var(--color-text-primary);
   background: var(--ui-surface-soft);
 }
 
 .ui-segmented-control__option.is-active {
   background: var(--ui-surface-soft-strong);
-  color: var(--color-text-primary, #ffffff);
+  color: var(--color-text-primary);
   box-shadow: 
     0 1px 3px rgba(0, 0, 0, 0.2), 
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -51,24 +51,24 @@
   background-color: var(--color-surface-glass);
   border: 1px solid var(--color-border-default);
   border-radius: 6px;
-  padding: 2px;
+  padding: 0.125rem;
 }
 
 .ui-segmented-control--filter .ui-segmented-control__option {
-  padding: 4px 8px;
+  padding: var(--space-2xs) var(--space-sm);
   font-size: var(--font-size-2xs, 10px);
   font-weight: var(--font-weight-bold, 700);
   line-height: 1;
-  color: var(--color-text-muted, #94a3b8);
+  color: var(--color-text-muted);
   border-radius: 4px;
 }
 
 .ui-segmented-control--filter .ui-segmented-control__option:hover:not(.is-active) {
-  color: var(--color-text-primary, #ffffff);
+  color: var(--color-text-primary);
 }
 
 .ui-segmented-control--filter .ui-segmented-control__option.is-active {
   background-color: var(--color-surface-glass-strong);
-  color: var(--color-text-primary, #ffffff);
+  color: var(--color-text-primary);
   box-shadow: none;
 }

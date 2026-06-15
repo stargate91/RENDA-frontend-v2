@@ -225,7 +225,7 @@ export default function LibraryGrid({
             {paginatedItems.map((item, index) => (
               <PosterCard
                 key={item.id}
-                style={{ '--item-index': index }}
+                customStyle={{ '--item-index': index }}
                 onClick={() => handleItemClick(item)}
                 {...getCardProps(item)}
               />
@@ -260,6 +260,9 @@ export default function LibraryGrid({
 function ExpandedTagPanel({ tag, t, resolvePosterUrl, emptyIcon, isFocusMode = false, activeSessionMode }) {
   const navigate = useNavigate();
   const allItems = useMemo(() => {
+    if (Array.isArray(tag.mode_items)) {
+      return tag.mode_items;
+    }
     const isNsfw = activeSessionMode === 'nsfw';
     if (isNsfw) {
       return [

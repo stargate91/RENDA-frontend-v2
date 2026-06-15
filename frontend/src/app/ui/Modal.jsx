@@ -10,8 +10,15 @@ export default function Modal({ open, title, description, children, footer, onCl
   if (!open) return null;
 
   return (
-    <div className="ui-modal-backdrop" onClick={onClose}>
-      <div className={`ui-modal ${variant ? `ui-modal--${variant}` : ''} ${className || ''}`.trim()} onClick={(event) => event.stopPropagation()}>
+    <>
+      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
+      <div className="ui-modal-backdrop" onClick={onClose}>
+        <div
+          className={`ui-modal ${variant ? `ui-modal--${variant}` : ''} ${className || ''}`.trim()}
+          onClick={(event) => event.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+        >
         <header className="ui-modal__header">
           <div>
             {title ? (
@@ -32,5 +39,6 @@ export default function Modal({ open, title, description, children, footer, onCl
         {footer ? <footer className="ui-modal__footer">{footer}</footer> : null}
       </div>
     </div>
+    </>
   );
 }

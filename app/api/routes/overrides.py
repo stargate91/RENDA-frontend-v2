@@ -625,18 +625,24 @@ def update_item_status(item_id: str, payload: dict):
             if "user_comment" in payload:
                 state.user_comment = payload["user_comment"] if payload["user_comment"] else None
             if "custom_tags" in payload:
+                from app.db.models.metadata import TMDBCache
+                cache = db.query(TMDBCache).filter(TMDBCache.tmdb_id == tmdb_id).first()
+                is_item_adult = bool(cache.raw_data.get("adult", False)) if (cache and cache.raw_data) else False
+
                 new_tag_names = [str(t).strip() for t in payload["custom_tags"] if str(t).strip()]
                 for name in new_tag_names:
-                    existing = db.query(Tag).filter(Tag.name == name).first()
+                    existing = db.query(Tag).filter(Tag.name == name, Tag.is_adult == is_item_adult).first()
                     if not existing:
-                        db.add(Tag(name=name))
+                        db.add(Tag(name=name, is_adult=is_item_adult))
                 db.commit()
                 state.custom_tags = new_tag_names
+                if new_tag_names:
+                    state.is_tracked = True
 
             db.commit()
             if state.is_tracked:
                 _hydrate_virtual_metadata(db, tmdb_id, media_type)
-            tag_entities = db.query(Tag).filter(Tag.name.in_(state.custom_tags or [])).all() if state.custom_tags else []
+            tag_entities = db.query(Tag).filter(Tag.name.in_(state.custom_tags or []), Tag.is_adult == is_item_adult).all() if state.custom_tags else []
             return JSONResponse(content={
                 "id": item_id,
                 "user_rating": state.user_rating,
@@ -668,11 +674,12 @@ def update_item_status(item_id: str, payload: dict):
                 if "user_comment" in payload:
                     state.user_comment = payload["user_comment"] if payload["user_comment"] else None
                 if "custom_tags" in payload:
+                    is_item_adult = bool(active_match.is_adult) if active_match else False
                     new_tag_names = [str(t).strip() for t in payload["custom_tags"] if str(t).strip()]
                     for name in new_tag_names:
-                        existing = db.query(Tag).filter(Tag.name == name).first()
+                        existing = db.query(Tag).filter(Tag.name == name, Tag.is_adult == is_item_adult).first()
                         if not existing:
-                            db.add(Tag(name=name))
+                            db.add(Tag(name=name, is_adult=is_item_adult))
                     db.commit()
                     state.custom_tags = new_tag_names
 
@@ -685,16 +692,23 @@ def update_item_status(item_id: str, payload: dict):
             item.is_watched = bool(payload["is_watched"])
             if item.is_watched:
                 item.resume_position = 0
+                if not item.watch_count:
+                    item.watch_count = 1
+            else:
+                item.watch_count = 0
         if "custom_tags" in payload:
+            active_match = next((m for m in item.matches if m.is_active), None)
+            is_item_adult = bool(active_match.is_adult) if active_match else False
+
             new_tag_names = [str(t).strip() for t in payload["custom_tags"] if str(t).strip()]
             for name in new_tag_names:
-                existing = db.query(Tag).filter(Tag.name == name).first()
+                existing = db.query(Tag).filter(Tag.name == name, Tag.is_adult == is_item_adult).first()
                 if not existing:
-                    db.add(Tag(name=name))
+                    db.add(Tag(name=name, is_adult=is_item_adult))
             db.commit()
 
             if new_tag_names:
-                actual_tags = db.query(Tag).filter(Tag.name.in_(new_tag_names)).all()
+                actual_tags = db.query(Tag).filter(Tag.name.in_(new_tag_names), Tag.is_adult == is_item_adult).all()
                 item.tags = actual_tags
             else:
                 item.tags = []
@@ -885,6 +899,10 @@ def bulk_update_item_watched(payload: dict):
             item.is_watched = watched
             if watched:
                 item.resume_position = 0
+                if not item.watch_count:
+                    item.watch_count = 1
+            else:
+                item.watch_count = 0
 
         updated_ids = [item.id for item in items]
         for raw_id, episode_key in virtual_episode_ids:
@@ -913,6 +931,65 @@ def bulk_update_item_watched(payload: dict):
     except Exception as e:
         db.rollback()
         logger.error(f"Error bulk updating watched state: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    finally:
+        db.close()
+
+
+@router.post("/item/{item_id}/backdrop")
+def update_item_backdrop(item_id: str, payload: dict):
+    backdrop_path = payload.get("backdrop_path")
+    if not backdrop_path:
+        return JSONResponse(status_code=400, content={"error": "backdrop_path is required"})
+
+    db = Session()
+    try:
+        from app.services.asset_service import AssetService
+        
+        target_item_id = None
+        if isinstance(item_id, str) and item_id.startswith("series_"):
+            try:
+                series_tmdb_id = int(item_id.split("_")[1])
+            except (ValueError, IndexError):
+                return JSONResponse(status_code=400, content={"error": "Invalid series ID format"})
+            
+            match_row = db.query(MediaMatch).filter(
+                (MediaMatch.series_tmdb_id == series_tmdb_id) | (MediaMatch.tmdb_id == series_tmdb_id),
+                MediaMatch.is_active == True
+            ).first()
+            if not match_row:
+                return JSONResponse(status_code=404, content={"error": "Series not found"})
+            target_item_id = match_row.media_item_id
+        else:
+            try:
+                target_item_id = int(item_id)
+            except ValueError:
+                return JSONResponse(status_code=400, content={"error": "Invalid item ID format"})
+
+        item = db.query(MediaItem).filter(MediaItem.id == target_item_id).first()
+        if not item:
+            return JSONResponse(status_code=404, content={"error": "Item not found"})
+
+        active_match = next((m for m in item.matches if m.is_active), None)
+        if not active_match:
+            return JSONResponse(status_code=404, content={"error": "No active match found for this item"})
+
+        # Download the image
+        asset_service = AssetService()
+        local_b = asset_service.download_image(backdrop_path, "backdrops", size="w1280")
+        if not local_b:
+            return JSONResponse(status_code=500, content={"error": "Failed to download backdrop"})
+
+        # Update localizations
+        for loc in active_match.localizations:
+            loc.backdrop_path = backdrop_path
+            loc.local_backdrop_path = local_b
+
+        db.commit()
+        return {"status": "success", "backdrop_path": backdrop_path, "local_backdrop_path": local_b}
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error overriding backdrop: {e}")
         return JSONResponse(status_code=500, content={"error": str(e)})
     finally:
         db.close()

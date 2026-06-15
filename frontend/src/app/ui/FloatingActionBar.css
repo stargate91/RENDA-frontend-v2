@@ -17,7 +17,7 @@
   align-items: center;
   gap: var(--space-4);
   width: 100%;
-  padding: 14px 14px 14px 18px;
+  padding: var(--space-xl) var(--space-xl) var(--space-xl) 1.125rem;
   border: 1px solid var(--ui-floating-surface-border);
   border-radius: var(--radius-xl);
   background: var(--ui-floating-surface-bg);
@@ -89,9 +89,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--space-sm);
   min-height: 38px;
-  padding: 0 14px;
+  padding: 0 var(--space-xl);
   border: 1px solid var(--ui-floating-action-border);
   border-radius: var(--radius-input);
   background: var(--ui-floating-action-bg);
@@ -165,7 +165,7 @@
     flex-direction: column;
     align-items: stretch;
     gap: var(--space-3);
-    padding: 14px;
+    padding: var(--space-xl);
   }
 
   .ui-floating-bar__actions {
