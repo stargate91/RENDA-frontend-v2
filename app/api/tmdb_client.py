@@ -83,7 +83,7 @@ class TMDBClient:
 
                     cache_item.raw_data = data
                     cache_item.tmdb_id = data.get('id') if isinstance(data, dict) else None
-                    cache_item.target_language = target_language
+                    cache_item.locale = target_language
                     cache_item.updated_at = datetime.utcnow()
                     cache_db.commit()
                     return
@@ -94,7 +94,7 @@ class TMDBClient:
                         if cache_item:
                             cache_item.raw_data = data
                             cache_item.tmdb_id = data.get('id') if isinstance(data, dict) else None
-                            cache_item.target_language = target_language
+                            cache_item.locale = target_language
                             cache_item.updated_at = datetime.utcnow()
                             cache_db.commit()
                             return

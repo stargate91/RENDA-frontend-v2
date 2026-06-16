@@ -34,11 +34,8 @@ class DetailFormatterService:
     def pick_collection_localization(self, collection, ui_lang: str):
         if not collection or not getattr(collection, "localizations", None):
             return None
-        if ui_lang:
-            localized = next((loc for loc in collection.localizations if _match_language_code(loc.target_language, ui_lang)), None)
-            if localized:
-                return localized
-        return next((loc for loc in collection.localizations if loc.is_primary), collection.localizations[0])
+        from app.services.language_service import LanguageService
+        return LanguageService.pick_localization(collection.localizations, [ui_lang] if ui_lang else [])
 
     def serialize_collection(self, collection, fallback_name: str, ui_lang: str):
         if not collection and not fallback_name:

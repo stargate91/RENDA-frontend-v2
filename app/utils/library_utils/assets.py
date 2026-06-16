@@ -131,7 +131,7 @@ def _ensure_person_cached(db, actor_id: int, actor_name: str, actor_profile_path
                     person.image_status = ImageStatus.COMPLETED
 
             db.add(person)
-            db.add(PersonLocalization(person_id=actor_id, language=lang_code, name=actor_name))
+            db.add(PersonLocalization(person_id=actor_id, locale=lang_code, name=actor_name))
             db.commit()
         except IntegrityError:
             db.rollback()
@@ -163,9 +163,9 @@ def _ensure_person_cached(db, actor_id: int, actor_name: str, actor_profile_path
 
         if actor_name and not db.query(PersonLocalization.id).filter(
             PersonLocalization.person_id == actor_id,
-            PersonLocalization.language == lang_code,
+            PersonLocalization.locale == lang_code,
         ).first():
-            db.add(PersonLocalization(person_id=actor_id, language=lang_code, name=actor_name))
+            db.add(PersonLocalization(person_id=actor_id, locale=lang_code, name=actor_name))
             updated = True
 
         if updated:

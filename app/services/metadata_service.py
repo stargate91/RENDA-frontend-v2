@@ -147,7 +147,7 @@ class MetadataService:
                     return a == b or a.split("-", 1)[0] == b.split("-", 1)[0]
 
                 def _missing_sync_languages(match):
-                    existing_langs = [loc.target_language for loc in match.localizations]
+                    existing_langs = [loc.locale for loc in match.localizations]
                     return [
                         lang_code
                         for lang_code in sync_langs
@@ -159,7 +159,7 @@ class MetadataService:
                         from app.formatter.formatter import Formatter, FormatterConfig
 
                         loc = next(
-                            (l for l in active_match.localizations if _match_language_code(l.target_language, target_lang)),
+                            (l for l in active_match.localizations if _match_language_code(l.locale, target_lang)),
                             None,
                         )
                         if not loc and active_match.localizations:
@@ -296,7 +296,7 @@ class MetadataService:
                             previous_backdrop_path = active_match.backdrop_path
 
                         previous_logo_paths = {
-                            loc.target_language: loc.logo_path
+                            loc.locale: loc.logo_path
                             for match in item.matches
                             if match.is_active
                             for loc in match.localizations
@@ -322,7 +322,7 @@ class MetadataService:
                                     match.image_status = ImageStatus.PENDING
                                 backdrop_changed = previous_backdrop_path != match.backdrop_path
                                 logo_changed = any(
-                                    previous_logo_paths.get(loc.target_language) != loc.logo_path
+                                    previous_logo_paths.get(loc.locale) != loc.logo_path
                                     for loc in match.localizations
                                 )
                                 if logo_changed:
@@ -366,10 +366,10 @@ class MetadataService:
                         "message": f"Syncing {progress_count}/{total_units} items..."
                     })
 
-                db.query(MetadataLocalization).filter(MetadataLocalization.target_language == target_lang).update({"is_primary": True})
-                db.query(MetadataLocalization).filter(MetadataLocalization.target_language != target_lang).update({"is_primary": False})
-                db.query(MediaCollectionLocalization).filter(MediaCollectionLocalization.target_language == target_lang).update({"is_primary": True})
-                db.query(MediaCollectionLocalization).filter(MediaCollectionLocalization.target_language != target_lang).update({"is_primary": False})
+                db.query(MetadataLocalization).filter(MetadataLocalization.locale == target_lang).update({"is_primary": True})
+                db.query(MetadataLocalization).filter(MetadataLocalization.locale != target_lang).update({"is_primary": False})
+                db.query(MediaCollectionLocalization).filter(MediaCollectionLocalization.locale == target_lang).update({"is_primary": True})
+                db.query(MediaCollectionLocalization).filter(MediaCollectionLocalization.locale != target_lang).update({"is_primary": False})
                 
                 sync_pending_setting = db.query(UserSetting).filter(UserSetting.key == "language_sync_pending").first()
                 if sync_pending_setting:

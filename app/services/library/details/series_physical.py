@@ -57,12 +57,8 @@ class SeriesPhysicalMixin(SeriesAssetsMixin):
 
         base_item = next((i for i in items if i.item_type == ItemType.SERIES), items[0])
         base_match = _best_series_level_match(items)
-        base_loc = None
-        if base_match and base_match.localizations:
-            if ui_lang:
-                base_loc = next((l for l in base_match.localizations if _match_language_code(l.target_language, ui_lang)), None)
-            if not base_loc:
-                base_loc = next((l for l in base_match.localizations if l.is_primary), base_match.localizations[0])
+        from app.services.language_service import LanguageService
+        base_loc = LanguageService.pick_localization(base_match.localizations, [ui_lang] if ui_lang else []) if base_match else None
 
         tmdb_episode_stills = {}
         self._download_and_update_physical_assets(db, episodes_only, base_match, base_loc, cached_seasons, series_tmdb_id_int, ui_lang, tmdb_episode_stills)
@@ -207,12 +203,7 @@ class SeriesPhysicalMixin(SeriesAssetsMixin):
             if item.item_type == ItemType.SERIES:
                 continue
 
-            loc = None
-            if match.localizations:
-                if ui_lang:
-                        loc = next((l for l in match.localizations if _match_language_code(l.target_language, ui_lang)), None)
-                if not loc:
-                    loc = next((l for l in match.localizations if l.is_primary), match.localizations[0])
+            loc = LanguageService.pick_localization(match.localizations, [ui_lang] if ui_lang else [])
 
             s_num = match.season_number if match.season_number is not None else item.fn_season
             raw_e_num = match.episode_number if match.episode_number is not None else item.fn_episode

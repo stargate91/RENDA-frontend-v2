@@ -27,22 +27,17 @@ class Formatter:
         self.path_resolver = PathResolver(self.config)
 
     def _match_language_code(self, lang_a: Optional[str], lang_b: Optional[str]) -> bool:
-        if not lang_a or not lang_b:
-            return False
-        a = str(lang_a).lower()
-        b = str(lang_b).lower()
-        return a == b or a.split("-")[0] == b.split("-")[0]
+        from ..services.language_service import LanguageService
+        return LanguageService.matches_locale(lang_a, lang_b)
 
     def _pick_localization(self, match: MediaMatch, item: Any = None):
         localizations = getattr(match, "localizations", None) or []
         if not localizations:
             return None
-        preferred_language = getattr(item, "target_language", None) or getattr(getattr(match, "media_item", None), "target_language", None)
-        if preferred_language:
-            localized = next((l for l in localizations if self._match_language_code(getattr(l, "target_language", None), preferred_language)), None)
-            if localized:
-                return localized
-        return next((l for l in localizations if l.is_primary), localizations[0])
+        from ..services.language_service import LanguageService
+        preferred_locale = getattr(item, "locale", None) or getattr(getattr(match, "media_item", None), "locale", None)
+        locales = [preferred_locale] if preferred_locale else []
+        return LanguageService.pick_localization(localizations, locales)
 
     def format_item(self, item: Any, match: MediaMatch, loc: Any) -> RenamePreview:
         """

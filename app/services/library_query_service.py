@@ -6,6 +6,7 @@ from typing import Optional
 from sqlalchemy import Float, Integer, String, and_, case, cast, func, inspect, literal, or_, select, union_all
 from sqlalchemy.orm import Session, joinedload
 
+from app.services.language_service import LanguageService
 from ..db.models import CustomListItem, ItemStatus, ItemType, MediaItem, VirtualMediaState
 from ..db.models.metadata import MediaMatch, TMDBCache
 from ..repositories.media_repository import MediaRepository
@@ -93,12 +94,7 @@ class LibraryQueryService:
             if not active_match:
                 continue
 
-            loc = None
-            if active_match.localizations:
-                if ui_lang:
-                    loc = next((localization for localization in active_match.localizations if _match_language_code(localization.target_language, ui_lang)), None)
-                if not loc:
-                    loc = next((localization for localization in active_match.localizations if localization.is_primary), active_match.localizations[0])
+            loc = LanguageService.pick_localization(active_match.localizations, [ui_lang] if ui_lang else [])
 
             results.append({
                 "id": item.id,
@@ -183,12 +179,7 @@ class LibraryQueryService:
             else:
                 continue
 
-            loc = None
-            if active_match and active_match.localizations:
-                if ui_lang:
-                    loc = next((localization for localization in active_match.localizations if _match_language_code(localization.target_language, ui_lang)), None)
-                if not loc:
-                    loc = next((localization for localization in active_match.localizations if localization.is_primary), active_match.localizations[0])
+            loc = LanguageService.pick_localization(active_match.localizations, [ui_lang] if ui_lang else []) if active_match else None
 
             serialized_item = {
                 "id": item.id,

@@ -55,8 +55,8 @@ class MetadataEnrichmentService:
             langs_to_enrich.append(pl.value)
         if tl and tl.value:
             langs_to_enrich.append(tl.value)
-        if item.target_language:
-            langs_to_enrich.append(item.target_language)
+        if item.locale:
+            langs_to_enrich.append(item.locale)
         if fallback_language:
             langs_to_enrich.append(fallback_language)
         if fl and fl.value and fl.value != "none":
@@ -98,7 +98,7 @@ class MetadataEnrichmentService:
                 self.resolver.api,
                 details.belongs_to_collection,
                 language,
-                is_primary=(language == (match.media_item.target_language or language)),
+                is_primary=(language == (match.media_item.locale or language)),
             )
             match.collection = details.belongs_to_collection.name
             match.collection_tmdb_id = collection.tmdb_id if collection else None
@@ -339,10 +339,9 @@ class MetadataEnrichmentService:
             match.rating_meta = int(omdb["metascore"]) if omdb.get("metascore") != "N/A" else match.rating_meta
         except: pass
 
-    def _get_or_create_loc(self, match: MediaMatch, language: str) -> MetadataLocalization:
-        loc = self.db.query(MetadataLocalization).filter(MetadataLocalization.match_id == match.id, MetadataLocalization.target_language == language).first()
+        loc = self.db.query(MetadataLocalization).filter(MetadataLocalization.match_id == match.id, MetadataLocalization.locale == language).first()
         if not loc:
-            loc = MetadataLocalization(match_id=match.id, target_language=language)
+            loc = MetadataLocalization(match_id=match.id, locale=language)
             self.db.add(loc)
         return loc
     def _refresh_planned_path(self, item: MediaItem, match: MediaMatch):
@@ -352,17 +351,17 @@ class MetadataEnrichmentService:
         formatter = Formatter(config)
         
         target_lang = self.db.query(UserSetting).filter(UserSetting.key == "default_target_language").first()
-        preferred_language = item.target_language or (target_lang.value if target_lang else None)
+        preferred_language = item.locale or (target_lang.value if target_lang else None)
         
         loc = None
         if preferred_language:
             db_localizations = self.db.query(MetadataLocalization).filter(MetadataLocalization.match_id == match.id).all()
-            loc = next((l for l in db_localizations if _match_language_code(l.target_language, preferred_language)), None)
+            loc = next((l for l in db_localizations if _match_language_code(l.locale, preferred_language)), None)
         if not loc:
             primary_lang = self.db.query(UserSetting).filter(UserSetting.key == "primary_metadata_language").first()
             primary_lang_val = primary_lang.value if primary_lang else "en"
             if match.localizations:
-                loc = next((l for l in match.localizations if _match_language_code(l.target_language, primary_lang_val)), None)
+                loc = next((l for l in match.localizations if _match_language_code(l.locale, primary_lang_val)), None)
         if not loc and match.localizations:
             loc = next((l for l in match.localizations if l.is_primary), match.localizations[0])
             

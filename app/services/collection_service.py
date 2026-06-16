@@ -65,7 +65,7 @@ class CollectionService:
 
         loc = self.db.query(MediaCollectionLocalization).filter(
             MediaCollectionLocalization.collection_tmdb_id == collection.tmdb_id,
-            MediaCollectionLocalization.target_language == language,
+            MediaCollectionLocalization.locale == language,
         ).first()
         if not loc:
             # Check if it's already pending in the session
@@ -73,7 +73,7 @@ class CollectionService:
                 if (
                     isinstance(obj, MediaCollectionLocalization)
                     and obj.collection_tmdb_id == collection.tmdb_id
-                    and obj.target_language == language
+                    and obj.locale == language
                 ):
                     loc = obj
                     break
@@ -82,7 +82,7 @@ class CollectionService:
                 loc = next(
                     (
                         entry for entry in collection.localizations
-                        if entry.target_language == language
+                        if entry.locale == language
                     ),
                     None,
                 )
@@ -90,7 +90,7 @@ class CollectionService:
             if not loc:
                 loc = MediaCollectionLocalization(
                     collection_tmdb_id=collection.tmdb_id,
-                    target_language=language,
+                    locale=language,
                     name=resolved_name,
                 )
                 try:
@@ -103,7 +103,7 @@ class CollectionService:
                         self.db.expunge(loc)
                     loc = self.db.query(MediaCollectionLocalization).filter(
                         MediaCollectionLocalization.collection_tmdb_id == collection.tmdb_id,
-                        MediaCollectionLocalization.target_language == language,
+                        MediaCollectionLocalization.locale == language,
                     ).first()
                     if not loc:
                         raise
@@ -111,7 +111,7 @@ class CollectionService:
         if is_primary:
             self.db.query(MediaCollectionLocalization).filter(
                 MediaCollectionLocalization.collection_tmdb_id == collection.tmdb_id,
-                MediaCollectionLocalization.target_language != language,
+                MediaCollectionLocalization.locale != language,
             ).update({"is_primary": False}, synchronize_session=False)
 
         previous_poster_path = loc.poster_path

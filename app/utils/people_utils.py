@@ -328,42 +328,22 @@ def _run_bulk_people_import_job(raw_text: str, role: str, adult_only: bool = Fal
         db.close()
 
 
-def _preferred_metadata_language(db) -> str:
-    primary = db.query(UserSetting).filter(UserSetting.key == "primary_metadata_language").first()
-    if primary and primary.value and primary.value != "none":
-        return primary.value
-    fallback = db.query(UserSetting).filter(UserSetting.key == "fallback_metadata_language").first()
-    if fallback and fallback.value and fallback.value != "none":
-        return fallback.value
-    return "en"
-
-
-def _match_language_code(lang_a: Optional[str], lang_b: Optional[str]) -> bool:
-    if not lang_a or not lang_b:
-        return False
-    a = lang_a.lower()
-    b = lang_b.lower()
-    return a == b or a.split("-")[0] == b.split("-")[0]
+from app.services.language_service import LanguageService
+from app.utils.library_utils import _preferred_metadata_language, _match_language_code
 
 
 def _pick_person_localization(person, preferred_lang: Optional[str]):
     if not person or not person.localizations:
         return None
-    if preferred_lang:
-        loc = next((l for l in person.localizations if _match_language_code(l.language, preferred_lang)), None)
-        if loc:
-            return loc
-    return person.localizations[0]
+    locales = [preferred_lang] if preferred_lang else []
+    return LanguageService.pick_localization(person.localizations, locales)
 
 
 def _pick_match_localization(localizations, preferred_lang: Optional[str]):
     if not localizations:
         return None
-    if preferred_lang:
-        loc = next((l for l in localizations if _match_language_code(l.target_language, preferred_lang)), None)
-        if loc:
-            return loc
-    return next((l for l in localizations if l.is_primary), localizations[0])
+    locales = [preferred_lang] if preferred_lang else []
+    return LanguageService.pick_localization(localizations, locales)
 
 
 def _is_remote_image_path(path: Optional[str]) -> bool:

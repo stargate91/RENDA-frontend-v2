@@ -280,17 +280,35 @@ class ImageBatchProcessorMixin:
                 match.image_status = ImageStatus.COMPLETED
             else:
                 match.image_status = ImageStatus.FAILED
-            local_db.commit()
+
+            from sqlalchemy.exc import OperationalError
+            import time
+            for attempt in range(5):
+                try:
+                    local_db.commit()
+                    break
+                except OperationalError as oe:
+                    local_db.rollback()
+                    if attempt == 4:
+                        raise oe
+                    time.sleep(0.25 * (attempt + 1))
         except Exception as e:
             logger.error(f"Error downloading images for match ID {match_id}: {e}")
             local_db.rollback()
-            try:
-                match = local_db.query(MediaMatch).filter(MediaMatch.id == match_id).first()
-                if match:
-                    match.image_status = ImageStatus.FAILED
-                    local_db.commit()
-            except:
-                pass
+            from sqlalchemy.exc import OperationalError
+            import time
+            for attempt in range(5):
+                try:
+                    match = local_db.query(MediaMatch).filter(MediaMatch.id == match_id).first()
+                    if match:
+                        match.image_status = ImageStatus.FAILED
+                        local_db.commit()
+                        break
+                except OperationalError:
+                    local_db.rollback()
+                    time.sleep(0.25 * (attempt + 1))
+                except:
+                    break
         finally:
             local_db.close()
 

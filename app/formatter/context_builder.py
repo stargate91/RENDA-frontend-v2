@@ -163,17 +163,12 @@ class ContextBuilder:
         collection = getattr(match, "collection_entity", None)
         localizations = getattr(collection, "localizations", None) if collection else None
         if localizations:
-            target_language = getattr(loc, "target_language", None)
-            if target_language:
-                localized = next((entry for entry in localizations if entry.target_language == target_language and entry.name), None)
-                if localized:
-                    return localized.name
-            primary = next((entry for entry in localizations if entry.is_primary and entry.name), None)
-            if primary:
-                return primary.name
-            fallback = next((entry for entry in localizations if entry.name), None)
-            if fallback:
-                return fallback.name
+            from ..services.language_service import LanguageService
+            locale = getattr(loc, "locale", None)
+            locales = [locale] if locale else []
+            localized = LanguageService.pick_localization(localizations, locales)
+            if localized and localized.name:
+                return localized.name
         return getattr(match, "collection", None) or ""
 
     def _resolve_air_dates(self, match: Any) -> tuple[Optional[datetime], Optional[datetime]]:

@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Any, Optional
 
 from sqlalchemy import or_
+from app.services.language_service import LanguageService
 from app.db.models import ItemType, UserSetting
 from app.db.models.media import CustomListItem, MediaItem, VirtualMediaState
 from app.db.models.metadata import MediaMatch, MetadataLocalization, OMDBCache
@@ -146,26 +147,7 @@ def _serialize_list_item(db, item: CustomListItem) -> dict[str, Any]:
             is_watched = bool(media_item.is_watched)
         if match:
             imdb_id = match.imdb_id
-            loc = None
-            localizations = list(match.localizations or [])
-            for preferred in preferred_languages:
-                loc = next((entry for entry in localizations if entry.target_language == preferred), None)
-                if loc:
-                    break
-            if not loc:
-                for preferred in preferred_languages:
-                    loc = next(
-                        (
-                            entry for entry in localizations
-                            if entry.target_language and preferred
-                            and entry.target_language.split("-", 1)[0].lower() == preferred.split("-", 1)[0].lower()
-                        ),
-                        None,
-                    )
-                    if loc:
-                        break
-            if not loc and localizations:
-                loc = next((entry for entry in localizations if entry.is_primary), localizations[0])
+            loc = LanguageService.pick_localization(match.localizations, preferred_languages)
             if loc:
                 current_title = (
                     loc.series_title if normalized_media_type == "tv" and loc.series_title
@@ -281,17 +263,7 @@ def _cache_virtual_poster(poster_path: Optional[str]):
         logger.warning(f"Failed to cache virtual poster {poster_path}: {exc}")
 
 
-def _preferred_metadata_language(db) -> str:
-    fallback = db.query(UserSetting).filter(UserSetting.key == "fallback_metadata_language").first()
-    if fallback and fallback.value and fallback.value != "none":
-        return fallback.value
-    ui = db.query(UserSetting).filter(UserSetting.key == "ui_language").first()
-    if ui and ui.value and ui.value != "none":
-        return ui.value
-    primary = db.query(UserSetting).filter(UserSetting.key == "primary_metadata_language").first()
-    if primary and primary.value and primary.value != "none":
-        return primary.value
-    return "en-US"
+from app.utils.library_utils import _preferred_metadata_language
 
 
 def _hydrate_virtual_metadata(

@@ -145,12 +145,8 @@ class LibraryFormatterService:
         if not target_group:
             return None
 
-        loc = None
-        if active_match and active_match.localizations:
-            if ui_lang:
-                loc = next((localization for localization in active_match.localizations if _match_language_code(localization.target_language, ui_lang)), None)
-            if not loc:
-                loc = next((localization for localization in active_match.localizations if localization.is_primary), active_match.localizations[0])
+        from app.services.language_service import LanguageService
+        loc = LanguageService.pick_localization(active_match.localizations, [ui_lang] if ui_lang else []) if active_match else None
 
         def _library_year():
             if not active_match:

@@ -59,7 +59,7 @@ class PersonService:
                 # Default localization (English)
                 loc = PersonLocalization(
                     person_id=tmdb_id,
-                    language="en",
+                    locale="en",
                     name=person_data.get("name", "Unknown")
                 )
                 self.db.add(loc)
@@ -148,11 +148,11 @@ class PersonService:
                 # Update localization
                 loc = self.db.query(PersonLocalization).filter(
                     PersonLocalization.person_id == person_id,
-                    PersonLocalization.language == lang_code
+                    PersonLocalization.locale == lang_code
                 ).first()
                 
                 if not loc:
-                    loc = PersonLocalization(person_id=person_id, language=lang_code)
+                    loc = PersonLocalization(person_id=person_id, locale=lang_code)
                     self.db.add(loc)
                     
                 loc.name = data.get("name") or loc.name or "Unknown"

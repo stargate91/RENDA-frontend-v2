@@ -59,7 +59,7 @@ class MediaActionService:
     def _apply_media_updates(self, item: MediaItem, updates: dict):
         # Mapping dict keys to model attributes
         mapping = {
-            "target_language": "target_language",
+            "target_language": "locale",
             "edition": lambda v: MovieEdition(v),
             "source": lambda v: MediaSource(v),
             "audio_type": lambda v: MediaAudioType(v),

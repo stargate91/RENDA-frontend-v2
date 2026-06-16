@@ -1,39 +1,20 @@
 from typing import Optional
-from app.db.models import UserSetting
+from app.services.language_service import LanguageService
 
 def _preferred_metadata_language(db) -> str:
-    return _preferred_metadata_languages(db)[0]
+    return LanguageService.get_preferred_locale(db)
 
 
 def _preferred_metadata_languages(db) -> list[str]:
-    langs: list[str] = []
-    for key in ("default_target_language", "fallback_metadata_language", "ui_language", "primary_metadata_language"):
-        setting = db.query(UserSetting).filter(UserSetting.key == key).first()
-        if not setting or not setting.value:
-            continue
-        token = str(setting.value).strip()
-        if not token or token.lower() == "none":
-            continue
-        if token not in langs:
-            langs.append(token)
-    return langs or ["en"]
+    return LanguageService.get_preferred_locales(db)
 
 
 def _match_language_code(lang_a: Optional[str], lang_b: Optional[str]) -> bool:
-    if not lang_a or not lang_b:
-        return False
-    a = str(lang_a).lower()
-    b = str(lang_b).lower()
-    return a == b or a.split("-", 1)[0] == b.split("-", 1)[0]
+    return LanguageService.matches_locale(lang_a, lang_b)
 
 
 def _normalize_language_code(language: Optional[str]) -> Optional[str]:
-    if not language:
-        return None
-    normalized = str(language).strip().lower()
-    if not normalized:
-        return None
-    return normalized.split("-", 1)[0]
+    return LanguageService.normalize_locale(language)
 
 
 def _split_genres(genres: list[str]) -> list[str]:

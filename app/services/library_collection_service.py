@@ -1,6 +1,7 @@
 from typing import Optional
 from sqlalchemy.orm import Session
 
+from app.services.language_service import LanguageService
 from ..db.models import ItemType
 from ..repositories.media_repository import MediaRepository
 from ..schemas.media import LibraryCollectionsPageDTO, LibraryCollectionDTO, LibraryCollectionItemDTO
@@ -162,11 +163,8 @@ class LibraryCollectionService:
     def _pick_collection_localization(self, collection, ui_lang: Optional[str]):
         if not collection or not getattr(collection, "localizations", None):
             return None
-        if ui_lang:
-            localized = next((loc for loc in collection.localizations if _match_language_code(loc.target_language, ui_lang)), None)
-            if localized:
-                return localized
-        return next((loc for loc in collection.localizations if loc.is_primary), collection.localizations[0])
+        locales = [ui_lang] if ui_lang else []
+        return LanguageService.pick_localization(collection.localizations, locales)
 
     def _resolve_collection_image(self, collection_loc, image_kind: str) -> Optional[str]:
         if not collection_loc:
@@ -183,11 +181,8 @@ class LibraryCollectionService:
     def _pick_match_localization(self, match, ui_lang: Optional[str]):
         if not match or not match.localizations:
             return None
-        if ui_lang:
-            localized = next((loc for loc in match.localizations if _match_language_code(loc.target_language, ui_lang)), None)
-            if localized:
-                return localized
-        return next((loc for loc in match.localizations if loc.is_primary), match.localizations[0])
+        locales = [ui_lang] if ui_lang else []
+        return LanguageService.pick_localization(match.localizations, locales)
 
     def _resolve_match_poster(self, movie_loc) -> Optional[str]:
         if not movie_loc:

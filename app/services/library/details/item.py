@@ -241,13 +241,8 @@ class ItemDetailProvider(BaseDetailProvider):
             if not active_match:
                 return JSONResponse(status_code=404, content={"error": "No active match found"})
 
-            # Get the best localization
-            loc = None
-            if active_match.localizations:
-                if ui_lang:
-                    loc = next((l for l in active_match.localizations if _match_language_code(l.target_language, ui_lang)), None)
-                if not loc:
-                    loc = next((l for l in active_match.localizations if l.is_primary), active_match.localizations[0])
+            from app.services.language_service import LanguageService
+            loc = LanguageService.pick_localization(active_match.localizations, [ui_lang] if ui_lang else [])
 
             if loc:
                 # Synchronously download missing media assets for local/missing movie
@@ -321,14 +316,12 @@ class ItemDetailProvider(BaseDetailProvider):
             cast = []
             directors = []
             writers = []
+            from app.services.language_service import LanguageService
             for link in sorted(active_match.people, key=lambda x: x.order):
                 person = link.person
                 p_loc = None
                 if person.localizations:
-                    if ui_lang:
-                        p_loc = next((l for l in person.localizations if _match_language_code(l.language, ui_lang)), None)
-                    if not p_loc:
-                        p_loc = person.localizations[0] if person.localizations else None
+                    p_loc = LanguageService.pick_localization(person.localizations, [ui_lang] if ui_lang else [])
 
                 person_data = {
                     "id": person.id,

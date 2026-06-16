@@ -3,6 +3,7 @@ from urllib.parse import urlsplit, parse_qs
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
 
+from app.services.language_service import LanguageService
 from ...db.models import CustomList, CustomListItem, ItemStatus, ItemType, MediaItem, VirtualMediaState, UserSetting, Person, Tag
 from ...db.models.metadata import MediaMatch, OMDBCache, TMDBCache
 from ...repositories.media_repository import MediaRepository
@@ -248,7 +249,7 @@ class LibraryGroupedService:
                         return parsed_language
                 except Exception:
                     pass
-                return str(cache.target_language or "")
+                return str(cache.locale or "")
 
             def _rank_cache(cache):
                 cache_lang = _cache_language(cache)
@@ -357,12 +358,7 @@ class LibraryGroupedService:
             if not include_all_tabs and target_group not in requested_tabs:
                 continue
 
-            loc = None
-            if active_match and active_match.localizations:
-                if ui_lang:
-                    loc = next((localization for localization in active_match.localizations if _match_language_code(localization.target_language, ui_lang)), None)
-                if not loc:
-                    loc = next((localization for localization in active_match.localizations if localization.is_primary), active_match.localizations[0])
+            loc = LanguageService.pick_localization(active_match.localizations, [ui_lang] if ui_lang else []) if active_match else None
 
             data = {
                 "id": item.id,

@@ -24,22 +24,7 @@ from app.db.models import (
 
 logger = logging.getLogger(__name__)
 
-def _preferred_metadata_language(db) -> str:
-    primary = db.query(UserSetting).filter(UserSetting.key == "primary_metadata_language").first()
-    if primary and primary.value and primary.value != "none":
-        return primary.value
-    fallback = db.query(UserSetting).filter(UserSetting.key == "fallback_metadata_language").first()
-    if fallback and fallback.value and fallback.value != "none":
-        return fallback.value
-    return "en-US"
-
-
-def _match_language_code(lang_a: Optional[str], lang_b: Optional[str]) -> bool:
-    if not lang_a or not lang_b:
-        return False
-    a = str(lang_a).lower()
-    b = str(lang_b).lower()
-    return a == b or a.split("-")[0] == b.split("-")[0]
+from app.utils.library_utils import _preferred_metadata_language, _match_language_code
 
 
 def _hydrate_virtual_metadata(db, tmdb_id: int, media_type: str) -> None:
@@ -172,7 +157,7 @@ def _apply_media_updates(item, updates):
                 item.planned_path = None
 
         if "target_language" in updates:
-            item.target_language = updates["target_language"]
+            item.locale = updates["target_language"]
         if "edition" in updates:
             item.edition = MovieEdition(updates["edition"])
         if "source" in updates:
@@ -238,7 +223,7 @@ def _build_media_item_from_extra(extra, target_item_type: str):
         folder_name=path.parent.name if path.parent else None,
         status=ItemStatus.NEW,
         category="video",
-        target_language="en",
+        locale="en",
         file_hash=extra.file_hash,
     )
 
@@ -295,13 +280,15 @@ def _refresh_planned_path(db, item):
         return
 
     loc = None
-    if item.target_language:
+    if item.locale:
         db_loc = db.query(MetadataLocalization).filter(
             MetadataLocalization.match_id == active_match.id
         ).all()
-        loc = next((entry for entry in db_loc if _match_language_code(entry.target_language, item.target_language)), None)
+        from app.services.language_service import LanguageService
+        loc = LanguageService.pick_localization(db_loc, [item.locale])
     if not loc and active_match.localizations:
-        loc = next((entry for entry in active_match.localizations if entry.is_primary), active_match.localizations[0])
+        from app.services.language_service import LanguageService
+        loc = LanguageService.pick_localization(active_match.localizations, db)
     if not loc:
         return
 
@@ -314,7 +301,7 @@ def _refresh_planned_path(db, item):
 
 def _sync_target_language_metadata(db, item):
     active_match = next((m for m in item.matches if m.is_active), None)
-    target_language = item.target_language
+    target_language = item.locale
     if not active_match or not target_language:
         return
 

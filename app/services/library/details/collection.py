@@ -103,12 +103,8 @@ class CollectionDetailProvider(BaseDetailProvider):
                 if not active_match:
                     continue
                 owned_tmdb_ids.add(active_match.tmdb_id)
-                loc = None
-                if active_match.localizations:
-                    if ui_lang:
-                        loc = next((l for l in active_match.localizations if l.target_language == ui_lang), None)
-                    if not loc:
-                        loc = next((l for l in active_match.localizations if l.is_primary), active_match.localizations[0])
+                from app.services.language_service import LanguageService
+                loc = LanguageService.pick_localization(active_match.localizations, [ui_lang] if ui_lang else [])
 
                 year = active_match.release_date.year if active_match.release_date else (item.fn_year or item.fd_year)
                 movies.append({

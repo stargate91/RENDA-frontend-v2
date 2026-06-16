@@ -13,6 +13,7 @@ from app.db.models import (
 
 from app.utils.library_utils.lang import _match_language_code
 from app.utils.library_utils.images import _public_image_path, _is_remote_image_path
+from app.services.language_service import LanguageService
 
 def _pick_tmdb_cache(db, tmdb_id: Optional[int], media_type: str, preferred_languages: list[str]):
     if not tmdb_id:
@@ -40,7 +41,7 @@ def _pick_tmdb_cache(db, tmdb_id: Optional[int], media_type: str, preferred_lang
                 return parsed_language
         except Exception:
             pass
-        return str(cache.target_language or "")
+        return str(cache.locale or "")
 
     def rank_for(cache: TMDBCache) -> tuple[int, float]:
         cache_lang = _cache_language(cache)
@@ -57,14 +58,7 @@ def _pick_tmdb_cache(db, tmdb_id: Optional[int], media_type: str, preferred_lang
 def _pick_match_localization(match, preferred_languages: list[str]):
     if not match or not match.localizations:
         return None
-    for preferred in preferred_languages:
-        loc = next(
-            (entry for entry in match.localizations if _match_language_code(entry.target_language, preferred)),
-            None,
-        )
-        if loc:
-            return loc
-    return next((entry for entry in match.localizations if entry.is_primary), None) or match.localizations[0]
+    return LanguageService.pick_localization(match.localizations, preferred_languages)
 
 
 def _resolve_virtual_catalog_metadata(

@@ -34,12 +34,12 @@ class MediaDiscoveryService:
     def _get_active_loc(self, match, item=None):
         if not match.localizations:
             return None
-        preferred_lang = getattr(item, "target_language", None) or self.primary_lang
+        preferred_lang = getattr(item, "locale", None) or self.primary_lang
         for loc in match.localizations:
-            if _match_language_code(loc.target_language, preferred_lang):
+            if _match_language_code(loc.locale, preferred_lang):
                 return loc
         for loc in match.localizations:
-            if _match_language_code(loc.target_language, self.primary_lang):
+            if _match_language_code(loc.locale, self.primary_lang):
                 return loc
         return next((loc for loc in match.localizations if loc.is_primary), match.localizations[0])
 
@@ -168,7 +168,7 @@ class MediaDiscoveryService:
             audio_type=item.audio_type.value if item.audio_type else None,
             edition=item.edition.value if item.edition else None,
             source=item.source.value if item.source else None,
-            target_language=item.target_language,
+            target_language=item.locale,
         )
 
     def _process_extras(self, extras: List[Any], parent_planned_paths: Dict[int, str], formatter: Formatter) -> List[ExtraFileDTO]:

@@ -87,7 +87,7 @@ class MetadataPresentationService:
                 localizations = []
                 for loc in match.localizations:
                     localizations.append({
-                        "language": loc.target_language,
+                        "language": loc.locale,
                         "title": loc.title,
                         "overview": loc.overview,
                         "poster_path": _resolve_poster_path(loc.poster_path, loc.local_poster_path),

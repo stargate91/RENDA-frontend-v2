@@ -66,7 +66,7 @@ class Resolver:
             for loc in active_match.localizations:
                 new_loc = MetadataLocalization(
                     match_id=new_match.id,
-                    target_language=loc.target_language,
+                    locale=loc.locale,
                     title=loc.title,
                     original_title=loc.original_title,
                     series_title=loc.series_title,
@@ -565,7 +565,7 @@ class Resolver:
             # Localized data (from basic search response)
             loc = MetadataLocalization(
                 match_id=match.id,
-                target_language=language,
+                locale=language,
                 title=data.get("title") or data.get("name"),
                 overview=data.get("overview"),
                 poster_path=data.get("poster_path")

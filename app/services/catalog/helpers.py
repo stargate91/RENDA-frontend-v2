@@ -74,7 +74,7 @@ def _pick_best_cached_row(rows, preferred_languages):
                 return parsed_language
         except Exception:
             pass
-        return str(cache.target_language or "")
+        return str(cache.locale or "")
 
     def _rank(cache):
         cache_lang = _cache_language(cache)

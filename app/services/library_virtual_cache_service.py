@@ -27,7 +27,7 @@ class LibraryVirtualCacheService:
             return False
 
     def build_virtual_cache_choice_subquery(self, media_type: str, preferred_languages: list[str]):
-        cache_lang = func.lower(TMDBCache.target_language)
+        cache_lang = func.lower(TMDBCache.locale)
         language_rank = case(
             *[
                 (
@@ -120,7 +120,7 @@ class LibraryVirtualCacheService:
             except Exception:
                 cache_lang = ""
             if not cache_lang:
-                cache_lang = str(cache.target_language or "").lower()
+                cache_lang = str(cache.locale or "").lower()
             for idx, preferred in enumerate(preferred_languages):
                 preferred_norm = preferred.lower()
                 preferred_short = preferred_norm.split("-", 1)[0]

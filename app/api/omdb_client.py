@@ -135,14 +135,18 @@ class OMDBClient:
             if isinstance(ex, OMDBRateLimitError):
                 raise
 
+            err_msg = str(ex)
+            if "10054" in err_msg or isinstance(ex, ConnectionResetError):
+                err_msg = "Connection reset by peer (WSAECONNRESET / 10054)"
+
             if queue_on_limit:
                 self.enqueue_rating_request(
                     imdb_id,
                     status="pending",
-                    error=str(ex),
+                    error=err_msg,
                     next_retry_at=datetime.utcnow() + timedelta(hours=1),
                 )
-            logger.error(f"OMDb API error ({imdb_id}): {ex}")
+            logger.error(f"OMDb API error ({imdb_id}): {err_msg}")
             if allow_stale_fallback:
                 return cached_data or {}
             return {}

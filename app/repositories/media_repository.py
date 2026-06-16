@@ -22,13 +22,8 @@ class MediaRepository:
             return 0
 
     def _preferred_metadata_language(self) -> str:
-        primary = self.db.query(UserSetting).filter(UserSetting.key == "primary_metadata_language").first()
-        if primary and primary.value and primary.value != "none":
-            return primary.value
-        fallback = self.db.query(UserSetting).filter(UserSetting.key == "fallback_metadata_language").first()
-        if fallback and fallback.value and fallback.value != "none":
-            return fallback.value
-        return "en-US"
+        from app.utils.library_utils import _preferred_metadata_language as pref_lang
+        return pref_lang(self.db)
 
     def _get_cached_genres_for_match(self, match: MediaMatch, preferred_lang: str) -> List[dict]:
         lang_candidates = [preferred_lang]

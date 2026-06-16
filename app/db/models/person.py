@@ -31,7 +31,7 @@ class PersonLocalization(Base):
     """Cast and crew - Language-specific information."""
     __tablename__ = "person_localizations"
     id: Mapped[int] = mapped_column(primary_key=True); person_id: Mapped[int] = mapped_column(ForeignKey("persons.id"), index=True)
-    language: Mapped[str] = mapped_column(String, default="en", index=True); name: Mapped[str] = mapped_column(String, nullable=False)
+    locale: Mapped[str] = mapped_column(String, default="en", index=True); name: Mapped[str] = mapped_column(String, nullable=False)
     biography: Mapped[Optional[str]] = mapped_column(String); person: Mapped["Person"] = relationship(back_populates="localizations")
 
 

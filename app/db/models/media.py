@@ -50,7 +50,7 @@ class MediaItem(Base):
     it_title: Mapped[Optional[str]] = mapped_column(String); it_year: Mapped[Optional[int]] = mapped_column(Integer)
     it_season: Mapped[Optional[int]] = mapped_column(Integer); it_episode: Mapped[Optional[str]] = mapped_column(String)
     it_item_type: Mapped[Optional[str]] = mapped_column(String)
-    target_language: Mapped[Optional[str]] = mapped_column(String); source: Mapped[MediaSource] = mapped_column(SQLEnum(MediaSource), default=MediaSource.NONE)
+    locale: Mapped[Optional[str]] = mapped_column(String); source: Mapped[MediaSource] = mapped_column(SQLEnum(MediaSource), default=MediaSource.NONE)
     edition: Mapped[MovieEdition] = mapped_column(SQLEnum(MovieEdition), default=MovieEdition.NONE)
     audio_type: Mapped[MediaAudioType] = mapped_column(SQLEnum(MediaAudioType), default=MediaAudioType.NONE)
     part: Mapped[Optional[int]] = mapped_column(Integer)

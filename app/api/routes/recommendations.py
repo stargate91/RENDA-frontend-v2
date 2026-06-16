@@ -25,17 +25,7 @@ router = APIRouter()
 MEDIA_IMAGE_ROOT = Path("data/media/images")
 
 
-def _preferred_metadata_language(db) -> str:
-    fallback = db.query(UserSetting).filter(UserSetting.key == "fallback_metadata_language").first()
-    if fallback and fallback.value and fallback.value != "none":
-        return fallback.value
-    ui = db.query(UserSetting).filter(UserSetting.key == "ui_language").first()
-    if ui and ui.value and ui.value != "none":
-        return ui.value
-    primary = db.query(UserSetting).filter(UserSetting.key == "primary_metadata_language").first()
-    if primary and primary.value and primary.value != "none":
-        return primary.value
-    return "en-US"
+from app.utils.library_utils import _preferred_metadata_language
 
 
 _IMAGE_EXISTENCE_CACHE = {}
@@ -278,7 +268,7 @@ def _get_top_genre(db, preferred_language: str):
     genre_counts_tv = defaultdict(int)
 
     def _cache_rank(cache):
-        target = (cache.target_language or "").lower()
+        target = (cache.locale or "").lower()
         if target == preferred_language.lower():
             return (0, -cache.updated_at.timestamp())
         if target == short_language or target.startswith(f"{short_language}-"):
@@ -299,7 +289,7 @@ def _get_top_genre(db, preferred_language: str):
                 if not isinstance(genres, list):
                     continue
 
-                target = (cache.target_language or "").lower()
+                target = (cache.locale or "").lower()
                 if target == preferred_language.lower():
                     rank = (0, -cache.updated_at.timestamp())
                 elif target == short_language or target.startswith(f"{short_language}-"):

@@ -27,12 +27,12 @@ class MediaCollectionLocalization(Base):
     """Language-specific collection metadata for localized collection views."""
     __tablename__ = "media_collection_localizations"
     __table_args__ = (
-        UniqueConstraint("collection_tmdb_id", "target_language", name="uq_collection_localization_lang"),
+        UniqueConstraint("collection_tmdb_id", "locale", name="uq_collection_localization_lang"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     collection_tmdb_id: Mapped[int] = mapped_column(ForeignKey("media_collections.tmdb_id", ondelete="CASCADE"), index=True)
-    target_language: Mapped[str] = mapped_column(String, default="en", index=True)
+    locale: Mapped[str] = mapped_column(String, default="en", index=True)
     is_primary: Mapped[bool] = mapped_column(Boolean, default=False)
     name: Mapped[str] = mapped_column(String)
     overview: Mapped[Optional[str]] = mapped_column(String)
@@ -93,7 +93,7 @@ class MetadataLocalization(Base):
     """Level 3: Language-specific metadata (localized titles, overviews)."""
     __tablename__ = "metadata_localizations"
     id: Mapped[int] = mapped_column(primary_key=True); match_id: Mapped[int] = mapped_column(ForeignKey("media_matches.id", ondelete="CASCADE"), index=True)
-    target_language: Mapped[str] = mapped_column(String, default="en", index=True); is_primary: Mapped[bool] = mapped_column(Boolean, default=True)
+    locale: Mapped[str] = mapped_column(String, default="en", index=True); is_primary: Mapped[bool] = mapped_column(Boolean, default=True)
     title: Mapped[str] = mapped_column(String); original_title: Mapped[Optional[str]] = mapped_column(String)
     series_title: Mapped[Optional[str]] = mapped_column(String); original_series_title: Mapped[Optional[str]] = mapped_column(String)
     season_title: Mapped[Optional[str]] = mapped_column(String)
@@ -121,7 +121,7 @@ class TMDBCache(CacheBase):
     cache_key: Mapped[str] = mapped_column(String, unique=True, index=True) # Unique key for query/params
     tmdb_id: Mapped[Optional[int]] = mapped_column(Integer, index=True)
     item_type: Mapped[Optional[ItemType]] = mapped_column(SQLEnum(ItemType))
-    target_language: Mapped[str] = mapped_column(String, index=True)
+    locale: Mapped[str] = mapped_column(String, index=True)
     raw_data: Mapped[dict[str, Any]] = mapped_column(JSON)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

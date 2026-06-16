@@ -52,24 +52,16 @@ class SeriesAssetsMixin:
             if s_num not in seen_seasons:
                 seen_seasons.add(s_num)
                 c_season = cached_seasons.get(s_num, {})
-                loc = None
-                if match.localizations:
-                    if ui_lang:
-                        loc = next((l for l in match.localizations if _match_language_code(l.target_language, ui_lang)), None)
-                    if not loc:
-                        loc = next((l for l in match.localizations if l.is_primary), match.localizations[0])
+                from app.services.language_service import LanguageService
+                loc = LanguageService.pick_localization(match.localizations, [ui_lang] if ui_lang else [])
                 s_poster = c_season.get("poster_path") or (loc.poster_path if loc else None)
                 if s_poster:
                     local_s_post = os.path.join("data", "media", "images", "posters", s_poster.lstrip("/"))
                     if not os.path.exists(local_s_post):
                         missing_season_posters.append(s_poster)
 
-            loc = None
-            if match.localizations:
-                if ui_lang:
-                    loc = next((l for l in match.localizations if _match_language_code(l.target_language, ui_lang)), None)
-                if not loc:
-                    loc = next((l for l in match.localizations if l.is_primary), match.localizations[0])
+            from app.services.language_service import LanguageService
+            loc = LanguageService.pick_localization(match.localizations, [ui_lang] if ui_lang else [])
             if match and match.still_path:
                 local_still = os.path.join("data", "media", "images", "stills", match.still_path.lstrip("/"))
                 if not os.path.exists(local_still):
@@ -98,12 +90,8 @@ class SeriesAssetsMixin:
             except Exception:
                 s_num = 1
 
-            loc = None
-            if match.localizations:
-                if ui_lang:
-                    loc = next((l for l in match.localizations if _match_language_code(l.target_language, ui_lang)), None)
-                if not loc:
-                    loc = next((l for l in match.localizations if l.is_primary), match.localizations[0])
+            from app.services.language_service import LanguageService
+            loc = LanguageService.pick_localization(match.localizations, [ui_lang] if ui_lang else [])
 
             still_missing = True
             if match and match.still_path:

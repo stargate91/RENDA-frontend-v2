@@ -290,7 +290,7 @@ def retry_item_image(item_id: int):
 
         # 2. Re-enrich metadata using the network
         try:
-            lang = item.target_language or _preferred_metadata_language(db) or "en-US"
+            lang = item.locale or _preferred_metadata_language(db) or "en-US"
             enricher = MetadataEnrichmentService(db)
             enricher.enrich_matched_item(item, language=lang)
         except Exception as enrich_err:

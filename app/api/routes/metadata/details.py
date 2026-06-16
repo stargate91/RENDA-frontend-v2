@@ -99,16 +99,16 @@ def get_full_item_metadata(item_id: str, db: Session = Depends(get_db)):
             tmdb_caches = db.query(TMDBCache).filter(TMDBCache.tmdb_id.in_(cache_ids)).all()
             for cache in tmdb_caches:
                 if match.series_tmdb_id and cache.tmdb_id == match.series_tmdb_id:
-                    series_api_responses[cache.target_language] = cache.raw_data
+                    series_api_responses[cache.locale] = cache.raw_data
                 if cache.tmdb_id == match.tmdb_id:
-                    api_responses[cache.target_language] = cache.raw_data
+                    api_responses[cache.locale] = cache.raw_data
                 elif not match.series_tmdb_id:
-                    api_responses[cache.target_language] = cache.raw_data
+                    api_responses[cache.locale] = cache.raw_data
 
             localizations = []
             for loc in match.localizations:
                 localizations.append({
-                    "language": loc.target_language,
+                    "language": loc.locale,
                     "title": loc.title,
                     "original_title": loc.original_title,
                     "series_title": loc.series_title,
@@ -194,7 +194,7 @@ def get_full_item_metadata(item_id: str, db: Session = Depends(get_db)):
             "technical": tech_data,
             "guessit": guessit_data,
             "overrides": {
-                "target_language": item.target_language,
+                "target_language": item.locale,
                 "source": item.source.value if item.source else None,
                 "edition": item.edition.value if item.edition else None,
                 "audio_type": item.audio_type.value if item.audio_type else None,

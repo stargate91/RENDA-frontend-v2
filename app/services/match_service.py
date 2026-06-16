@@ -32,10 +32,9 @@ class MatchService:
             self.db.add(match)
             self.db.flush() # Ensure match.id for localization
 
-            # Save localized metadata
             loc = MetadataLocalization(
                 match_id=match.id,
-                target_language=language,
+                locale=language,
                 title=data.get("title") or data.get("name"),
                 overview=data.get("overview"),
                 poster_path=data.get("poster_path"),
@@ -116,7 +115,7 @@ class MatchService:
 
     def _clone_localization(self, source: MetadataLocalization, target_match_id: int) -> MetadataLocalization:
         return MetadataLocalization(
-            match_id=target_match_id, target_language=source.target_language,
+            match_id=target_match_id, locale=source.locale,
             title=source.title, original_title=source.original_title,
             series_title=source.series_title, original_series_title=source.original_series_title,
             season_title=source.season_title, episode_title=source.episode_title,

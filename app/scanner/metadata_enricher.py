@@ -77,8 +77,8 @@ class MetadataEnricher:
             langs_to_enrich.append(pl.value)
         if tl and tl.value:
             langs_to_enrich.append(tl.value)
-        if item.target_language:
-            langs_to_enrich.append(item.target_language)
+        if item.locale:
+            langs_to_enrich.append(item.locale)
         if fallback_language:
             langs_to_enrich.append(fallback_language)
         if fl and fl.value and fl.value != "none":
@@ -107,13 +107,13 @@ class MetadataEnricher:
             formatter = Formatter(config)
             
             target_lang = self.db.query(UserSetting).filter(UserSetting.key == "default_target_language").first()
-            target_lang_val = (item.target_language or (target_lang.value if target_lang else None) or "en")
+            target_lang_val = (item.locale or (target_lang.value if target_lang else None) or "en")
             
-            loc = next((l for l in active_match.localizations if _match_language_code(l.target_language, target_lang_val)), None)
+            loc = next((l for l in active_match.localizations if _match_language_code(l.locale, target_lang_val)), None)
             if not loc:
                 primary_lang = self.db.query(UserSetting).filter(UserSetting.key == "primary_metadata_language").first()
                 primary_lang_val = primary_lang.value if primary_lang else "en"
-                loc = next((l for l in active_match.localizations if _match_language_code(l.target_language, primary_lang_val)), None)
+                loc = next((l for l in active_match.localizations if _match_language_code(l.locale, primary_lang_val)), None)
             if not loc and active_match.localizations:
                 loc = next((l for l in active_match.localizations if l.is_primary), active_match.localizations[0])
                 
@@ -144,7 +144,7 @@ class MetadataEnricher:
                 self.api,
                 coll,
                 language,
-                is_primary=(language == ((match.media_item.target_language if match.media_item else None) or language)),
+                is_primary=(language == ((match.media_item.locale if match.media_item else None) or language)),
             )
             match.collection = coll.get("name")
             match.collection_tmdb_id = collection.tmdb_id if collection else None
@@ -469,7 +469,7 @@ class MetadataEnricher:
                     gender=p_data.get("gender")
                 )
                 self.db.add(person)
-                loc = PersonLocalization(person_id=tmdb_id, language="en", name=p_data.get("name", "Unknown"))
+                loc = PersonLocalization(person_id=tmdb_id, locale="en", name=p_data.get("name", "Unknown"))
                 self.db.add(loc)
                 self.db.flush() # Trigger uniqueness check NOW
             return person
@@ -508,10 +508,10 @@ class MetadataEnricher:
         """Fetch or create a localization object."""
         loc = self.db.query(MetadataLocalization).filter(
             MetadataLocalization.match_id == match.id,
-            MetadataLocalization.target_language == language
+            MetadataLocalization.locale == language
         ).first()
         if not loc:
-            loc = MetadataLocalization(match_id=match.id, target_language=language)
+            loc = MetadataLocalization(match_id=match.id, locale=language)
             self.db.add(loc)
         return loc
 

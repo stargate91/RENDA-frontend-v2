@@ -391,10 +391,10 @@ def _apply_settings(db, settings: dict):
     # Update is_primary flags in database if language setting changed
     if "primary_metadata_language" in settings:
         target_lang = settings["primary_metadata_language"]
-        db.query(MetadataLocalization).filter(MetadataLocalization.target_language == target_lang).update({"is_primary": True})
-        db.query(MetadataLocalization).filter(MetadataLocalization.target_language != target_lang).update({"is_primary": False})
-        db.query(MediaCollectionLocalization).filter(MediaCollectionLocalization.target_language == target_lang).update({"is_primary": True})
-        db.query(MediaCollectionLocalization).filter(MediaCollectionLocalization.target_language != target_lang).update({"is_primary": False})
+        db.query(MetadataLocalization).filter(MetadataLocalization.locale == target_lang).update({"is_primary": True})
+        db.query(MetadataLocalization).filter(MetadataLocalization.locale != target_lang).update({"is_primary": False})
+        db.query(MediaCollectionLocalization).filter(MediaCollectionLocalization.locale == target_lang).update({"is_primary": True})
+        db.query(MediaCollectionLocalization).filter(MediaCollectionLocalization.locale != target_lang).update({"is_primary": False})
         db.commit()
     
     # If naming settings OR language settings changed, we should refresh planned paths.
