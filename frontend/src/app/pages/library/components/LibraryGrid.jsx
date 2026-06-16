@@ -98,7 +98,7 @@ export default function LibraryGrid({
     if (isTags) return;
 
     if (isCollections) {
-      navigate(`/library/collection/${item.id}`);
+      navigate(`/library/collection/${item.tmdb_id || item.id}`);
     } else if (resolvedTab === 'people' || resolvedTab === 'adult_people') {
       navigate(`/library/people/${item.id}`);
     } else if (resolvedTab === 'movies') {

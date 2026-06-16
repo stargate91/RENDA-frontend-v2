@@ -95,6 +95,7 @@ class CollectionDetailProvider(BaseDetailProvider):
                 ) or {}
             except Exception:
                 tmdb_details = {}
+            preferred_collection_backdrop = _pick_backdrop_path(tmdb_details, ui_lang) if tmdb_details else None
 
             movies = []
             owned_tmdb_ids = set()
@@ -170,7 +171,7 @@ class CollectionDetailProvider(BaseDetailProvider):
                 "title": (collection_loc.name if collection_loc and collection_loc.name else tmdb_details.get("name") or fallback_name or f"Collection {collection_tmdb_id_int}"),
                 "overview": (collection_loc.overview if collection_loc else None) or tmdb_details.get("overview"),
                 "poster_path": (_public_image_path(collection_loc.local_poster_path, "posters") or collection_loc.poster_path) if collection_loc else tmdb_details.get("poster_path"),
-                "backdrop_path": (_public_image_path(collection.local_backdrop_path, "backdrops") or collection.backdrop_path) if collection else tmdb_details.get("backdrop_path"),
+                "backdrop_path": (_public_image_path(collection.local_backdrop_path, "backdrops") or collection.backdrop_path) if collection else (preferred_collection_backdrop or tmdb_details.get("backdrop_path")),
                 "has_local_poster": bool(_public_image_path(collection_loc.local_poster_path, "posters")) if collection_loc else False,
                 "has_local_backdrop": bool(_public_image_path(collection.local_backdrop_path, "backdrops")) if collection else False,
                 "owned_count": len([movie for movie in movies if movie.get("in_library")]),

@@ -42,7 +42,7 @@ def add_person_tmdb(payload: dict):
         db.close()
 
 
-@router.post("/people/{person_id}/status")
+@router.post("/people/{person_id:int}/status")
 def update_person_status(person_id: int, payload: dict):
     """Updates the status (is_active, is_favorite, user_rating) of a person."""
     db = Session()
@@ -105,7 +105,7 @@ def update_person_status(person_id: int, payload: dict):
         db.close()
 
 
-@router.post("/people/{person_id}/profile")
+@router.post("/people/{person_id:int}/profile")
 def update_person_profile(person_id: int, payload: dict):
     """Updates the profile picture of a person, downloading it if not present locally."""
     db = Session()
@@ -159,7 +159,7 @@ def update_person_profile(person_id: int, payload: dict):
         db.close()
 
 
-@router.post("/people/{person_id}/upload-profile")
+@router.post("/people/{person_id:int}/upload-profile")
 def upload_person_profile(person_id: int, file: UploadFile = File(...)):
     """Uploads a local image file directly as the person's profile picture."""
     db = Session()

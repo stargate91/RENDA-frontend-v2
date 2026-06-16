@@ -108,7 +108,7 @@ def _resolve_person_known_for_backdrop(
     return candidates[0][1]
 
 
-@router.get("/people/{person_id}")
+@router.get("/people/{person_id:int}")
 def get_person_detail(person_id: int):
     """Returns comprehensive detail data for a single person, including their biography and associated library items."""
     db = Session()

@@ -6,6 +6,6 @@ from app.api.routes.people.mutate import router as mutate_router
 
 router = APIRouter()
 router.include_router(import_router)
-router.include_router(details_router)
 router.include_router(search_router)
+router.include_router(details_router)
 router.include_router(mutate_router)

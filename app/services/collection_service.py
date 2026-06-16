@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.db.models import MediaCollection, MediaCollectionLocalization
 from app.services.asset_service import AssetService
+from app.utils.library_utils import _pick_backdrop_path
 
 
 class CollectionService:
@@ -120,7 +121,12 @@ class CollectionService:
         loc.name = resolved_name
         loc.overview = details.get("overview") or loc.overview
         loc.poster_path = details.get("poster_path") or payload.get("poster_path") or loc.poster_path
-        collection.backdrop_path = details.get("backdrop_path") or payload.get("backdrop_path") or collection.backdrop_path
+        collection.backdrop_path = (
+            _pick_backdrop_path(details, language)
+            or details.get("backdrop_path")
+            or payload.get("backdrop_path")
+            or collection.backdrop_path
+        )
 
         if loc.poster_path != previous_poster_path:
             loc.local_poster_path = None

@@ -42,7 +42,7 @@ export default function CastPanel() {
                 <div
                   key={director.id}
                   className="person-card"
-                  onClick={() => navigate(`/people/${director.id}`)}
+                  onClick={() => navigate(`/library/people/${director.id}`)}
                 >
                   {director.profile_path ? (
                     <img
@@ -80,7 +80,7 @@ export default function CastPanel() {
                 <div
                   key={writer.id}
                   className="person-card"
-                  onClick={() => navigate(`/people/${writer.id}`)}
+                  onClick={() => navigate(`/library/people/${writer.id}`)}
                 >
                   {writer.profile_path ? (
                     <img
@@ -118,7 +118,7 @@ export default function CastPanel() {
                 <div
                   key={actor.id}
                   className="person-card"
-                  onClick={() => navigate(`/people/${actor.id}`)}
+                  onClick={() => navigate(`/library/people/${actor.id}`)}
                 >
                   {actor.profile_path ? (
                     <img

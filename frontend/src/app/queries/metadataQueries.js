@@ -54,3 +54,15 @@ export const useLibrarySeriesDetailQuery = (seriesId, options = {}) => useQuery(
   queryFn: () => api.library.getSeriesDetail(seriesId),
   ...options,
 });
+
+export const useLibraryCollectionDetailQuery = (collectionId, options = {}) => useQuery({
+  queryKey: ['library-collection-detail', collectionId],
+  queryFn: () => api.library.getCollectionDetail(collectionId),
+  ...options,
+});
+
+export const usePersonDetailQuery = (personId, options = {}) => useQuery({
+  queryKey: ['person-detail', personId],
+  queryFn: () => api.people.getDetail(personId),
+  ...options,
+});
