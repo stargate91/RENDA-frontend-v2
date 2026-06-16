@@ -260,10 +260,10 @@ class ItemDetailProvider(BaseDetailProvider):
                     if not os.path.exists(local_p):
                         missing_poster = loc.poster_path
                     
-                if loc.backdrop_path and not _public_image_path(loc.local_backdrop_path, "backdrops"):
-                    local_b = os.path.join("data", "media", "images", "backdrops", loc.backdrop_path.lstrip("/"))
+                if active_match.backdrop_path and not _public_image_path(active_match.local_backdrop_path, "backdrops"):
+                    local_b = os.path.join("data", "media", "images", "backdrops", active_match.backdrop_path.lstrip("/"))
                     if not os.path.exists(local_b):
-                        missing_backdrop = loc.backdrop_path
+                        missing_backdrop = active_match.backdrop_path
                 if loc.logo_path and not _public_image_path(loc.local_logo_path, "logos"):
                     local_logo = os.path.join("data", "media", "images", "logos", loc.logo_path.lstrip("/"))
                     if not os.path.exists(local_logo):
@@ -296,7 +296,7 @@ class ItemDetailProvider(BaseDetailProvider):
                         if missing_backdrop:
                             local_b_rel = f"data/media/images/backdrops/{missing_backdrop.lstrip('/')}"
                             if os.path.exists(local_b_rel):
-                                loc.local_backdrop_path = local_b_rel
+                                active_match.local_backdrop_path = local_b_rel
                                 updated = True
                         if missing_logo:
                             local_logo_rel = f"data/media/images/logos/{missing_logo.lstrip('/')}"
@@ -389,10 +389,10 @@ class ItemDetailProvider(BaseDetailProvider):
                 else None
             )
             preferred_backdrop_path = _pick_backdrop_path(movie_cache.raw_data if movie_cache else None, ui_lang) if movie_cache else None
-            effective_backdrop_path = (loc.backdrop_path if loc and loc.backdrop_path else None) or preferred_backdrop_path
+            effective_backdrop_path = (active_match.backdrop_path if active_match and active_match.backdrop_path else None) or preferred_backdrop_path
             effective_local_backdrop_path = (
-                loc.local_backdrop_path
-                if loc and effective_backdrop_path and effective_backdrop_path == loc.backdrop_path
+                active_match.local_backdrop_path
+                if active_match and effective_backdrop_path and effective_backdrop_path == active_match.backdrop_path
                 else None
             )
 

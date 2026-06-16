@@ -122,14 +122,14 @@ class MediaDiscoveryService:
                             images.append(MediaImageDTO(type="poster", path=movie_poster, label="poster"))
                     elif item.item_type == ItemType.EPISODE:
                         seen_stills = set()
-                        for still in (loc.local_all_stills or loc.all_stills or []):
+                        for still in (am.local_all_stills or am.all_stills or []):
                             still_path = self._resolve_image_path(still, "stills", "w400")
                             if still_path and still_path not in seen_stills:
                                 images.append(MediaImageDTO(type="still", path=still_path, label="still"))
                                 seen_stills.add(still_path)
 
                         if not images:
-                            fallback_still = self._resolve_image_path(loc.local_still_path or loc.still_path, "stills", "w400")
+                            fallback_still = self._resolve_image_path(am.local_still_path or am.still_path, "stills", "w400")
                             if fallback_still:
                                 images.append(MediaImageDTO(type="still", path=fallback_still, label="still"))
 

@@ -125,10 +125,6 @@ def get_full_item_metadata(item_id: str, db: Session = Depends(get_db)):
                     "local_poster_path": _resolve_poster_path(loc.poster_path, loc.local_poster_path),
                     "logo_path": _resolve_logo_path(loc.logo_path, loc.local_logo_path),
                     "local_logo_path": _resolve_logo_path(loc.logo_path, loc.local_logo_path),
-                    "backdrop_path": _resolve_backdrop_path(loc.backdrop_path, loc.local_backdrop_path),
-                    "local_backdrop_path": _resolve_backdrop_path(loc.backdrop_path, loc.local_backdrop_path),
-                    "still_path": _resolve_still_path(loc.still_path, loc.local_still_path),
-                    "local_still_path": _resolve_still_path(loc.still_path, loc.local_still_path),
                     "is_primary": loc.is_primary
                 })
  
@@ -141,6 +137,10 @@ def get_full_item_metadata(item_id: str, db: Session = Depends(get_db)):
                 "api_responses": api_responses,
                 "series_api_responses": series_api_responses,
                 "confidence": match.confidence_score,
+                "backdrop_path": _resolve_backdrop_path(match.backdrop_path, match.local_backdrop_path),
+                "local_backdrop_path": _resolve_backdrop_path(match.backdrop_path, match.local_backdrop_path),
+                "still_path": _resolve_still_path(match.still_path, match.local_still_path),
+                "local_still_path": _resolve_still_path(match.still_path, match.local_still_path),
                 "director": match.director,
                 "cast": match.cast,
                 "collection": match.collection,

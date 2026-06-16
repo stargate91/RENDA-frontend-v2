@@ -159,6 +159,7 @@ class MetadataEnricher:
             match.image_status = ImageStatus.PENDING
         if selected_backdrop_path:
             match.backdrop_status = ImageStatus.PENDING
+            match.backdrop_path = selected_backdrop_path
 
         # 2. Localization
         loc = self._get_or_create_loc(match, language)
@@ -167,7 +168,6 @@ class MetadataEnricher:
         loc.tagline = details.get("tagline")
         loc.poster_path = details.get("poster_path")
         loc.logo_path = _pick_logo_path(details, language)
-        loc.backdrop_path = selected_backdrop_path
         loc.genres = _split_genres([g["name"] for g in details.get("genres", [])])
         loc.original_title = details.get("original_title")
         loc.original_language = details.get("original_language")
@@ -201,12 +201,13 @@ class MetadataEnricher:
                 match.last_air_date = datetime.strptime(series_last_air_date, "%Y-%m-%d")
             except Exception:
                 pass
-
+ 
         selected_backdrop_path = _pick_backdrop_path(series_details, language)
         if series_details.get("poster_path") or _pick_logo_path(series_details, language):
             match.image_status = ImageStatus.PENDING
         if selected_backdrop_path:
             match.backdrop_status = ImageStatus.PENDING
+            match.backdrop_path = selected_backdrop_path
         
         loc = self._get_or_create_loc(match, language)
         loc.title = series_details.get("name")
@@ -217,7 +218,6 @@ class MetadataEnricher:
         loc.series_poster_path = series_details.get("poster_path") # Main series poster
         loc.poster_path = series_details.get("poster_path") # Default (ha nincs szezon poszter)
         loc.logo_path = _pick_logo_path(series_details, language)
-        loc.backdrop_path = selected_backdrop_path
         loc.genres = _split_genres([g["name"] for g in series_details.get("genres", [])])
         loc.origin_country = series_details.get("origin_country")
         loc.original_language = series_details.get("original_language")
@@ -289,7 +289,7 @@ class MetadataEnricher:
                         if s_path:
                             all_stills.append(s_path)
                             if not first_still:
-                                first_still = s_path
+                                  first_still = s_path
                                 
                         if not first_air_date:
                             first_air_date = ep_details.get("air_date")
@@ -306,13 +306,10 @@ class MetadataEnricher:
 
             if titles:
                 loc.episode_title = " / ".join(titles)
-                loc.still_path = first_still
-                loc.all_stills = all_stills
+                match.still_path = first_still
+                match.all_stills = all_stills
                 if overviews:
                     loc.overview = "\n\n".join(overviews)
-                
-                if first_still:
-                    loc.still_path = first_still
                 
                 if first_air_date:
                     try:

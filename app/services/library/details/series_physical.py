@@ -91,10 +91,10 @@ class SeriesPhysicalMixin(SeriesAssetsMixin):
             else None
         )
         preferred_backdrop_path = _pick_backdrop_path(cached_series, ui_lang) if cached_series else None
-        effective_backdrop_path = (base_loc.backdrop_path if base_loc and base_loc.backdrop_path else None) or preferred_backdrop_path
+        effective_backdrop_path = (base_match.backdrop_path if base_match and base_match.backdrop_path else None) or preferred_backdrop_path
         effective_local_backdrop_path = (
-            base_loc.local_backdrop_path
-            if base_loc and effective_backdrop_path and effective_backdrop_path == base_loc.backdrop_path
+            base_match.local_backdrop_path
+            if base_match and effective_backdrop_path and effective_backdrop_path == base_match.backdrop_path
             else None
         )
 
@@ -263,8 +263,8 @@ class SeriesPhysicalMixin(SeriesAssetsMixin):
                 "title": loc.episode_title if loc else (item.fn_title or f"Episode {e_num}"),
                 "overview": loc.overview if loc else None,
                 "still_path": (
-                    self.formatter.resolve_image_response_path(loc.still_path, subfolder="stills")
-                    if loc and loc.still_path
+                    self.formatter.resolve_image_response_path(match.still_path, subfolder="stills")
+                    if match and match.still_path
                     else self.formatter.resolve_image_response_path(
                         tmdb_episode_stills.get((s_num, primary_e_num)),
                         subfolder="stills",

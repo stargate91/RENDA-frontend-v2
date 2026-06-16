@@ -28,10 +28,10 @@ class SeriesAssetsMixin:
                 if not os.path.exists(local_p):
                     missing_poster = poster_p
                 
-            if base_loc.backdrop_path and not _public_image_path(base_loc.local_backdrop_path, "backdrops"):
-                local_b = os.path.join("data", "media", "images", "backdrops", base_loc.backdrop_path.lstrip("/"))
+            if base_match.backdrop_path and not _public_image_path(base_match.local_backdrop_path, "backdrops"):
+                local_b = os.path.join("data", "media", "images", "backdrops", base_match.backdrop_path.lstrip("/"))
                 if not os.path.exists(local_b):
-                    missing_backdrop = base_loc.backdrop_path
+                    missing_backdrop = base_match.backdrop_path
             if base_loc.logo_path and not _public_image_path(base_loc.local_logo_path, "logos"):
                 local_logo = os.path.join("data", "media", "images", "logos", base_loc.logo_path.lstrip("/"))
                 if not os.path.exists(local_logo):
@@ -70,10 +70,10 @@ class SeriesAssetsMixin:
                     loc = next((l for l in match.localizations if _match_language_code(l.target_language, ui_lang)), None)
                 if not loc:
                     loc = next((l for l in match.localizations if l.is_primary), match.localizations[0])
-            if loc and loc.still_path:
-                local_still = os.path.join("data", "media", "images", "stills", loc.still_path.lstrip("/"))
+            if match and match.still_path:
+                local_still = os.path.join("data", "media", "images", "stills", match.still_path.lstrip("/"))
                 if not os.path.exists(local_still):
-                    missing_stills.append(loc.still_path)
+                    missing_stills.append(match.still_path)
 
             for link in match.people:
                 person = link.person
@@ -106,8 +106,8 @@ class SeriesAssetsMixin:
                     loc = next((l for l in match.localizations if l.is_primary), match.localizations[0])
 
             still_missing = True
-            if loc and loc.still_path:
-                local_still = os.path.join("data", "media", "images", "stills", loc.still_path.lstrip("/"))
+            if match and match.still_path:
+                local_still = os.path.join("data", "media", "images", "stills", match.still_path.lstrip("/"))
                 still_missing = not os.path.exists(local_still)
             if still_missing:
                 seasons_needing_tmdb.add(s_num)
@@ -156,7 +156,7 @@ class SeriesAssetsMixin:
                     if missing_backdrop:
                         local_b_rel = f"data/media/images/backdrops/{missing_backdrop.lstrip('/')}"
                         if os.path.exists(local_b_rel):
-                            base_loc.local_backdrop_path = local_b_rel
+                            base_match.local_backdrop_path = local_b_rel
                             updated = True
                     if missing_logo:
                         local_logo_rel = f"data/media/images/logos/{missing_logo.lstrip('/')}"

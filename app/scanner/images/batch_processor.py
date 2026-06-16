@@ -166,44 +166,44 @@ class ImageBatchProcessorMixin:
                     else:
                         success = True
 
-                # B. STILLS
-                if loc.still_path:
-                    has_any_path = True
-                    remote_still_filename = loc.still_path.lstrip("/")
-                    if loc.local_still_path and remote_still_filename not in loc.local_still_path:
-                        loc.local_still_path = None
-                    if not loc.local_still_path:
-                        local_s = self.download_image(loc.still_path, "stills", size="w400")
-                        if local_s:
-                            loc.local_still_path = local_s
-                            success = True
-                        else:
-                            has_pending = True
-                    else:
+            # B. STILLS
+            if match.still_path:
+                has_any_path = True
+                remote_still_filename = match.still_path.lstrip("/")
+                if match.local_still_path and remote_still_filename not in match.local_still_path:
+                    match.local_still_path = None
+                if not match.local_still_path:
+                    local_s = self.download_image(match.still_path, "stills", size="w400")
+                    if local_s:
+                        match.local_still_path = local_s
                         success = True
+                    else:
+                        has_pending = True
+                else:
+                    success = True
+
+            # C. ALL STILLS (Gallery for multi-part episodes)
+            if match.all_stills:
+                has_any_path = True
+                local_stills = list(match.local_all_stills or [])
+                updated_stills = False
                 
-                # C. ALL STILLS (Gallery for multi-part episodes)
-                if loc.all_stills:
-                    has_any_path = True
-                    local_stills = list(loc.local_all_stills or [])
-                    updated_stills = False
-                    
-                    for s_path in loc.all_stills:
-                        # Check if the image is already downloaded
-                        filename = s_path.lstrip("/")
-                        if any(filename in str(ls) for ls in local_stills):
-                            continue
-                            
-                        local_s = self.download_image(s_path, "stills", size="w400")
-                        if local_s:
-                            local_stills.append(local_s)
-                            updated_stills = True
-                            success = True
-                        else:
-                            has_pending = True
-                    
-                    if updated_stills:
-                        loc.local_all_stills = local_stills
+                for s_path in match.all_stills:
+                    # Check if the image is already downloaded
+                    filename = s_path.lstrip("/")
+                    if any(filename in str(ls) for ls in local_stills):
+                        continue
+                        
+                    local_s = self.download_image(s_path, "stills", size="w400")
+                    if local_s:
+                        local_stills.append(local_s)
+                        updated_stills = True
+                        success = True
+                    else:
+                        has_pending = True
+                
+                if updated_stills:
+                    match.local_all_stills = local_stills
                         
             # D. SEASON POSTERS (TV shows only)
             series_id = match.series_tmdb_id if match.item_type == ItemType.EPISODE else (match.tmdb_id if match.item_type == ItemType.SERIES else None)
@@ -327,19 +327,16 @@ class ImageBatchProcessorMixin:
             if not match: return
                 
             success = True # assume success if no paths exist
-            for loc in match.localizations:
-                if loc.backdrop_path:
-                    remote_bd_filename = loc.backdrop_path.lstrip("/")
-                    if loc.local_backdrop_path and remote_bd_filename not in loc.local_backdrop_path:
-                        loc.local_backdrop_path = None
-                    if not loc.local_backdrop_path:
-                        local_b = self.download_image(loc.backdrop_path, "backdrops", size="w1280")
-                        if local_b:
-                            loc.local_backdrop_path = local_b
-                        else:
-                            success = False
-                else:
-                    pass
+            if match.backdrop_path:
+                remote_bd_filename = match.backdrop_path.lstrip("/")
+                if match.local_backdrop_path and remote_bd_filename not in match.local_backdrop_path:
+                    match.local_backdrop_path = None
+                if not match.local_backdrop_path:
+                    local_b = self.download_image(match.backdrop_path, "backdrops", size="w1280")
+                    if local_b:
+                        match.local_backdrop_path = local_b
+                    else:
+                        success = False
 
             match.backdrop_status = ImageStatus.COMPLETED if success else ImageStatus.FAILED
             local_db.commit()

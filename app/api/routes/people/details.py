@@ -360,14 +360,11 @@ def get_person_detail(person_id: int):
                 all_series = parsed_series
         except Exception as ex:
             logger.error(f"Failed to load or parse TMDB credits for person {person_id}: {ex}")
-
         if not person_backdrop:
             for link in links:
-                item_loc = _pick_match_localization(link.media_match.localizations, ui_lang)
-                if item_loc and item_loc.backdrop_path:
-                    person_backdrop = item_loc.backdrop_path
+                if link.media_match and link.media_match.backdrop_path:
+                    person_backdrop = link.media_match.backdrop_path
                     break
-
         # Sort films and series by year descending
         all_movies.sort(key=lambda x: x.get("year") or 0, reverse=True)
         all_series.sort(key=lambda x: x.get("year") or 0, reverse=True)

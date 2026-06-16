@@ -91,7 +91,6 @@ class MetadataPresentationService:
                         "title": loc.title,
                         "overview": loc.overview,
                         "poster_path": _resolve_poster_path(loc.poster_path, loc.local_poster_path),
-                        "backdrop_path": _resolve_backdrop_path(loc.backdrop_path, loc.local_backdrop_path),
                         "logo_path": _resolve_logo_path(loc.logo_path, loc.local_logo_path),
                         "series_title": loc.series_title,
                         "season_title": loc.season_title,
@@ -127,6 +126,8 @@ class MetadataPresentationService:
                     "director": match.director,
                     "cast": match.cast,
                     "collection": match.collection,
+                    "backdrop_path": _resolve_backdrop_path(match.backdrop_path, match.local_backdrop_path),
+                    "still_path": _resolve_image_path(match.still_path, match.local_still_path, "stills", "w400"),
                     "networks": [
                         {
                             "name": net.get("name"),

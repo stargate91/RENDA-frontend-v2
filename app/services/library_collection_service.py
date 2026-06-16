@@ -66,7 +66,7 @@ class LibraryCollectionService:
                     "poster_path": local_collection_poster or (collection_loc.poster_path if collection_loc else None),
                     "has_local_poster": bool(local_collection_poster),
                     "poster_remote_path": f"https://image.tmdb.org/t/p/w500{collection_loc.poster_path}" if collection_loc and collection_loc.poster_path else None,
-                    "backdrop_path": self._resolve_collection_image(collection_loc, "backdrop"),
+                    "backdrop_path": self._resolve_collection_backdrop(active_match.collection_entity),
                     "owned_count": 0,
                     "total_count": int(getattr(active_match.collection_entity, "total_parts", 0) or 0),
                     "type": "collection",
@@ -83,7 +83,7 @@ class LibraryCollectionService:
                 "year": movie_year,
                 "poster_path": self._resolve_match_poster(movie_loc),
                 "has_local_poster": bool(_public_image_path(movie_loc.local_poster_path, "posters")) if movie_loc else False,
-                "backdrop_path": _public_image_path(movie_loc.local_backdrop_path if movie_loc else None, "backdrops") if movie_loc else None,
+                "backdrop_path": _public_image_path(active_match.local_backdrop_path, "backdrops") or active_match.backdrop_path if active_match else None,
                 "rating": active_match.rating_tmdb or 0,
                 "rating_imdb": active_match.rating_imdb,
                 "type": item.item_type.value,
@@ -173,7 +173,12 @@ class LibraryCollectionService:
             return None
         if image_kind == "poster":
             return _public_image_path(collection_loc.local_poster_path, "posters") or collection_loc.poster_path
-        return _public_image_path(collection_loc.local_backdrop_path, "backdrops") or collection_loc.backdrop_path
+        return None
+
+    def _resolve_collection_backdrop(self, collection) -> Optional[str]:
+        if not collection:
+            return None
+        return _public_image_path(collection.local_backdrop_path, "backdrops") or collection.backdrop_path
 
     def _pick_match_localization(self, match, ui_lang: Optional[str]):
         if not match or not match.localizations:

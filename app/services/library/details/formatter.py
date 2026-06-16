@@ -50,5 +50,5 @@ class DetailFormatterService:
             "title": (loc.name if loc and loc.name else fallback_name),
             "overview": loc.overview if loc else None,
             "poster_path": (_public_image_path(loc.local_poster_path, "posters") or loc.poster_path) if loc else None,
-            "backdrop_path": (_public_image_path(loc.local_backdrop_path, "backdrops") or loc.backdrop_path) if loc else None,
+            "backdrop_path": (_public_image_path(collection.local_backdrop_path, "backdrops") or collection.backdrop_path) if collection else None,
         }

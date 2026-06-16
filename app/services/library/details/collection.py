@@ -60,10 +60,10 @@ class CollectionDetailProvider(BaseDetailProvider):
                     local_p = os.path.join("data", "media", "images", "posters", collection_loc.poster_path.lstrip("/"))
                     if not os.path.exists(local_p):
                         missing_poster = collection_loc.poster_path
-                if collection_loc.backdrop_path and not _public_image_path(collection_loc.local_backdrop_path, "backdrops"):
-                    local_b = os.path.join("data", "media", "images", "backdrops", collection_loc.backdrop_path.lstrip("/"))
+                if collection.backdrop_path and not _public_image_path(collection.local_backdrop_path, "backdrops"):
+                    local_b = os.path.join("data", "media", "images", "backdrops", collection.backdrop_path.lstrip("/"))
                     if not os.path.exists(local_b):
-                        missing_backdrop = collection_loc.backdrop_path
+                        missing_backdrop = collection.backdrop_path
 
                 if missing_poster or missing_backdrop:
                     _download_media_assets_sync(
@@ -79,7 +79,7 @@ class CollectionDetailProvider(BaseDetailProvider):
                     if missing_backdrop:
                         local_b_rel = f"data/media/images/backdrops/{missing_backdrop.lstrip('/')}"
                         if os.path.exists(local_b_rel):
-                            collection_loc.local_backdrop_path = local_b_rel
+                            collection.local_backdrop_path = local_b_rel
                             updated = True
                     if updated:
                         db.commit()
@@ -118,7 +118,7 @@ class CollectionDetailProvider(BaseDetailProvider):
                     "title": loc.title if loc and loc.title else (item.fn_title or item.fd_title or item.filename),
                     "year": year,
                     "poster_path": (_public_image_path(loc.local_poster_path, "posters") or loc.poster_path) if loc else None,
-                    "backdrop_path": (_public_image_path(loc.local_backdrop_path, "backdrops") or loc.backdrop_path) if loc else None,
+                    "backdrop_path": (_public_image_path(active_match.local_backdrop_path, "backdrops") or active_match.backdrop_path) if active_match else None,
                     "has_local_poster": bool(_public_image_path(loc.local_poster_path, "posters")) if loc else False,
                     "rating": active_match.rating_tmdb or 0,
                     "rating_tmdb": active_match.rating_tmdb or 0,
@@ -174,9 +174,9 @@ class CollectionDetailProvider(BaseDetailProvider):
                 "title": (collection_loc.name if collection_loc and collection_loc.name else tmdb_details.get("name") or fallback_name or f"Collection {collection_tmdb_id_int}"),
                 "overview": (collection_loc.overview if collection_loc else None) or tmdb_details.get("overview"),
                 "poster_path": (_public_image_path(collection_loc.local_poster_path, "posters") or collection_loc.poster_path) if collection_loc else tmdb_details.get("poster_path"),
-                "backdrop_path": (_public_image_path(collection_loc.local_backdrop_path, "backdrops") or collection_loc.backdrop_path) if collection_loc else tmdb_details.get("backdrop_path"),
+                "backdrop_path": (_public_image_path(collection.local_backdrop_path, "backdrops") or collection.backdrop_path) if collection else tmdb_details.get("backdrop_path"),
                 "has_local_poster": bool(_public_image_path(collection_loc.local_poster_path, "posters")) if collection_loc else False,
-                "has_local_backdrop": bool(_public_image_path(collection_loc.local_backdrop_path, "backdrops")) if collection_loc else False,
+                "has_local_backdrop": bool(_public_image_path(collection.local_backdrop_path, "backdrops")) if collection else False,
                 "owned_count": len([movie for movie in movies if movie.get("in_library")]),
                 "total_count": len(movies),
                 "movies": movies,

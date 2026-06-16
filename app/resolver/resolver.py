@@ -51,7 +51,13 @@ class Resolver:
                 confidence_score=active_match.confidence_score,
                 is_active=True,
                 rating_tmdb=active_match.rating_tmdb,
-                vote_count_tmdb=active_match.vote_count_tmdb
+                vote_count_tmdb=active_match.vote_count_tmdb,
+                backdrop_path=active_match.backdrop_path,
+                local_backdrop_path=active_match.local_backdrop_path,
+                still_path=active_match.still_path,
+                local_still_path=active_match.local_still_path,
+                all_stills=active_match.all_stills,
+                local_all_stills=active_match.local_all_stills,
             )
             self.db.add(new_match)
             self.db.flush()
@@ -68,8 +74,7 @@ class Resolver:
                     season_title=loc.season_title,
                     episode_title=loc.episode_title,
                     overview=loc.overview,
-                    poster_path=loc.poster_path,
-                    backdrop_path=loc.backdrop_path
+                    poster_path=loc.poster_path
                 )
                 self.db.add(new_loc)
             
@@ -463,7 +468,8 @@ class Resolver:
                 last_air_date=last_air_date if itype == ItemType.SERIES else None,
                 confidence_score=1.0,
                 rating_tmdb=data.get("vote_average"),
-                vote_count_tmdb=data.get("vote_count")
+                vote_count_tmdb=data.get("vote_count"),
+                backdrop_path=data.get("backdrop_path")
             )
             
             # First match (most popular) becomes active (by default)
@@ -562,8 +568,7 @@ class Resolver:
                 target_language=language,
                 title=data.get("title") or data.get("name"),
                 overview=data.get("overview"),
-                poster_path=data.get("poster_path"),
-                backdrop_path=data.get("backdrop_path")
+                poster_path=data.get("poster_path")
             )
             self.db.add(loc)
 

@@ -11,6 +11,8 @@ class MediaCollection(Base):
 
     tmdb_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     total_parts: Mapped[Optional[int]] = mapped_column(Integer)
+    backdrop_path: Mapped[Optional[str]] = mapped_column(String)
+    local_backdrop_path: Mapped[Optional[str]] = mapped_column(String)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -36,8 +38,6 @@ class MediaCollectionLocalization(Base):
     overview: Mapped[Optional[str]] = mapped_column(String)
     poster_path: Mapped[Optional[str]] = mapped_column(String)
     local_poster_path: Mapped[Optional[str]] = mapped_column(String)
-    backdrop_path: Mapped[Optional[str]] = mapped_column(String)
-    local_backdrop_path: Mapped[Optional[str]] = mapped_column(String)
     last_updated: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     collection: Mapped["MediaCollection"] = relationship(back_populates="localizations")
@@ -74,6 +74,14 @@ class MediaMatch(Base):
     confidence_score: Mapped[float] = mapped_column(Float, default=1.0)
     is_adult: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    
+    backdrop_path: Mapped[Optional[str]] = mapped_column(String)
+    local_backdrop_path: Mapped[Optional[str]] = mapped_column(String)
+    still_path: Mapped[Optional[str]] = mapped_column(String)
+    local_still_path: Mapped[Optional[str]] = mapped_column(String)
+    all_stills: Mapped[Optional[List[str]]] = mapped_column(JSON)
+    local_all_stills: Mapped[Optional[List[str]]] = mapped_column(JSON)
+
     localizations: Mapped[List["MetadataLocalization"]] = relationship(back_populates="match", cascade="all, delete-orphan")
     media_item: Mapped[Optional["MediaItem"]] = relationship(back_populates="matches")
     children: Mapped[List["MediaMatch"]] = relationship("MediaMatch", backref=backref("parent", remote_side=[id]))
@@ -100,13 +108,8 @@ class MetadataLocalization(Base):
     local_series_poster_path: Mapped[Optional[str]] = mapped_column(String)
     logo_path: Mapped[Optional[str]] = mapped_column(String)
     local_logo_path: Mapped[Optional[str]] = mapped_column(String)
-    backdrop_path: Mapped[Optional[str]] = mapped_column(String)
-    local_backdrop_path: Mapped[Optional[str]] = mapped_column(String)
-    still_path: Mapped[Optional[str]] = mapped_column(String)
     trailer_url: Mapped[Optional[str]] = mapped_column(String)
-    local_still_path: Mapped[Optional[str]] = mapped_column(String)
-    all_stills: Mapped[Optional[List[str]]] = mapped_column(JSON) # JSON list of paths
-    local_all_stills: Mapped[Optional[List[str]]] = mapped_column(JSON)
+    
     last_updated: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     match: Mapped["MediaMatch"] = relationship(back_populates="localizations")
 

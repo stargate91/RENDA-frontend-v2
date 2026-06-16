@@ -290,19 +290,17 @@ class MetadataService:
                         "message": f"Syncing {progress_count + 1}/{total_units} items..."
                     })
                     try:
-                        previous_backdrop_paths = {
-                            loc.target_language: loc.backdrop_path
-                            for match in item.matches
-                            if match.is_active
-                            for loc in match.localizations
-                        }
+                        previous_backdrop_path = None
+                        active_match = next((match for match in item.matches if match.is_active), None)
+                        if active_match:
+                            previous_backdrop_path = active_match.backdrop_path
+
                         previous_logo_paths = {
                             loc.target_language: loc.logo_path
                             for match in item.matches
                             if match.is_active
                             for loc in match.localizations
                         }
-                        active_match = next((match for match in item.matches if match.is_active), None)
                         missing_langs = _missing_sync_languages(active_match) if active_match else []
 
                         if active_match:
@@ -322,10 +320,7 @@ class MetadataService:
                             if match.is_active:
                                 if active_match:
                                     match.image_status = ImageStatus.PENDING
-                                backdrop_changed = any(
-                                    previous_backdrop_paths.get(loc.target_language) != loc.backdrop_path
-                                    for loc in match.localizations
-                                )
+                                backdrop_changed = previous_backdrop_path != match.backdrop_path
                                 logo_changed = any(
                                     previous_logo_paths.get(loc.target_language) != loc.logo_path
                                     for loc in match.localizations

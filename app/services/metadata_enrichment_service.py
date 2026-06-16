@@ -111,7 +111,9 @@ class MetadataEnrichmentService:
         # Queue images
         selected_backdrop_path = _pick_backdrop_path(raw_data, language)
         if details.poster_path or _pick_logo_path(raw_data, language): match.image_status = ImageStatus.PENDING
-        if selected_backdrop_path: match.backdrop_status = ImageStatus.PENDING
+        if selected_backdrop_path:
+            match.backdrop_status = ImageStatus.PENDING
+            match.backdrop_path = selected_backdrop_path
         
         # Update localization
         loc = self._get_or_create_loc(match, language)
@@ -120,7 +122,6 @@ class MetadataEnrichmentService:
         loc.tagline = details.tagline
         loc.poster_path = details.poster_path
         loc.logo_path = _pick_logo_path(raw_data, language)
-        loc.backdrop_path = selected_backdrop_path
         loc.genres = _split_genres([g.name for g in details.genres])
         loc.original_title = details.original_title
         loc.original_language = details.original_language
@@ -149,7 +150,9 @@ class MetadataEnrichmentService:
         # Queue images
         selected_backdrop_path = _pick_backdrop_path(raw_data, language)
         if series.poster_path or _pick_logo_path(raw_data, language): match.image_status = ImageStatus.PENDING
-        if selected_backdrop_path: match.backdrop_status = ImageStatus.PENDING
+        if selected_backdrop_path:
+            match.backdrop_status = ImageStatus.PENDING
+            match.backdrop_path = selected_backdrop_path
         
         loc = self._get_or_create_loc(match, language)
         fallback_series_title = (
@@ -171,7 +174,6 @@ class MetadataEnrichmentService:
         loc.poster_path = series.poster_path
         loc.series_poster_path = series.poster_path
         loc.logo_path = _pick_logo_path(raw_data, language)
-        loc.backdrop_path = selected_backdrop_path
         loc.genres = _split_genres([g.name for g in series.genres])
         loc.origin_country = series.origin_country
         loc.original_language = series.original_language
@@ -231,7 +233,7 @@ class MetadataEnrichmentService:
             if titles:
                 loc.episode_title = " / ".join(titles)
                 loc.overview = "\n\n".join(overviews) if overviews else loc.overview
-                loc.still_path = stills[0] if stills else None
+                match.still_path = stills[0] if stills else None
                 if not loc.title:
                     loc.title = loc.series_title or loc.original_series_title or loc.episode_title
 

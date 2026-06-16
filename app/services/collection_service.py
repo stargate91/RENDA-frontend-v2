@@ -115,22 +115,22 @@ class CollectionService:
             ).update({"is_primary": False}, synchronize_session=False)
 
         previous_poster_path = loc.poster_path
-        previous_backdrop_path = loc.backdrop_path
+        previous_backdrop_path = collection.backdrop_path
         loc.is_primary = is_primary
         loc.name = resolved_name
         loc.overview = details.get("overview") or loc.overview
         loc.poster_path = details.get("poster_path") or payload.get("poster_path") or loc.poster_path
-        loc.backdrop_path = details.get("backdrop_path") or payload.get("backdrop_path") or loc.backdrop_path
+        collection.backdrop_path = details.get("backdrop_path") or payload.get("backdrop_path") or collection.backdrop_path
 
         if loc.poster_path != previous_poster_path:
             loc.local_poster_path = None
-        if loc.backdrop_path != previous_backdrop_path:
-            loc.local_backdrop_path = None
+        if collection.backdrop_path != previous_backdrop_path:
+            collection.local_backdrop_path = None
 
         if loc.poster_path and not loc.local_poster_path:
             loc.local_poster_path = self.asset_service.download_image(loc.poster_path, "posters", size="w500")
-        if loc.backdrop_path and not loc.local_backdrop_path:
-            loc.local_backdrop_path = self.asset_service.download_image(loc.backdrop_path, "backdrops", size="w1280")
+        if collection.backdrop_path and not collection.local_backdrop_path:
+            collection.local_backdrop_path = self.asset_service.download_image(collection.backdrop_path, "backdrops", size="w1280")
         self.db.flush()
 
         return collection

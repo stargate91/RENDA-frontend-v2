@@ -297,15 +297,15 @@ def retry_item_image(item_id: int):
             logger.warning(f"Metadata re-enrichment failed during retry-image: {enrich_err}")
 
         # 3. Clear local image paths to force redownload
-        for loc in match.localizations:
-            if item.item_type == ItemType.EPISODE:
-                loc.local_still_path = None
-                loc.local_all_stills = None
-            else:
+        if item.item_type == ItemType.EPISODE:
+            match.local_still_path = None
+            match.local_all_stills = None
+        else:
+            match.local_backdrop_path = None
+            for loc in match.localizations:
                 loc.local_poster_path = None
                 loc.local_series_poster_path = None
                 loc.local_logo_path = None
-                loc.local_backdrop_path = None
 
         match.image_status = ImageStatus.PENDING
         db.commit()
@@ -358,10 +358,9 @@ def update_item_backdrop(item_id: str, payload: dict):
         if not local_b:
             return JSONResponse(status_code=500, content={"error": "Failed to download backdrop"})
 
-        # Update localizations
-        for loc in active_match.localizations:
-            loc.backdrop_path = backdrop_path
-            loc.local_backdrop_path = local_b
+        # Update match properties
+        active_match.backdrop_path = backdrop_path
+        active_match.local_backdrop_path = local_b
 
         db.commit()
         return {"status": "success", "backdrop_path": backdrop_path, "local_backdrop_path": local_b}
