@@ -107,7 +107,6 @@ class MetadataLocalization(Base):
     local_still_path: Mapped[Optional[str]] = mapped_column(String)
     all_stills: Mapped[Optional[List[str]]] = mapped_column(JSON) # JSON list of paths
     local_all_stills: Mapped[Optional[List[str]]] = mapped_column(JSON)
-    local_thumb_path: Mapped[Optional[str]] = mapped_column(String) # For fast UI previews
     last_updated: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     match: Mapped["MediaMatch"] = relationship(back_populates="localizations")
 

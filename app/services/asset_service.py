@@ -30,7 +30,7 @@ class AssetService:
 
     def _ensure_folders(self):
         """Creates the necessary subdirectories for assets."""
-        folders = ["posters", "backdrops", "logos", "persons", "stills", "thumbnails"]
+        folders = ["posters", "backdrops", "logos", "persons", "stills"]
         for folder in folders:
             (self.image_path / folder).mkdir(parents=True, exist_ok=True)
 
@@ -98,33 +98,3 @@ class AssetService:
                 logger.error(f"Image download exception ({url}): {e}")
                 temp_file_path.unlink(missing_ok=True)
                 return None
-
-    def generate_thumbnail(self, source_path: str, width: int = 300) -> Optional[str]:
-        """Generates a small WebP thumbnail for fast UI preview."""
-        try:
-            src = Path(source_path)
-            if not src.exists():
-                return None
-            
-            thumb_filename = src.stem + "_thumb.webp"
-            thumb_path = self.image_path / "thumbnails" / thumb_filename
-            
-            if thumb_path.exists():
-                return str(thumb_path)
-            
-            with Image.open(src) as img:
-                # Maintain aspect ratio
-                w_percent = (width / float(img.size[0]))
-                h_size = int((float(img.size[1]) * float(w_percent)))
-                img = img.resize((width, h_size), Image.Resampling.LANCZOS)
-                img.save(thumb_path, "WEBP", quality=80)
-            
-            return str(thumb_path)
-        except Exception as e:
-            logger.error(f"Thumbnail generation failed ({source_path}): {e}")
-            # If image is corrupt, delete source to force re-download
-            try:
-                if Path(source_path).exists():
-                    Path(source_path).unlink()
-            except: pass
-            return None
