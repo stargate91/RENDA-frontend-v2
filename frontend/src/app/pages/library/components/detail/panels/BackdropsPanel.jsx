@@ -25,7 +25,7 @@ export default function BackdropsPanel({ showTitle = true }) {
   const allBackdrops = apiResponse?.images?.backdrops || [];
   const currentBackdropPath = activeMatch?.local_backdrop_path || activeMatch?.backdrop_path || item?.backdrop_path || '';
   const neutralBackdrops = allBackdrops.filter(
-    bd => (!bd.iso_639_1 || bd.iso_639_1 === '') && bd.width >= 1920
+    bd => (!bd.iso_639_1 || bd.iso_639_1 === '') && bd.width >= 1280
   );
 
   const handleSelectBackdrop = async (backdropPath) => {
@@ -90,7 +90,7 @@ export default function BackdropsPanel({ showTitle = true }) {
             variant="detail-panel"
             icon={ImageOff}
             className="backdrops-panel__empty-state"
-            title={t('library.details.noBackdropsAvailable') || 'No neutral Full HD backdrops available.'}
+            title={t('library.details.noBackdropsAvailable') || 'No neutral HD-or-better backdrops available.'}
           />
         )}
       </div>

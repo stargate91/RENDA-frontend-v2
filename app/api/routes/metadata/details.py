@@ -56,6 +56,30 @@ def get_full_item_metadata(item_id: str, db: Session = Depends(get_db)):
                 raise HTTPException(status_code=404, detail="Virtual movie not found")
 
             tmdb_caches = db.query(TMDBCache).filter(TMDBCache.tmdb_id == tmdb_id).all()
+            preferred_cache = next(
+                (
+                    cache for cache in tmdb_caches
+                    if isinstance(cache.raw_data, dict)
+                    and str(cache.cache_key or "").startswith(f"/movie/{tmdb_id}")
+                    and (
+                        not ui_lang
+                        or str(cache.locale or "") == str(ui_lang)
+                        or f"language={ui_lang}" in str(cache.cache_key or "")
+                    )
+                ),
+                None,
+            )
+            if preferred_cache is None:
+                preferred_cache = next(
+                    (
+                        cache for cache in tmdb_caches
+                        if isinstance(cache.raw_data, dict) and str(cache.cache_key or "").startswith(f"/movie/{tmdb_id}")
+                    ),
+                    None,
+                )
+            preferred_raw = preferred_cache.raw_data if preferred_cache and isinstance(preferred_cache.raw_data, dict) else {}
+            effective_poster_path = preferred_raw.get("poster_path") or tmdb_data.get("poster_path")
+            effective_backdrop_path = preferred_raw.get("backdrop_path") or tmdb_data.get("backdrop_path")
             api_responses = {}
             for cache in tmdb_caches:
                 api_responses[cache.locale] = cache.raw_data
@@ -71,8 +95,8 @@ def get_full_item_metadata(item_id: str, db: Session = Depends(get_db)):
                 "api_responses": api_responses,
                 "series_api_responses": {},
                 "confidence": 1.0,
-                "backdrop_path": _resolve_backdrop_path(tmdb_data.get("backdrop_path"), None),
-                "local_backdrop_path": _resolve_backdrop_path(tmdb_data.get("backdrop_path"), None),
+                "backdrop_path": _resolve_backdrop_path(effective_backdrop_path, None),
+                "local_backdrop_path": _resolve_backdrop_path(effective_backdrop_path, None),
                 "still_path": None,
                 "local_still_path": None,
                 "director": None,
@@ -116,6 +140,8 @@ def get_full_item_metadata(item_id: str, db: Session = Depends(get_db)):
                 "folder": None,
                 "technical": {},
                 "guessit": {},
+                "poster_path": _resolve_poster_path(effective_poster_path, None),
+                "backdrop_path": _resolve_backdrop_path(effective_backdrop_path, None),
                 "overrides": {
                     "target_language": ui_lang,
                     "source": None,

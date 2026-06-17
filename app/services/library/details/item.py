@@ -52,12 +52,20 @@ class ItemDetailProvider(BaseDetailProvider):
                 tmdb_data = tmdb_client.get_details(tmdb_id, "movie", language=ui_lang)
                 if not tmdb_data:
                     return JSONResponse(status_code=404, content={"error": "Movie not found on TMDB"})
+
+                cached_movie = _pick_tmdb_cache(
+                    db,
+                    tmdb_id,
+                    "movie",
+                    [ui_lang, "en-US"] if ui_lang else ["en-US"],
+                )
+                cached_raw = cached_movie.raw_data if cached_movie and isinstance(cached_movie.raw_data, dict) else {}
                 
                 credits = tmdb_data.get("credits", {})
             
                 # Gather assets to download synchronously
-                poster_path = tmdb_data.get("poster_path")
-                backdrop_path = _pick_backdrop_path(tmdb_data, ui_lang)
+                poster_path = cached_raw.get("poster_path") or tmdb_data.get("poster_path")
+                backdrop_path = cached_raw.get("backdrop_path") or _pick_backdrop_path(tmdb_data, ui_lang)
                 logo_path = _pick_logo_path(tmdb_data, ui_lang)
             
                 cast_profiles = []
@@ -188,7 +196,7 @@ class ItemDetailProvider(BaseDetailProvider):
                         "poster_path": (tmdb_data.get("belongs_to_collection") or {}).get("poster_path"),
                         "backdrop_path": (tmdb_data.get("belongs_to_collection") or {}).get("backdrop_path"),
                     } if tmdb_data.get("belongs_to_collection") else None,
-                    "poster_path": self.formatter.resolve_image_response_path(tmdb_data.get("poster_path"), subfolder="posters"),
+                    "poster_path": self.formatter.resolve_image_response_path(poster_path, subfolder="posters"),
                     "backdrop_path": self.formatter.resolve_image_response_path(backdrop_path, subfolder="backdrops"),
                     "original_language": tmdb_data.get("original_language"),
                     "type": "movie",

@@ -44,6 +44,8 @@ import './components/detail/UserRatingSection.css';
 import ReviewModalContent from './components/detail/modals/ReviewModalContent';
 import Button from '@/ui/Button';
 
+const PERSON_INITIAL_CREDITS_PAGE_SIZE = 12;
+
 function getGenderLabel(gender, t) {
   if (gender === 1 || gender === '1') {
     return t('library.details.female') || 'Female';
@@ -480,11 +482,11 @@ function prioritizePersonCredits(items, knownForItems) {
     });
 }
 
-function PersonCreditsGridSection({ title, personId, mediaType, totalCount, navigate, t }) {
+function PersonCreditsGridSection({ title, personId, mediaType, totalCount, initialPageData, navigate, t }) {
   const shouldLoad = Boolean(personId) && Number(totalCount) > 0;
   const queryClient = useQueryClient();
   const containerRef = useRef(null);
-  const [columns, setColumns] = useState(1);
+  const [columns, setColumns] = useState(Math.max(1, Math.floor(PERSON_INITIAL_CREDITS_PAGE_SIZE / 2)));
   const [page, setPage] = useState(1);
 
   useLayoutEffect(() => {
@@ -535,11 +537,13 @@ function PersonCreditsGridSection({ title, personId, mediaType, totalCount, navi
   const itemsPerPage = Math.max(1, columns * 2);
   const creditsQuery = usePersonCreditsQuery(personId, mediaType, page, itemsPerPage, {
     enabled: shouldLoad,
+    initialData: page === 1 && itemsPerPage === PERSON_INITIAL_CREDITS_PAGE_SIZE ? initialPageData : undefined,
   });
   const totalPages = Math.max(1, Number(creditsQuery.data?.total_pages) || Math.ceil(Number(totalCount) / itemsPerPage) || 1);
   const safePage = Math.min(page, totalPages);
   const visibleItems = creditsQuery.data?.items || [];
   const fillerCount = Math.max(0, itemsPerPage - visibleItems.length);
+  const isInitialPageLoading = creditsQuery.isLoading && visibleItems.length === 0;
   const isPageFetching = creditsQuery.isFetching;
 
   if (!shouldLoad) {
@@ -616,6 +620,21 @@ function PersonCreditsGridSection({ title, personId, mediaType, totalCount, navi
           isPageFetching ? ' entity-detail-page__credits-list--fetching' : ''
         }`}
       >
+        {isInitialPageLoading && Array.from({ length: itemsPerPage }).map((_, index) => (
+          <div key={`credit-grid-skeleton-${mediaType}-${index}`} className="entity-detail-page__credit-card entity-detail-page__credit-card--people-grid entity-detail-page__skeleton-card">
+            <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-poster" />
+            <div className="entity-detail-page__credit-body">
+              <div className="entity-detail-page__credit-topline">
+                <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-title" />
+              </div>
+              <div className="entity-detail-page__credit-meta">
+                <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-meta" />
+                <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-pill" />
+                <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-pill" />
+              </div>
+            </div>
+          </div>
+        ))}
         {visibleItems.map((item) => (
           <button
             key={`credit-grid-${item.media_type || item.type || 'movie'}-${item.tmdb_id || item.id}`}
@@ -1308,6 +1327,7 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
           personId={id}
           mediaType="movies"
           totalCount={item?.total_movie_credits}
+          initialPageData={item?.initial_movie_credits_page}
           navigate={navigate}
           t={t}
         />
@@ -1319,6 +1339,7 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
           personId={id}
           mediaType="series"
           totalCount={item?.total_series_credits}
+          initialPageData={item?.initial_series_credits_page}
           navigate={navigate}
           t={t}
         />

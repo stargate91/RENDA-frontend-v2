@@ -37,6 +37,7 @@ from app.utils.library_utils.image_constants import PERSON_SIZE
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+PERSON_INITIAL_CREDITS_PAGE_SIZE = 12
 _PERSON_CREDIT_WARMUP_LOCK = threading.Lock()
 _PERSON_CREDIT_WARMUP_CACHE: dict[tuple[int, str, int, int], float] = {}
 _PERSON_CREDIT_WARMUP_TTL_SECONDS = 300.0
@@ -219,7 +220,7 @@ def _resolve_person_known_for_backdrop(
 ) -> Optional[str]:
     candidates: list[tuple[int, str]] = []
     seen_media: set[tuple[str, int]] = set()
-    max_scan = 8
+    max_scan = 5 if adult_only else 3
 
     ranked_credits = sorted(
         credits or [],
@@ -710,11 +711,17 @@ def get_person_detail(person_id: int):
         known_for = _apply_local_poster_paths(credit_payload["known_for"])
         all_movies = credit_payload["movies"]
         all_series = credit_payload["series"]
+        prioritized_movies = _prioritize_person_credits(all_movies, credit_payload["known_for"])
+        prioritized_series = _prioritize_person_credits(all_series, credit_payload["known_for"])
+        initial_movies_page = _paginate_items(prioritized_movies, 1, PERSON_INITIAL_CREDITS_PAGE_SIZE)
+        initial_series_page = _paginate_items(prioritized_series, 1, PERSON_INITIAL_CREDITS_PAGE_SIZE)
+        initial_movies_page["items"] = _apply_local_poster_paths(initial_movies_page["items"])
+        initial_series_page["items"] = _apply_local_poster_paths(initial_series_page["items"])
         preload_movies, preload_series = _build_person_asset_preload_batches(
             all_movies,
             all_series,
             credit_payload["known_for"],
-            first_page_size=8,
+            first_page_size=PERSON_INITIAL_CREDITS_PAGE_SIZE,
         )
 
         profile_path = person.profile_path
@@ -770,6 +777,8 @@ def get_person_detail(person_id: int):
             "known_for": known_for,
             "total_movie_credits": len(all_movies),
             "total_series_credits": len(all_series),
+            "initial_movie_credits_page": initial_movies_page,
+            "initial_series_credits_page": initial_series_page,
         }
         
         return JSONResponse(content=result, media_type="application/json; charset=utf-8")
