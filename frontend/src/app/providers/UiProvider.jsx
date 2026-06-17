@@ -24,6 +24,7 @@ export const UiProvider = ({ children }) => {
     },
     removeToast,
     openModal: (nextModal) => setModal(nextModal),
+    updateModal: (nextModal) => setModal((current) => (current ? { ...current, ...nextModal } : current)),
     closeModal: () => setModal(null),
   }), [removeToast]);
 

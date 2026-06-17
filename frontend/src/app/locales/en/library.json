@@ -349,6 +349,8 @@
     "noBackdropsAvailable": "No good backdrop options found for this title.",
     "backdropUpdated": "Backdrop updated successfully!",
     "backdropUpdateFailed": "Failed to update backdrop",
+    "backdropFilterRunning": "Checking title backdrops ({{checked}}/{{total}}). You can keep browsing.",
+    "backdropFilterFinishing": "Finalizing backdrop availability. You can keep browsing.",
     "keywords": "Keywords",
     "virtual": "Virtual"
   }

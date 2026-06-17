@@ -35,6 +35,7 @@ import { useTranslation } from '@/providers/LanguageContext';
 import { useUi } from '@/providers/UiProvider';
 import api from '@/lib/api';
 import { API_BASE } from '@/lib/backend';
+import { usePersonBackdropChooserStore, createPersonBackdropChooserSession } from '@/stores/usePersonBackdropChooserStore';
 import {
   useLibraryCollectionDetailQuery,
   usePersonCreditBackdropsQuery,
@@ -628,16 +629,25 @@ function mergeBackdropCreditPages(pages) {
 
 function PersonBackdropPickerModal({ personId, item, t, toast, overridePersonBackdropMutation }) {
   const viewportRef = useRef(null);
-  const [activeTab, setActiveTab] = useState('movies');
-  const [selectedBackdropPath, setSelectedBackdropPath] = useState(item?.backdrop_path || '');
-  const [currentSourceCreditKey, setCurrentSourceCreditKey] = useState('');
-  const [selectedCredit, setSelectedCredit] = useState(null);
-  const [moviePages, setMoviePages] = useState([]);
-  const [seriesPages, setSeriesPages] = useState([]);
-  const [movieNextPage, setMovieNextPage] = useState(2);
-  const [seriesNextPage, setSeriesNextPage] = useState(2);
-  const [movieLoadingMore, setMovieLoadingMore] = useState(false);
-  const [seriesLoadingMore, setSeriesLoadingMore] = useState(false);
+  const { updateModal } = useUi();
+  const sessionKey = String(personId || '');
+  const ensureSession = usePersonBackdropChooserStore((state) => state.ensureSession);
+  const patchSession = usePersonBackdropChooserStore((state) => state.patchSession);
+  const session = usePersonBackdropChooserStore((state) => state.sessions[sessionKey]);
+  const resolvedSession = session || createPersonBackdropChooserSession(item?.backdrop_path || '');
+  const {
+    activeTab,
+    selectedBackdropPath,
+    currentSourceCreditKey,
+    selectedCredit,
+    moviePages,
+    seriesPages,
+    movieNextPage,
+    seriesNextPage,
+    movieLoadingMore,
+    seriesLoadingMore,
+    creditValidationByKey,
+  } = resolvedSession;
   const selectedBackdropTmdbId = Number(selectedCredit?.series_tmdb_id || selectedCredit?.tmdb_id || selectedCredit?.id || 0);
   const selectedBackdropMediaType = isTvLikeMediaType(selectedCredit?.media_type || selectedCredit?.type) ? 'tv' : 'movie';
   const selectedBackdropMetadataQuery = usePersonCreditBackdropsQuery(personId, selectedBackdropTmdbId, selectedBackdropMediaType, {
@@ -645,23 +655,15 @@ function PersonBackdropPickerModal({ personId, item, t, toast, overridePersonBac
   });
 
   useEffect(() => {
-    setSelectedBackdropPath(item?.backdrop_path || '');
-  }, [item?.backdrop_path]);
+    ensureSession(personId, item?.backdrop_path || '');
+  }, [ensureSession, item?.backdrop_path, personId]);
 
   useEffect(() => {
-    setMoviePages([]);
-    setSeriesPages([]);
-    setMovieNextPage(2);
-    setSeriesNextPage(2);
-    setMovieLoadingMore(false);
-    setSeriesLoadingMore(false);
-    setSelectedCredit(null);
-    setCurrentSourceCreditKey('');
+    if (!session) {
+      patchSession(personId, { selectedBackdropPath: item?.backdrop_path || '' });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [personId]);
-
-  useEffect(() => {
-    setSelectedCredit(null);
-  }, [activeTab]);
 
   const initialTabPageSize = PERSON_BACKDROP_COLUMNS * PERSON_BACKDROP_INITIAL_ROWS;
   const moviesQuery = usePersonCreditsQuery(personId, 'movies', 1, PERSON_BACKDROP_PAGE_SIZE, {
@@ -674,18 +676,18 @@ function PersonBackdropPickerModal({ personId, item, t, toast, overridePersonBac
   });
 
   useEffect(() => {
-    if (moviesQuery.data?.items) {
-      setMoviePages([moviesQuery.data]);
-      setMovieNextPage(2);
+    if (moviesQuery.data?.items && (!moviePages || moviePages.length === 0)) {
+      patchSession(personId, { moviePages: [moviesQuery.data], movieNextPage: 2 });
     }
-  }, [moviesQuery.data]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [moviesQuery.data, patchSession, personId]);
 
   useEffect(() => {
-    if (seriesQuery.data?.items) {
-      setSeriesPages([seriesQuery.data]);
-      setSeriesNextPage(2);
+    if (seriesQuery.data?.items && (!seriesPages || seriesPages.length === 0)) {
+      patchSession(personId, { seriesPages: [seriesQuery.data], seriesNextPage: 2 });
     }
-  }, [seriesQuery.data]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [patchSession, personId, seriesQuery.data]);
 
   const currentBackdropKey = normalizeBackdropKey(selectedBackdropPath || item?.backdrop_path);
   const movieItems = useMemo(
@@ -722,10 +724,23 @@ function PersonBackdropPickerModal({ personId, item, t, toast, overridePersonBac
     return allBackdrops.filter((bd) => (!bd.iso_639_1 || bd.iso_639_1 === '') && Number(bd.width) >= 1280);
   }, [selectedBackdropMetadataQuery.data]);
 
+  const visibleItems = useMemo(
+    () => activeItems.filter((credit) => creditValidationByKey[String(credit.tmdb_id || credit.id || '')] !== false),
+    [activeItems, creditValidationByKey]
+  );
+
   const totalAvailableItems = activeTab === 'movies'
     ? Math.max(movieItems.length, Number(moviePages[0]?.total_items) || 0)
     : Math.max(seriesItems.length, Number(seriesPages[0]?.total_items) || 0);
-  const visibleItems = activeItems;
+  const progressTotal = Math.max(totalAvailableItems, activeItems.length);
+  const validatedCount = useMemo(
+    () => activeItems.reduce((count, credit) => {
+      const key = String(credit.tmdb_id || credit.id || '');
+      return count + (creditValidationByKey[key] !== undefined ? 1 : 0);
+    }, 0),
+    [activeItems, creditValidationByKey]
+  );
+  const validationPendingCount = Math.max(0, activeItems.length - validatedCount);
   const hasMore = activeItems.length < totalAvailableItems;
   const isLoading = activeTab === 'movies'
     ? (moviesQuery.isLoading || movieLoadingMore)
@@ -743,17 +758,19 @@ function PersonBackdropPickerModal({ personId, item, t, toast, overridePersonBac
       if (movieLoadingMore || movieNextPage > totalPages) {
         return;
       }
-      setMovieLoadingMore(true);
+      patchSession(personId, { movieLoadingMore: true });
       try {
         const nextPage = await api.people.getCredits(personId, 'movies', {
           page: movieNextPage,
           pageSize: PERSON_BACKDROP_PAGE_SIZE,
           excludeKnownFor: false,
         });
-        setMoviePages((current) => [...current, nextPage]);
-        setMovieNextPage((current) => current + 1);
+        patchSession(personId, (current) => ({
+          moviePages: [...(current.moviePages || []), nextPage],
+          movieNextPage: (current.movieNextPage || 2) + 1,
+        }));
       } finally {
-        setMovieLoadingMore(false);
+        patchSession(personId, { movieLoadingMore: false });
       }
       return;
     }
@@ -763,20 +780,29 @@ function PersonBackdropPickerModal({ personId, item, t, toast, overridePersonBac
       if (seriesLoadingMore || seriesNextPage > totalPages) {
         return;
       }
-      setSeriesLoadingMore(true);
+      patchSession(personId, { seriesLoadingMore: true });
       try {
         const nextPage = await api.people.getCredits(personId, 'series', {
           page: seriesNextPage,
           pageSize: PERSON_BACKDROP_PAGE_SIZE,
           excludeKnownFor: false,
         });
-        setSeriesPages((current) => [...current, nextPage]);
-        setSeriesNextPage((current) => current + 1);
+        patchSession(personId, (current) => ({
+          seriesPages: [...(current.seriesPages || []), nextPage],
+          seriesNextPage: (current.seriesNextPage || 2) + 1,
+        }));
       } finally {
-        setSeriesLoadingMore(false);
+        patchSession(personId, { seriesLoadingMore: false });
       }
     }
   };
+
+  useEffect(() => {
+    if (selectedCredit || !hasMore || isLoading) {
+      return;
+    }
+    void loadMore();
+  }, [activeTab, hasMore, isLoading, selectedCredit, totalAvailableItems]);
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -794,6 +820,57 @@ function PersonBackdropPickerModal({ personId, item, t, toast, overridePersonBac
     return () => window.cancelAnimationFrame(frameId);
   }, [activeTab, hasMore, isLoading, selectedCredit, visibleItems.length]);
 
+  useEffect(() => {
+    if (!personId || selectedCredit || activeItems.length === 0) {
+      return undefined;
+    }
+
+    let cancelled = false;
+    const candidates = activeItems.filter((credit) => {
+      const key = String(credit.tmdb_id || credit.id || '');
+      return key && creditValidationByKey[key] === undefined;
+    });
+
+    if (candidates.length === 0) {
+      return undefined;
+    }
+
+    const run = async () => {
+      const batch = candidates.slice(0, 4);
+      const results = await Promise.all(batch.map(async (credit) => {
+        const creditKey = String(credit.tmdb_id || credit.id || '');
+        const tmdbId = Number(credit.series_tmdb_id || credit.tmdb_id || credit.id || 0);
+        const mediaType = isTvLikeMediaType(credit.media_type || credit.type) ? 'tv' : 'movie';
+        try {
+          const response = await api.people.getCreditBackdrops(personId, tmdbId, mediaType);
+          const hasValidBackdrops = Boolean((response?.backdrops || []).some(
+            (bd) => (!bd?.iso_639_1 || bd.iso_639_1 === '') && Number(bd?.width) >= 1280
+          ));
+          return [creditKey, hasValidBackdrops];
+        } catch {
+          return [creditKey, true];
+        }
+      }));
+
+      if (cancelled) {
+        return;
+      }
+
+      patchSession(personId, (current) => ({
+        creditValidationByKey: {
+          ...(current.creditValidationByKey || {}),
+          ...Object.fromEntries(results),
+        },
+      }));
+    };
+
+    void run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeItems, creditValidationByKey, patchSession, personId, selectedCredit]);
+
   const handleViewportScroll = (event) => {
     if (selectedCredit || !hasMore || isLoading) {
       return;
@@ -809,15 +886,23 @@ function PersonBackdropPickerModal({ personId, item, t, toast, overridePersonBac
     if (!credit) {
       return;
     }
-    setSelectedCredit(credit);
     const viewport = viewportRef.current;
+    const scrollTop = viewport ? viewport.scrollTop : 0;
+    patchSession(personId, { selectedCredit: credit, gridScrollTop: scrollTop });
     if (viewport) {
       viewport.scrollTop = 0;
     }
   };
 
   const handleBackToCredits = () => {
-    setSelectedCredit(null);
+    const savedScrollTop = resolvedSession.gridScrollTop || 0;
+    patchSession(personId, { selectedCredit: null });
+    requestAnimationFrame(() => {
+      const viewport = viewportRef.current;
+      if (viewport) {
+        viewport.scrollTop = savedScrollTop;
+      }
+    });
   };
 
   const handleSelectDetailedBackdrop = async (backdropPath) => {
@@ -829,8 +914,10 @@ function PersonBackdropPickerModal({ personId, item, t, toast, overridePersonBac
         personId,
         backdropPath,
       });
-      setSelectedBackdropPath(backdropPath);
-      setCurrentSourceCreditKey(String(selectedCredit?.tmdb_id || selectedCredit?.id || ''));
+      patchSession(personId, {
+        selectedBackdropPath: backdropPath,
+        currentSourceCreditKey: String(selectedCredit?.tmdb_id || selectedCredit?.id || ''),
+      });
       toast(t('library.details.backdropUpdated') || 'Backdrop updated successfully!', 'success');
     } catch (err) {
       toast(err.message || t('library.details.backdropUpdateFailed') || 'Failed to update backdrop', 'danger');
@@ -839,20 +926,36 @@ function PersonBackdropPickerModal({ personId, item, t, toast, overridePersonBac
 
   const isBackdropBrowserOpen = Boolean(selectedCredit);
   const isBackdropBrowserLoading = selectedBackdropMetadataQuery.isLoading && !selectedBackdropMetadataQuery.data;
+  const headerDescription = !isBackdropBrowserOpen && (validationPendingCount > 0 || hasMore || isLoading)
+    ? t('library.details.backdropFilterRunning', {
+      checked: validatedCount,
+      total: progressTotal || 0,
+      defaultValue: 'Checking title backdrops ({{checked}}/{{total}}). You can keep browsing.',
+    })
+    : undefined;
+
+  useEffect(() => {
+    updateModal({ description: headerDescription });
+    return () => {
+      updateModal({ description: undefined });
+    };
+  }, [headerDescription, updateModal]);
 
   return (
     <div className="person-backdrop-picker">
       {!isBackdropBrowserOpen && (
-        <SegmentedControl
-          ariaLabel={t('library.details.chooseBackdrop') || 'Choose backdrop source'}
-          className="person-backdrop-picker__tabs"
-          options={[
-            { value: 'movies', label: t('library.details.moviesTitle') || 'Movies' },
-            { value: 'series', label: t('library.details.tvShowsTitle') || 'Series' },
-          ]}
-          value={activeTab}
-          onChange={setActiveTab}
-        />
+        <>
+          <SegmentedControl
+            ariaLabel={t('library.details.chooseBackdrop') || 'Choose backdrop source'}
+            className="person-backdrop-picker__tabs"
+            options={[
+              { value: 'movies', label: t('library.details.moviesTitle') || 'Movies' },
+              { value: 'series', label: t('library.details.tvShowsTitle') || 'Series' },
+            ]}
+            value={activeTab}
+            onChange={(value) => patchSession(personId, { activeTab: value, selectedCredit: null })}
+          />
+        </>
       )}
 
       <div ref={viewportRef} className="person-backdrop-picker__viewport" onScroll={handleViewportScroll}>
