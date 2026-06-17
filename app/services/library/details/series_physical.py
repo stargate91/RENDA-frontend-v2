@@ -80,18 +80,33 @@ class SeriesPhysicalMixin(SeriesAssetsMixin):
                 logger.error(f"Failed to fetch series details from TMDB API on the fly: {e}")
 
         preferred_logo_path = _pick_logo_path(cached_series, ui_lang) if cached_series else None
-        effective_logo_path = preferred_logo_path or (base_loc.logo_path if base_loc else None)
+        effective_logo_path = (
+            getattr(base_loc, "manual_logo_path", None)
+            or preferred_logo_path
+            or (base_loc.logo_path if base_loc else None)
+        )
         effective_local_logo_path = (
+            getattr(base_loc, "manual_local_logo_path", None)
+            if base_loc and effective_logo_path and effective_logo_path == getattr(base_loc, "manual_logo_path", None)
+            else (
             base_loc.local_logo_path
             if base_loc and effective_logo_path and effective_logo_path == base_loc.logo_path
             else None
+            )
         )
         preferred_backdrop_path = _pick_backdrop_path(cached_series, ui_lang) if cached_series else None
-        effective_backdrop_path = (base_match.backdrop_path if base_match and base_match.backdrop_path else None) or preferred_backdrop_path
+        effective_backdrop_path = (
+            getattr(base_match, "manual_backdrop_path", None)
+            or ((base_match.backdrop_path if base_match and base_match.backdrop_path else None) or preferred_backdrop_path)
+        )
         effective_local_backdrop_path = (
+            getattr(base_match, "manual_local_backdrop_path", None)
+            if base_match and effective_backdrop_path and effective_backdrop_path == getattr(base_match, "manual_backdrop_path", None)
+            else (
             base_match.local_backdrop_path
             if base_match and effective_backdrop_path and effective_backdrop_path == base_match.backdrop_path
             else None
+            )
         )
 
         cached_companies = {}
@@ -157,7 +172,13 @@ class SeriesPhysicalMixin(SeriesAssetsMixin):
                 _public_image_path(effective_local_backdrop_path, "backdrops") or effective_backdrop_path
             ) if (base_loc or effective_backdrop_path) else None,
             "poster_path": (
-                _public_image_path(base_loc.local_series_poster_path, "posters")
+                _public_image_path(getattr(base_loc, "manual_local_series_poster_path", None), "posters")
+                or _public_image_path(getattr(base_loc, "manual_series_poster_path", None), "posters")
+                or getattr(base_loc, "manual_series_poster_path", None)
+                or _public_image_path(getattr(base_loc, "manual_local_poster_path", None), "posters")
+                or _public_image_path(getattr(base_loc, "manual_poster_path", None), "posters")
+                or getattr(base_loc, "manual_poster_path", None)
+                or _public_image_path(base_loc.local_series_poster_path, "posters")
                 or _public_image_path(base_loc.local_poster_path, "posters")
                 or (base_loc.series_poster_path if base_loc and base_loc.series_poster_path else (base_loc.poster_path if base_loc else None))
             ) if base_loc else None,

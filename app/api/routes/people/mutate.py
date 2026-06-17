@@ -6,7 +6,7 @@ import logging
 
 from app.db.base import Session
 from app.db.models import Person, Tag, ImageStatus
-from app.utils.library_utils.image_constants import PERSON_SIZE
+from app.utils.library_utils.image_constants import BACKDROP_SIZE, PERSON_SIZE
 from app.services.image_processing_service import ImageProcessingService
 
 from app.utils.people_utils import (
@@ -20,6 +20,45 @@ from app.utils.people_utils import (
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+@router.post("/people/{person_id:int}/backdrop")
+def update_person_backdrop(person_id: int, payload: dict):
+    """Updates the backdrop of a person, using a credit backdrop image."""
+    db = Session()
+    try:
+        from app.services.asset_service import AssetService
+
+        person = _get_or_create_person_db(db, person_id)
+        if not person:
+            return JSONResponse(status_code=404, content={"error": "Person not found"})
+
+        backdrop_path = payload.get("backdrop_path")
+        if not backdrop_path:
+            return JSONResponse(status_code=400, content={"error": "backdrop_path is required"})
+
+        asset_service = AssetService()
+        local_path = asset_service.download_image(backdrop_path, "backdrops", size=BACKDROP_SIZE)
+        if not local_path:
+            return JSONResponse(status_code=500, content={"error": "Failed to download backdrop"})
+
+        person.manual_backdrop_path = backdrop_path
+        person.manual_local_backdrop_path = local_path
+        db.commit()
+        db.refresh(person)
+
+        return {
+            "status": "success",
+            "backdrop_path": _public_image_path(person.manual_local_backdrop_path, "backdrops") or person.manual_backdrop_path,
+            "local_backdrop_path": person.manual_local_backdrop_path,
+            "has_local_backdrop": bool(_public_image_path(person.manual_local_backdrop_path or person.manual_backdrop_path, "backdrops")),
+        }
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error updating person backdrop: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    finally:
+        db.close()
 
 @router.post("/people/add-tmdb")
 def add_person_tmdb(payload: dict):
@@ -132,15 +171,15 @@ def update_person_profile(person_id: int, payload: dict):
                 if len(subparts) > 1:
                     db_profile_path = "/" + subparts[1]
 
-        # 1. Update remote path
-        person.profile_path = db_profile_path
-        person.local_profile_path = None
+        # 1. Store manual override separately
+        person.manual_profile_path = db_profile_path
+        person.manual_local_profile_path = None
         
         # 2. Download the image locally
         asset_service = AssetService()
         local_path = asset_service.download_image(profile_path, "persons", size=PERSON_SIZE)
         if local_path:
-            person.local_profile_path = local_path
+            person.manual_local_profile_path = local_path
             person.image_status = ImageStatus.COMPLETED
         else:
             person.image_status = ImageStatus.FAILED
@@ -150,8 +189,8 @@ def update_person_profile(person_id: int, payload: dict):
         return {
             "status": "success",
             "profile_path": _resolve_person_profile_path(person),
-            "local_profile_path": person.local_profile_path,
-            "has_local_profile": bool(_public_image_path(person.local_profile_path or person.profile_path, "persons")),
+            "local_profile_path": person.manual_local_profile_path or person.local_profile_path,
+            "has_local_profile": bool(_public_image_path(person.manual_local_profile_path or person.manual_profile_path or person.local_profile_path or person.profile_path, "persons")),
         }
     except Exception as e:
         db.rollback()
@@ -181,8 +220,8 @@ def upload_person_profile(person_id: int, file: UploadFile = File(...)):
         if not saved_path:
             return JSONResponse(status_code=400, content={"error": "Invalid image upload"})
             
-        person.local_profile_path = filename
-        person.profile_path = filename
+        person.manual_local_profile_path = filename
+        person.manual_profile_path = filename
         person.image_status = ImageStatus.COMPLETED
         
         db.commit()
@@ -190,8 +229,8 @@ def upload_person_profile(person_id: int, file: UploadFile = File(...)):
         return {
             "status": "success",
             "profile_path": _resolve_person_profile_path(person),
-            "local_profile_path": person.local_profile_path,
-            "has_local_profile": bool(_public_image_path(person.local_profile_path or person.profile_path, "persons")),
+            "local_profile_path": person.manual_local_profile_path or person.local_profile_path,
+            "has_local_profile": bool(_public_image_path(person.manual_local_profile_path or person.manual_profile_path or person.local_profile_path or person.profile_path, "persons")),
         }
     except Exception as e:
         db.rollback()

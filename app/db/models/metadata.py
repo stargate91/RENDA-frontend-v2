@@ -13,6 +13,8 @@ class MediaCollection(Base):
     total_parts: Mapped[Optional[int]] = mapped_column(Integer)
     backdrop_path: Mapped[Optional[str]] = mapped_column(String)
     local_backdrop_path: Mapped[Optional[str]] = mapped_column(String)
+    manual_backdrop_path: Mapped[Optional[str]] = mapped_column(String)
+    manual_local_backdrop_path: Mapped[Optional[str]] = mapped_column(String)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -38,6 +40,8 @@ class MediaCollectionLocalization(Base):
     overview: Mapped[Optional[str]] = mapped_column(String)
     poster_path: Mapped[Optional[str]] = mapped_column(String)
     local_poster_path: Mapped[Optional[str]] = mapped_column(String)
+    manual_poster_path: Mapped[Optional[str]] = mapped_column(String)
+    manual_local_poster_path: Mapped[Optional[str]] = mapped_column(String)
     last_updated: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     collection: Mapped["MediaCollection"] = relationship(back_populates="localizations")
@@ -77,6 +81,8 @@ class MediaMatch(Base):
     
     backdrop_path: Mapped[Optional[str]] = mapped_column(String)
     local_backdrop_path: Mapped[Optional[str]] = mapped_column(String)
+    manual_backdrop_path: Mapped[Optional[str]] = mapped_column(String)
+    manual_local_backdrop_path: Mapped[Optional[str]] = mapped_column(String)
     still_path: Mapped[Optional[str]] = mapped_column(String)
     local_still_path: Mapped[Optional[str]] = mapped_column(String)
     all_stills: Mapped[Optional[List[str]]] = mapped_column(JSON)
@@ -104,10 +110,16 @@ class MetadataLocalization(Base):
     spoken_languages: Mapped[Optional[List[str]]] = mapped_column(JSON)
     poster_path: Mapped[Optional[str]] = mapped_column(String)
     local_poster_path: Mapped[Optional[str]] = mapped_column(String)
+    manual_poster_path: Mapped[Optional[str]] = mapped_column(String)
+    manual_local_poster_path: Mapped[Optional[str]] = mapped_column(String)
     series_poster_path: Mapped[Optional[str]] = mapped_column(String)
     local_series_poster_path: Mapped[Optional[str]] = mapped_column(String)
+    manual_series_poster_path: Mapped[Optional[str]] = mapped_column(String)
+    manual_local_series_poster_path: Mapped[Optional[str]] = mapped_column(String)
     logo_path: Mapped[Optional[str]] = mapped_column(String)
     local_logo_path: Mapped[Optional[str]] = mapped_column(String)
+    manual_logo_path: Mapped[Optional[str]] = mapped_column(String)
+    manual_local_logo_path: Mapped[Optional[str]] = mapped_column(String)
     trailer_url: Mapped[Optional[str]] = mapped_column(String)
     
     last_updated: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

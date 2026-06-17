@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useLibraryItemDetailQuery, useLibrarySeriesDetailQuery } from '@/queries/metadataQueries';
 import {
   useUpdateMediaStatusMutation, usePlayMediaMutation,
@@ -6,6 +7,7 @@ import {
 } from '@/queries/mediaQueries';
 import { useSettingsQuery } from '@/queries/settingsQueries';
 import { API_BASE } from '@/lib/backend';
+import api from '@/lib/api';
 import { isMovieMediaType } from '@/lib/mediaTypes';
 import {
   getDurationText,
@@ -28,6 +30,8 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
 
   const overviewRef = useRef(null);
   const lastIdRef = useRef(null);
+  const fullPeoplePrefetchRef = useRef(new Set());
+  const queryClient = useQueryClient();
 
   const updateStatusMutation = useUpdateMediaStatusMutation();
   const overrideBackdropMutation = useOverrideBackdropMutation();
@@ -47,7 +51,7 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
     lastIdRef.current = cleanId;
 
     if (isMovie) {
-      setActivePanel(item?.cast?.length ? 'cast' : 'details');
+      setActivePanel('details');
       return;
     }
 
@@ -58,6 +62,33 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
 
     setActivePanel(item?.cast?.length ? 'cast' : 'details');
   }, [cleanId, isMovie, item]);
+
+  useEffect(() => {
+    if (!isMovie || !cleanId || !item?.id?.startsWith('tmdb_')) return;
+    if (item?.people_complete) return;
+    if (!item?.cast?.length) return;
+    if (fullPeoplePrefetchRef.current.has(cleanId)) return;
+
+    fullPeoplePrefetchRef.current.add(cleanId);
+
+    api.library.getItemDetail(cleanId, { fullPeople: true })
+      .then((fullItem) => {
+        queryClient.setQueryData(['library-item-detail', cleanId], (current) => {
+          if (!current) return fullItem;
+          return {
+            ...current,
+            directors: fullItem.directors ?? current.directors,
+            writers: fullItem.writers ?? current.writers,
+            cast: fullItem.cast ?? current.cast,
+            cast_total: fullItem.cast_total ?? current.cast_total,
+            people_complete: fullItem.people_complete ?? current.people_complete,
+          };
+        });
+      })
+      .catch(() => {
+        fullPeoplePrefetchRef.current.delete(cleanId);
+      });
+  }, [cleanId, isMovie, item, queryClient]);
 
   const togglePanel = (panelName) => {
     setActivePanel(prev => prev === panelName ? null : panelName);

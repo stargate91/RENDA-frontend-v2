@@ -215,17 +215,28 @@ class TMDBClient:
         if tv: return {**tv[0], "item_type": "series"}
         return None
 
-    def get_details(self, tmdb_id: int, item_type: str, language: str = "en-US") -> Dict[str, Any]:
+    def get_details(
+        self,
+        tmdb_id: int,
+        item_type: str,
+        language: str = "en-US",
+        include_images: bool = True,
+    ) -> Dict[str, Any]:
         """Retrieve detailed information about a movie or TV show."""
         if not self._api_key:
             raise ValueError("TMDB API key is missing")
 
         if item_type == "movie":
             endpoint = f"/movie/{tmdb_id}"
-            append = "credits,external_ids,images,translations,videos,keywords"
+            append_parts = ["credits", "external_ids", "translations", "videos", "keywords"]
         else:
             endpoint = f"/tv/{tmdb_id}"
-            append = "credits,aggregate_credits,external_ids,images,translations,videos,keywords"
+            append_parts = ["credits", "aggregate_credits", "external_ids", "translations", "videos", "keywords"]
+
+        if include_images:
+            append_parts.append("images")
+
+        append = ",".join(append_parts)
 
         normalized_lang = str(language or "en").split("-", 1)[0].strip() or "en"
         include_image_language = ",".join(dict.fromkeys([normalized_lang, "en", "null"]))
@@ -235,9 +246,10 @@ class TMDBClient:
             "api_key": self._api_key,
             "language": language,
             "append_to_response": append,
-            "include_image_language": include_image_language,
             "include_video_language": include_video_language,
         }
+        if include_images:
+            params["include_image_language"] = include_image_language
         return self._call_api(endpoint, params)
 
     def get_episode_details(self, series_id: int, season_number: int, episode_number: int, language: str = "en-US") -> Dict[str, Any]:

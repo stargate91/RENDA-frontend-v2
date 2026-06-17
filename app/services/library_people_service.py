@@ -153,6 +153,15 @@ class LibraryPeopleService:
         return "person"
 
     def _person_profile_path(self, person) -> Optional[str]:
+        manual_local_profile = _public_image_path(getattr(person, "manual_local_profile_path", None), "persons")
+        if manual_local_profile:
+            return manual_local_profile
+        manual_profile = getattr(person, "manual_profile_path", None)
+        manual_cached = _public_image_path(manual_profile, "persons")
+        if manual_cached:
+            return manual_cached
+        if manual_profile:
+            return manual_profile
         local_profile = _public_image_path(getattr(person, "local_profile_path", None), "persons")
         if local_profile:
             return local_profile

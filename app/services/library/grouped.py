@@ -49,6 +49,11 @@ class LibraryGroupedService:
             "adult_people": len(self.formatter.format_media_cards("adult_people", library.get("adult_people", []))),
         }
 
+    @staticmethod
+    def _normalize_virtual_media_type(media_type: Optional[str]) -> str:
+        normalized = str(media_type or "movie").strip().lower()
+        return "tv" if normalized in {"tv", "series", "show"} else "movie"
+
     def _build_media_tab_counts(self) -> dict:
         counts = {
             **self.repository.get_library_owned_counts(),
@@ -59,19 +64,8 @@ class LibraryGroupedService:
             "adult_collections": len(self.collection_service._build_movie_collection_rows(tab="adult")),
         }
 
-        include_adult = self._include_adult_enabled()
-        adult_pref = self._adult_gender_preference()
-        people_rows = self.db.query(Person.is_active, Person.is_adult, Person.gender).all()
-        counts["people"] = sum(1 for is_active, is_adult, gender in people_rows if is_active and (not include_adult or not is_adult))
-        
-        def matches_pref(gender):
-            if adult_pref == "female":
-                return gender == 1
-            if adult_pref == "male":
-                return gender == 2
-            return True
-
-        counts["adult_people"] = sum(1 for is_active, is_adult, gender in people_rows if include_adult and is_active and is_adult and matches_pref(gender))
+        counts["people"] = len(self.people_service.get_people_group("all", filter_status="active", tab="people"))
+        counts["adult_people"] = len(self.people_service.get_people_group("all", filter_status="active", tab="adult_people"))
 
         virtual_keys = set()
         list_rows = self.db.query(
@@ -88,7 +82,7 @@ class LibraryGroupedService:
         ).all()
 
         for tmdb_id, media_type in [*list_rows, *state_rows]:
-            media_type = (media_type or "movie").lower()
+            media_type = self._normalize_virtual_media_type(media_type)
             if tmdb_id and media_type in {"movie", "tv"}:
                 virtual_keys.add((media_type, tmdb_id))
 
@@ -120,8 +114,22 @@ class LibraryGroupedService:
             if series_id in candidate_ids and item_type_value in {"series", "season", "episode"}:
                 local_keys.add(("tv", series_id))
 
+        cache_rows = self.db.query(TMDBCache.tmdb_id, TMDBCache.cache_key, TMDBCache.raw_data).filter(
+            TMDBCache.tmdb_id.in_(list(candidate_ids))
+        ).all()
+        adult_map = {}
+        for tmdb_id, cache_key, raw_data in cache_rows:
+            if not isinstance(raw_data, dict):
+                continue
+            cache_key_str = str(cache_key or "")
+            media_type = "tv" if cache_key_str.startswith(f"/tv/{tmdb_id}") else "movie" if cache_key_str.startswith(f"/movie/{tmdb_id}") else None
+            if media_type is None:
+                continue
+            adult_map[(media_type, tmdb_id)] = bool(raw_data.get("adult", False))
+
         for media_type, tmdb_id in virtual_keys - local_keys:
-            count_key = "series" if media_type == "tv" else "movies"
+            is_adult = adult_map.get((media_type, tmdb_id), False)
+            count_key = "adult_series" if media_type == "tv" and is_adult else "series" if media_type == "tv" else "adult" if is_adult else "movies"
             counts[count_key] = int(counts.get(count_key) or 0) + 1
 
         return counts
@@ -151,11 +159,11 @@ class LibraryGroupedService:
 
         candidate_tmdb_ids = set()
         for list_item, _custom_list in virtual_rows:
-            media_type = (list_item.media_type or "movie").lower()
+            media_type = self._normalize_virtual_media_type(list_item.media_type)
             if media_type in {"movie", "tv"} and list_item.tmdb_id:
                 candidate_tmdb_ids.add(list_item.tmdb_id)
         for state in standalone_virtual_rows:
-            media_type = (state.media_type or "movie").lower()
+            media_type = self._normalize_virtual_media_type(state.media_type)
             if media_type in {"movie", "tv"} and state.tmdb_id:
                 candidate_tmdb_ids.add(state.tmdb_id)
 
@@ -228,7 +236,7 @@ class LibraryGroupedService:
                 VirtualMediaState.tmdb_id.in_(candidate_tmdb_ids)
             ).all()
             for state in state_rows:
-                media_type = (state.media_type or "movie").lower()
+                media_type = self._normalize_virtual_media_type(state.media_type)
                 virtual_state_map[(media_type, state.tmdb_id)] = state
 
         raw_cache_map = {}
@@ -340,6 +348,12 @@ class LibraryGroupedService:
                     keywords_list = [kw.get("name") for kw in kw_list if isinstance(kw, dict) and kw.get("name")]
             return keywords_list
 
+        def _get_virtual_target_group(media_type, raw_data):
+            is_adult = bool(raw_data.get("adult", False)) if isinstance(raw_data, dict) else False
+            if media_type == "tv":
+                return "adult_series" if is_adult else "series"
+            return "adult" if is_adult else "movies"
+
         for item in items:
             active_match = next((match for match in item.matches if match.is_active), None)
             target_group = None
@@ -396,7 +410,7 @@ class LibraryGroupedService:
 
         seen_virtual_keys = set()
         for list_item, custom_list in virtual_rows:
-            media_type = (list_item.media_type or "movie").lower()
+            media_type = self._normalize_virtual_media_type(list_item.media_type)
             if media_type not in {"movie", "tv"}:
                 continue
 
@@ -413,8 +427,16 @@ class LibraryGroupedService:
             if virtual_state is not None and not bool(getattr(virtual_state, "is_tracked", True)):
                 continue
 
-            raw_poster_path = raw_data.get("poster_path") or list_item.poster_path
-            local_poster_path = _public_image_path(raw_poster_path, "posters")
+            raw_poster_path = (
+                (virtual_state.manual_poster_path if virtual_state else None)
+                or raw_data.get("poster_path")
+                or list_item.poster_path
+            )
+            local_poster_path = _public_image_path(
+                (virtual_state.manual_local_poster_path if virtual_state else None)
+                or raw_poster_path,
+                "posters",
+            )
             year_value = None
             if media_type == "tv":
                 first_air_date = raw_data.get("first_air_date")
@@ -459,7 +481,7 @@ class LibraryGroupedService:
                 "duration": 0,
             }
 
-            target_group = "series" if media_type == "tv" else "movies"
+            target_group = _get_virtual_target_group(media_type, raw_data)
             library["counts"][target_group] += 1
             if include_all_tabs or target_group in requested_tabs:
                 library[target_group].append(virtual_item)
@@ -467,7 +489,7 @@ class LibraryGroupedService:
         for state in standalone_virtual_rows:
             if not bool(getattr(state, "is_tracked", True)):
                 continue
-            media_type = (state.media_type or "movie").lower()
+            media_type = self._normalize_virtual_media_type(state.media_type)
             key = f"{media_type}:{state.tmdb_id}"
             if key in seen_virtual_keys:
                 continue
@@ -475,8 +497,8 @@ class LibraryGroupedService:
                 continue
 
             raw_data = _get_virtual_raw_data(media_type, state.tmdb_id)
-            raw_poster_path = raw_data.get("poster_path")
-            local_poster_path = _public_image_path(raw_poster_path, "posters")
+            raw_poster_path = state.manual_poster_path or raw_data.get("poster_path")
+            local_poster_path = _public_image_path(state.manual_local_poster_path or raw_poster_path, "posters")
             year_value = None
             date_field = raw_data.get("first_air_date") if media_type == "tv" else raw_data.get("release_date")
             if date_field:
@@ -513,7 +535,7 @@ class LibraryGroupedService:
                 "duration": 0,
             }
             seen_virtual_keys.add(key)
-            target_group = "series" if media_type == "tv" else "movies"
+            target_group = _get_virtual_target_group(media_type, raw_data)
             library["counts"][target_group] += 1
             if include_all_tabs or target_group in requested_tabs:
                 library[target_group].append(virtual_item)
@@ -521,8 +543,8 @@ class LibraryGroupedService:
         library["people"] = []
         library["adult_people"] = []
         library["tags"] = []
-        people_items = self.people_service.get_people_group("all", filter_status="all", tab="people")
-        adult_people_items = self.people_service.get_people_group("all", filter_status="all", tab="adult_people")
+        people_items = self.people_service.get_people_group("all", filter_status="active", tab="people")
+        adult_people_items = self.people_service.get_people_group("all", filter_status="active", tab="adult_people")
         if include_all_tabs or "people" in requested_tabs:
             library["people"] = self.formatter.format_media_cards("people", people_items)
         if self._include_adult_enabled() and (include_all_tabs or "adult_people" in requested_tabs):

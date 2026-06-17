@@ -73,7 +73,7 @@ class LibraryTabService:
             items, total_items, safe_page, safe_page_size, total_pages = self.owned_provider.get_page(
                 normalized_tab, page, page_size, sort_by, search, selected_tags, selected_genre, selected_decade, selected_year, filter_favorite, filter_watched, filter_ownership, filter_status, filter_gender
             )
-        elif normalized_tab in {"movies", "series", "adult_series"} and filter_ownership == "unowned":
+        elif normalized_tab in {"movies", "series", "adult", "adult_series"} and filter_ownership == "unowned":
             items, total_items, safe_page, safe_page_size, total_pages = self.virtual_provider.get_page(
                 normalized_tab, page, page_size, sort_by, search, selected_tags, selected_genre, selected_decade, selected_year, filter_favorite, filter_watched, filter_ownership, filter_status, filter_gender
             )
@@ -88,7 +88,9 @@ class LibraryTabService:
                 normalized_tab, page, page_size, sort_by, search, selected_tags, selected_genre, selected_decade, selected_year, filter_favorite, filter_watched, filter_ownership, filter_status, filter_gender
             )
 
-        counts = self.grouped_service._build_media_tab_counts()
+        counts = self.grouped_service.get_grouped_library(
+            requested_tabs={"movies", "series", "adult", "adult_series", "people", "adult_people"}
+        ).get("counts", {})
 
         return {
             "tab": normalized_tab,

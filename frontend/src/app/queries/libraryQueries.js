@@ -266,3 +266,33 @@ export const useUpdatePersonStatusMutation = () => {
     },
   });
 };
+
+export const useOverridePersonBackdropMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ personId, backdropPath }) => api.people.overrideBackdrop(personId, backdropPath),
+    onSuccess: (data, variables) => {
+      const personKeys = [
+        ['person-detail', variables.personId],
+        ['person-detail', String(variables.personId)],
+        ['person-detail', Number(variables.personId)],
+      ];
+      personKeys.forEach((key) => {
+        queryClient.setQueryData(key, (oldData) => {
+          if (!oldData) {
+            return oldData;
+          }
+          return {
+            ...oldData,
+            backdrop_path: data?.backdrop_path ?? oldData.backdrop_path,
+            has_local_backdrop: data?.has_local_backdrop ?? oldData.has_local_backdrop,
+          };
+        });
+      });
+      queryClient.invalidateQueries({ queryKey: ['person-detail'] });
+      queryClient.invalidateQueries({ queryKey: ['people'] });
+      queryClient.invalidateQueries({ queryKey: ['people-infinite'] });
+      queryClient.invalidateQueries({ queryKey: ['library'] });
+    },
+  });
+};

@@ -36,11 +36,21 @@ def _ensure_sqlite_columns():
         "metadata_localizations": {
             "logo_path": "VARCHAR",
             "local_logo_path": "VARCHAR",
+            "manual_poster_path": "VARCHAR",
+            "manual_local_poster_path": "VARCHAR",
+            "manual_series_poster_path": "VARCHAR",
+            "manual_local_series_poster_path": "VARCHAR",
+            "manual_logo_path": "VARCHAR",
+            "manual_local_logo_path": "VARCHAR",
         },
         "persons": {
             "is_adult": "BOOLEAN DEFAULT 0",
             "user_rating_at": "DATETIME",
             "user_comment": "TEXT",
+            "manual_profile_path": "VARCHAR",
+            "manual_local_profile_path": "VARCHAR",
+            "manual_backdrop_path": "VARCHAR",
+            "manual_local_backdrop_path": "VARCHAR",
         },
         "media_items": {
             "user_rating_at": "DATETIME",
@@ -49,9 +59,25 @@ def _ensure_sqlite_columns():
         "virtual_media_states": {
             "user_rating_at": "DATETIME",
             "user_comment": "TEXT",
+            "manual_poster_path": "VARCHAR",
+            "manual_local_poster_path": "VARCHAR",
+            "manual_backdrop_path": "VARCHAR",
+            "manual_local_backdrop_path": "VARCHAR",
+            "manual_logo_path": "VARCHAR",
+            "manual_local_logo_path": "VARCHAR",
         },
         "media_matches": {
             "companies": "TEXT",
+            "manual_backdrop_path": "VARCHAR",
+            "manual_local_backdrop_path": "VARCHAR",
+        },
+        "media_collections": {
+            "manual_backdrop_path": "VARCHAR",
+            "manual_local_backdrop_path": "VARCHAR",
+        },
+        "media_collection_localizations": {
+            "manual_poster_path": "VARCHAR",
+            "manual_local_poster_path": "VARCHAR",
         },
         "tags": {
             "target_type": "VARCHAR DEFAULT 'media'",

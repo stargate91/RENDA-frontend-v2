@@ -388,6 +388,14 @@ def _resolve_person_profile_path(person) -> Optional[str]:
     """Resolves the best profile path to return for a person, prioritizing custom and local images."""
     if not person:
         return None
+    local_path = _public_image_path(getattr(person, "manual_local_profile_path", None), "persons")
+    if local_path:
+        return local_path
+    manual_path = _public_image_path(getattr(person, "manual_profile_path", None), "persons")
+    if manual_path:
+        return manual_path
+    if getattr(person, "manual_profile_path", None):
+        return person.manual_profile_path
     local_path = _public_image_path(person.local_profile_path, "persons")
     if local_path:
         return local_path

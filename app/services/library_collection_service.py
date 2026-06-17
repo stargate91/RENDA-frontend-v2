@@ -59,15 +59,19 @@ class LibraryCollectionService:
 
             entry = collections_map.get(active_match.collection_tmdb_id)
             if not entry:
-                local_collection_poster = _public_image_path(collection_loc.local_poster_path, "posters") if collection_loc else None
+                local_collection_poster = (
+                    _public_image_path(getattr(collection_loc, "manual_local_poster_path", None), "posters")
+                    or _public_image_path(getattr(collection_loc, "manual_poster_path", None), "posters")
+                    or _public_image_path(collection_loc.local_poster_path, "posters")
+                ) if collection_loc else None
                 entry = {
                     "id": f"collection_{active_match.collection_tmdb_id}",
                     "tmdb_id": active_match.collection_tmdb_id,
                     "title": collection_title,
                     "overview": collection_loc.overview if collection_loc else None,
-                    "poster_path": local_collection_poster or (collection_loc.poster_path if collection_loc else None),
+                    "poster_path": local_collection_poster or (getattr(collection_loc, "manual_poster_path", None) if collection_loc else None) or (collection_loc.poster_path if collection_loc else None),
                     "has_local_poster": bool(local_collection_poster),
-                    "poster_remote_path": f"https://image.tmdb.org/t/p/{POSTER_SIZE}{collection_loc.poster_path}" if collection_loc and collection_loc.poster_path else None,
+                    "poster_remote_path": f"https://image.tmdb.org/t/p/{POSTER_SIZE}{getattr(collection_loc, 'manual_poster_path', None) or collection_loc.poster_path}" if collection_loc and (getattr(collection_loc, "manual_poster_path", None) or collection_loc.poster_path) else None,
                     "backdrop_path": self._resolve_collection_backdrop(active_match.collection_entity),
                     "owned_count": 0,
                     "total_count": int(getattr(active_match.collection_entity, "total_parts", 0) or 0),
@@ -85,7 +89,7 @@ class LibraryCollectionService:
                 "year": movie_year,
                 "poster_path": self._resolve_match_poster(movie_loc),
                 "has_local_poster": bool(_public_image_path(movie_loc.local_poster_path, "posters")) if movie_loc else False,
-                "backdrop_path": _public_image_path(active_match.local_backdrop_path, "backdrops") or active_match.backdrop_path if active_match else None,
+                    "backdrop_path": _public_image_path(getattr(active_match, "manual_local_backdrop_path", None), "backdrops") or _public_image_path(active_match.local_backdrop_path, "backdrops") or getattr(active_match, "manual_backdrop_path", None) or active_match.backdrop_path if active_match else None,
                 "rating": active_match.rating_tmdb or 0,
                 "rating_imdb": active_match.rating_imdb,
                 "type": item.item_type.value,
@@ -171,13 +175,13 @@ class LibraryCollectionService:
         if not collection_loc:
             return None
         if image_kind == "poster":
-            return _public_image_path(collection_loc.local_poster_path, "posters") or collection_loc.poster_path
+            return _public_image_path(getattr(collection_loc, "manual_local_poster_path", None), "posters") or _public_image_path(collection_loc.local_poster_path, "posters") or getattr(collection_loc, "manual_poster_path", None) or collection_loc.poster_path
         return None
 
     def _resolve_collection_backdrop(self, collection) -> Optional[str]:
         if not collection:
             return None
-        return _public_image_path(collection.local_backdrop_path, "backdrops") or collection.backdrop_path
+        return _public_image_path(getattr(collection, "manual_local_backdrop_path", None), "backdrops") or _public_image_path(collection.local_backdrop_path, "backdrops") or getattr(collection, "manual_backdrop_path", None) or collection.backdrop_path
 
     def _pick_match_localization(self, match, ui_lang: Optional[str]):
         if not match or not match.localizations:
@@ -188,7 +192,7 @@ class LibraryCollectionService:
     def _resolve_match_poster(self, movie_loc) -> Optional[str]:
         if not movie_loc:
             return None
-        return _public_image_path(movie_loc.local_poster_path, "posters") or movie_loc.poster_path
+        return _public_image_path(getattr(movie_loc, "manual_local_poster_path", None), "posters") or _public_image_path(movie_loc.local_poster_path, "posters") or getattr(movie_loc, "manual_poster_path", None) or movie_loc.poster_path
 
     def _match_year(self, item, active_match) -> Optional[int]:
         if not active_match:

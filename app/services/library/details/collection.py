@@ -68,14 +68,32 @@ class CollectionDetailProvider(BaseDetailProvider):
             if collection_loc:
                 missing_poster = None
                 missing_backdrop = None
-                if collection_loc.poster_path and not _public_image_path(collection_loc.local_poster_path, "posters"):
-                    local_p = os.path.join("data", "media", "images", "posters", collection_loc.poster_path.lstrip("/"))
+                effective_collection_poster = (
+                    getattr(collection_loc, "manual_poster_path", None)
+                    or collection_loc.poster_path
+                )
+                effective_collection_local_poster = (
+                    getattr(collection_loc, "manual_local_poster_path", None)
+                    if getattr(collection_loc, "manual_poster_path", None)
+                    else collection_loc.local_poster_path
+                )
+                effective_collection_backdrop = (
+                    getattr(collection, "manual_backdrop_path", None)
+                    or collection.backdrop_path
+                ) if collection else None
+                effective_collection_local_backdrop = (
+                    getattr(collection, "manual_local_backdrop_path", None)
+                    if collection and getattr(collection, "manual_backdrop_path", None)
+                    else (collection.local_backdrop_path if collection else None)
+                )
+                if effective_collection_poster and not _public_image_path(effective_collection_local_poster, "posters"):
+                    local_p = os.path.join("data", "media", "images", "posters", effective_collection_poster.lstrip("/"))
                     if not os.path.exists(local_p):
-                        missing_poster = collection_loc.poster_path
-                if collection and collection.backdrop_path and not _public_image_path(collection.local_backdrop_path, "backdrops"):
-                    local_b = os.path.join("data", "media", "images", "backdrops", collection.backdrop_path.lstrip("/"))
+                        missing_poster = effective_collection_poster
+                if collection and effective_collection_backdrop and not _public_image_path(effective_collection_local_backdrop, "backdrops"):
+                    local_b = os.path.join("data", "media", "images", "backdrops", effective_collection_backdrop.lstrip("/"))
                     if not os.path.exists(local_b):
-                        missing_backdrop = collection.backdrop_path
+                        missing_backdrop = effective_collection_backdrop
 
                 if missing_poster or missing_backdrop:
                     _download_media_assets_sync(
@@ -86,12 +104,18 @@ class CollectionDetailProvider(BaseDetailProvider):
                     if missing_poster:
                         local_p_rel = f"data/media/images/posters/{missing_poster.lstrip('/')}"
                         if os.path.exists(local_p_rel):
-                            collection_loc.local_poster_path = local_p_rel
+                            if getattr(collection_loc, "manual_poster_path", None):
+                                collection_loc.manual_local_poster_path = local_p_rel
+                            else:
+                                collection_loc.local_poster_path = local_p_rel
                             updated = True
                     if collection and missing_backdrop:
                         local_b_rel = f"data/media/images/backdrops/{missing_backdrop.lstrip('/')}"
                         if os.path.exists(local_b_rel):
-                            collection.local_backdrop_path = local_b_rel
+                            if getattr(collection, "manual_backdrop_path", None):
+                                collection.manual_local_backdrop_path = local_b_rel
+                            else:
+                                collection.local_backdrop_path = local_b_rel
                             updated = True
                     if updated:
                         db.commit()
@@ -177,10 +201,22 @@ class CollectionDetailProvider(BaseDetailProvider):
                 "tmdb_id": collection_tmdb_id_int,
                 "title": (collection_loc.name if collection_loc and collection_loc.name else tmdb_details.get("name") or fallback_name or f"Collection {collection_tmdb_id_int}"),
                 "overview": (collection_loc.overview if collection_loc else None) or tmdb_details.get("overview"),
-                "poster_path": (_public_image_path(collection_loc.local_poster_path, "posters") or collection_loc.poster_path) if collection_loc else tmdb_details.get("poster_path"),
-                "backdrop_path": (_public_image_path(collection.local_backdrop_path, "backdrops") or collection.backdrop_path) if collection else (preferred_collection_backdrop or tmdb_details.get("backdrop_path")),
-                "has_local_poster": bool(_public_image_path(collection_loc.local_poster_path, "posters")) if collection_loc else False,
-                "has_local_backdrop": bool(_public_image_path(collection.local_backdrop_path, "backdrops")) if collection else False,
+                "poster_path": (
+                    _public_image_path(getattr(collection_loc, "manual_local_poster_path", None), "posters")
+                    or _public_image_path(getattr(collection_loc, "manual_poster_path", None), "posters")
+                    or getattr(collection_loc, "manual_poster_path", None)
+                    or _public_image_path(collection_loc.local_poster_path, "posters")
+                    or collection_loc.poster_path
+                ) if collection_loc else tmdb_details.get("poster_path"),
+                "backdrop_path": (
+                    _public_image_path(getattr(collection, "manual_local_backdrop_path", None), "backdrops")
+                    or _public_image_path(getattr(collection, "manual_backdrop_path", None), "backdrops")
+                    or getattr(collection, "manual_backdrop_path", None)
+                    or _public_image_path(collection.local_backdrop_path, "backdrops")
+                    or collection.backdrop_path
+                ) if collection else (preferred_collection_backdrop or tmdb_details.get("backdrop_path")),
+                "has_local_poster": bool(_public_image_path(getattr(collection_loc, "manual_local_poster_path", None) or collection_loc.local_poster_path, "posters")) if collection_loc else False,
+                "has_local_backdrop": bool(_public_image_path(getattr(collection, "manual_local_backdrop_path", None) or collection.local_backdrop_path, "backdrops")) if collection else False,
                 "owned_count": len([movie for movie in movies if movie.get("in_library")]),
                 "total_count": len(movies),
                 "movies": movies,

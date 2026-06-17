@@ -346,7 +346,7 @@
     "seasonProgress": "Season Progress",
     "backdrops": "Choose Backdrop",
     "chooseBackdrop": "Choose Backdrop",
-    "noBackdropsAvailable": "No neutral Full HD backdrops available.",
+    "noBackdropsAvailable": "No good backdrop options found for this title.",
     "backdropUpdated": "Backdrop updated successfully!",
     "backdropUpdateFailed": "Failed to update backdrop",
     "keywords": "Keywords",

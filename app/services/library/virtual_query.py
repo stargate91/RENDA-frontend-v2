@@ -31,7 +31,8 @@ class LibraryVirtualQueryService:
         filter_favorite: str,
         filter_watched: str,
     ) -> tuple[list[dict], int, Optional[int], int]:
-        media_type = "tv" if tab == "series" else "movie"
+        media_type = "tv" if tab in {"series", "adult_series"} else "movie"
+        adult_only = tab in {"adult", "adult_series"}
         safe_page = max(1, int(page or 1))
         safe_page_size = None if page_size is None or int(page_size) <= 0 else min(1000, max(20, int(page_size)))
         preferred_languages = _preferred_metadata_languages(self.db)
@@ -156,6 +157,7 @@ class LibraryVirtualQueryService:
             year_expr = cast(func.substr(release_date_expr, 1, 4), Integer)
             rating_expr = cast(func.json_extract(cache_sq.c.raw_data, "$.vote_average"), Float)
             genres_expr = cast(func.json_extract(cache_sq.c.raw_data, "$.genres"), String)
+            adult_expr = cast(func.json_extract(cache_sq.c.raw_data, "$.adult"), Integer)
         else:
             title_expr = func.coalesce(list_snapshot_sq.c.list_title, literal(""))
             original_title_expr = literal("")
@@ -163,7 +165,11 @@ class LibraryVirtualQueryService:
             year_expr = literal(0)
             rating_expr = literal(0)
             genres_expr = literal("")
+            adult_expr = literal(None)
         tags_expr = cast(VirtualMediaState.custom_tags, String)
+
+        if cache_sq is not None:
+            base = base.filter(adult_expr == 1 if adult_only else func.coalesce(adult_expr, 0) == 0)
 
         if filter_favorite == "favorites":
             base = base.filter(VirtualMediaState.is_favorite == True)
@@ -246,6 +252,13 @@ class LibraryVirtualQueryService:
                 cached = _pick_tmdb_cache(self.db, row.tmdb_id, media_type, preferred_languages)
                 raw_data = cached.raw_data if cached and isinstance(cached.raw_data, dict) else {}
             resolved_raw_payloads[row.tmdb_id] = raw_data if isinstance(raw_data, dict) else {}
+
+        if python_postprocess or cache_sq is None:
+            rows = [
+                row for row in rows
+                if bool(resolved_raw_payloads.get(row.tmdb_id, {}).get("adult", False)) == adult_only
+            ]
+            total_items = len(rows)
 
         omdb_map = {}
         imdb_ids = {

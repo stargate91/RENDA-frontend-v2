@@ -116,6 +116,18 @@ def _get_virtual_media_state(db, tmdb_id: int, media_type: str):
     ).first()
 
 
+def _get_virtual_media_state_with_tracking(db, tmdb_id: int, media_type: str):
+    state = _get_virtual_media_state(db, tmdb_id, media_type)
+    if state is not None:
+        return state, bool(getattr(state, "is_tracked", True))
+
+    is_tracked = db.query(CustomListItem.id).filter(
+        CustomListItem.tmdb_id == tmdb_id,
+        CustomListItem.media_type == media_type,
+    ).first() is not None
+    return None, is_tracked
+
+
 def _get_virtual_episode_state(db, series_tmdb_id: int, season_number: int, episode_number: int):
     return db.query(VirtualEpisodeState).filter(
         VirtualEpisodeState.series_tmdb_id == series_tmdb_id,
@@ -125,13 +137,8 @@ def _get_virtual_episode_state(db, series_tmdb_id: int, season_number: int, epis
 
 
 def _is_virtual_media_tracked(db, tmdb_id: int, media_type: str) -> bool:
-    state = _get_virtual_media_state(db, tmdb_id, media_type)
-    if state is not None:
-        return bool(getattr(state, "is_tracked", True))
-    return db.query(CustomListItem.id).filter(
-        CustomListItem.tmdb_id == tmdb_id,
-        CustomListItem.media_type == media_type,
-    ).first() is not None
+    _state, is_tracked = _get_virtual_media_state_with_tracking(db, tmdb_id, media_type)
+    return is_tracked
 
 
 def _get_omdb_ratings_from_imdb(db, imdb_id: Optional[str]) -> dict:

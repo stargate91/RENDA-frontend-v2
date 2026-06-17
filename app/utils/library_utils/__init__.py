@@ -23,6 +23,7 @@ from app.utils.library_utils.database import (
     _pick_match_localization,
     _resolve_virtual_catalog_metadata,
     _get_virtual_media_state,
+    _get_virtual_media_state_with_tracking,
     _get_virtual_episode_state,
     _is_virtual_media_tracked,
     _get_omdb_ratings_from_imdb,

@@ -3,6 +3,7 @@ import { useMediaDetailContext } from '../MediaDetailContext';
 import './CastPanel.css';
 
 import { API_BASE } from '@/lib/backend';
+import { resolveMediaImageUrl } from '@/lib/imageUrls';
 
 export default function CastPanel() {
   const { state, t, navigate } = useMediaDetailContext();
@@ -27,6 +28,7 @@ export default function CastPanel() {
   const filteredDirectors = filterPeople(item.directors);
   const filteredWriters = filterPeople(item.writers);
   const filteredCast = filterPeople(item.cast);
+  const resolvePersonAvatarUrl = (path) => resolveMediaImageUrl(path, 'person', API_BASE);
 
   return (
     <div className="cast-panel">
@@ -46,7 +48,7 @@ export default function CastPanel() {
                 >
                   {director.profile_path ? (
                     <img
-                      src={`${API_BASE}/media/images/persons/${director.profile_path}`}
+                      src={resolvePersonAvatarUrl(director.profile_path)}
                       alt={director.name}
                       className="person-card__avatar"
                     />
@@ -84,7 +86,7 @@ export default function CastPanel() {
                 >
                   {writer.profile_path ? (
                     <img
-                      src={`${API_BASE}/media/images/persons/${writer.profile_path}`}
+                      src={resolvePersonAvatarUrl(writer.profile_path)}
                       alt={writer.name}
                       className="person-card__avatar"
                     />
@@ -122,7 +124,7 @@ export default function CastPanel() {
                 >
                   {actor.profile_path ? (
                     <img
-                      src={`${API_BASE}/media/images/persons/${actor.profile_path}`}
+                      src={resolvePersonAvatarUrl(actor.profile_path)}
                       alt={actor.name}
                       className="person-card__avatar person-card__avatar--actor"
                     />

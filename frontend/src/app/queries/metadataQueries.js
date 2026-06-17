@@ -67,9 +67,18 @@ export const usePersonDetailQuery = (personId, options = {}) => useQuery({
   ...options,
 });
 
-export const usePersonCreditsQuery = (personId, mediaType, page, pageSize, options = {}) => useQuery({
-  queryKey: ['person-credits', personId, mediaType, page, pageSize],
-  queryFn: () => api.people.getCredits(personId, mediaType, { page, pageSize }),
+export const usePersonCreditsQuery = (personId, mediaType, page, pageSize, options = {}) => {
+  const { excludeKnownFor = false, ...queryOptions } = options;
+  return useQuery({
+  queryKey: ['person-credits', personId, mediaType, page, pageSize, excludeKnownFor],
+  queryFn: () => api.people.getCredits(personId, mediaType, { page, pageSize, excludeKnownFor }),
   placeholderData: (previousData) => previousData,
+  ...queryOptions,
+});
+};
+
+export const usePersonCreditBackdropsQuery = (personId, tmdbId, mediaType, options = {}) => useQuery({
+  queryKey: ['person-credit-backdrops', personId, tmdbId, mediaType],
+  queryFn: () => api.people.getCreditBackdrops(personId, tmdbId, mediaType),
   ...options,
 });

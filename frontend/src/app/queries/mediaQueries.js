@@ -184,12 +184,18 @@ export const useOverrideBackdropMutation = () => {
     mutationFn: ({ itemId, backdropPath }) => api.media.overrideBackdrop(itemId, backdropPath),
     onSuccess: (data, variables) => {
       const cleanId = String(variables.itemId).replace('series_', '');
+      const isCollection = String(variables.itemId).startsWith('collection_');
       queryClient.invalidateQueries({ queryKey: ['full-metadata', variables.itemId] });
       queryClient.invalidateQueries({ queryKey: ['full-metadata', cleanId] });
       queryClient.invalidateQueries({ queryKey: ['library-item-detail', variables.itemId] });
       queryClient.invalidateQueries({ queryKey: ['library-item-detail', cleanId] });
       queryClient.invalidateQueries({ queryKey: ['library-series-detail', variables.itemId] });
       queryClient.invalidateQueries({ queryKey: ['library-series-detail', cleanId] });
+      if (isCollection) {
+        const collectionId = String(variables.itemId).replace('collection_', '');
+        queryClient.invalidateQueries({ queryKey: ['library-collection-detail', collectionId] });
+        queryClient.invalidateQueries({ queryKey: ['library-collection-detail', variables.itemId] });
+      }
     },
   });
 };

@@ -215,8 +215,21 @@ def _serialize_movie_item(item, preferred_languages):
     match = _active_match(item)
     loc = _pick_match_loc(match, preferred_languages)
     poster = None
-    if loc and (loc.poster_path or loc.series_poster_path):
-        poster = _public_image_path(loc.poster_path or loc.series_poster_path, "posters")
+    if loc and (
+        getattr(loc, "manual_poster_path", None)
+        or getattr(loc, "manual_series_poster_path", None)
+        or loc.poster_path
+        or loc.series_poster_path
+    ):
+        poster = (
+            _public_image_path(getattr(loc, "manual_local_poster_path", None), "posters")
+            or _public_image_path(getattr(loc, "manual_local_series_poster_path", None), "posters")
+            or _public_image_path(loc.local_poster_path or loc.local_series_poster_path, "posters")
+            or getattr(loc, "manual_poster_path", None)
+            or getattr(loc, "manual_series_poster_path", None)
+            or loc.poster_path
+            or loc.series_poster_path
+        )
     date_value = match.release_date or match.first_air_date if match else None
     return {
         "id": item.id,
@@ -263,8 +276,21 @@ def _serialize_series_item(item, series_state_by_tmdb, preferred_languages, term
 
     loc = _pick_match_loc(match, preferred_languages)
     poster = None
-    if loc and (loc.series_poster_path or loc.poster_path):
-        poster = _public_image_path(loc.series_poster_path or loc.poster_path, "posters")
+    if loc and (
+        getattr(loc, "manual_series_poster_path", None)
+        or getattr(loc, "manual_poster_path", None)
+        or loc.series_poster_path
+        or loc.poster_path
+    ):
+        poster = (
+            _public_image_path(getattr(loc, "manual_local_series_poster_path", None), "posters")
+            or _public_image_path(getattr(loc, "manual_local_poster_path", None), "posters")
+            or _public_image_path(loc.local_series_poster_path or loc.local_poster_path, "posters")
+            or getattr(loc, "manual_series_poster_path", None)
+            or getattr(loc, "manual_poster_path", None)
+            or loc.series_poster_path
+            or loc.poster_path
+        )
     date_value = match.first_air_date or match.release_date
     year_display = None
     if str(match.release_status or "").lower() in terminal_series_statuses:

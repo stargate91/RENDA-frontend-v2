@@ -90,7 +90,7 @@ export default function BackdropsPanel({ showTitle = true }) {
             variant="detail-panel"
             icon={ImageOff}
             className="backdrops-panel__empty-state"
-            title={t('library.details.noBackdropsAvailable') || 'No neutral HD-or-better backdrops available.'}
+            title={t('library.details.noBackdropsAvailable') || 'No good backdrop options found for this title.'}
           />
         )}
       </div>

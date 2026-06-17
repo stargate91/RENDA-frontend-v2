@@ -1,16 +1,17 @@
 import os
+import threading
 from app.services.library.details.base import BaseDetailProvider
 from fastapi.responses import JSONResponse
 import logging
 from sqlalchemy.orm import joinedload
+from app.db.base import Session
 from app.utils.library_utils import (
     _download_media_assets_sync,
     _preferred_metadata_language,
     _parse_omdb_float,
     _parse_omdb_int,
     _ensure_person_cached,
-    _get_virtual_media_state,
-    _is_virtual_media_tracked,
+    _get_virtual_media_state_with_tracking,
     _match_language_code,
     _pick_backdrop_path,
     _pick_logo_path,
@@ -27,9 +28,41 @@ from app.utils.library_utils import (
 from app.db.models import *
 
 logger = logging.getLogger(__name__)
+VIRTUAL_MOVIE_INITIAL_CAST_LIMIT = 7
+
+
+def _resolve_virtual_person_profile_path(profile_path: str | None) -> str | None:
+    if not profile_path:
+        return None
+    local_public = _public_image_path(profile_path, "persons")
+    if local_public:
+        return local_public
+    return _tmdb_image_url(profile_path, size=_tmdb_size_for_subfolder("persons"))
+
+
+def _cache_virtual_people_profiles(people: list[dict], ui_lang: str) -> None:
+    if not people:
+        return
+
+    bg_db = Session()
+    try:
+        for person in people:
+            try:
+                _ensure_person_cached(
+                    bg_db,
+                    person.get("id"),
+                    person.get("name"),
+                    person.get("profile_path"),
+                    person.get("popularity", 0),
+                    ui_lang,
+                )
+            except Exception as exc:
+                logger.warning(f"Failed to background-cache virtual person {person.get('id')}: {exc}")
+    finally:
+        bg_db.close()
 
 class ItemDetailProvider(BaseDetailProvider):
-    def get_library_item_detail(self, item_id: str):
+    def get_library_item_detail(self, item_id: str, full_people: bool = False):
         """Returns comprehensive detail data for a single library item (movie detail page)."""
         db = self.db
         try:
@@ -60,13 +93,28 @@ class ItemDetailProvider(BaseDetailProvider):
                     [ui_lang, "en-US"] if ui_lang else ["en-US"],
                 )
                 cached_raw = cached_movie.raw_data if cached_movie and isinstance(cached_movie.raw_data, dict) else {}
+                virtual_state, is_tracked = _get_virtual_media_state_with_tracking(db, tmdb_id, "movie")
                 
                 credits = tmdb_data.get("credits", {})
             
                 # Gather assets to download synchronously
-                poster_path = cached_raw.get("poster_path") or tmdb_data.get("poster_path")
-                backdrop_path = cached_raw.get("backdrop_path") or _pick_backdrop_path(tmdb_data, ui_lang)
-                logo_path = _pick_logo_path(tmdb_data, ui_lang)
+                poster_path = (
+                    virtual_state.manual_poster_path if virtual_state and virtual_state.manual_poster_path else (
+                        cached_raw.get("poster_path") or tmdb_data.get("poster_path")
+                    )
+                )
+                backdrop_path = (
+                    virtual_state.manual_backdrop_path if virtual_state and virtual_state.manual_backdrop_path else (
+                    cached_raw.get("manual_backdrop_path")
+                    or _pick_backdrop_path(cached_raw, ui_lang)
+                    or cached_raw.get("backdrop_path")
+                    or _pick_backdrop_path(tmdb_data, ui_lang)
+                    or tmdb_data.get("backdrop_path")
+                    )
+                )
+                logo_path = (
+                    virtual_state.manual_logo_path if virtual_state and virtual_state.manual_logo_path else _pick_logo_path(cached_raw, ui_lang)
+                )
             
                 cast_profiles = []
                 raw_directors = [c for c in credits.get("crew", []) if c.get("job") in ("Director", "Creator")][:2]
@@ -82,54 +130,52 @@ class ItemDetailProvider(BaseDetailProvider):
                 director_ids = {d["id"] for d in raw_directors}
                 writer_ids = {w["id"] for w in raw_writers}
                 exclude_ids = director_ids | writer_ids
-                raw_cast = [a for a in credits.get("cast", []) if a.get("id") not in exclude_ids][:10]
-                for actor in raw_cast:
-                    if actor.get("profile_path"):
+                cast_limit = None if full_people else VIRTUAL_MOVIE_INITIAL_CAST_LIMIT
+                full_cast_candidates = []
+                response_cast_candidates = []
+                for actor in credits.get("cast", []):
+                    actor_id = actor.get("id")
+                    if actor_id in exclude_ids:
+                        continue
+                    full_cast_candidates.append(actor)
+                    if len(full_cast_candidates) <= 10 and actor.get("profile_path"):
                         cast_profiles.append(actor.get("profile_path"))
+                    if cast_limit is None or len(response_cast_candidates) < cast_limit:
+                        response_cast_candidates.append(actor)
                     
-                # Synchronously download posters, backdrops, and cast profile images in parallel!
-                _download_media_assets_sync(
-                    poster_path=poster_path,
-                    backdrop_path=backdrop_path,
-                    logo_path=logo_path,
-                    cast_profiles=cast_profiles
-                )
+                threading.Thread(
+                    target=_download_media_assets_sync,
+                    kwargs={
+                        "poster_path": poster_path,
+                        "backdrop_path": backdrop_path,
+                        "logo_path": logo_path,
+                        "cast_profiles": cast_profiles,
+                    },
+                    daemon=True,
+                ).start()
 
+                people_to_cache = []
                 cast = []
                 directors = []
                 writers = []
                 for crew in raw_directors:
-                    profile_path = _ensure_person_cached(
-                        db,
-                        crew.get("id"),
-                        crew.get("name"),
-                        crew.get("profile_path"),
-                        crew.get("popularity", 0),
-                        ui_lang
-                    )
+                    people_to_cache.append(crew)
                     directors.append({
                         "id": crew.get("id"),
                         "name": crew.get("name"),
                         "job": crew.get("job"),
-                        "profile_path": profile_path,
+                        "profile_path": _resolve_virtual_person_profile_path(crew.get("profile_path")),
                         "popularity": crew.get("popularity", 0),
                         "gender": crew.get("gender")
                     })
 
                 for crew in raw_writers:
-                    profile_path = _ensure_person_cached(
-                        db,
-                        crew.get("id"),
-                        crew.get("name"),
-                        crew.get("profile_path"),
-                        crew.get("popularity", 0),
-                        ui_lang
-                    )
+                    people_to_cache.append(crew)
                     writers.append({
                         "id": crew.get("id"),
                         "name": crew.get("name"),
                         "job": crew.get("job"),
-                        "profile_path": profile_path,
+                        "profile_path": _resolve_virtual_person_profile_path(crew.get("profile_path")),
                         "popularity": crew.get("popularity", 0),
                         "gender": crew.get("gender")
                     })
@@ -137,25 +183,23 @@ class ItemDetailProvider(BaseDetailProvider):
                 director_ids = {d["id"] for d in directors}
                 writer_ids = {w["id"] for w in writers}
                 exclude_ids = director_ids | writer_ids
-                raw_cast = [a for a in credits.get("cast", []) if a.get("id") not in exclude_ids][:10]
-                for actor in raw_cast:
-                    profile_path = _ensure_person_cached(
-                        db,
-                        actor.get("id"),
-                        actor.get("name"),
-                        actor.get("profile_path"),
-                        actor.get("popularity", 0),
-                        ui_lang
-                    )
+                for actor in response_cast_candidates:
+                    people_to_cache.append(actor)
                     cast.append({
                         "id": actor.get("id"),
                         "name": actor.get("name"),
                         "character": actor.get("character"),
                         "job": "Actor",
-                        "profile_path": profile_path,
+                        "profile_path": _resolve_virtual_person_profile_path(actor.get("profile_path")),
                         "popularity": actor.get("popularity", 0),
                         "gender": actor.get("gender")
                     })
+
+                threading.Thread(
+                    target=_cache_virtual_people_profiles,
+                    args=(people_to_cache, ui_lang),
+                    daemon=True,
+                ).start()
 
                 trailer_key = _pick_trailer_key(tmdb_data, ui_lang, tmdb_data.get("original_language"))
 
@@ -166,10 +210,14 @@ class ItemDetailProvider(BaseDetailProvider):
                         year = int(release_date.split("-")[0])
                     except:
                         pass
-                virtual_state = _get_virtual_media_state(db, tmdb_id, "movie")
-                is_tracked = _is_virtual_media_tracked(db, tmdb_id, "movie")
                 imdb_id = tmdb_data.get("external_ids", {}).get("imdb_id")
-                omdb_data = omdb_client.get_ratings(imdb_id, queue_on_limit=True) if imdb_id else {}
+                omdb_data = {}
+                if imdb_id:
+                    cached_omdb = db.query(OMDBCache).filter(OMDBCache.imdb_id == imdb_id).first()
+                    if cached_omdb and isinstance(cached_omdb.raw_data, dict):
+                        omdb_data = cached_omdb.raw_data
+                    else:
+                        omdb_client.enqueue_rating_request(imdb_id, status="pending")
 
                 result = {
                     "id": f"tmdb_{tmdb_id}",
@@ -207,6 +255,8 @@ class ItemDetailProvider(BaseDetailProvider):
                     "rating_rotten": omdb_data.get("rotten_tomatoes"),
                     "rating_meta": _parse_omdb_int(omdb_data.get("metascore")),
                     "cast": cast,
+                    "cast_total": len(full_cast_candidates),
+                    "people_complete": full_people or len(cast) >= len(full_cast_candidates),
                     "directors": directors,
                     "writers": writers,
                     "is_adult": tmdb_data.get("adult", False),
@@ -383,18 +433,33 @@ class ItemDetailProvider(BaseDetailProvider):
                 networks_fallback = [{"name": n.get("name"), "logo_path": n.get("logo_path")} for n in movie_cache.raw_data.get("networks", [])]
 
             preferred_logo_path = _pick_logo_path(movie_cache.raw_data if movie_cache else None, ui_lang) if movie_cache else None
-            effective_logo_path = preferred_logo_path or (loc.logo_path if loc else None)
+            effective_logo_path = (
+                getattr(loc, "manual_logo_path", None)
+                or preferred_logo_path
+                or (loc.logo_path if loc else None)
+            )
             effective_local_logo_path = (
+                getattr(loc, "manual_local_logo_path", None)
+                if loc and effective_logo_path and effective_logo_path == getattr(loc, "manual_logo_path", None)
+                else (
                 loc.local_logo_path
                 if loc and effective_logo_path and effective_logo_path == loc.logo_path
                 else None
+                )
             )
             preferred_backdrop_path = _pick_backdrop_path(movie_cache.raw_data if movie_cache else None, ui_lang) if movie_cache else None
-            effective_backdrop_path = (active_match.backdrop_path if active_match and active_match.backdrop_path else None) or preferred_backdrop_path
+            effective_backdrop_path = (
+                getattr(active_match, "manual_backdrop_path", None)
+                or ((active_match.backdrop_path if active_match and active_match.backdrop_path else None) or preferred_backdrop_path)
+            )
             effective_local_backdrop_path = (
+                getattr(active_match, "manual_local_backdrop_path", None)
+                if active_match and effective_backdrop_path and effective_backdrop_path == getattr(active_match, "manual_backdrop_path", None)
+                else (
                 active_match.local_backdrop_path
                 if active_match and effective_backdrop_path and effective_backdrop_path == active_match.backdrop_path
                 else None
+                )
             )
 
             result = {
@@ -424,7 +489,13 @@ class ItemDetailProvider(BaseDetailProvider):
                 "networks": networks_fallback,
                 "collection": active_match.collection,
                 "collection_data": self.formatter.serialize_collection(active_match.collection_entity, active_match.collection, ui_lang),
-                "poster_path": (_public_image_path(loc.local_poster_path, "posters") or loc.poster_path) if loc else None,
+                "poster_path": (
+                    _public_image_path(getattr(loc, "manual_local_poster_path", None), "posters")
+                    or _public_image_path(getattr(loc, "manual_poster_path", None), "posters")
+                    or getattr(loc, "manual_poster_path", None)
+                    or _public_image_path(loc.local_poster_path, "posters")
+                    or loc.poster_path
+                ) if loc else None,
                 "backdrop_path": (
                     _public_image_path(effective_local_backdrop_path, "backdrops") or effective_backdrop_path
                 ) if (loc or effective_backdrop_path) else None,

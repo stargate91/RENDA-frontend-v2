@@ -9,8 +9,7 @@ from app.utils.library_utils import (
     _parse_omdb_int,
     _ensure_person_cached,
     _get_virtual_episode_state,
-    _get_virtual_media_state,
-    _is_virtual_media_tracked,
+    _get_virtual_media_state_with_tracking,
     _pick_backdrop_path,
     _pick_logo_path,
     _pick_trailer_key,
@@ -210,8 +209,7 @@ class SeriesVirtualMixin:
             season["poster_path"] = self.formatter.resolve_image_response_path(season.get("poster_path"), subfolder="posters")
             for episode in season["episodes"]:
                 episode["still_path"] = self.formatter.resolve_image_response_path(episode.get("still_path"), subfolder="stills")
-        virtual_state = _get_virtual_media_state(db, series_tmdb_id_int, "tv")
-        is_tracked = _is_virtual_media_tracked(db, series_tmdb_id_int, "tv")
+        virtual_state, is_tracked = _get_virtual_media_state_with_tracking(db, series_tmdb_id_int, "tv")
         all_virtual_episodes = [
             episode
             for season in seasons_list
@@ -225,15 +223,18 @@ class SeriesVirtualMixin:
         )
         imdb_id = tmdb_data.get("external_ids", {}).get("imdb_id")
         omdb_data = omdb_client.get_ratings(imdb_id, queue_on_limit=True) if imdb_id else {}
+        effective_logo_path = virtual_state.manual_logo_path if virtual_state and virtual_state.manual_logo_path else logo_path
+        effective_backdrop_path = virtual_state.manual_backdrop_path if virtual_state and virtual_state.manual_backdrop_path else backdrop_path
+        effective_poster_path = virtual_state.manual_poster_path if virtual_state and virtual_state.manual_poster_path else tmdb_data.get("poster_path")
 
         result = {
             "id": f"tmdb_{series_tmdb_id_int}",
             "series_tmdb_id": series_tmdb_id_int,
             "imdb_id": imdb_id,
             "title": tmdb_data.get("name") or tmdb_data.get("original_name") or "Unknown Series",
-            "logo_path": self.formatter.resolve_logo_response_path(logo_path=logo_path),
-            "backdrop_path": self.formatter.resolve_image_response_path(backdrop_path, subfolder="backdrops"),
-            "poster_path": self.formatter.resolve_image_response_path(tmdb_data.get("poster_path"), subfolder="posters"),
+            "logo_path": self.formatter.resolve_logo_response_path(logo_path=effective_logo_path),
+            "backdrop_path": self.formatter.resolve_image_response_path(effective_backdrop_path, subfolder="backdrops"),
+            "poster_path": self.formatter.resolve_image_response_path(effective_poster_path, subfolder="posters"),
             "year": year,
             "first_air_date": tmdb_data.get("first_air_date"),
             "last_air_date": tmdb_data.get("last_air_date"),

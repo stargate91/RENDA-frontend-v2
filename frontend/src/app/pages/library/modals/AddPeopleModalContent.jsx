@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { usePeopleInfiniteQuery, useUpdatePersonStatusMutation, useSettingsQuery, useAddPersonTmdbMutation } from '@/queries';
 import api from '@/lib/api';
 import { useUi } from '@/providers/UiProvider';
@@ -52,8 +52,8 @@ export default function AddPeopleModalContent({ isAdult, t, onClose }) {
   const [activeMode, setActiveMode] = useState('local'); // 'local', 'search', 'bulk'
   const [searchQuery, setSearchQuery] = useState('');
   const [optimisticStatus, setOptimisticStatus] = useState({});
-  // eslint-disable-next-line no-unused-vars
   const [loadingIds, setLoadingIds] = useState(new Set());
+  const [queuedIds, setQueuedIds] = useState(new Set());
   const [roleFilter, setRoleFilter] = useState('all');
   const [genderFilter, setGenderFilter] = useState('all');
   const [sortBy, setSortBy] = useState('library_count');
@@ -67,6 +67,8 @@ export default function AddPeopleModalContent({ isAdult, t, onClose }) {
   const [hasSearched, setHasSearched] = useState(false);
 
   const addPersonMutation = useAddPersonTmdbMutation();
+  const actionQueueRef = useRef([]);
+  const isProcessingQueueRef = useRef(false);
 
   // Bulk Add States
   const [bulkText, setBulkText] = useState('');
@@ -111,28 +113,64 @@ export default function AddPeopleModalContent({ isAdult, t, onClose }) {
     return resolveMediaImageUrl(path, 'personThumb');
   };
 
-  const handleToggleStatus = async (personId, newActiveStatus) => {
+  const processQueuedActions = async () => {
+    if (isProcessingQueueRef.current) return;
+    isProcessingQueueRef.current = true;
+
+    while (actionQueueRef.current.length > 0) {
+      const task = actionQueueRef.current.shift();
+
+      setQueuedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(task.personId);
+        return next;
+      });
+      setLoadingIds((prev) => {
+        const next = new Set(prev);
+        next.add(task.personId);
+        return next;
+      });
+
+      try {
+        if (task.source === 'search' && task.newActiveStatus) {
+          await addPersonMutation.mutateAsync(task.personId);
+        } else {
+          await updateStatusMutation.mutateAsync({
+            personId: task.personId,
+            payload: { is_active: task.newActiveStatus }
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        setOptimisticStatus((prev) => ({ ...prev, [task.personId]: task.previousStatus }));
+      } finally {
+        setLoadingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(task.personId);
+          return next;
+        });
+      }
+    }
+
+    isProcessingQueueRef.current = false;
+  };
+
+  const enqueueToggleStatus = ({ personId, newActiveStatus, previousStatus, source }) => {
     setOptimisticStatus((prev) => ({ ...prev, [personId]: newActiveStatus }));
-    setLoadingIds((prev) => {
+    setQueuedIds((prev) => {
       const next = new Set(prev);
       next.add(personId);
       return next;
     });
-    try {
-      await updateStatusMutation.mutateAsync({
-        personId,
-        payload: { is_active: newActiveStatus }
-      });
-    } catch (err) {
-      console.error(err);
-      setOptimisticStatus((prev) => ({ ...prev, [personId]: !newActiveStatus }));
-    } finally {
-      setLoadingIds((prev) => {
-        const next = new Set(prev);
-        next.delete(personId);
-        return next;
-      });
-    }
+
+    actionQueueRef.current.push({
+      personId,
+      newActiveStatus,
+      previousStatus,
+      source,
+    });
+
+    processQueuedActions();
   };
 
   return (
@@ -261,6 +299,7 @@ export default function AddPeopleModalContent({ isAdult, t, onClose }) {
                 const isActive = optimisticStatus[person.id] !== undefined
                   ? optimisticStatus[person.id]
                   : person.is_active;
+                const isPendingForPerson = loadingIds.has(person.id) || queuedIds.has(person.id);
 
                 return (
                   <div
@@ -290,8 +329,13 @@ export default function AddPeopleModalContent({ isAdult, t, onClose }) {
                     </div>
                     <ActivationButton
                       isActive={isActive}
-                      onClick={(newActiveStatus) => handleToggleStatus(person.id, newActiveStatus)}
-                      disabled={updateStatusMutation.isPending}
+                      onClick={(newActiveStatus) => enqueueToggleStatus({
+                        personId: person.id,
+                        newActiveStatus,
+                        previousStatus: isActive,
+                        source: 'local',
+                      })}
+                      disabled={isPendingForPerson}
                     />
                   </div>
                 );
@@ -375,6 +419,7 @@ export default function AddPeopleModalContent({ isAdult, t, onClose }) {
                 const isActive = optimisticStatus[person.id] !== undefined
                   ? optimisticStatus[person.id]
                   : person.is_active;
+                const isPendingForPerson = loadingIds.has(person.id) || queuedIds.has(person.id);
 
                 return (
                   <div
@@ -405,29 +450,13 @@ export default function AddPeopleModalContent({ isAdult, t, onClose }) {
                     </div>
                     <ActivationButton
                       isActive={isActive}
-                      onClick={async (newActiveStatus) => {
-                        if (newActiveStatus) {
-                          setOptimisticStatus((prev) => ({ ...prev, [person.id]: true }));
-                          try {
-                            await addPersonMutation.mutateAsync(person.id);
-                          } catch (err) {
-                            console.error(err);
-                            setOptimisticStatus((prev) => ({ ...prev, [person.id]: false }));
-                          }
-                        } else {
-                          setOptimisticStatus((prev) => ({ ...prev, [person.id]: false }));
-                          try {
-                            await updateStatusMutation.mutateAsync({
-                              personId: person.id,
-                              payload: { is_active: false }
-                            });
-                          } catch (err) {
-                            console.error(err);
-                            setOptimisticStatus((prev) => ({ ...prev, [person.id]: true }));
-                          }
-                        }
-                      }}
-                      disabled={addPersonMutation.isPending || updateStatusMutation.isPending}
+                      onClick={(newActiveStatus) => enqueueToggleStatus({
+                        personId: person.id,
+                        newActiveStatus,
+                        previousStatus: isActive,
+                        source: 'search',
+                      })}
+                      disabled={isPendingForPerson}
                     />
                   </div>
                 );

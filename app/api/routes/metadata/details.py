@@ -4,7 +4,7 @@ from sqlalchemy.orm import joinedload
 
 from app.db.base import get_db
 from app.db.models import MediaItem, TMDBCache, MediaMatch
-from app.utils.library_utils import _public_image_path, _tmdb_image_url
+from app.utils.library_utils import _pick_backdrop_path, _public_image_path, _tmdb_image_url
 from app.utils.library_utils.image_constants import BACKDROP_SIZE, LOGO_SIZE, POSTER_SIZE, STILL_SIZE
 
 import logging
@@ -78,8 +78,25 @@ def get_full_item_metadata(item_id: str, db: Session = Depends(get_db)):
                     None,
                 )
             preferred_raw = preferred_cache.raw_data if preferred_cache and isinstance(preferred_cache.raw_data, dict) else {}
-            effective_poster_path = preferred_raw.get("poster_path") or tmdb_data.get("poster_path")
-            effective_backdrop_path = preferred_raw.get("backdrop_path") or tmdb_data.get("backdrop_path")
+            from app.db.models import VirtualMediaState
+            virtual_state = db.query(VirtualMediaState).filter(
+                VirtualMediaState.tmdb_id == tmdb_id,
+                VirtualMediaState.media_type == "movie",
+            ).first()
+            effective_poster_path = (
+                virtual_state.manual_poster_path if virtual_state and virtual_state.manual_poster_path else (
+                    preferred_raw.get("poster_path") or tmdb_data.get("poster_path")
+                )
+            )
+            effective_backdrop_path = (
+                virtual_state.manual_backdrop_path if virtual_state and virtual_state.manual_backdrop_path else (
+                preferred_raw.get("manual_backdrop_path")
+                or _pick_backdrop_path(preferred_raw, ui_lang)
+                or preferred_raw.get("backdrop_path")
+                or _pick_backdrop_path(tmdb_data, ui_lang)
+                or tmdb_data.get("backdrop_path")
+                )
+            )
             api_responses = {}
             for cache in tmdb_caches:
                 api_responses[cache.locale] = cache.raw_data
@@ -220,6 +237,20 @@ def get_full_item_metadata(item_id: str, db: Session = Depends(get_db)):
 
             localizations = []
             for loc in match.localizations:
+                effective_loc_poster_path = (
+                    getattr(loc, "manual_series_poster_path", None)
+                    if match.item_type and match.item_type.value in {"series", "episode"}
+                    else None
+                ) or getattr(loc, "manual_poster_path", None) or (
+                    loc.series_poster_path if match.item_type and match.item_type.value in {"series", "episode"} else loc.poster_path
+                ) or loc.poster_path
+                effective_loc_local_poster_path = (
+                    getattr(loc, "manual_local_series_poster_path", None)
+                    if match.item_type and match.item_type.value in {"series", "episode"}
+                    else None
+                ) or getattr(loc, "manual_local_poster_path", None) or (
+                    loc.local_series_poster_path if match.item_type and match.item_type.value in {"series", "episode"} else loc.local_poster_path
+                ) or loc.local_poster_path
                 localizations.append({
                     "language": loc.locale,
                     "title": loc.title,
@@ -234,10 +265,16 @@ def get_full_item_metadata(item_id: str, db: Session = Depends(get_db)):
                     "origin_country": loc.origin_country,
                     "original_language": loc.original_language,
                     "spoken_languages": loc.spoken_languages,
-                    "poster_path": _resolve_poster_path(loc.poster_path, loc.local_poster_path),
-                    "local_poster_path": _resolve_poster_path(loc.poster_path, loc.local_poster_path),
-                    "logo_path": _resolve_logo_path(loc.logo_path, loc.local_logo_path),
-                    "local_logo_path": _resolve_logo_path(loc.logo_path, loc.local_logo_path),
+                    "poster_path": _resolve_poster_path(effective_loc_poster_path, effective_loc_local_poster_path),
+                    "local_poster_path": _resolve_poster_path(effective_loc_poster_path, effective_loc_local_poster_path),
+                    "logo_path": _resolve_logo_path(
+                        getattr(loc, "manual_logo_path", None) or loc.logo_path,
+                        getattr(loc, "manual_local_logo_path", None) or loc.local_logo_path,
+                    ),
+                    "local_logo_path": _resolve_logo_path(
+                        getattr(loc, "manual_logo_path", None) or loc.logo_path,
+                        getattr(loc, "manual_local_logo_path", None) or loc.local_logo_path,
+                    ),
                     "is_primary": loc.is_primary
                 })
  
@@ -250,8 +287,14 @@ def get_full_item_metadata(item_id: str, db: Session = Depends(get_db)):
                 "api_responses": api_responses,
                 "series_api_responses": series_api_responses,
                 "confidence": match.confidence_score,
-                "backdrop_path": _resolve_backdrop_path(match.backdrop_path, match.local_backdrop_path),
-                "local_backdrop_path": _resolve_backdrop_path(match.backdrop_path, match.local_backdrop_path),
+                "backdrop_path": _resolve_backdrop_path(
+                    getattr(match, "manual_backdrop_path", None) or match.backdrop_path,
+                    getattr(match, "manual_local_backdrop_path", None) or match.local_backdrop_path,
+                ),
+                "local_backdrop_path": _resolve_backdrop_path(
+                    getattr(match, "manual_backdrop_path", None) or match.backdrop_path,
+                    getattr(match, "manual_local_backdrop_path", None) or match.local_backdrop_path,
+                ),
                 "still_path": _resolve_still_path(match.still_path, match.local_still_path),
                 "local_still_path": _resolve_still_path(match.still_path, match.local_still_path),
                 "director": match.director,

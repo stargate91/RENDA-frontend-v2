@@ -34,6 +34,7 @@ from app.utils.library_utils import (
     _parse_omdb_float,
 )
 from app.utils.library_utils.image_constants import PERSON_SIZE
+from app.api.tmdb_client import TMDBClient
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -100,15 +101,16 @@ def _department_matches_credit(credit: dict, department: Optional[str]) -> bool:
     return False
 
 
-def _known_for_score(credit: dict, department: Optional[str]) -> float:
+def _known_for_score(credit: dict, department: Optional[str], adult_only: bool = False) -> float:
     score = 0.0
 
     vote_average = float(credit.get("rating") or 0.0)
     vote_count = float(credit.get("vote_count") or 0.0)
     popularity = float(credit.get("popularity") or 0.0)
+    vote_count_weight = 5.0 if adult_only else 10.0
 
     score += vote_average * 6.0
-    score += math.log1p(max(vote_count, 0.0)) * 10.0
+    score += math.log1p(max(vote_count, 0.0)) * vote_count_weight
     score += min(popularity, 1000.0) * 0.3
 
     order = credit.get("order")
@@ -119,6 +121,8 @@ def _known_for_score(credit: dict, department: Optional[str]) -> float:
             score += 24.0
         elif order <= 10:
             score += 12.0
+        if adult_only:
+            score += max(0, 18 - (order * 2.5))
 
     if credit.get("is_lead"):
         score += 18.0
@@ -138,13 +142,13 @@ def _known_for_score(credit: dict, department: Optional[str]) -> float:
     return score
 
 
-def _select_known_for(credits: list[dict], department: Optional[str], limit: int = 8) -> list[dict]:
+def _select_known_for(credits: list[dict], department: Optional[str], limit: int = 8, adult_only: bool = False) -> list[dict]:
     if not credits:
         return []
 
     ranked = sorted(
         credits,
-        key=lambda credit: (_known_for_score(credit, department), credit.get("year") or 0),
+        key=lambda credit: (_known_for_score(credit, department, adult_only=adult_only), credit.get("year") or 0),
         reverse=True,
     )
 
@@ -225,7 +229,7 @@ def _resolve_person_known_for_backdrop(
     ranked_credits = sorted(
         credits or [],
         key=lambda credit: (
-            _known_for_score(credit, department),
+            _known_for_score(credit, department, adult_only=adult_only),
             int(str((credit.get("release_date") if credit.get("media_type") == "movie" else credit.get("first_air_date")) or "0")[:4] or 0),
         ),
         reverse=True,
@@ -345,6 +349,15 @@ def _prioritize_person_credits(items: list[dict], known_for_items: list[dict]) -
     return prioritized
 
 
+def _exclude_known_for_credits(items: list[dict], known_for_items: list[dict]) -> list[dict]:
+    if not items or not known_for_items:
+        return items or []
+    return [
+        entry for entry in items
+        if not any(_credit_matches_known_for(entry, known_for_entry) for known_for_entry in known_for_items)
+    ]
+
+
 def _apply_local_poster_paths(items: list[dict]) -> list[dict]:
     for item in items:
         original_poster = item.get("poster_path")
@@ -443,6 +456,7 @@ def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str
                 "tmdb_id": match.tmdb_id,
                 "year": match.release_date.year if match.release_date else None,
                 "poster_path": poster_path,
+                "backdrop_path": match.backdrop_path,
                 "rating": match.rating_tmdb or 0.0,
                 "rating_tmdb": match.rating_tmdb or 0.0,
                 "rating_imdb": match.rating_imdb,
@@ -465,6 +479,7 @@ def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str
                     "media_type": "tv",
                     "year": match.first_air_date.year if match.first_air_date else (match.release_date.year if match.release_date else None),
                     "poster_path": item_loc.series_poster_path if item_loc and item_loc.series_poster_path else poster_path,
+                    "backdrop_path": match.backdrop_path,
                     "rating": match.rating_tmdb or 0.0,
                     "rating_tmdb": match.rating_tmdb or 0.0,
                     "rating_imdb": match.rating_imdb,
@@ -510,6 +525,21 @@ def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str
                     return None
                 omdb_raw = _get_omdb_ratings_from_imdb(db, imdb_id)
                 return _parse_omdb_float(omdb_raw.get("imdb_rating"))
+
+            def _get_credit_backdrop_path(tmdb_id: int, media_type: str, credit: dict) -> Optional[str]:
+                direct_backdrop = credit.get("backdrop_path")
+                if direct_backdrop:
+                    return direct_backdrop
+
+                cache = _pick_tmdb_cache(db, tmdb_id, media_type, preferred_languages)
+                raw_data = cache.raw_data if cache and isinstance(cache.raw_data, dict) else None
+                if not raw_data:
+                    return None
+
+                return (
+                    _pick_backdrop_path(raw_data, preferred_languages[0])
+                    or raw_data.get("backdrop_path")
+                )
 
             local_movies = db.query(MediaMatch.tmdb_id, MediaItem.id, MediaMatch.rating_imdb).join(MediaMatch.media_item).filter(
                 MediaMatch.is_active == True,
@@ -587,6 +617,7 @@ def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str
                         library_series_tmdb_id = cid
 
                     virtual_imdb_rating = _get_virtual_credit_imdb_rating(cid, media_type)
+                    resolved_backdrop_path = _get_credit_backdrop_path(cid, media_type, credit)
                     combined_credits[key] = {
                         "id": cid,
                         "tmdb_id": cid,
@@ -595,6 +626,7 @@ def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str
                         "media_type": media_type,
                         "year": year,
                         "poster_path": credit.get("poster_path"),
+                        "backdrop_path": resolved_backdrop_path,
                         "rating": credit.get("vote_average") or 0.0,
                         "rating_tmdb": credit.get("vote_average") or 0.0,
                         "vote_count": credit.get("vote_count") or 0,
@@ -635,16 +667,23 @@ def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str
                 else:
                     parsed_series.append(serialized_credit)
 
-            known_for = _select_known_for(ordered_credits, person.known_for_department, limit=8)
+            known_for = _select_known_for(
+                ordered_credits,
+                person.known_for_department,
+                limit=8,
+                adult_only=bool(getattr(person, "is_adult", False)),
+            )
             all_movies = parsed_movies
             all_series = parsed_series
     except Exception as ex:
         logger.error(f"Failed to load or parse TMDB credits for person {person_id}: {ex}")
 
-    if not person_backdrop:
+    if getattr(person, "manual_backdrop_path", None):
+        person_backdrop = person.manual_backdrop_path
+    elif not person_backdrop:
         for link in links:
-            if link.media_match and link.media_match.backdrop_path:
-                person_backdrop = link.media_match.backdrop_path
+            if link.media_match and (getattr(link.media_match, "manual_backdrop_path", None) or link.media_match.backdrop_path):
+                person_backdrop = getattr(link.media_match, "manual_backdrop_path", None) or link.media_match.backdrop_path
                 break
 
     all_movies.sort(key=lambda entry: entry.get("year") or 0, reverse=True)
@@ -724,7 +763,7 @@ def get_person_detail(person_id: int):
             first_page_size=PERSON_INITIAL_CREDITS_PAGE_SIZE,
         )
 
-        profile_path = person.profile_path
+        profile_path = person.manual_profile_path or person.profile_path
         person_images = list(person.images or [])
         threading.Thread(
             target=_download_person_detail_assets,
@@ -732,10 +771,19 @@ def get_person_detail(person_id: int):
             daemon=True
         ).start()
 
-        if person.profile_path and not _resolve_person_profile_path(person):
+        effective_profile_path = person.manual_profile_path or person.profile_path
+        has_local_profile = bool(
+            _public_image_path(
+                person.manual_local_profile_path
+                or person.local_profile_path
+                or person.manual_profile_path
+                or person.profile_path,
+                "persons",
+            )
+        )
+        if effective_profile_path and not _resolve_person_profile_path(person):
             person.image_status = ImageStatus.FAILED
-        elif person.profile_path:
-            person.local_profile_path = _resolve_person_profile_path(person)
+        elif effective_profile_path and has_local_profile:
             person.image_status = ImageStatus.COMPLETED
 
         local_images = []
@@ -764,9 +812,9 @@ def get_person_detail(person_id: int):
             "known_for_department": person.known_for_department,
             "is_adult": bool(getattr(person, "is_adult", False)),
             "profile_path": _resolve_person_profile_path(person),
-            "has_local_profile": bool(_public_image_path(person.profile_path, "persons")),
-            "backdrop_path": _public_image_path(person_backdrop, "backdrops") or person_backdrop,
-            "has_local_backdrop": bool(_public_image_path(person_backdrop, "backdrops")),
+            "has_local_profile": bool(_public_image_path(person.manual_local_profile_path or person.manual_profile_path or person.local_profile_path or person.profile_path, "persons")),
+            "backdrop_path": _public_image_path(person.manual_local_backdrop_path or person_backdrop, "backdrops") or person_backdrop,
+            "has_local_backdrop": bool(_public_image_path(person.manual_local_backdrop_path or person_backdrop, "backdrops")),
             "is_active": person.is_active,
             "is_favorite": person.is_favorite,
             "user_rating": person.user_rating,
@@ -792,7 +840,12 @@ def get_person_detail(person_id: int):
 
 
 @router.get("/people/{person_id:int}/movies")
-def get_person_movies(person_id: int, page: int = Query(default=1, ge=1), page_size: int = Query(default=8, ge=1, le=60)):
+def get_person_movies(
+    person_id: int,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=8, ge=1, le=60),
+    exclude_known_for: bool = Query(default=False),
+):
     db = Session()
     try:
         person = db.query(Person).options(joinedload(Person.localizations)).filter(Person.id == person_id).first()
@@ -806,7 +859,16 @@ def get_person_movies(person_id: int, page: int = Query(default=1, ge=1), page_s
         ui_lang = _preferred_metadata_language(db)
         target_lang = ui_lang or "en"
         credit_payload = _load_person_credit_payload(db, person_id, person, ui_lang, target_lang)
-        prioritized = _prioritize_person_credits(credit_payload["movies"], credit_payload["known_for"])
+        base_items = credit_payload["movies"]
+        if exclude_known_for:
+            base_items = _exclude_known_for_credits(base_items, credit_payload["known_for"])
+            prioritized = sorted(
+                base_items,
+                key=lambda entry: (_known_for_score(entry, person.known_for_department, adult_only=bool(getattr(person, "is_adult", False))), entry.get("year") or 0),
+                reverse=True,
+            )
+        else:
+            prioritized = _prioritize_person_credits(base_items, credit_payload["known_for"])
         paged = _paginate_items(prioritized, page, page_size)
         _schedule_person_credit_poster_warmup(person_id, "movies", paged["page"], paged["page_size"], paged["items"])
         paged["items"] = _apply_local_poster_paths(paged["items"])
@@ -819,7 +881,12 @@ def get_person_movies(person_id: int, page: int = Query(default=1, ge=1), page_s
 
 
 @router.get("/people/{person_id:int}/series")
-def get_person_series(person_id: int, page: int = Query(default=1, ge=1), page_size: int = Query(default=8, ge=1, le=60)):
+def get_person_series(
+    person_id: int,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=8, ge=1, le=60),
+    exclude_known_for: bool = Query(default=False),
+):
     db = Session()
     try:
         person = db.query(Person).options(joinedload(Person.localizations)).filter(Person.id == person_id).first()
@@ -833,13 +900,58 @@ def get_person_series(person_id: int, page: int = Query(default=1, ge=1), page_s
         ui_lang = _preferred_metadata_language(db)
         target_lang = ui_lang or "en"
         credit_payload = _load_person_credit_payload(db, person_id, person, ui_lang, target_lang)
-        prioritized = _prioritize_person_credits(credit_payload["series"], credit_payload["known_for"])
+        base_items = credit_payload["series"]
+        if exclude_known_for:
+            base_items = _exclude_known_for_credits(base_items, credit_payload["known_for"])
+            prioritized = sorted(
+                base_items,
+                key=lambda entry: (_known_for_score(entry, person.known_for_department, adult_only=bool(getattr(person, "is_adult", False))), entry.get("year") or 0),
+                reverse=True,
+            )
+        else:
+            prioritized = _prioritize_person_credits(base_items, credit_payload["known_for"])
         paged = _paginate_items(prioritized, page, page_size)
         _schedule_person_credit_poster_warmup(person_id, "series", paged["page"], paged["page_size"], paged["items"])
         paged["items"] = _apply_local_poster_paths(paged["items"])
         return JSONResponse(content=paged, media_type="application/json; charset=utf-8")
     except Exception as e:
         logger.error(f"Error getting person series for {person_id}: {e}")
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+    finally:
+        db.close()
+
+
+@router.get("/people/{person_id:int}/credit-backdrops")
+def get_person_credit_backdrops(
+    person_id: int,
+    tmdb_id: int = Query(..., ge=1),
+    media_type: str = Query(...),
+):
+    db = Session()
+    try:
+        person = db.query(Person).filter(Person.id == person_id).first()
+        if not person:
+            person = _get_or_create_person_db(db, person_id)
+        if not person:
+            return JSONResponse(status_code=404, content={"error": "Person not found"})
+
+        normalized_type = "tv" if str(media_type or "").lower() in {"tv", "series"} else "movie"
+        ui_lang = _preferred_metadata_language(db) or "en-US"
+        tmdb_client = TMDBClient(db)
+        raw_data = tmdb_client.get_details(tmdb_id, normalized_type, language=ui_lang, include_images=True)
+        backdrops = ((raw_data or {}).get("images") or {}).get("backdrops") or []
+
+        return JSONResponse(
+            content={
+                "tmdb_id": tmdb_id,
+                "media_type": normalized_type,
+                "title": raw_data.get("title") or raw_data.get("name") or raw_data.get("original_title") or raw_data.get("original_name"),
+                "backdrops": backdrops,
+            },
+            media_type="application/json; charset=utf-8",
+        )
+    except Exception as e:
+        logger.error(f"Error getting credit backdrops for person {person_id}, tmdb {tmdb_id}: {e}")
         return JSONResponse(content={"error": str(e)}, status_code=500)
     finally:
         db.close()

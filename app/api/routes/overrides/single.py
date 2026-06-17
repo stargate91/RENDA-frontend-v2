@@ -10,6 +10,7 @@ from app.db.models import (
     Tag,
     TMDBCache,
     MediaMatch,
+    MediaCollection,
 )
 
 from app.api.routes.overrides.logic import (
@@ -26,12 +27,22 @@ from app.api.routes.overrides.logic import (
     _preferred_metadata_language,
     _hydrate_virtual_metadata,
 )
-from app.utils.library_utils.image_constants import BACKDROP_SIZE
+from app.utils.library_utils.image_constants import BACKDROP_SIZE, LOGO_SIZE, POSTER_SIZE
 
 import logging
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def _pick_active_localization_for_override(match, db):
+    if not match:
+        return None
+    from app.services.language_service import LanguageService
+    ui_lang = _preferred_metadata_language(db)
+    return LanguageService.pick_localization(match.localizations, [ui_lang] if ui_lang else []) or (
+        match.localizations[0] if getattr(match, "localizations", None) else None
+    )
 
 @router.post("/media/update")
 def update_media_item(payload: dict):
@@ -347,6 +358,28 @@ def update_item_backdrop(item_id: str, payload: dict):
     db = Session()
     try:
         from app.services.asset_service import AssetService
+        if isinstance(item_id, str) and item_id.startswith("collection_"):
+            try:
+                collection_tmdb_id = int(item_id.split("_")[1])
+            except (ValueError, IndexError):
+                return JSONResponse(status_code=400, content={"error": "Invalid collection TMDB ID format"})
+
+            asset_service = AssetService()
+            local_b = asset_service.download_image(backdrop_path, "backdrops", size=BACKDROP_SIZE)
+            if not local_b:
+                return JSONResponse(status_code=500, content={"error": "Failed to download backdrop"})
+
+            collection = db.query(MediaCollection).filter(MediaCollection.tmdb_id == collection_tmdb_id).first()
+            if not collection:
+                collection = MediaCollection(tmdb_id=collection_tmdb_id)
+                db.add(collection)
+
+            collection.manual_backdrop_path = backdrop_path
+            collection.manual_local_backdrop_path = local_b
+
+            db.commit()
+            return {"status": "success", "backdrop_path": backdrop_path, "local_backdrop_path": local_b}
+
         if isinstance(item_id, str) and item_id.startswith("tmdb_"):
             try:
                 tmdb_id = int(item_id.split("_")[1])
@@ -358,13 +391,12 @@ def update_item_backdrop(item_id: str, payload: dict):
             if not local_b:
                 return JSONResponse(status_code=500, content={"error": "Failed to download backdrop"})
 
-            cache_rows = db.query(TMDBCache).filter(TMDBCache.tmdb_id == tmdb_id).all()
-            for cache in cache_rows:
-                if not isinstance(cache.raw_data, dict):
-                    continue
-                raw_data = deepcopy(cache.raw_data)
-                raw_data["backdrop_path"] = backdrop_path
-                cache.raw_data = raw_data
+            media_type = str(payload.get("media_type") or "movie").lower()
+            if media_type not in {"movie", "tv", "series"}:
+                return JSONResponse(status_code=400, content={"error": "Invalid media_type"})
+            state = _get_or_create_virtual_media_state(db, tmdb_id, "tv" if media_type in {"tv", "series"} else "movie")
+            state.manual_backdrop_path = backdrop_path
+            state.manual_local_backdrop_path = local_b
 
             db.commit()
             return {"status": "success", "backdrop_path": backdrop_path, "local_backdrop_path": local_b}
@@ -403,15 +435,187 @@ def update_item_backdrop(item_id: str, payload: dict):
         if not local_b:
             return JSONResponse(status_code=500, content={"error": "Failed to download backdrop"})
 
-        # Update match properties
-        active_match.backdrop_path = backdrop_path
-        active_match.local_backdrop_path = local_b
+        # Store manual override separately
+        active_match.manual_backdrop_path = backdrop_path
+        active_match.manual_local_backdrop_path = local_b
 
         db.commit()
         return {"status": "success", "backdrop_path": backdrop_path, "local_backdrop_path": local_b}
     except Exception as e:
         db.rollback()
         logger.error(f"Error overriding backdrop: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    finally:
+        db.close()
+
+
+@router.post("/item/{item_id}/poster")
+def update_item_poster(item_id: str, payload: dict):
+    poster_path = payload.get("poster_path")
+    if not poster_path:
+        return JSONResponse(status_code=400, content={"error": "poster_path is required"})
+
+    db = Session()
+    try:
+        from app.services.asset_service import AssetService
+        asset_service = AssetService()
+        local_p = asset_service.download_image(poster_path, "posters", size=POSTER_SIZE)
+        if not local_p:
+            return JSONResponse(status_code=500, content={"error": "Failed to download poster"})
+
+        if isinstance(item_id, str) and item_id.startswith("collection_"):
+            try:
+                collection_tmdb_id = int(item_id.split("_")[1])
+            except (ValueError, IndexError):
+                return JSONResponse(status_code=400, content={"error": "Invalid collection TMDB ID format"})
+
+            collection = db.query(MediaCollection).filter(MediaCollection.tmdb_id == collection_tmdb_id).first()
+            if not collection:
+                collection = MediaCollection(tmdb_id=collection_tmdb_id)
+                db.add(collection)
+                db.flush()
+
+            ui_lang = _preferred_metadata_language(db) or "en"
+            loc = next((entry for entry in collection.localizations if entry.locale == ui_lang), None)
+            if not loc:
+                loc = next(iter(collection.localizations), None)
+            if not loc:
+                from app.db.models import MediaCollectionLocalization
+                loc = MediaCollectionLocalization(collection_tmdb_id=collection.tmdb_id, locale=ui_lang, name=f"Collection {collection.tmdb_id}")
+                db.add(loc)
+
+            loc.manual_poster_path = poster_path
+            loc.manual_local_poster_path = local_p
+            db.commit()
+            return {"status": "success", "poster_path": poster_path, "local_poster_path": local_p}
+
+        if isinstance(item_id, str) and item_id.startswith("tmdb_"):
+            try:
+                tmdb_id = int(item_id.split("_")[1])
+            except (ValueError, IndexError):
+                return JSONResponse(status_code=400, content={"error": "Invalid TMDB ID format"})
+            media_type = str(payload.get("media_type") or "movie").lower()
+            state = _get_or_create_virtual_media_state(db, tmdb_id, "tv" if media_type in {"tv", "series"} else "movie")
+            state.manual_poster_path = poster_path
+            state.manual_local_poster_path = local_p
+            db.commit()
+            return {"status": "success", "poster_path": poster_path, "local_poster_path": local_p}
+
+        if isinstance(item_id, str) and item_id.startswith("series_"):
+            try:
+                series_tmdb_id = int(item_id.split("_")[1])
+            except (ValueError, IndexError):
+                return JSONResponse(status_code=400, content={"error": "Invalid series ID format"})
+            active_match = db.query(MediaMatch).filter(
+                ((MediaMatch.series_tmdb_id == series_tmdb_id) | (MediaMatch.tmdb_id == series_tmdb_id)),
+                MediaMatch.is_active == True,
+            ).first()
+            if not active_match:
+                return JSONResponse(status_code=404, content={"error": "Series not found"})
+            loc = _pick_active_localization_for_override(active_match, db)
+            if not loc:
+                return JSONResponse(status_code=404, content={"error": "No localization found for this series"})
+            loc.manual_series_poster_path = poster_path
+            loc.manual_local_series_poster_path = local_p
+            loc.manual_poster_path = poster_path
+            loc.manual_local_poster_path = local_p
+            db.commit()
+            return {"status": "success", "poster_path": poster_path, "local_poster_path": local_p}
+
+        try:
+            target_item_id = int(item_id)
+        except ValueError:
+            return JSONResponse(status_code=400, content={"error": "Invalid item ID format"})
+
+        item = db.query(MediaItem).filter(MediaItem.id == target_item_id).first()
+        if not item:
+            return JSONResponse(status_code=404, content={"error": "Item not found"})
+        active_match = next((m for m in item.matches if m.is_active), None)
+        if not active_match:
+            return JSONResponse(status_code=404, content={"error": "No active match found for this item"})
+        loc = _pick_active_localization_for_override(active_match, db)
+        if not loc:
+            return JSONResponse(status_code=404, content={"error": "No localization found for this item"})
+
+        loc.manual_poster_path = poster_path
+        loc.manual_local_poster_path = local_p
+        db.commit()
+        return {"status": "success", "poster_path": poster_path, "local_poster_path": local_p}
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error overriding poster: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    finally:
+        db.close()
+
+
+@router.post("/item/{item_id}/logo")
+def update_item_logo(item_id: str, payload: dict):
+    logo_path = payload.get("logo_path")
+    if not logo_path:
+        return JSONResponse(status_code=400, content={"error": "logo_path is required"})
+
+    db = Session()
+    try:
+        from app.services.asset_service import AssetService
+        asset_service = AssetService()
+        local_logo = asset_service.download_image(logo_path, "logos", size=LOGO_SIZE)
+        if not local_logo:
+            return JSONResponse(status_code=500, content={"error": "Failed to download logo"})
+
+        if isinstance(item_id, str) and item_id.startswith("tmdb_"):
+            try:
+                tmdb_id = int(item_id.split("_")[1])
+            except (ValueError, IndexError):
+                return JSONResponse(status_code=400, content={"error": "Invalid TMDB ID format"})
+            media_type = str(payload.get("media_type") or "movie").lower()
+            state = _get_or_create_virtual_media_state(db, tmdb_id, "tv" if media_type in {"tv", "series"} else "movie")
+            state.manual_logo_path = logo_path
+            state.manual_local_logo_path = local_logo
+            db.commit()
+            return {"status": "success", "logo_path": logo_path, "local_logo_path": local_logo}
+
+        if isinstance(item_id, str) and item_id.startswith("series_"):
+            try:
+                series_tmdb_id = int(item_id.split("_")[1])
+            except (ValueError, IndexError):
+                return JSONResponse(status_code=400, content={"error": "Invalid series ID format"})
+            active_match = db.query(MediaMatch).filter(
+                ((MediaMatch.series_tmdb_id == series_tmdb_id) | (MediaMatch.tmdb_id == series_tmdb_id)),
+                MediaMatch.is_active == True,
+            ).first()
+            if not active_match:
+                return JSONResponse(status_code=404, content={"error": "Series not found"})
+            loc = _pick_active_localization_for_override(active_match, db)
+            if not loc:
+                return JSONResponse(status_code=404, content={"error": "No localization found for this series"})
+            loc.manual_logo_path = logo_path
+            loc.manual_local_logo_path = local_logo
+            db.commit()
+            return {"status": "success", "logo_path": logo_path, "local_logo_path": local_logo}
+
+        try:
+            target_item_id = int(item_id)
+        except ValueError:
+            return JSONResponse(status_code=400, content={"error": "Invalid item ID format"})
+
+        item = db.query(MediaItem).filter(MediaItem.id == target_item_id).first()
+        if not item:
+            return JSONResponse(status_code=404, content={"error": "Item not found"})
+        active_match = next((m for m in item.matches if m.is_active), None)
+        if not active_match:
+            return JSONResponse(status_code=404, content={"error": "No active match found for this item"})
+        loc = _pick_active_localization_for_override(active_match, db)
+        if not loc:
+            return JSONResponse(status_code=404, content={"error": "No localization found for this item"})
+
+        loc.manual_logo_path = logo_path
+        loc.manual_local_logo_path = local_logo
+        db.commit()
+        return {"status": "success", "logo_path": logo_path, "local_logo_path": local_logo}
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error overriding logo: {e}")
         return JSONResponse(status_code=500, content={"error": str(e)})
     finally:
         db.close()

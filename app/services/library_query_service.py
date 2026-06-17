@@ -107,7 +107,12 @@ class LibraryQueryService:
                 "episode_number": active_match.episode_number,
                 "series_tmdb_id": active_match.series_tmdb_id if active_match.series_tmdb_id else (active_match.tmdb_id if item.item_type == ItemType.EPISODE else None),
                 "tmdb_id": active_match.tmdb_id,
-                "backdrop_path": _public_image_path(active_match.backdrop_path, "backdrops") if active_match else None,
+                "backdrop_path": (
+                    _public_image_path(getattr(active_match, "manual_local_backdrop_path", None), "backdrops")
+                    or _public_image_path(active_match.local_backdrop_path, "backdrops")
+                    or getattr(active_match, "manual_backdrop_path", None)
+                    or active_match.backdrop_path
+                ) if active_match else None,
                 "still_path": _public_image_path(active_match.still_path, "stills") if active_match else None,
                 "resume_position": getattr(item, "resume_position", 0),
                 "duration": item.duration or 0,
@@ -189,9 +194,28 @@ class LibraryQueryService:
                 "original_series_title": loc.original_series_title if loc else None,
                 "year": _library_year(item, active_match),
                 "release_date": _library_release_date(active_match),
-                "poster_path": loc.poster_path if loc else None,
-                "backdrop_path": active_match.backdrop_path if active_match else None,
-                "series_poster_path": loc.series_poster_path if loc else None,
+                "poster_path": (
+                    _public_image_path(getattr(loc, "manual_local_poster_path", None), "posters")
+                    or _public_image_path(loc.local_poster_path, "posters")
+                    or getattr(loc, "manual_poster_path", None)
+                    or loc.poster_path
+                ) if loc else None,
+                "backdrop_path": (
+                    _public_image_path(getattr(active_match, "manual_local_backdrop_path", None), "backdrops")
+                    or _public_image_path(active_match.local_backdrop_path, "backdrops")
+                    or getattr(active_match, "manual_backdrop_path", None)
+                    or active_match.backdrop_path
+                ) if active_match else None,
+                "series_poster_path": (
+                    _public_image_path(getattr(loc, "manual_local_series_poster_path", None), "posters")
+                    or _public_image_path(getattr(loc, "manual_local_poster_path", None), "posters")
+                    or _public_image_path(loc.local_series_poster_path, "posters")
+                    or _public_image_path(loc.local_poster_path, "posters")
+                    or getattr(loc, "manual_series_poster_path", None)
+                    or getattr(loc, "manual_poster_path", None)
+                    or loc.series_poster_path
+                    or loc.poster_path
+                ) if loc else None,
                 "rating": active_match.rating_tmdb if active_match else 0,
                 "rating_imdb": active_match.rating_imdb if active_match else None,
                 "type": item.item_type.value,
@@ -236,8 +260,8 @@ class LibraryQueryService:
             is_virtual_adult = bool(raw_data.get("adult", False))
             if is_virtual_adult != is_adult:
                 continue
-            raw_poster_path = raw_data.get("poster_path")
-            local_poster_path = _public_image_path(raw_poster_path, "posters")
+            raw_poster_path = state.manual_poster_path or raw_data.get("poster_path")
+            local_poster_path = _public_image_path(state.manual_local_poster_path or raw_poster_path, "posters")
             date_field = raw_data.get("first_air_date") if media_type == "tv" else raw_data.get("release_date")
             year_value = None
             if date_field:
@@ -254,9 +278,9 @@ class LibraryQueryService:
                 "year": year_value,
                 "release_date": date_field,
                 "poster_path": raw_poster_path,
-                "backdrop_path": raw_data.get("backdrop_path"),
+                "backdrop_path": state.manual_backdrop_path or raw_data.get("backdrop_path"),
                 "local_poster_path": local_poster_path,
-                "local_backdrop_path": _public_image_path(raw_data.get("backdrop_path"), "backdrops"),
+                "local_backdrop_path": _public_image_path(state.manual_local_backdrop_path or state.manual_backdrop_path or raw_data.get("backdrop_path"), "backdrops"),
                 "displayPosterRemote": f"https://image.tmdb.org/t/p/{POSTER_SIZE}{raw_poster_path}" if raw_poster_path else None,
                 "rating": raw_data.get("vote_average") or 0,
                 "type": "series" if media_type == "tv" else "movie",

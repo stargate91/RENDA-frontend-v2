@@ -5,12 +5,12 @@ from app.services.library_detail_service import LibraryDetailService
 router = APIRouter()
 
 @router.get("/library/item/{item_id}")
-def get_library_item_detail(item_id: str):
+def get_library_item_detail(item_id: str, full_people: bool = False):
     """Returns comprehensive detail data for a single library item (movie detail page)."""
     db = Session()
     try:
         service = LibraryDetailService(db)
-        return service.get_library_item_detail(item_id)
+        return service.get_library_item_detail(item_id, full_people=full_people)
     finally:
         db.close()
 

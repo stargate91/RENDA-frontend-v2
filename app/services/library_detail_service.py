@@ -16,8 +16,8 @@ class LibraryDetailService:
         self.series_provider = SeriesDetailProvider(self.db, self.formatter)
         self.collection_provider = CollectionDetailProvider(self.db, self.formatter)
 
-    def get_library_item_detail(self, item_id: str):
-        return self.item_provider.get_library_item_detail(item_id)
+    def get_library_item_detail(self, item_id: str, full_people: bool = False):
+        return self.item_provider.get_library_item_detail(item_id, full_people=full_people)
 
     def get_collection_detail(self, collection_tmdb_id: int):
         return self.collection_provider.get_collection_detail(collection_tmdb_id)

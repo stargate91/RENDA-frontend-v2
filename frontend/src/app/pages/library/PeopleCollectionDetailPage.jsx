@@ -4,7 +4,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import PosterGrid from '@/ui/PosterGrid';
 import PosterCard from '@/ui/PosterCard';
 import Pill from '@/ui/Pill';
-import { useUpdatePersonStatusMutation } from '@/queries/libraryQueries';
+import NavButton from '@/ui/NavButton';
+import { useOverridePersonBackdropMutation, useUpdatePersonStatusMutation } from '@/queries/libraryQueries';
+import { useOverrideBackdropMutation } from '@/queries/mediaQueries';
+import SegmentedControl from '@/ui/SegmentedControl';
 import {
   Calendar,
   CalendarX2,
@@ -12,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Film,
+  Image as ImageIcon,
   Layers,
   MapPin,
   Minus,
@@ -33,6 +37,7 @@ import api from '@/lib/api';
 import { API_BASE } from '@/lib/backend';
 import {
   useLibraryCollectionDetailQuery,
+  usePersonCreditBackdropsQuery,
   usePersonCreditsQuery,
   usePersonDetailQuery,
 } from '@/queries/metadataQueries';
@@ -41,10 +46,13 @@ import { resolveDetailsImageUrl } from './utils/detailUtils';
 import DetailPageShell from './components/detail/DetailPageShell';
 import './PeopleCollectionDetailPage.css';
 import './components/detail/UserRatingSection.css';
+import './components/detail/panels/BackdropsPanel.css';
 import ReviewModalContent from './components/detail/modals/ReviewModalContent';
-import Button from '@/ui/Button';
 
 const PERSON_INITIAL_CREDITS_PAGE_SIZE = 12;
+const PERSON_BACKDROP_INITIAL_ROWS = 2;
+const PERSON_BACKDROP_COLUMNS = 4;
+const PERSON_BACKDROP_PAGE_SIZE = 20;
 
 function getGenderLabel(gender, t) {
   if (gender === 1 || gender === '1') {
@@ -290,6 +298,97 @@ function HorizontalCollectionItemsList({ items, navigate, t }) {
   );
 }
 
+function CollectionBackdropsPanel({ item, collectionId, t, toast, overrideBackdropMutation }) {
+  const normalizeBackdropKey = (path) => {
+    if (!path) {
+      return '';
+    }
+    const normalized = String(path).trim();
+    const parts = normalized.split('/');
+    return parts[parts.length - 1] || normalized;
+  };
+
+  const [selectedBackdropPath, setSelectedBackdropPath] = useState(item?.backdrop_path || '');
+  const seen = new Set();
+  const backdropOptions = [];
+
+  for (const movie of item?.movies || []) {
+    const backdropPath = movie?.backdrop_path;
+    const backdropKey = normalizeBackdropKey(backdropPath);
+    if (!backdropPath || !backdropKey || seen.has(backdropKey)) {
+      continue;
+    }
+    seen.add(backdropKey);
+    backdropOptions.push({
+      backdrop_path: backdropPath,
+      backdrop_key: backdropKey,
+      title: movie?.title || 'Collection item',
+      year: movie?.year,
+      in_library: Boolean(movie?.in_library),
+    });
+  }
+
+  const currentBackdropPath = selectedBackdropPath || item?.backdrop_path || '';
+  const currentBackdropKey = normalizeBackdropKey(currentBackdropPath);
+
+  const handleSelectBackdrop = async (backdropPath) => {
+    try {
+      await overrideBackdropMutation.mutateAsync({
+        itemId: `collection_${collectionId}`,
+        backdropPath,
+      });
+      setSelectedBackdropPath(backdropPath);
+      toast(t('library.details.backdropUpdated') || 'Backdrop updated successfully!', 'success');
+    } catch (err) {
+      toast(err.message || t('library.details.backdropUpdateFailed') || 'Failed to update backdrop', 'danger');
+    }
+  };
+
+  return (
+    <div className="backdrops-panel">
+      <div className="backdrops-grid">
+        {backdropOptions.map((option, idx) => {
+          const backdropUrl = resolveDetailsImageUrl(option.backdrop_path, API_BASE, 'backdrop');
+          const isSelected = currentBackdropKey !== '' && currentBackdropKey === option.backdrop_key;
+          const isPending = overrideBackdropMutation.isPending && overrideBackdropMutation.variables?.backdropPath === option.backdrop_path;
+          const label = option.year ? `${option.title} (${option.year})` : option.title;
+
+          return (
+            <button
+              key={`${option.backdrop_path}-${idx}`}
+              type="button"
+              onClick={() => !overrideBackdropMutation.isPending && handleSelectBackdrop(option.backdrop_path)}
+              className={`backdrop-card ${isSelected ? 'backdrop-card--selected' : ''} ${overrideBackdropMutation.isPending ? 'backdrop-card--disabled' : ''}`}
+              disabled={overrideBackdropMutation.isPending}
+              title={label}
+            >
+              <img
+                src={backdropUrl}
+                alt={label}
+                className="backdrop-card__img"
+              />
+              {isPending && (
+                <div className="backdrop-card__spinner-overlay">
+                  <div className="backdrop-card__spinner" />
+                </div>
+              )}
+              {isSelected && !isPending && (
+                <div className="backdrop-card__selected-overlay">
+                  <Check size={18} />
+                </div>
+              )}
+              <div className="backdrop-card__info-overlay">
+                <span>{label}</span>
+                <span>{option.in_library ? (t('library.details.have') || 'Have') : (t('library.details.missing') || 'Missing')}</span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function CollectionItemsSection({ items, navigate, t }) {
   const containerRef = useRef(null);
   const [columns, setColumns] = useState(1);
@@ -482,6 +581,421 @@ function prioritizePersonCredits(items, knownForItems) {
     });
 }
 
+function getTmdbBackdropScore(item) {
+  const rating = Number(item?.rating_tmdb ?? item?.rating ?? 0);
+  const voteCount = Number(item?.vote_count ?? 0);
+  return (rating * 100) + (Math.log10(Math.max(voteCount, 1)) * 24);
+}
+
+function sortBackdropCredits(items) {
+  return [...(items || [])].sort((a, b) => {
+    const scoreDiff = getTmdbBackdropScore(b) - getTmdbBackdropScore(a);
+    if (scoreDiff !== 0) {
+      return scoreDiff;
+    }
+    const yearDiff = (Number(b?.year) || 0) - (Number(a?.year) || 0);
+    if (yearDiff !== 0) {
+      return yearDiff;
+    }
+    return String(a?.title || '').localeCompare(String(b?.title || ''));
+  });
+}
+
+function normalizeBackdropKey(path) {
+  if (!path) {
+    return '';
+  }
+  const normalized = String(path).trim();
+  const parts = normalized.split('/');
+  return parts[parts.length - 1] || normalized;
+}
+
+function mergeBackdropCreditPages(pages) {
+  const seen = new Set();
+  const merged = [];
+  (pages || []).forEach((page) => {
+    (page?.items || []).forEach((entry) => {
+      const key = String(entry?.tmdb_id || entry?.id || `${entry?.title || entry?.name || ''}-${entry?.year || ''}`);
+      if (!key || seen.has(key)) {
+        return;
+      }
+      seen.add(key);
+      merged.push(entry);
+    });
+  });
+  return merged;
+}
+
+function PersonBackdropPickerModal({ personId, item, t, toast, overridePersonBackdropMutation }) {
+  const viewportRef = useRef(null);
+  const [activeTab, setActiveTab] = useState('movies');
+  const [selectedBackdropPath, setSelectedBackdropPath] = useState(item?.backdrop_path || '');
+  const [currentSourceCreditKey, setCurrentSourceCreditKey] = useState('');
+  const [selectedCredit, setSelectedCredit] = useState(null);
+  const [moviePages, setMoviePages] = useState([]);
+  const [seriesPages, setSeriesPages] = useState([]);
+  const [movieNextPage, setMovieNextPage] = useState(2);
+  const [seriesNextPage, setSeriesNextPage] = useState(2);
+  const [movieLoadingMore, setMovieLoadingMore] = useState(false);
+  const [seriesLoadingMore, setSeriesLoadingMore] = useState(false);
+  const selectedBackdropTmdbId = Number(selectedCredit?.series_tmdb_id || selectedCredit?.tmdb_id || selectedCredit?.id || 0);
+  const selectedBackdropMediaType = isTvLikeMediaType(selectedCredit?.media_type || selectedCredit?.type) ? 'tv' : 'movie';
+  const selectedBackdropMetadataQuery = usePersonCreditBackdropsQuery(personId, selectedBackdropTmdbId, selectedBackdropMediaType, {
+    enabled: Boolean(personId) && Number.isFinite(selectedBackdropTmdbId) && selectedBackdropTmdbId > 0,
+  });
+
+  useEffect(() => {
+    setSelectedBackdropPath(item?.backdrop_path || '');
+  }, [item?.backdrop_path]);
+
+  useEffect(() => {
+    setMoviePages([]);
+    setSeriesPages([]);
+    setMovieNextPage(2);
+    setSeriesNextPage(2);
+    setMovieLoadingMore(false);
+    setSeriesLoadingMore(false);
+    setSelectedCredit(null);
+    setCurrentSourceCreditKey('');
+  }, [personId]);
+
+  useEffect(() => {
+    setSelectedCredit(null);
+  }, [activeTab]);
+
+  const initialTabPageSize = PERSON_BACKDROP_COLUMNS * PERSON_BACKDROP_INITIAL_ROWS;
+  const moviesQuery = usePersonCreditsQuery(personId, 'movies', 1, PERSON_BACKDROP_PAGE_SIZE, {
+    enabled: Boolean(personId) && activeTab === 'movies',
+    excludeKnownFor: false,
+  });
+  const seriesQuery = usePersonCreditsQuery(personId, 'series', 1, PERSON_BACKDROP_PAGE_SIZE, {
+    enabled: Boolean(personId) && activeTab === 'series',
+    excludeKnownFor: false,
+  });
+
+  useEffect(() => {
+    if (moviesQuery.data?.items) {
+      setMoviePages([moviesQuery.data]);
+      setMovieNextPage(2);
+    }
+  }, [moviesQuery.data]);
+
+  useEffect(() => {
+    if (seriesQuery.data?.items) {
+      setSeriesPages([seriesQuery.data]);
+      setSeriesNextPage(2);
+    }
+  }, [seriesQuery.data]);
+
+  const currentBackdropKey = normalizeBackdropKey(selectedBackdropPath || item?.backdrop_path);
+  const movieItems = useMemo(
+    () => prioritizePersonCredits(
+      sortBackdropCredits(mergeBackdropCreditPages(moviePages)),
+      item?.known_for || []
+    ),
+    [item?.known_for, moviePages]
+  );
+  const seriesItems = useMemo(
+    () => prioritizePersonCredits(
+      sortBackdropCredits(mergeBackdropCreditPages(seriesPages)),
+      item?.known_for || []
+    ),
+    [item?.known_for, seriesPages]
+  );
+
+  const activeItems = activeTab === 'movies'
+    ? movieItems
+    : seriesItems;
+  const matchedCreditKey = useMemo(() => {
+    if (!currentBackdropKey) {
+      return '';
+    }
+    const matchedCredit = activeItems.find((credit) => normalizeBackdropKey(credit?.backdrop_path) === currentBackdropKey);
+    if (!matchedCredit) {
+      return '';
+    }
+    return String(matchedCredit.tmdb_id || matchedCredit.id || '');
+  }, [activeItems, currentBackdropKey]);
+  const selectedCreditKey = currentSourceCreditKey || matchedCreditKey;
+  const selectedBackdrops = useMemo(() => {
+    const allBackdrops = selectedBackdropMetadataQuery.data?.backdrops || [];
+    return allBackdrops.filter((bd) => (!bd.iso_639_1 || bd.iso_639_1 === '') && Number(bd.width) >= 1280);
+  }, [selectedBackdropMetadataQuery.data]);
+
+  const totalAvailableItems = activeTab === 'movies'
+    ? Math.max(movieItems.length, Number(moviePages[0]?.total_items) || 0)
+    : Math.max(seriesItems.length, Number(seriesPages[0]?.total_items) || 0);
+  const visibleItems = activeItems;
+  const hasMore = activeItems.length < totalAvailableItems;
+  const isLoading = activeTab === 'movies'
+    ? (moviesQuery.isLoading || movieLoadingMore)
+    : activeTab === 'series'
+      ? (seriesQuery.isLoading || seriesLoadingMore)
+      : false;
+
+  const loadMore = async () => {
+    if (!personId || overridePersonBackdropMutation.isPending) {
+      return;
+    }
+
+    if (activeTab === 'movies') {
+      const totalPages = Math.max(1, Number(moviePages[0]?.total_pages) || 1);
+      if (movieLoadingMore || movieNextPage > totalPages) {
+        return;
+      }
+      setMovieLoadingMore(true);
+      try {
+        const nextPage = await api.people.getCredits(personId, 'movies', {
+          page: movieNextPage,
+          pageSize: PERSON_BACKDROP_PAGE_SIZE,
+          excludeKnownFor: false,
+        });
+        setMoviePages((current) => [...current, nextPage]);
+        setMovieNextPage((current) => current + 1);
+      } finally {
+        setMovieLoadingMore(false);
+      }
+      return;
+    }
+
+    if (activeTab === 'series') {
+      const totalPages = Math.max(1, Number(seriesPages[0]?.total_pages) || 1);
+      if (seriesLoadingMore || seriesNextPage > totalPages) {
+        return;
+      }
+      setSeriesLoadingMore(true);
+      try {
+        const nextPage = await api.people.getCredits(personId, 'series', {
+          page: seriesNextPage,
+          pageSize: PERSON_BACKDROP_PAGE_SIZE,
+          excludeKnownFor: false,
+        });
+        setSeriesPages((current) => [...current, nextPage]);
+        setSeriesNextPage((current) => current + 1);
+      } finally {
+        setSeriesLoadingMore(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport || selectedCredit || !hasMore || isLoading) {
+      return undefined;
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      const remaining = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
+      if (remaining <= 180) {
+        void loadMore();
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [activeTab, hasMore, isLoading, selectedCredit, visibleItems.length]);
+
+  const handleViewportScroll = (event) => {
+    if (selectedCredit || !hasMore || isLoading) {
+      return;
+    }
+    const viewport = event.currentTarget;
+    const remaining = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
+    if (remaining <= 180) {
+      void loadMore();
+    }
+  };
+
+  const handleOpenBackdropBrowser = (credit) => {
+    if (!credit) {
+      return;
+    }
+    setSelectedCredit(credit);
+    const viewport = viewportRef.current;
+    if (viewport) {
+      viewport.scrollTop = 0;
+    }
+  };
+
+  const handleBackToCredits = () => {
+    setSelectedCredit(null);
+  };
+
+  const handleSelectDetailedBackdrop = async (backdropPath) => {
+    if (!backdropPath || overridePersonBackdropMutation.isPending) {
+      return;
+    }
+    try {
+      await overridePersonBackdropMutation.mutateAsync({
+        personId,
+        backdropPath,
+      });
+      setSelectedBackdropPath(backdropPath);
+      setCurrentSourceCreditKey(String(selectedCredit?.tmdb_id || selectedCredit?.id || ''));
+      toast(t('library.details.backdropUpdated') || 'Backdrop updated successfully!', 'success');
+    } catch (err) {
+      toast(err.message || t('library.details.backdropUpdateFailed') || 'Failed to update backdrop', 'danger');
+    }
+  };
+
+  const isBackdropBrowserOpen = Boolean(selectedCredit);
+  const isBackdropBrowserLoading = selectedBackdropMetadataQuery.isLoading && !selectedBackdropMetadataQuery.data;
+
+  return (
+    <div className="person-backdrop-picker">
+      {!isBackdropBrowserOpen && (
+        <SegmentedControl
+          ariaLabel={t('library.details.chooseBackdrop') || 'Choose backdrop source'}
+          className="person-backdrop-picker__tabs"
+          options={[
+            { value: 'movies', label: t('library.details.moviesTitle') || 'Movies' },
+            { value: 'series', label: t('library.details.tvShowsTitle') || 'Series' },
+          ]}
+          value={activeTab}
+          onChange={setActiveTab}
+        />
+      )}
+
+      <div ref={viewportRef} className="person-backdrop-picker__viewport" onScroll={handleViewportScroll}>
+        {isBackdropBrowserOpen ? (
+          <div className="backdrops-panel person-backdrop-picker__detail-view">
+            <div className="person-backdrop-picker__detail-toolbar">
+              <NavButton className="person-backdrop-picker__back-btn" onClick={handleBackToCredits} icon={ChevronLeft}>
+                {t('common.back') || 'Back'}
+              </NavButton>
+              <h4 className="details-panel__section-title person-backdrop-picker__detail-title">
+                {selectedBackdropMetadataQuery.data?.title || selectedCredit?.title}
+              </h4>
+            </div>
+
+            <div className="backdrops-grid">
+              {isBackdropBrowserLoading && Array.from({ length: 8 }).map((_, index) => (
+                <div key={`person-backdrop-detail-skeleton-${index}`} className="backdrop-card backdrop-card--disabled" />
+              ))}
+
+              {!isBackdropBrowserLoading && selectedBackdrops.map((bd, idx) => {
+                const backdropPath = bd.file_path;
+                const tmdbThumbUrl = resolveDetailsImageUrl(backdropPath, API_BASE, 'backdrop');
+                const isSelected = currentBackdropKey !== '' && currentBackdropKey === normalizeBackdropKey(backdropPath);
+                const isPending = overridePersonBackdropMutation.isPending && overridePersonBackdropMutation.variables?.backdropPath === backdropPath;
+
+                return (
+                  <button
+                    key={`${backdropPath}-${idx}`}
+                    type="button"
+                    onClick={() => !overridePersonBackdropMutation.isPending && handleSelectDetailedBackdrop(backdropPath)}
+                    className={`backdrop-card ${isSelected ? 'backdrop-card--selected' : ''} ${overridePersonBackdropMutation.isPending ? 'backdrop-card--disabled' : ''}`}
+                    disabled={overridePersonBackdropMutation.isPending}
+                  >
+                    <img
+                      src={tmdbThumbUrl}
+                      alt={`Backdrop ${idx + 1}`}
+                      className="backdrop-card__img"
+                    />
+                    {isPending && (
+                      <div className="backdrop-card__spinner-overlay">
+                        <div className="backdrop-card__spinner" />
+                      </div>
+                    )}
+                    <div className="backdrop-card__info-overlay">
+                      <span>{bd.width}{String.fromCharCode(0x00D7)}{bd.height}</span>
+                      <span>{String.fromCharCode(0x2605)} {bd.vote_average?.toFixed(1)}</span>
+                    </div>
+                  </button>
+                );
+              })}
+
+              {!isBackdropBrowserLoading && selectedBackdrops.length === 0 && (
+                <div className="backdrops-panel__empty person-backdrop-picker__empty">
+                  {t('library.details.noBackdropsAvailable') || 'No good backdrop options found for this title.'}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="person-backdrop-picker__grid">
+          {isLoading && visibleItems.length === 0 && Array.from({ length: initialTabPageSize }).map((_, index) => (
+            <div key={`person-backdrop-skeleton-${activeTab}-${index}`} className="entity-detail-page__credit-card entity-detail-page__credit-card--people-grid entity-detail-page__skeleton-card">
+              <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-poster" />
+              <div className="entity-detail-page__credit-body">
+                <div className="entity-detail-page__credit-topline">
+                  <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-title" />
+                </div>
+                <div className="entity-detail-page__credit-meta">
+                  <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-meta" />
+                  <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-pill" />
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {!isLoading && visibleItems.length === 0 && (
+            <div className="backdrops-panel__empty person-backdrop-picker__empty">
+              {t('library.details.noBackdropsAvailable') || 'No good backdrop options found for this title.'}
+            </div>
+          )}
+
+          {visibleItems.map((credit) => {
+            const creditKey = String(credit.tmdb_id || credit.id || '');
+            const isSelected = selectedCreditKey !== '' && selectedCreditKey === creditKey;
+            const isPending = overridePersonBackdropMutation.isPending && overridePersonBackdropMutation.variables?.backdropPath === credit.backdrop_path;
+            const rating = Number(credit.rating_tmdb ?? credit.rating);
+            const hasRating = Number.isFinite(rating) && rating > 0;
+            const posterPath = credit.local_poster_path || credit.poster_path;
+            return (
+              <button
+                key={`person-backdrop-${activeTab}-${credit.tmdb_id || credit.id}`}
+                type="button"
+                className={`entity-detail-page__credit-card entity-detail-page__credit-card--collection-item entity-detail-page__credit-card--people-grid person-backdrop-picker__card${credit.is_known_for ? ' entity-detail-page__credit-card--known-for' : ''}${isSelected ? ' person-backdrop-picker__card--selected' : ''}${isPending ? ' backdrop-card--disabled' : ''}`}
+                onClick={() => handleOpenBackdropBrowser(credit)}
+                disabled={overridePersonBackdropMutation.isPending}
+              >
+                <div className="entity-detail-page__credit-poster-wrap">
+                  {posterPath ? (
+                    <img
+                      src={resolveDetailsImageUrl(posterPath, API_BASE, 'poster')}
+                      alt={credit.title || 'Poster option'}
+                      className="entity-detail-page__credit-poster"
+                    />
+                  ) : (
+                    <div className="entity-detail-page__credit-poster entity-detail-page__credit-poster--placeholder">
+                      <Film size={16} />
+                    </div>
+                  )}
+                  {isPending && (
+                    <div className="backdrop-card__spinner-overlay">
+                      <div className="backdrop-card__spinner" />
+                    </div>
+                  )}
+                </div>
+                <div className="entity-detail-page__credit-body">
+                  <div className="entity-detail-page__credit-topline">
+                    <div className="entity-detail-page__credit-title">{credit.title}</div>
+                  </div>
+                  <div className="entity-detail-page__credit-meta">
+                    {credit.year && <span>{credit.year}</span>}
+                    {hasRating && (
+                      <Pill variant="tmdb" className="entity-detail-page__credit-rating-pill">
+                        <Star size={10} fill="currentColor" strokeWidth={1.8} />
+                        {rating.toFixed(1)}
+                      </Pill>
+                    )}
+                    {isSelected && (
+                      <Pill variant="success" className="entity-detail-page__credit-status-pill">
+                        {t('common.current') || 'Current'}
+                      </Pill>
+                    )}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function PersonCreditsGridSection({ title, personId, mediaType, totalCount, initialPageData, navigate, t }) {
   const shouldLoad = Boolean(personId) && Number(totalCount) > 0;
   const queryClient = useQueryClient();
@@ -544,11 +1058,11 @@ function PersonCreditsGridSection({ title, personId, mediaType, totalCount, init
   const visibleItems = creditsQuery.data?.items || [];
   const fillerCount = Math.max(0, itemsPerPage - visibleItems.length);
   const isInitialPageLoading = creditsQuery.isLoading && visibleItems.length === 0;
-  const isPageFetching = creditsQuery.isFetching;
-
-  if (!shouldLoad) {
-    return null;
-  }
+  const resolvedPage = Number(creditsQuery.data?.page) || 1;
+  const resolvedPageSize = Number(creditsQuery.data?.page_size) || itemsPerPage;
+  const isPageFetching = creditsQuery.isFetching && (
+    resolvedPage !== page || resolvedPageSize !== itemsPerPage
+  );
 
   useEffect(() => {
     setPage((current) => Math.max(1, Math.min(current, totalPages)));
@@ -559,12 +1073,15 @@ function PersonCreditsGridSection({ title, personId, mediaType, totalCount, init
       return;
     }
 
-    for (let nextPage = 2; nextPage <= totalPages; nextPage += 1) {
-      queryClient.prefetchQuery({
-        queryKey: ['person-credits', personId, mediaType, nextPage, itemsPerPage],
-        queryFn: () => api.people.getCredits(personId, mediaType, { page: nextPage, pageSize: itemsPerPage }),
-      });
+    const nextPage = page + 1;
+    if (nextPage > totalPages) {
+      return;
     }
+
+    queryClient.prefetchQuery({
+      queryKey: ['person-credits', personId, mediaType, nextPage, itemsPerPage, false],
+      queryFn: () => api.people.getCredits(personId, mediaType, { page: nextPage, pageSize: itemsPerPage }),
+    });
   }, [
     creditsQuery.data?.items,
     itemsPerPage,
@@ -575,6 +1092,10 @@ function PersonCreditsGridSection({ title, personId, mediaType, totalCount, init
     shouldLoad,
     totalPages,
   ]);
+
+  if (!shouldLoad) {
+    return null;
+  }
 
   const openItem = (item) => {
     if (isTvLikeMediaType(item.media_type || item.type)) {
@@ -940,7 +1461,7 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { openModal, closeModal } = useUi();
+  const { openModal, closeModal, toast } = useUi();
   const isPeople = type === 'people';
 
   const [hoveredRating, setHoveredRating] = useState(null);
@@ -949,6 +1470,8 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
   const personQuery = usePersonDetailQuery(id, { enabled: isPeople && Boolean(id) });
   const collectionQuery = useLibraryCollectionDetailQuery(id, { enabled: !isPeople && Boolean(id) });
   const updatePersonStatusMutation = useUpdatePersonStatusMutation();
+  const overrideBackdropMutation = useOverrideBackdropMutation();
+  const overridePersonBackdropMutation = useOverridePersonBackdropMutation();
 
   const item = isPeople ? personQuery.data : collectionQuery.data;
   const isLoading = isPeople ? personQuery.isLoading : collectionQuery.isLoading;
@@ -1063,6 +1586,46 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
     });
   };
 
+  const handleOpenCollectionBackdropModal = () => {
+    if (isPeople || !item?.tmdb_id) {
+      return;
+    }
+
+    openModal({
+      title: t('library.details.chooseBackdrop') || 'Choose Backdrop',
+      variant: 'extra-wide',
+      content: (
+        <CollectionBackdropsPanel
+          item={item}
+          collectionId={item.tmdb_id}
+          t={t}
+          toast={toast}
+          overrideBackdropMutation={overrideBackdropMutation}
+        />
+      ),
+    });
+  };
+
+  const handleOpenPeopleBackdropModal = () => {
+    if (!isPeople || !item?.id) {
+      return;
+    }
+
+    openModal({
+      title: t('library.details.chooseBackdrop') || 'Choose Backdrop',
+      variant: 'extra-wide',
+      content: (
+        <PersonBackdropPickerModal
+          personId={item.id}
+          item={item}
+          t={t}
+          toast={toast}
+          overridePersonBackdropMutation={overridePersonBackdropMutation}
+        />
+      ),
+    });
+  };
+
   const metaPills = isPeople
     ? [
         (() => {
@@ -1160,6 +1723,29 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
       backLabel={t('common.back') || 'Back'}
       isLoading={isLoading}
       pageClassName={`entity-detail-page ${isPeople ? 'entity-detail-page--people' : 'entity-detail-page--collection'}`}
+      topRightControls={
+        isPeople
+          ? ((Number(item?.total_movie_credits) > 0 || Number(item?.total_series_credits) > 0 || (item?.known_for || []).length > 0) ? (
+            <button
+              type="button"
+              onClick={handleOpenPeopleBackdropModal}
+              className="media-detail-page__side-nav-toggle"
+              title={t('library.details.backdrops') || 'Choose Backdrop'}
+            >
+              <ImageIcon size={18} />
+            </button>
+          ) : null)
+          : (item?.movies?.some((movie) => movie?.backdrop_path) ? (
+            <button
+              type="button"
+              onClick={handleOpenCollectionBackdropModal}
+              className="media-detail-page__side-nav-toggle"
+              title={t('library.details.backdrops') || 'Choose Backdrop'}
+            >
+              <ImageIcon size={18} />
+            </button>
+          ) : null)
+      }
     >
       {hasError && (
         <section className="entity-detail-page__content-section entity-detail-page__content-section--status">
@@ -1323,6 +1909,7 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
 
       {!hasError && isPeople && Number(item?.total_movie_credits) > 0 && (
         <PersonCreditsGridSection
+          key={`${id}-movies`}
           title={t('library.details.moviesTitle') || 'Movies'}
           personId={id}
           mediaType="movies"
@@ -1335,6 +1922,7 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
 
       {!hasError && isPeople && Number(item?.total_series_credits) > 0 && (
         <PersonCreditsGridSection
+          key={`${id}-series`}
           title={t('library.details.tvShowsTitle') || 'TV Shows'}
           personId={id}
           mediaType="series"

@@ -540,13 +540,13 @@ function createWindow() {
     });
   });
 
-  win.webContents.on('console-message', (_event, level, message, line, sourceId) => {
-    if (level === 3) {
+  win.webContents.on('console-message', (details) => {
+    if (details.level === 'error') {
       writeElectronLog('ERROR', 'Renderer console message', {
-        level,
-        message,
-        line,
-        sourceId,
+        level: details.level,
+        message: details.message,
+        line: details.lineNumber,
+        sourceId: details.sourceId,
       });
     }
   });

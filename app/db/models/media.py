@@ -147,6 +147,12 @@ class VirtualMediaState(Base):
     user_rating_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True, index=True)
     user_comment: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     custom_tags: Mapped[Optional[List[str]]] = mapped_column(JSON, nullable=True)
+    manual_poster_path: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    manual_local_poster_path: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    manual_backdrop_path: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    manual_local_backdrop_path: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    manual_logo_path: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    manual_local_logo_path: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
