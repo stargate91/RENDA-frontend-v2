@@ -3,21 +3,20 @@ import { useNavigate, useParams } from 'react-router-dom';
 import PosterGrid from '@/ui/PosterGrid';
 import PosterCard from '@/ui/PosterCard';
 import Pill from '@/ui/Pill';
-import SegmentedControl from '@/ui/SegmentedControl';
-import EmptyState from '@/ui/EmptyState';
 import { useUpdatePersonStatusMutation } from '@/queries/libraryQueries';
 import {
   Calendar,
   CalendarX2,
   Check,
+  ChevronLeft,
   ChevronRight,
-  ExternalLink,
   Film,
-  FolderOpen,
   Layers,
   MapPin,
   Minus,
   Briefcase,
+  Mars,
+  Venus,
   VenusAndMars,
   Heart,
   PenLine,
@@ -25,6 +24,7 @@ import {
   Star,
   Tv,
   User,
+  X,
 } from 'lucide-react';
 import { useTranslation } from '@/providers/LanguageContext';
 import { useUi } from '@/providers/UiProvider';
@@ -54,19 +54,17 @@ function getGenderLabel(gender, t) {
   return null;
 }
 
-function DetailSection({ title, children, emptyText }) {
-  return (
-    <div className="details-panel details-panel--custom">
-      <h4 className="details-panel__section-title">{title}</h4>
-      {children || (
-        <EmptyState
-          variant="detail-panel"
-          icon={FolderOpen}
-          title={emptyText}
-        />
-      )}
-    </div>
-  );
+function getGenderIcon(gender) {
+  if (gender === 1 || gender === '1') {
+    return Venus;
+  }
+  if (gender === 2 || gender === '2') {
+    return Mars;
+  }
+  if (gender === 3 || gender === '3') {
+    return VenusAndMars;
+  }
+  return User;
 }
 
 function OverviewContent({ text, title, emptyText, t, openModal, className = '' }) {
@@ -287,12 +285,261 @@ function HorizontalCollectionItemsList({ items, navigate, t }) {
   );
 }
 
-function CompactKnownForList({ items, navigate, t }) {
+function CollectionItemsSection({ items, navigate, t }) {
+  const containerRef = useRef(null);
+  const [columns, setColumns] = useState(1);
+  const [page, setPage] = useState(0);
+
+  useLayoutEffect(() => {
+    const element = containerRef.current;
+    if (!element) {
+      return undefined;
+    }
+
+    let frameId = null;
+    let resizeObserver = null;
+
+    const measure = () => {
+      const styles = window.getComputedStyle(element);
+      const gap = Number.parseFloat(styles.columnGap || styles.gap || '16') || 16;
+      const minCardWidth = 224;
+      const width = element.clientWidth || 0;
+      const nextColumns = Math.max(1, Math.floor((width + gap) / (minCardWidth + gap)));
+      setColumns((current) => (current === nextColumns ? current : nextColumns));
+    };
+
+    const scheduleMeasure = () => {
+      if (frameId !== null) {
+        cancelAnimationFrame(frameId);
+      }
+      frameId = requestAnimationFrame(measure);
+    };
+
+    scheduleMeasure();
+
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        scheduleMeasure();
+      });
+      resizeObserver.observe(element);
+    }
+
+    window.addEventListener('resize', scheduleMeasure);
+
+    return () => {
+      if (frameId !== null) {
+        cancelAnimationFrame(frameId);
+      }
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', scheduleMeasure);
+    };
+  }, []);
+
+  const itemsPerPage = Math.max(1, columns * 3);
+  const totalPages = Math.max(1, Math.ceil((items?.length || 0) / itemsPerPage));
+  const safePage = Math.min(page, totalPages - 1);
+  const visibleItems = (items || []).slice(safePage * itemsPerPage, (safePage + 1) * itemsPerPage);
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, totalPages - 1));
+  }, [totalPages]);
+
+  return (
+    <section className="entity-detail-page__content-section">
+      <div className="entity-detail-page__section-header">
+        <h2>{t('library.details.collectionItemsTitle') || 'Collection Items'}</h2>
+        {totalPages > 1 && (
+          <div className="entity-detail-page__section-pager">
+            <button
+              type="button"
+              className="entity-detail-page__section-pager-btn"
+              onClick={() => setPage((current) => Math.max(0, current - 1))}
+              disabled={safePage === 0}
+              aria-label={t('common.previous') || 'Previous'}
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              type="button"
+              className="entity-detail-page__section-pager-btn"
+              onClick={() => setPage((current) => Math.min(totalPages - 1, current + 1))}
+              disabled={safePage >= totalPages - 1}
+              aria-label={t('common.next') || 'Next'}
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
+      </div>
+      <div ref={containerRef}>
+        <HorizontalCollectionItemsList items={visibleItems} navigate={navigate} t={t} />
+      </div>
+    </section>
+  );
+}
+
+function normalizeCreditType(item) {
+  return isTvLikeMediaType(item?.media_type || item?.type) ? 'tv' : 'movie';
+}
+
+function normalizeCreditTitle(item) {
+  return String(item?.title || item?.name || '')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9]+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function getCreditIdentityCandidates(item) {
+  return [
+    item?.tmdb_id,
+    item?.series_tmdb_id,
+    item?.library_series_tmdb_id,
+    item?.library_item_id,
+    item?.id,
+  ]
+    .filter((value) => value !== null && value !== undefined && value !== '')
+    .map((value) => String(value));
+}
+
+function isKnownForMatch(entry, knownForEntry) {
+  if (normalizeCreditType(entry) !== normalizeCreditType(knownForEntry)) {
+    return false;
+  }
+
+  const entryIds = getCreditIdentityCandidates(entry);
+  const knownForIds = getCreditIdentityCandidates(knownForEntry);
+  if (entryIds.some((id) => knownForIds.includes(id))) {
+    return true;
+  }
+
+  const entryTitle = normalizeCreditTitle(entry);
+  const knownForTitle = normalizeCreditTitle(knownForEntry);
+  const entryYear = String(entry?.year || '');
+  const knownForYear = String(knownForEntry?.year || '');
+
+  if (!entryTitle || !knownForTitle) {
+    return false;
+  }
+
+  if (entryTitle === knownForTitle && entryYear === knownForYear) {
+    return true;
+  }
+
+  return entryTitle === knownForTitle;
+}
+
+function prioritizePersonCredits(items, knownForItems) {
+  if (!items?.length) {
+    return [];
+  }
+
+  const knownForRank = new Map(
+    (knownForItems || []).map((entry, index) => {
+      const ids = getCreditIdentityCandidates(entry);
+      const key = ids[0] || `${normalizeCreditType(entry)}:${normalizeCreditTitle(entry)}:${entry?.year || ''}`;
+      return [key, index];
+    })
+  );
+
+  return [...items]
+    .map((entry) => {
+      const matchedKnownFor = (knownForItems || []).find((knownForEntry) => isKnownForMatch(entry, knownForEntry));
+      const matchIds = matchedKnownFor ? getCreditIdentityCandidates(matchedKnownFor) : [];
+      const fallbackKey = `${normalizeCreditType(entry)}:${normalizeCreditTitle(entry)}:${entry?.year || ''}`;
+      const rankKey = matchIds[0] || fallbackKey;
+      return {
+        ...entry,
+        is_known_for: Boolean(matchedKnownFor),
+        known_for_rank: matchedKnownFor ? (knownForRank.get(rankKey) ?? Number.MAX_SAFE_INTEGER) : Number.MAX_SAFE_INTEGER,
+      };
+    })
+    .sort((a, b) => {
+      if (Boolean(a?.is_known_for) !== Boolean(b?.is_known_for)) {
+        return a?.is_known_for ? -1 : 1;
+      }
+
+      if (a?.is_known_for && b?.is_known_for) {
+        return (a?.known_for_rank ?? Number.MAX_SAFE_INTEGER) - (b?.known_for_rank ?? Number.MAX_SAFE_INTEGER);
+      }
+
+      if (Boolean(a?.in_library) !== Boolean(b?.in_library)) {
+        return a?.in_library ? -1 : 1;
+      }
+
+      const yearDiff = (Number(b?.year) || 0) - (Number(a?.year) || 0);
+      if (yearDiff !== 0) {
+        return yearDiff;
+      }
+
+      return String(a?.title || '').localeCompare(String(b?.title || ''));
+    });
+}
+
+function PersonCreditsGridSection({ title, items, navigate, t }) {
   if (!items?.length) {
     return null;
   }
 
-  const topItems = items.slice(0, 3);
+  const containerRef = useRef(null);
+  const [columns, setColumns] = useState(1);
+  const [page, setPage] = useState(0);
+
+  useLayoutEffect(() => {
+    const element = containerRef.current;
+    if (!element) {
+      return undefined;
+    }
+
+    let frameId = null;
+    let resizeObserver = null;
+
+    const measure = () => {
+      const styles = window.getComputedStyle(element);
+      const gap = Number.parseFloat(styles.columnGap || styles.gap || '16') || 16;
+      const minCardWidth = 224;
+      const width = element.clientWidth || 0;
+      const nextColumns = Math.max(1, Math.floor((width + gap) / (minCardWidth + gap)));
+      setColumns((current) => (current === nextColumns ? current : nextColumns));
+    };
+
+    const scheduleMeasure = () => {
+      if (frameId !== null) {
+        cancelAnimationFrame(frameId);
+      }
+      frameId = requestAnimationFrame(measure);
+    };
+
+    scheduleMeasure();
+
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        scheduleMeasure();
+      });
+      resizeObserver.observe(element);
+    }
+
+    window.addEventListener('resize', scheduleMeasure);
+
+    return () => {
+      if (frameId !== null) {
+        cancelAnimationFrame(frameId);
+      }
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', scheduleMeasure);
+    };
+  }, []);
+
+  const itemsPerPage = Math.max(1, columns * 2);
+  const totalPages = Math.max(1, Math.ceil(items.length / itemsPerPage));
+  const safePage = Math.min(page, totalPages - 1);
+  const visibleItems = items.slice(safePage * itemsPerPage, (safePage + 1) * itemsPerPage);
+  const fillerCount = Math.max(0, itemsPerPage - visibleItems.length);
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, totalPages - 1));
+  }, [totalPages]);
 
   const openItem = (item) => {
     if (isTvLikeMediaType(item.media_type || item.type)) {
@@ -306,37 +553,63 @@ function CompactKnownForList({ items, navigate, t }) {
   };
 
   return (
-    <div className="entity-detail-page__compact-known-for">
-      <div className="entity-detail-page__compact-known-for-header">
-        <span>{t('library.details.knownForTitle') || 'Known For'}</span>
+    <section className="entity-detail-page__content-section">
+      <div className="entity-detail-page__section-header">
+        <h2>{title}</h2>
+        {totalPages > 1 && (
+          <div className="entity-detail-page__section-pager">
+            <button
+              type="button"
+              className="entity-detail-page__section-pager-btn"
+              onClick={() => setPage((current) => Math.max(0, current - 1))}
+              disabled={safePage === 0}
+              aria-label={t('common.previous') || 'Previous'}
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              type="button"
+              className="entity-detail-page__section-pager-btn"
+              onClick={() => setPage((current) => Math.min(totalPages - 1, current + 1))}
+              disabled={safePage >= totalPages - 1}
+              aria-label={t('common.next') || 'Next'}
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
       </div>
-      <div className="entity-detail-page__compact-known-for-list">
-        {topItems.map((item) => (
+      <div ref={containerRef} className="entity-detail-page__credits-list entity-detail-page__credits-list--people-grid">
+        {visibleItems.map((item) => (
           <button
-            key={`compact-known-for-${item.tmdb_id || item.id}`}
+            key={`credit-grid-${item.media_type || item.type || 'movie'}-${item.tmdb_id || item.id}`}
             type="button"
-            className="entity-detail-page__compact-known-for-card"
+            className={`entity-detail-page__credit-card entity-detail-page__credit-card--collection-item entity-detail-page__credit-card--people-grid ${
+              item.is_known_for ? ' entity-detail-page__credit-card--known-for' : ''
+            }${
+              item.in_library ? ' entity-detail-page__credit-card--owned' : ' entity-detail-page__credit-card--missing'
+            }`}
             onClick={() => openItem(item)}
           >
-            <div className="entity-detail-page__compact-known-for-poster-wrap">
+            <div className="entity-detail-page__credit-poster-wrap">
               {item.poster_path ? (
                 <img
                   src={resolveDetailsImageUrl(item.poster_path, API_BASE, 'poster')}
-                  alt={item.title || 'Known for poster'}
-                  className="entity-detail-page__compact-known-for-poster"
+                  alt={item.title || 'Credit poster'}
+                  className="entity-detail-page__credit-poster"
                 />
               ) : (
-                <div className="entity-detail-page__compact-known-for-poster entity-detail-page__compact-known-for-poster--placeholder">
-                  <Film size={18} />
+                <div className="entity-detail-page__credit-poster entity-detail-page__credit-poster--placeholder">
+                  {isTvLikeMediaType(item.media_type || item.type) ? <Tv size={18} /> : <Film size={18} />}
                 </div>
               )}
             </div>
-            <div className="entity-detail-page__compact-known-for-body">
-              <div className="entity-detail-page__compact-known-for-title">
-                {item.title}
+            <div className="entity-detail-page__credit-body">
+              <div className="entity-detail-page__credit-topline">
+                <div className="entity-detail-page__credit-title">{item.title}</div>
               </div>
-              <div className="entity-detail-page__compact-known-for-meta">
-                {item.year ? <span>{item.year}</span> : <span>{item.media_type === 'tv' ? 'TV' : 'Movie'}</span>}
+              <div className="entity-detail-page__credit-meta">
+                {item.year && <span>{item.year}</span>}
                 {(() => {
                   const imdbRating = Number(item.rating_imdb);
                   const tmdbRating = Number(item.rating_tmdb ?? item.rating);
@@ -350,21 +623,36 @@ function CompactKnownForList({ items, navigate, t }) {
                   return (
                     <Pill
                       variant={hasImdbRating ? 'imdb' : 'tmdb'}
-                      className={`entity-detail-page__compact-known-for-rating-pill${
-                        hasImdbRating ? ' entity-detail-page__compact-known-for-rating-pill--imdb' : ''
-                      }`}
+                      className="entity-detail-page__credit-rating-pill"
                     >
+                      <Star size={10} fill="currentColor" strokeWidth={1.8} />
                       {hasImdbRating ? imdbRating.toFixed(1) : tmdbRating.toFixed(1)}
                     </Pill>
                   );
                 })()}
+                <Pill
+                  variant={item.in_library ? 'success' : 'default'}
+                  className={`entity-detail-page__credit-status-pill${
+                    item.in_library ? '' : ' entity-detail-page__credit-status-pill--missing'
+                  }`}
+                >
+                  {item.in_library
+                    ? (t('library.details.have') || 'Have')
+                    : (t('library.details.missing') || 'Missing')}
+                </Pill>
               </div>
             </div>
-            <ChevronRight size={16} className="entity-detail-page__compact-known-for-arrow" />
           </button>
         ))}
+        {Array.from({ length: fillerCount }).map((_, index) => (
+          <div
+            key={`credit-grid-filler-${safePage}-${index}`}
+            className="entity-detail-page__credit-card entity-detail-page__credit-card--collection-item entity-detail-page__credit-card--people-grid entity-detail-page__credit-card--placeholder"
+            aria-hidden="true"
+          />
+        ))}
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -548,15 +836,6 @@ function buildPersonExternalLinks(item, t) {
           brandColor: '#25f4ee',
         }
       : null,
-    externalIds.wikidata_id
-      ? {
-          key: 'wikidata',
-          label: 'Wikidata',
-          href: `https://www.wikidata.org/wiki/${externalIds.wikidata_id}`,
-          iconSrc: '/links/wikidata.svg',
-          brandColor: '#8f9098',
-        }
-      : null,
   ];
 
   return links.filter(Boolean);
@@ -609,10 +888,6 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
   const { openModal, closeModal } = useUi();
   const isPeople = type === 'people';
 
-  const [activePanel, setActivePanel] = useState(null);
-  const [isSideNavVisible, setIsSideNavVisible] = useState(true);
-  const [creditsMediaFilter, setCreditsMediaFilter] = useState('movie');
-  const [creditsOwnershipFilter, setCreditsOwnershipFilter] = useState('library');
   const [hoveredRating, setHoveredRating] = useState(null);
   const [isActivateHovered, setIsActivateHovered] = useState(false);
 
@@ -624,7 +899,6 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
   const isLoading = isPeople ? personQuery.isLoading : collectionQuery.isLoading;
   const queryError = isPeople ? personQuery.error : collectionQuery.error;
   const hasError = isPeople ? personQuery.isError : collectionQuery.isError;
-  const hasSidePanel = isPeople;
   const overviewTitle = isPeople
     ? (t('library.details.biographyTitle') || 'Biography')
     : (t('library.details.collectionOverviewTitle') || 'Overview');
@@ -634,97 +908,22 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
     () => (isPeople ? buildPersonExternalLinks(item, t) : []),
     [isPeople, item, t]
   );
+  const profileLinks = useMemo(
+    () => externalLinks.filter((link) => link.key === 'tmdb' || link.key === 'imdb'),
+    [externalLinks]
+  );
   const knownForItems = useMemo(
     () => (isPeople ? enrichKnownForItems(item?.known_for, item?.movies, item?.series) : []),
     [isPeople, item?.known_for, item?.movies, item?.series]
   );
-  const combinedCredits = useMemo(() => {
-    if (!isPeople || !item) {
-      return [];
-    }
-
-    return [...(item.movies || []), ...(item.series || [])].sort((a, b) => {
-      const yearDiff = (b?.year || 0) - (a?.year || 0);
-      if (yearDiff !== 0) {
-        return yearDiff;
-      }
-      return String(a?.title || '').localeCompare(String(b?.title || ''));
-    });
-  }, [isPeople, item]);
-  const filteredCredits = useMemo(() => combinedCredits.filter((entry) => {
-    const isTv = isTvLikeMediaType(entry.media_type || entry.type);
-    const mediaMatches =
-      (creditsMediaFilter === 'movie' && !isTv)
-      || (creditsMediaFilter === 'tv' && isTv);
-    const ownershipMatches =
-      (creditsOwnershipFilter === 'library' && entry.in_library)
-      || (creditsOwnershipFilter === 'missing' && !entry.in_library);
-
-    return mediaMatches && ownershipMatches;
-  }), [combinedCredits, creditsMediaFilter, creditsOwnershipFilter]);
-
-  const panelItems = useMemo(() => {
-    if (!item) return [];
-
-    if (isPeople) {
-      return [
-        { id: 'credits', icon: Film, title: t('library.details.creditsTitle') || 'Credits', visible: Boolean(combinedCredits.length) },
-        { id: 'links', icon: ExternalLink, title: t('library.details.externalLinks') || 'External Links', visible: Boolean(externalLinks.length) },
-      ];
-    }
-
-    return [
-      { id: 'movies', icon: Film, title: t('library.details.collectionItemsTitle') || 'Collection Items', visible: Boolean(item.movies?.length) },
-    ];
-  }, [combinedCredits.length, externalLinks.length, isPeople, item, t]);
-
-  const visiblePanels = useMemo(
-    () => panelItems.filter((panel) => panel.visible),
-    [panelItems]
+  const prioritizedMovieCredits = useMemo(
+    () => (isPeople ? prioritizePersonCredits(item?.movies || [], knownForItems) || [] : []),
+    [isPeople, item?.movies, knownForItems]
   );
-
-  useEffect(() => {
-    if (!isPeople || !item) {
-      return;
-    }
-
-    const movies = item.movies || [];
-    const series = item.series || [];
-
-    if (movies.some((entry) => entry?.in_library)) {
-      setCreditsMediaFilter('movie');
-      setCreditsOwnershipFilter('library');
-      return;
-    }
-
-    if (series.some((entry) => entry?.in_library)) {
-      setCreditsMediaFilter('tv');
-      setCreditsOwnershipFilter('library');
-      return;
-    }
-
-    if (movies.some((entry) => !entry?.in_library)) {
-      setCreditsMediaFilter('movie');
-      setCreditsOwnershipFilter('missing');
-      return;
-    }
-
-    setCreditsMediaFilter('tv');
-    setCreditsOwnershipFilter('missing');
-  }, [isPeople, item]);
-
-  useEffect(() => {
-    if (!visiblePanels.length) {
-      setActivePanel(null);
-      return;
-    }
-    setActivePanel((current) => {
-      if (isPeople && visiblePanels.some((panel) => panel.id === 'credits')) {
-        return 'credits';
-      }
-      return current && visiblePanels.some((panel) => panel.id === current) ? current : visiblePanels[0].id;
-    });
-  }, [isPeople, visiblePanels]);
+  const prioritizedSeriesCredits = useMemo(
+    () => (isPeople ? prioritizePersonCredits(item?.series || [], knownForItems) || [] : []),
+    [isPeople, item?.series, knownForItems]
+  );
 
   const backdropUrl = resolveDetailsImageUrl(item?.backdrop_path, API_BASE, 'backdrop');
   const mediaUrl = resolveDetailsImageUrl(
@@ -824,21 +1023,29 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
 
   const metaPills = isPeople
     ? [
+        (() => {
+          const GenderIcon = getGenderIcon(item?.gender);
+          const genderLabel = getGenderLabel(item?.gender, t);
+          if (!genderLabel) {
+            return null;
+          }
+
+          return {
+            key: 'gender',
+            content: (
+              <span className="entity-detail-page__meta-pill-content">
+                <GenderIcon size={14} />
+                <span>{genderLabel}</span>
+              </span>
+            )
+          };
+        })(),
         item?.known_for_department ? {
           key: 'department',
           content: (
             <span className="entity-detail-page__meta-pill-content">
               <Briefcase size={14} />
               <span>{item.known_for_department}</span>
-            </span>
-          )
-        } : null,
-        getGenderLabel(item?.gender, t) ? {
-          key: 'gender',
-          content: (
-            <span className="entity-detail-page__meta-pill-content">
-              <VenusAndMars size={14} />
-              <span>{getGenderLabel(item?.gender, t)}</span>
             </span>
           )
         } : null,
@@ -892,7 +1099,7 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
               key: 'owned-count',
               content: (
                 <span className="entity-detail-page__meta-pill-content">
-                  <Check size={14} />
+                  {Number(item.owned_count) === 0 ? <X size={14} /> : <Check size={14} />}
                   <span>
                     {t('library.details.inLibraryCount', {
                       count: item.owned_count,
@@ -905,135 +1112,12 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
           : null,
       ].filter(Boolean);
 
-  const renderPanelContent = () => {
-    if (!item || !activePanel) return null;
-
-    if (activePanel === 'links') {
-      return (
-        <DetailSection
-          title={t('library.details.externalLinks') || 'External Links'}
-          emptyText={t('library.details.noExternalLinks') || 'No external links available.'}
-        >
-          <div className="entity-detail-page__panel-links">
-            {externalLinks.map((link) => (
-              <a
-                key={link.key}
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`entity-detail-page__panel-link-btn entity-detail-page__panel-link-btn--${link.key}`}
-              >
-                {link.label}
-              </a>
-            ))}
-          </div>
-        </DetailSection>
-      );
-    }
-
-    if (activePanel === 'credits') {
-      return (
-        <DetailSection
-          title={t('library.details.creditsTitle') || 'Credits'}
-          emptyText={t('library.details.noItemsFound') || 'No items found.'}
-        >
-          <div className="details-panel__section entity-detail-page__credits-section">
-            <div className="entity-detail-page__credits-toolbar">
-              <SegmentedControl
-                value={creditsMediaFilter}
-                onChange={setCreditsMediaFilter}
-                ariaLabel={t('library.details.creditTypeFilter') || 'Credit type filter'}
-                options={[
-                  { value: 'movie', label: t('library.details.moviesTitle') || 'Movies' },
-                  { value: 'tv', label: t('library.details.tvShowsTitle') || 'TV Shows' },
-                ]}
-              />
-              <SegmentedControl
-                value={creditsOwnershipFilter}
-                onChange={setCreditsOwnershipFilter}
-                ariaLabel={t('library.details.creditOwnershipFilter') || 'Credit ownership filter'}
-                options={[
-                  { value: 'library', label: t('library.details.inLibrary') || 'In Library' },
-                  { value: 'missing', label: t('library.details.missing') || 'Missing' },
-                ]}
-              />
-            </div>
-            {filteredCredits.length > 0 ? (
-              <HorizontalCreditsList items={filteredCredits} navigate={navigate} t={t} />
-            ) : (
-              <EmptyState
-                variant="detail-panel"
-                icon={FolderOpen}
-                title={t('library.details.noItemsFound') || 'No items found.'}
-              />
-            )}
-          </div>
-        </DetailSection>
-      );
-    }
-
-    if (activePanel === 'movies') {
-      return (
-        <DetailSection
-          title={isPeople ? (t('library.details.moviesTitle') || 'Movies') : (t('library.details.collectionItemsTitle') || 'Collection Items')}
-          emptyText={t('library.details.noItemsFound') || 'No items found.'}
-        >
-          {isPeople ? (
-            <EntityCardGrid items={item.movies} type="movie" navigate={navigate} t={t} />
-          ) : (
-            <HorizontalCollectionItemsList items={item.movies} navigate={navigate} t={t} />
-          )}
-        </DetailSection>
-      );
-    }
-
-    if (activePanel === 'series') {
-      return (
-        <DetailSection
-          title={t('library.details.seriesTitle') || 'Series'}
-          emptyText={t('library.details.noItemsFound') || 'No items found.'}
-        >
-          <EntityCardGrid items={item.series} type="series" navigate={navigate} t={t} />
-        </DetailSection>
-      );
-    }
-
-    return null;
-  };
-
   return (
     <DetailPageShell
       backdropUrl={backdropUrl}
       backLabel={t('common.back') || 'Back'}
-      activePanel={hasSidePanel ? activePanel : null}
       isLoading={isLoading}
-      isSideNavVisible={hasSidePanel ? isSideNavVisible : false}
-      onToggleSideNav={hasSidePanel ? () => {
-        setIsSideNavVisible((current) => {
-          const next = !current;
-          if (!next) {
-            setActivePanel(null);
-          } else if (!activePanel && visiblePanels.length) {
-            setActivePanel(visiblePanels[0].id);
-          }
-          return next;
-        });
-      } : undefined}
-      renderPanelContent={hasSidePanel ? renderPanelContent : undefined}
       pageClassName={`entity-detail-page ${isPeople ? 'entity-detail-page--people' : 'entity-detail-page--collection'}`}
-      sideNav={hasSidePanel ? visiblePanels.map((panel) => {
-        const Icon = panel.icon;
-        return (
-          <button
-            key={panel.id}
-            onClick={() => setActivePanel((current) => (current === panel.id ? null : panel.id))}
-            className={`media-detail-page__side-nav-btn ${activePanel === panel.id ? 'active' : ''}`}
-            title={panel.title}
-          >
-            <Icon size={20} />
-          </button>
-        );
-      }) : null}
     >
       {hasError && (
         <section className="entity-detail-page__content-section entity-detail-page__content-section--status">
@@ -1070,12 +1154,20 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
             )}
           </div>
 
-          {isPeople && item?.known_for?.length > 0 && (
-            <CompactKnownForList
-              items={knownForItems}
-              navigate={navigate}
-              t={t}
-            />
+          {isPeople && profileLinks.length > 0 && (
+            <div className="entity-detail-page__profile-links">
+              {profileLinks.map((link) => (
+                <a
+                  key={link.key}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="entity-detail-page__profile-link"
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
           )}
 
         </div>
@@ -1098,69 +1190,74 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
                 ))}
               </div>
             )}
+
           </div>
 
           {isPeople && (
             <div className="media-detail-page__meta-row">
               <Pill variant="meta-large" className="rating-pill--large entity-detail-page__person-rating-pill">
-                <button
-                  type="button"
-                  className={`entity-detail-page__person-rating-action entity-detail-page__person-rating-action--favorite${item?.is_favorite ? ' is-active' : ''}`}
-                  onClick={handleToggleFavorite}
-                  title={t('library.details.favorite') || 'Favorite'}
-                >
-                  <Heart size={15} fill={item?.is_favorite ? 'currentColor' : 'none'} />
-                </button>
-                <button
-                  type="button"
-                  className={`entity-detail-page__person-rating-action entity-detail-page__person-rating-action--activate${item?.is_active ? ' is-active' : ''}`}
-                  onClick={handleToggleActive}
-                  onMouseEnter={() => setIsActivateHovered(true)}
-                  onMouseLeave={() => setIsActivateHovered(false)}
-                  title={t('library.people.addPeopleBtn') || 'Activate'}
-                >
-                  {item?.is_active
-                    ? (isActivateHovered ? <Minus size={15} /> : <Check size={15} />)
-                    : <Plus size={15} />}
-                </button>
-                <button
-                  type="button"
-                  className="review-trigger-btn entity-detail-page__person-rating-action"
-                  onClick={handleOpenReviewModal}
-                  title={t('library.details.writeReview') || 'Write Review'}
-                >
-                  <PenLine size={15} />
-                </button>
-                <span className="pill-vertical-separator">|</span>
-                <div
-                  className="rating-stars-container"
-                  onMouseMove={handlePeopleRatingMouseMove}
-                  onMouseLeave={handlePeopleRatingMouseLeave}
-                  onMouseUp={handlePeopleRatingClick}
-                >
-                  <div className="rating-stars-underlay">
-                    <Star size={18} strokeWidth={2.3} />
-                    <Star size={18} strokeWidth={2.3} />
-                    <Star size={18} strokeWidth={2.3} />
-                    <Star size={18} strokeWidth={2.3} />
-                    <Star size={18} strokeWidth={2.3} />
-                  </div>
-                  <style>{starsStyleSheetText}</style>
-                  <div className="rating-stars-overlay rating-stars-overlay-dynamic">
-                    <div className="rating-stars-overlay-inner">
-                      <Star size={18} fill="currentColor" />
-                      <Star size={18} fill="currentColor" />
-                      <Star size={18} fill="currentColor" />
-                      <Star size={18} fill="currentColor" />
-                      <Star size={18} fill="currentColor" />
+                <div className="entity-detail-page__person-rating-actions">
+                  <button
+                    type="button"
+                    className={`entity-detail-page__person-rating-action entity-detail-page__person-rating-action--favorite${item?.is_favorite ? ' is-active' : ''}`}
+                    onClick={handleToggleFavorite}
+                    title={t('library.details.favorite') || 'Favorite'}
+                  >
+                    <Heart size={15} fill={item?.is_favorite ? 'currentColor' : 'none'} />
+                  </button>
+                  <button
+                    type="button"
+                    className={`entity-detail-page__person-rating-action entity-detail-page__person-rating-action--activate${item?.is_active ? ' is-active' : ''}`}
+                    onClick={handleToggleActive}
+                    onMouseEnter={() => setIsActivateHovered(true)}
+                    onMouseLeave={() => setIsActivateHovered(false)}
+                    title={t('library.people.addPeopleBtn') || 'Activate'}
+                  >
+                    {item?.is_active
+                      ? (isActivateHovered ? <Minus size={15} /> : <Check size={15} />)
+                      : <Plus size={15} />}
+                  </button>
+                  <button
+                    type="button"
+                    className="review-trigger-btn entity-detail-page__person-rating-action"
+                    onClick={handleOpenReviewModal}
+                    title={t('library.details.writeReview') || 'Write Review'}
+                  >
+                    <PenLine size={15} />
+                  </button>
+                </div>
+                <div className="entity-detail-page__person-rating-value">
+                  <span className="pill-vertical-separator">|</span>
+                  <div
+                    className="rating-stars-container"
+                    onMouseMove={handlePeopleRatingMouseMove}
+                    onMouseLeave={handlePeopleRatingMouseLeave}
+                    onMouseUp={handlePeopleRatingClick}
+                  >
+                    <div className="rating-stars-underlay">
+                      <Star size={18} strokeWidth={2.3} />
+                      <Star size={18} strokeWidth={2.3} />
+                      <Star size={18} strokeWidth={2.3} />
+                      <Star size={18} strokeWidth={2.3} />
+                      <Star size={18} strokeWidth={2.3} />
+                    </div>
+                    <style>{starsStyleSheetText}</style>
+                    <div className="rating-stars-overlay rating-stars-overlay-dynamic">
+                      <div className="rating-stars-overlay-inner">
+                        <Star size={18} fill="currentColor" />
+                        <Star size={18} fill="currentColor" />
+                        <Star size={18} fill="currentColor" />
+                        <Star size={18} fill="currentColor" />
+                        <Star size={18} fill="currentColor" />
+                      </div>
                     </div>
                   </div>
+                  <span className={`user-rating-label ${displayRating !== undefined && displayRating !== null ? 'has-value' : ''}`}>
+                    {displayRating !== undefined && displayRating !== null
+                      ? displayRating.toFixed(1)
+                      : (t('library.details.yourRating') || 'Your Rating')}
+                  </span>
                 </div>
-                <span className={`user-rating-label ${displayRating !== undefined && displayRating !== null ? 'has-value' : ''}`}>
-                  {displayRating !== undefined && displayRating !== null
-                    ? displayRating.toFixed(1)
-                    : (t('library.details.yourRating') || 'Your Rating')}
-                </span>
               </Pill>
             </div>
           )}
@@ -1182,13 +1279,26 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
       </section>
       )}
 
+      {!hasError && isPeople && prioritizedMovieCredits.length > 0 && (
+        <PersonCreditsGridSection
+          title={t('library.details.moviesTitle') || 'Movies'}
+          items={prioritizedMovieCredits}
+          navigate={navigate}
+          t={t}
+        />
+      )}
+
+      {!hasError && isPeople && prioritizedSeriesCredits.length > 0 && (
+        <PersonCreditsGridSection
+          title={t('library.details.tvShowsTitle') || 'TV Shows'}
+          items={prioritizedSeriesCredits}
+          navigate={navigate}
+          t={t}
+        />
+      )}
+
       {!hasError && !isPeople && item?.movies?.length > 0 && (
-        <section className="entity-detail-page__content-section">
-          <div className="entity-detail-page__section-header">
-            <h2>{t('library.details.collectionItemsTitle') || 'Collection Items'}</h2>
-          </div>
-          <HorizontalCollectionItemsList items={item.movies} navigate={navigate} t={t} />
-        </section>
+        <CollectionItemsSection items={item.movies} navigate={navigate} t={t} />
       )}
     </DetailPageShell>
   );

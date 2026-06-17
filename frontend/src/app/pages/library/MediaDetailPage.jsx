@@ -61,6 +61,18 @@ export default function MediaDetailPage({ type = 'movie' }) {
     handleToggleSideNav
   } = actions;
 
+  const handleOpenBackdropModal = () => {
+    openModal({
+      title: t('library.details.chooseBackdrop') || 'Choose Backdrop',
+      variant: 'extra-wide',
+      content: (
+        <MediaDetailProvider value={{ ...detailState, t, navigate, toast, type: normalizedType, id }}>
+          <BackdropsPanel showTitle={false} />
+        </MediaDetailProvider>
+      ),
+    });
+  };
+
   const renderPanelContent = () => {
     if (!item) return null;
 
@@ -79,8 +91,6 @@ export default function MediaDetailPage({ type = 'movie' }) {
         return <WatchedPanel />;
       case 'tags':
         return <TagsPanel />;
-      case 'backdrops':
-        return <BackdropsPanel />;
       default:
         return null;
     }
@@ -98,6 +108,16 @@ export default function MediaDetailPage({ type = 'movie' }) {
         activePanel={activePanel}
         isSideNavVisible={isSideNavVisible}
         onToggleSideNav={handleToggleSideNav}
+        topRightControls={(
+          <button
+            type="button"
+            onClick={handleOpenBackdropModal}
+            className="media-detail-page__side-nav-toggle"
+            title={t('library.details.backdrops') || 'Choose Backdrop'}
+          >
+            <ImageIcon size={18} />
+          </button>
+        )}
         renderPanelContent={renderPanelContent}
         sideNav={(
           <>
@@ -167,13 +187,6 @@ export default function MediaDetailPage({ type = 'movie' }) {
                 <Clapperboard size={20} />
               </button>
             )}
-            <button
-              onClick={() => togglePanel('backdrops')}
-              className={`media-detail-page__side-nav-btn ${activePanel === 'backdrops' ? 'active' : ''}`}
-              title={t('library.details.backdrops') || 'Choose Backdrop'}
-            >
-              <ImageIcon size={20} />
-            </button>
 
             {item && (
               <button

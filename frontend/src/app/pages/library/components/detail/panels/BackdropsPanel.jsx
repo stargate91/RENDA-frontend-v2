@@ -6,7 +6,7 @@ import EmptyState from '@/ui/EmptyState';
 import './BackdropsPanel.css';
 
 
-export default function BackdropsPanel() {
+export default function BackdropsPanel({ showTitle = true }) {
   const { state, mutations, id, t, toast } = useMediaDetailContext();
   const {
     item
@@ -23,6 +23,7 @@ export default function BackdropsPanel() {
     ? (Object.values(activeMatch.api_responses || {})[0] || Object.values(activeMatch.series_api_responses || {})[0])
     : null;
   const allBackdrops = apiResponse?.images?.backdrops || [];
+  const currentBackdropPath = activeMatch?.local_backdrop_path || activeMatch?.backdrop_path || item?.backdrop_path || '';
   const neutralBackdrops = allBackdrops.filter(
     bd => (!bd.iso_639_1 || bd.iso_639_1 === '') && bd.width >= 1920
   );
@@ -41,14 +42,16 @@ export default function BackdropsPanel() {
 
   return (
     <div className="backdrops-panel">
-      <h4 className="details-panel__section-title">
-        {t('library.details.chooseBackdrop') || 'Choose Backdrop'}
-      </h4>
+      {showTitle && (
+        <h4 className="details-panel__section-title">
+          {t('library.details.chooseBackdrop') || 'Choose Backdrop'}
+        </h4>
+      )}
 
       <div className="backdrops-grid">
         {neutralBackdrops.map((bd, idx) => {
           const tmdbThumbUrl = buildTmdbImageUrl(bd.file_path, TMDB_IMAGE_SIZES.thumbnail);
-          const isSelected = item?.backdrop_path === bd.file_path || (item?.backdrop_path && item.backdrop_path.endsWith(bd.file_path));
+          const isSelected = currentBackdropPath === bd.file_path || (currentBackdropPath && currentBackdropPath.endsWith(bd.file_path));
           const isPending = overrideBackdropMutation.isPending && overrideBackdropMutation.variables?.backdropPath === bd.file_path;
 
           return (

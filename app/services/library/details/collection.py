@@ -160,7 +160,13 @@ class CollectionDetailProvider(BaseDetailProvider):
                     "in_library": False,
                 })
 
-            movies.sort(key=lambda movie: (((movie.get("year") or 0) * -1), str(movie.get("title") or "").lower()))
+            movies.sort(
+                key=lambda movie: (
+                    0 if movie.get("in_library") else 1,
+                    ((movie.get("year") or 0) * -1),
+                    str(movie.get("title") or "").lower(),
+                )
+            )
 
             fallback_name = None
             if not collection_loc and items:

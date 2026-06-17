@@ -255,6 +255,14 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
   };
   const isWatched = isMovie ? item?.is_watched : getIsSeriesWatched();
 
+  const canToggleWatched = isMovie
+    ? Boolean(item)
+    : Boolean(
+        item?.seasons
+          ?.filter((season) => season.season_number > 0)
+          .some((season) => (season.episodes || []).length > 0)
+      );
+
   const getNextEpisodeInfo = () => {
     if (!item?.seasons) return null;
     for (const season of item.seasons) {
@@ -399,6 +407,7 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
       isMovie,
       isOwned,
       isWatched,
+      canToggleWatched,
       nextEpisodeInfo,
       backdropUrl,
       logoUrl,

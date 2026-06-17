@@ -16,6 +16,7 @@ export default function DetailPageShell({
   onToggleSideNav,
   renderPanelContent,
   sideNav,
+  topRightControls,
   pageClassName = '',
   panelOpenClassName = 'media-detail-page__container--panel-open',
 }) {
@@ -42,14 +43,19 @@ export default function DetailPageShell({
       <HeroSection backdropUrl={backdropUrl} />
 
       <div className="media-detail-page__layout-wrapper">
-        {onToggleSideNav ? (
-          <button
-            onClick={onToggleSideNav}
-            className={`media-detail-page__side-nav-toggle ${!isSideNavVisible ? 'hidden-state' : ''}`}
-            title={isSideNavVisible ? 'Hide Info Panels' : 'Show Info Panels'}
-          >
-            {isSideNavVisible ? <EyeOff size={18} /> : <Eye size={18} />}
-          </button>
+        {(topRightControls || onToggleSideNav) ? (
+          <div className={`media-detail-page__top-right-controls ${!isSideNavVisible ? 'hidden-state' : ''}`}>
+            {topRightControls}
+            {onToggleSideNav ? (
+              <button
+                onClick={onToggleSideNav}
+                className="media-detail-page__side-nav-toggle"
+                title={isSideNavVisible ? 'Hide Info Panels' : 'Show Info Panels'}
+              >
+                {isSideNavVisible ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            ) : null}
+          </div>
         ) : null}
 
         <div

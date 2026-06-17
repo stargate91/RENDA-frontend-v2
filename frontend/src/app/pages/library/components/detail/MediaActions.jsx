@@ -10,6 +10,7 @@ export default function MediaActions() {
     isMovie,
     item,
     isWatched,
+    canToggleWatched,
     nextEpisodeInfo
   } = state;
 
@@ -28,7 +29,7 @@ export default function MediaActions() {
   const hasCollection = isMovie && item?.collection_data;
   const hasTrailer = item?.trailer_key;
 
-  if (!isOwned && !hasCollection && !hasTrailer) return null;
+  if (!isOwned && !canToggleWatched && !hasCollection && !hasTrailer) return null;
 
   return (
     <div className="media-detail-page__actions-row">
@@ -52,17 +53,19 @@ export default function MediaActions() {
         </Button>
       )}
 
+      {canToggleWatched && (
+        <Button
+          variant="ghost"
+          onClick={handleToggleWatched}
+          disabled={updateStatusMutation.isPending || bulkUpdateWatchedMutation.isPending}
+        >
+          {isWatched ? <Check size={16} /> : <Eye size={16} />}
+          {isWatched ? (t('library.details.watched') || 'Watched') : (t('library.details.markWatched') || 'Mark as Watched')}
+        </Button>
+      )}
+
       {isOwned && (
         <>
-          <Button
-            variant="ghost"
-            onClick={handleToggleWatched}
-            disabled={updateStatusMutation.isPending || bulkUpdateWatchedMutation.isPending}
-          >
-            {isWatched ? <Check size={16} /> : <Eye size={16} />}
-            {isWatched ? (t('library.details.watched') || 'Watched') : (t('library.details.markWatched') || 'Mark as Watched')}
-          </Button>
-
           {isMovie ? (
             <Button
               variant="secondary"
