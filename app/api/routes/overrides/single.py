@@ -413,7 +413,17 @@ def update_item_backdrop(item_id: str, payload: dict):
                 MediaMatch.is_active == True
             ).first()
             if not match_row:
-                return JSONResponse(status_code=404, content={"error": "Series not found"})
+                state = _get_or_create_virtual_media_state(db, series_tmdb_id, "tv")
+                state.manual_backdrop_path = backdrop_path
+                target_item_id = None
+                active_match = None
+                asset_service = AssetService()
+                local_b = asset_service.download_image(backdrop_path, "backdrops", size=BACKDROP_SIZE)
+                if not local_b:
+                    return JSONResponse(status_code=500, content={"error": "Failed to download backdrop"})
+                state.manual_local_backdrop_path = local_b
+                db.commit()
+                return {"status": "success", "backdrop_path": backdrop_path, "local_backdrop_path": local_b}
             target_item_id = match_row.media_item_id
         else:
             try:
@@ -423,6 +433,17 @@ def update_item_backdrop(item_id: str, payload: dict):
 
         item = db.query(MediaItem).filter(MediaItem.id == target_item_id).first()
         if not item:
+            media_type = str(payload.get("media_type") or "movie").lower()
+            if media_type in {"tv", "series"}:
+                state = _get_or_create_virtual_media_state(db, target_item_id, "tv")
+                asset_service = AssetService()
+                local_b = asset_service.download_image(backdrop_path, "backdrops", size=BACKDROP_SIZE)
+                if not local_b:
+                    return JSONResponse(status_code=500, content={"error": "Failed to download backdrop"})
+                state.manual_backdrop_path = backdrop_path
+                state.manual_local_backdrop_path = local_b
+                db.commit()
+                return {"status": "success", "backdrop_path": backdrop_path, "local_backdrop_path": local_b}
             return JSONResponse(status_code=404, content={"error": "Item not found"})
 
         active_match = next((m for m in item.matches if m.is_active), None)

@@ -7,7 +7,7 @@ import './BackdropsPanel.css';
 
 
 export default function BackdropsPanel({ showTitle = true }) {
-  const { state, mutations, id, t, toast } = useMediaDetailContext();
+  const { state, mutations, id, type, t, toast } = useMediaDetailContext();
   const {
     item
   } = state;
@@ -16,7 +16,7 @@ export default function BackdropsPanel({ showTitle = true }) {
     overrideBackdropMutation
   } = mutations;
 
-  const { data: fullMetadata } = useFullMetadataQuery(id);
+  const { data: fullMetadata } = useFullMetadataQuery(id, type);
 
   const activeMatch = fullMetadata?.matches?.find(m => m.is_active);
   const apiResponse = activeMatch
@@ -32,7 +32,8 @@ export default function BackdropsPanel({ showTitle = true }) {
     try {
       await overrideBackdropMutation.mutateAsync({
         itemId: id,
-        backdropPath: backdropPath
+        backdropPath: backdropPath,
+        mediaType: type,
       });
       toast(t('library.details.backdropUpdated') || 'Backdrop updated successfully!', 'success');
     } catch (err) {

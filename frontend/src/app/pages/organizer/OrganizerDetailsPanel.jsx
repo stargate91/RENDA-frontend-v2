@@ -30,7 +30,7 @@ export default function OrganizerDetailsPanel({
   const { t } = useTranslation();
   const { openModal, toast } = useUi();
 
-  const { refetch: refetchFullMetadata } = useFullMetadataQuery(activeRow?.itemId, {
+  const { refetch: refetchFullMetadata } = useFullMetadataQuery(activeRow?.itemId, undefined, {
     enabled: false,
   });
 

@@ -181,7 +181,7 @@ export const usePreviewMediaMutation = () => {
 export const useOverrideBackdropMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ itemId, backdropPath }) => api.media.overrideBackdrop(itemId, backdropPath),
+    mutationFn: ({ itemId, backdropPath, mediaType }) => api.media.overrideBackdrop(itemId, backdropPath, mediaType),
     onSuccess: (data, variables) => {
       const cleanId = String(variables.itemId).replace('series_', '');
       const isCollection = String(variables.itemId).startsWith('collection_');

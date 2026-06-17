@@ -54,6 +54,14 @@ SELF_ROLE_KEYWORDS = {
     "presenter",
     "interviewer",
 }
+VOICE_ROLE_KEYWORDS = {
+    "voice",
+    "vo",
+    "dub",
+    "dubbed",
+    "narrator",
+    "announcer",
+}
 DIRECTING_JOBS = {"director", "creator"}
 WRITING_JOBS = {"writer", "screenplay", "story", "teleplay"}
 
@@ -101,6 +109,14 @@ def _department_matches_credit(credit: dict, department: Optional[str]) -> bool:
     return False
 
 
+def _is_voice_credit(credit: dict) -> bool:
+    character_words = _normalize_words(credit.get("character"))
+    job_words = _normalize_words(credit.get("job"))
+    if character_words.intersection(VOICE_ROLE_KEYWORDS):
+        return True
+    return bool(job_words.intersection(VOICE_ROLE_KEYWORDS))
+
+
 def _known_for_score(credit: dict, department: Optional[str], adult_only: bool = False) -> float:
     score = 0.0
 
@@ -146,6 +162,8 @@ def _select_known_for(credits: list[dict], department: Optional[str], limit: int
     if not credits:
         return []
 
+    normalized_department = str(department or "").strip().lower()
+
     ranked = sorted(
         credits,
         key=lambda credit: (_known_for_score(credit, department, adult_only=adult_only), credit.get("year") or 0),
@@ -176,7 +194,9 @@ def _select_known_for(credits: list[dict], department: Optional[str], limit: int
 
     primary_pool = [
         credit for credit in ranked
-        if _department_matches_credit(credit, department) and not _is_self_or_guest_credit(credit)
+        if _department_matches_credit(credit, department)
+        and not _is_self_or_guest_credit(credit)
+        and not (normalized_department == "acting" and _is_voice_credit(credit))
     ]
     secondary_pool = [
         credit for credit in ranked

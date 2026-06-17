@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import joinedload
 
@@ -36,7 +36,7 @@ def _resolve_logo_path(path: str | None, local_path: str | None) -> str | None:
 router = APIRouter()
 
 @router.get("/item/{item_id}/full-metadata")
-def get_full_item_metadata(item_id: str, db: Session = Depends(get_db)):
+def get_full_item_metadata(item_id: str, media_type: str | None = Query(None), db: Session = Depends(get_db)):
     """Get all metadata details for a specific item"""
     try:
         target_item_id = None
@@ -50,17 +50,19 @@ def get_full_item_metadata(item_id: str, db: Session = Depends(get_db)):
             from app.utils.library_utils import _preferred_metadata_language
 
             ui_lang = _preferred_metadata_language(db)
+            normalized_media_type = "tv" if str(media_type or "").lower() in {"tv", "series"} else "movie"
             tmdb_client = TMDBClient(db)
-            tmdb_data = tmdb_client.get_details(tmdb_id, "movie", language=ui_lang)
+            tmdb_data = tmdb_client.get_details(tmdb_id, "series" if normalized_media_type == "tv" else "movie", language=ui_lang)
             if not tmdb_data:
-                raise HTTPException(status_code=404, detail="Virtual movie not found")
+                raise HTTPException(status_code=404, detail="Virtual item not found")
 
             tmdb_caches = db.query(TMDBCache).filter(TMDBCache.tmdb_id == tmdb_id).all()
+            cache_prefix = f"/{'tv' if normalized_media_type == 'tv' else 'movie'}/{tmdb_id}"
             preferred_cache = next(
                 (
                     cache for cache in tmdb_caches
                     if isinstance(cache.raw_data, dict)
-                    and str(cache.cache_key or "").startswith(f"/movie/{tmdb_id}")
+                    and str(cache.cache_key or "").startswith(cache_prefix)
                     and (
                         not ui_lang
                         or str(cache.locale or "") == str(ui_lang)
@@ -71,17 +73,17 @@ def get_full_item_metadata(item_id: str, db: Session = Depends(get_db)):
             )
             if preferred_cache is None:
                 preferred_cache = next(
-                    (
-                        cache for cache in tmdb_caches
-                        if isinstance(cache.raw_data, dict) and str(cache.cache_key or "").startswith(f"/movie/{tmdb_id}")
-                    ),
-                    None,
-                )
+                (
+                    cache for cache in tmdb_caches
+                    if isinstance(cache.raw_data, dict) and str(cache.cache_key or "").startswith(cache_prefix)
+                ),
+                None,
+            )
             preferred_raw = preferred_cache.raw_data if preferred_cache and isinstance(preferred_cache.raw_data, dict) else {}
             from app.db.models import VirtualMediaState
             virtual_state = db.query(VirtualMediaState).filter(
                 VirtualMediaState.tmdb_id == tmdb_id,
-                VirtualMediaState.media_type == "movie",
+                VirtualMediaState.media_type == normalized_media_type,
             ).first()
             effective_poster_path = (
                 virtual_state.manual_poster_path if virtual_state and virtual_state.manual_poster_path else (
@@ -98,19 +100,29 @@ def get_full_item_metadata(item_id: str, db: Session = Depends(get_db)):
                 )
             )
             api_responses = {}
+            series_api_responses = {}
             for cache in tmdb_caches:
-                api_responses[cache.locale] = cache.raw_data
-            if not api_responses:
+                if not isinstance(cache.raw_data, dict) or not str(cache.cache_key or "").startswith(cache_prefix):
+                    continue
+                if normalized_media_type == "tv":
+                    series_api_responses[cache.locale] = cache.raw_data
+                else:
+                    api_responses[cache.locale] = cache.raw_data
+            if normalized_media_type == "tv":
+                if not series_api_responses:
+                    series_api_responses[ui_lang or "en-US"] = tmdb_data
+            elif not api_responses:
                 api_responses[ui_lang or "en-US"] = tmdb_data
 
+            is_tv = normalized_media_type == "tv"
             virtual_match = {
-                "id": f"virtual_movie_{tmdb_id}",
+                "id": f"virtual_{'series' if is_tv else 'movie'}_{tmdb_id}",
                 "tmdb_id": tmdb_id,
-                "type": "movie",
+                "type": "series" if is_tv else "movie",
                 "is_active": True,
                 "localizations": [],
                 "api_responses": api_responses,
-                "series_api_responses": {},
+                "series_api_responses": series_api_responses,
                 "confidence": 1.0,
                 "backdrop_path": _resolve_backdrop_path(effective_backdrop_path, None),
                 "local_backdrop_path": _resolve_backdrop_path(effective_backdrop_path, None),
@@ -125,12 +137,12 @@ def get_full_item_metadata(item_id: str, db: Session = Depends(get_db)):
                 "number_of_seasons": None,
                 "number_of_episodes": None,
                 "fetched_languages": None,
-                "release_date": tmdb_data.get("release_date"),
-                "first_air_date": None,
-                "last_air_date": None,
+                "release_date": None if is_tv else tmdb_data.get("release_date"),
+                "first_air_date": tmdb_data.get("first_air_date") if is_tv else None,
+                "last_air_date": tmdb_data.get("last_air_date") if is_tv else None,
                 "episode_air_date": None,
                 "season_air_date": None,
-                "runtime": tmdb_data.get("runtime"),
+                "runtime": (tmdb_data.get("episode_run_time") or [None])[0] if is_tv else tmdb_data.get("runtime"),
                 "popularity": tmdb_data.get("popularity"),
                 "release_status": tmdb_data.get("status"),
                 "rating_tmdb": tmdb_data.get("vote_average"),
@@ -142,7 +154,7 @@ def get_full_item_metadata(item_id: str, db: Session = Depends(get_db)):
                 "rating_rotten": None,
                 "budget": tmdb_data.get("budget"),
                 "revenue": tmdb_data.get("revenue"),
-                "series_tmdb_id": None,
+                "series_tmdb_id": tmdb_id if is_tv else None,
                 "season_tmdb_id": None,
                 "season_number": None,
                 "episode_number": None,
@@ -153,7 +165,7 @@ def get_full_item_metadata(item_id: str, db: Session = Depends(get_db)):
 
             return JSONResponse(content={
                 "id": item_id,
-                "filename": tmdb_data.get("title") or tmdb_data.get("original_title") or f"tmdb_{tmdb_id}",
+                "filename": tmdb_data.get("title") or tmdb_data.get("name") or tmdb_data.get("original_title") or tmdb_data.get("original_name") or f"tmdb_{tmdb_id}",
                 "folder": None,
                 "technical": {},
                 "guessit": {},
@@ -182,7 +194,7 @@ def get_full_item_metadata(item_id: str, db: Session = Depends(get_db)):
             ).first()
             
             if not match_row:
-                raise HTTPException(status_code=404, detail="Series not found in library")
+                return get_full_item_metadata(f"tmdb_{series_tmdb_id}", media_type or "tv", db)
             target_item_id = match_row.media_item_id
         else:
             try:
@@ -195,6 +207,25 @@ def get_full_item_metadata(item_id: str, db: Session = Depends(get_db)):
         ).filter(MediaItem.id == target_item_id).first()
         
         if not item:
+            numeric_item_id = None
+            try:
+                numeric_item_id = int(item_id)
+            except (TypeError, ValueError):
+                numeric_item_id = None
+
+            normalized_media_type = str(media_type or "").lower()
+            if normalized_media_type in {"tv", "series"} and numeric_item_id is not None:
+                match_row = db.query(MediaMatch).filter(
+                    (MediaMatch.series_tmdb_id == numeric_item_id) | (MediaMatch.tmdb_id == numeric_item_id),
+                    MediaMatch.is_active == True
+                ).first()
+                if match_row and match_row.media_item_id:
+                    item = db.query(MediaItem).options(
+                        joinedload(MediaItem.matches).joinedload(MediaMatch.localizations)
+                    ).filter(MediaItem.id == match_row.media_item_id).first()
+                if not item:
+                    return get_full_item_metadata(f"tmdb_{numeric_item_id}", "tv", db)
+
             raise HTTPException(status_code=404, detail="Item not found")
 
         tech_data = {

@@ -5,6 +5,7 @@ import PosterGrid from '@/ui/PosterGrid';
 import PosterCard from '@/ui/PosterCard';
 import Pill from '@/ui/Pill';
 import NavButton from '@/ui/NavButton';
+import EmptyState from '@/ui/EmptyState';
 import { useOverridePersonBackdropMutation, useUpdatePersonStatusMutation } from '@/queries/libraryQueries';
 import { useOverrideBackdropMutation } from '@/queries/mediaQueries';
 import SegmentedControl from '@/ui/SegmentedControl';
@@ -16,6 +17,7 @@ import {
   ChevronRight,
   Film,
   Image as ImageIcon,
+  ImageOff,
   Layers,
   MapPin,
   Minus,
@@ -1008,9 +1010,12 @@ function PersonBackdropPickerModal({ personId, item, t, toast, overridePersonBac
               })}
 
               {!isBackdropBrowserLoading && selectedBackdrops.length === 0 && (
-                <div className="backdrops-panel__empty person-backdrop-picker__empty">
-                  {t('library.details.noBackdropsAvailable') || 'No good backdrop options found for this title.'}
-                </div>
+                <EmptyState
+                  variant="detail-panel"
+                  icon={ImageOff}
+                  className="backdrops-panel__empty-state person-backdrop-picker__empty"
+                  title={t('library.details.noBackdropsAvailable') || 'No good backdrop options found for this title.'}
+                />
               )}
             </div>
           </div>
@@ -1032,9 +1037,12 @@ function PersonBackdropPickerModal({ personId, item, t, toast, overridePersonBac
           ))}
 
           {!isLoading && visibleItems.length === 0 && (
-            <div className="backdrops-panel__empty person-backdrop-picker__empty">
-              {t('library.details.noBackdropsAvailable') || 'No good backdrop options found for this title.'}
-            </div>
+            <EmptyState
+              variant="detail-panel"
+              icon={ImageOff}
+              className="backdrops-panel__empty-state person-backdrop-picker__empty"
+              title={t('library.details.noBackdropsAvailable') || 'No good backdrop options found for this title.'}
+            />
           )}
 
           {visibleItems.map((credit) => {
