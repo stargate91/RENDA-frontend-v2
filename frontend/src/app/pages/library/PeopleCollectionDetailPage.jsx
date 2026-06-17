@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import PosterGrid from '@/ui/PosterGrid';
 import PosterCard from '@/ui/PosterCard';
@@ -28,6 +29,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from '@/providers/LanguageContext';
 import { useUi } from '@/providers/UiProvider';
+import api from '@/lib/api';
 import { API_BASE } from '@/lib/backend';
 import {
   useLibraryCollectionDetailQuery,
@@ -480,6 +482,7 @@ function prioritizePersonCredits(items, knownForItems) {
 
 function PersonCreditsGridSection({ title, personId, mediaType, totalCount, navigate, t }) {
   const shouldLoad = Boolean(personId) && Number(totalCount) > 0;
+  const queryClient = useQueryClient();
   const containerRef = useRef(null);
   const [columns, setColumns] = useState(1);
   const [page, setPage] = useState(1);
@@ -546,6 +549,28 @@ function PersonCreditsGridSection({ title, personId, mediaType, totalCount, navi
   useEffect(() => {
     setPage((current) => Math.max(1, Math.min(current, totalPages)));
   }, [totalPages]);
+
+  useEffect(() => {
+    if (!shouldLoad || page !== 1 || !creditsQuery.data?.items?.length || totalPages <= 1) {
+      return;
+    }
+
+    for (let nextPage = 2; nextPage <= totalPages; nextPage += 1) {
+      queryClient.prefetchQuery({
+        queryKey: ['person-credits', personId, mediaType, nextPage, itemsPerPage],
+        queryFn: () => api.people.getCredits(personId, mediaType, { page: nextPage, pageSize: itemsPerPage }),
+      });
+    }
+  }, [
+    creditsQuery.data?.items,
+    itemsPerPage,
+    mediaType,
+    page,
+    personId,
+    queryClient,
+    shouldLoad,
+    totalPages,
+  ]);
 
   const openItem = (item) => {
     if (isTvLikeMediaType(item.media_type || item.type)) {

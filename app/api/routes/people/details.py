@@ -37,6 +37,9 @@ from app.utils.library_utils.image_constants import PERSON_SIZE
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+_PERSON_CREDIT_WARMUP_LOCK = threading.Lock()
+_PERSON_CREDIT_WARMUP_CACHE: dict[tuple[int, str, int, int], float] = {}
+_PERSON_CREDIT_WARMUP_TTL_SECONDS = 300.0
 
 TALK_LIKE_GENRE_IDS = {10763, 10764, 10767}
 SELF_ROLE_KEYWORDS = {
@@ -365,6 +368,49 @@ def _paginate_items(items: list[dict], page: int, page_size: int) -> dict:
     }
 
 
+def _build_person_asset_preload_batches(movies: list[dict], series: list[dict], known_for: list[dict], first_page_size: int = 8) -> tuple[list[dict], list[dict]]:
+    prioritized_movies = _prioritize_person_credits(movies or [], known_for or [])
+    prioritized_series = _prioritize_person_credits(series or [], known_for or [])
+    first_movies_page = _paginate_items(prioritized_movies, 1, first_page_size)["items"]
+    first_series_page = _paginate_items(prioritized_series, 1, first_page_size)["items"]
+    preload_movies = list(known_for or []) + first_movies_page
+    preload_series = first_series_page
+    return preload_movies, preload_series
+
+
+def _schedule_person_credit_poster_warmup(person_id: int, media_type: str, page: int, page_size: int, items: list[dict]) -> None:
+    if not items:
+        return
+
+    warmup_key = (int(person_id), str(media_type), int(page), int(page_size))
+
+    with _PERSON_CREDIT_WARMUP_LOCK:
+        import time
+
+        current_time = time.time()
+        expired_keys = [
+            key for key, timestamp in _PERSON_CREDIT_WARMUP_CACHE.items()
+            if current_time - timestamp >= _PERSON_CREDIT_WARMUP_TTL_SECONDS
+        ]
+        for expired_key in expired_keys:
+            _PERSON_CREDIT_WARMUP_CACHE.pop(expired_key, None)
+
+        if warmup_key in _PERSON_CREDIT_WARMUP_CACHE:
+            return
+        _PERSON_CREDIT_WARMUP_CACHE[warmup_key] = current_time
+
+    def _warmup():
+        try:
+            if media_type == "series":
+                _download_person_detail_assets(None, None, [], items, None)
+            else:
+                _download_person_detail_assets(None, None, items, [], None)
+        except Exception as exc:
+            logger.error(f"Failed to warm person credit posters for {person_id} {media_type} page {page}: {exc}")
+
+    threading.Thread(target=_warmup, daemon=True).start()
+
+
 def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str, target_lang: str, lead_cast_order_threshold: int = 3) -> dict:
     links = db.query(MediaPersonLink).join(MediaPersonLink.media_match).join(MediaMatch.media_item).filter(
         MediaPersonLink.person_id == person_id,
@@ -664,12 +710,18 @@ def get_person_detail(person_id: int):
         known_for = _apply_local_poster_paths(credit_payload["known_for"])
         all_movies = credit_payload["movies"]
         all_series = credit_payload["series"]
+        preload_movies, preload_series = _build_person_asset_preload_batches(
+            all_movies,
+            all_series,
+            credit_payload["known_for"],
+            first_page_size=8,
+        )
 
         profile_path = person.profile_path
         person_images = list(person.images or [])
         threading.Thread(
             target=_download_person_detail_assets,
-            args=(profile_path, person_images, all_movies, all_series, person_backdrop),
+            args=(profile_path, person_images, preload_movies, preload_series, person_backdrop),
             daemon=True
         ).start()
 
@@ -686,22 +738,6 @@ def get_person_detail(person_id: int):
                 local_images.append(local_image)
             elif image_path:
                 local_images.append(f"https://image.tmdb.org/t/p/{PERSON_SIZE}{image_path}")
-
-        for item in all_movies:
-            orig_poster = item.get("poster_path")
-            local_poster = _public_image_path(orig_poster, "posters")
-            item["poster_path"] = local_poster if local_poster else orig_poster
-            item["has_local_poster"] = bool(local_poster)
-        for item in all_series:
-            orig_poster = item.get("poster_path")
-            local_poster = _public_image_path(orig_poster, "posters")
-            item["poster_path"] = local_poster if local_poster else orig_poster
-            item["has_local_poster"] = bool(local_poster)
-        for item in known_for:
-            orig_poster = item.get("poster_path")
-            local_poster = _public_image_path(orig_poster, "posters")
-            item["poster_path"] = local_poster if local_poster else orig_poster
-            item["has_local_poster"] = bool(local_poster)
 
         db.commit()
         
@@ -762,7 +798,9 @@ def get_person_movies(person_id: int, page: int = Query(default=1, ge=1), page_s
         target_lang = ui_lang or "en"
         credit_payload = _load_person_credit_payload(db, person_id, person, ui_lang, target_lang)
         prioritized = _prioritize_person_credits(credit_payload["movies"], credit_payload["known_for"])
-        paged = _paginate_items(_apply_local_poster_paths(prioritized), page, page_size)
+        paged = _paginate_items(prioritized, page, page_size)
+        _schedule_person_credit_poster_warmup(person_id, "movies", paged["page"], paged["page_size"], paged["items"])
+        paged["items"] = _apply_local_poster_paths(paged["items"])
         return JSONResponse(content=paged, media_type="application/json; charset=utf-8")
     except Exception as e:
         logger.error(f"Error getting person movies for {person_id}: {e}")
@@ -787,7 +825,9 @@ def get_person_series(person_id: int, page: int = Query(default=1, ge=1), page_s
         target_lang = ui_lang or "en"
         credit_payload = _load_person_credit_payload(db, person_id, person, ui_lang, target_lang)
         prioritized = _prioritize_person_credits(credit_payload["series"], credit_payload["known_for"])
-        paged = _paginate_items(_apply_local_poster_paths(prioritized), page, page_size)
+        paged = _paginate_items(prioritized, page, page_size)
+        _schedule_person_credit_poster_warmup(person_id, "series", paged["page"], paged["page_size"], paged["items"])
+        paged["items"] = _apply_local_poster_paths(paged["items"])
         return JSONResponse(content=paged, media_type="application/json; charset=utf-8")
     except Exception as e:
         logger.error(f"Error getting person series for {person_id}: {e}")

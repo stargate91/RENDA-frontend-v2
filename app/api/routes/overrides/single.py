@@ -347,6 +347,27 @@ def update_item_backdrop(item_id: str, payload: dict):
     db = Session()
     try:
         from app.services.asset_service import AssetService
+        if isinstance(item_id, str) and item_id.startswith("tmdb_"):
+            try:
+                tmdb_id = int(item_id.split("_")[1])
+            except (ValueError, IndexError):
+                return JSONResponse(status_code=400, content={"error": "Invalid TMDB ID format"})
+
+            asset_service = AssetService()
+            local_b = asset_service.download_image(backdrop_path, "backdrops", size=BACKDROP_SIZE)
+            if not local_b:
+                return JSONResponse(status_code=500, content={"error": "Failed to download backdrop"})
+
+            cache_rows = db.query(TMDBCache).filter(TMDBCache.tmdb_id == tmdb_id).all()
+            for cache in cache_rows:
+                if not isinstance(cache.raw_data, dict):
+                    continue
+                raw_data = deepcopy(cache.raw_data)
+                raw_data["backdrop_path"] = backdrop_path
+                cache.raw_data = raw_data
+
+            db.commit()
+            return {"status": "success", "backdrop_path": backdrop_path, "local_backdrop_path": local_b}
         
         target_item_id = None
         if isinstance(item_id, str) and item_id.startswith("series_"):

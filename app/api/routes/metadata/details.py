@@ -40,6 +40,92 @@ def get_full_item_metadata(item_id: str, db: Session = Depends(get_db)):
     """Get all metadata details for a specific item"""
     try:
         target_item_id = None
+        if isinstance(item_id, str) and item_id.startswith("tmdb_"):
+            try:
+                tmdb_id = int(item_id.split("_")[1])
+            except (ValueError, IndexError):
+                raise HTTPException(status_code=400, detail="Invalid TMDB ID format")
+
+            from app.api.tmdb_client import TMDBClient
+            from app.utils.library_utils import _preferred_metadata_language
+
+            ui_lang = _preferred_metadata_language(db)
+            tmdb_client = TMDBClient(db)
+            tmdb_data = tmdb_client.get_details(tmdb_id, "movie", language=ui_lang)
+            if not tmdb_data:
+                raise HTTPException(status_code=404, detail="Virtual movie not found")
+
+            tmdb_caches = db.query(TMDBCache).filter(TMDBCache.tmdb_id == tmdb_id).all()
+            api_responses = {}
+            for cache in tmdb_caches:
+                api_responses[cache.locale] = cache.raw_data
+            if not api_responses:
+                api_responses[ui_lang or "en-US"] = tmdb_data
+
+            virtual_match = {
+                "id": f"virtual_movie_{tmdb_id}",
+                "tmdb_id": tmdb_id,
+                "type": "movie",
+                "is_active": True,
+                "localizations": [],
+                "api_responses": api_responses,
+                "series_api_responses": {},
+                "confidence": 1.0,
+                "backdrop_path": _resolve_backdrop_path(tmdb_data.get("backdrop_path"), None),
+                "local_backdrop_path": _resolve_backdrop_path(tmdb_data.get("backdrop_path"), None),
+                "still_path": None,
+                "local_still_path": None,
+                "director": None,
+                "cast": None,
+                "collection": None,
+                "networks": [],
+                "companies": [],
+                "series_type": None,
+                "number_of_seasons": None,
+                "number_of_episodes": None,
+                "fetched_languages": None,
+                "release_date": tmdb_data.get("release_date"),
+                "first_air_date": None,
+                "last_air_date": None,
+                "episode_air_date": None,
+                "season_air_date": None,
+                "runtime": tmdb_data.get("runtime"),
+                "popularity": tmdb_data.get("popularity"),
+                "release_status": tmdb_data.get("status"),
+                "rating_tmdb": tmdb_data.get("vote_average"),
+                "vote_count_tmdb": tmdb_data.get("vote_count"),
+                "imdb_id": (tmdb_data.get("external_ids") or {}).get("imdb_id"),
+                "rating_imdb": None,
+                "vote_count_imdb": None,
+                "rating_meta": None,
+                "rating_rotten": None,
+                "budget": tmdb_data.get("budget"),
+                "revenue": tmdb_data.get("revenue"),
+                "series_tmdb_id": None,
+                "season_tmdb_id": None,
+                "season_number": None,
+                "episode_number": None,
+                "episode_count": None,
+                "image_status": None,
+                "backdrop_status": None,
+            }
+
+            return JSONResponse(content={
+                "id": item_id,
+                "filename": tmdb_data.get("title") or tmdb_data.get("original_title") or f"tmdb_{tmdb_id}",
+                "folder": None,
+                "technical": {},
+                "guessit": {},
+                "overrides": {
+                    "target_language": ui_lang,
+                    "source": None,
+                    "edition": None,
+                    "audio_type": None,
+                    "user_rating": None,
+                },
+                "matches": [virtual_match],
+            }, media_type="application/json; charset=utf-8")
+
         if isinstance(item_id, str) and item_id.startswith("series_"):
             try:
                 series_tmdb_id = int(item_id.split("_")[1])
