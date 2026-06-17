@@ -1,6 +1,7 @@
 import { countEpisodesInNumber } from '../../../utils/detailUtils';
 import { useMediaDetailContext } from '../MediaDetailContext';
 import Pill from '@/ui/Pill';
+import { buildTmdbImageUrl, resolveMediaImageUrl, TMDB_IMAGE_SIZES } from '@/lib/imageUrls';
 import './PanelsCommon.css';
 import './DetailsPanel.css';
 
@@ -185,8 +186,8 @@ export default function DetailsPanel() {
             {itemsToShow.map((it, idx) => {
               const logoUrl = it.logo_path
                 ? (it.logo_path.startsWith('http') || it.logo_path.startsWith('/media/') || it.logo_path.startsWith('data/'))
-                  ? it.logo_path
-                  : `https://image.tmdb.org/t/p/w154${it.logo_path}`
+                  ? resolveMediaImageUrl(it.logo_path, 'logo')
+                  : buildTmdbImageUrl(it.logo_path, TMDB_IMAGE_SIZES.posterThumb)
                 : null;
               return (
                 <div

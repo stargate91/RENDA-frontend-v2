@@ -26,6 +26,7 @@ from app.api.routes.overrides.logic import (
     _preferred_metadata_language,
     _hydrate_virtual_metadata,
 )
+from app.utils.library_utils.image_constants import BACKDROP_SIZE
 
 import logging
 logger = logging.getLogger(__name__)
@@ -354,7 +355,7 @@ def update_item_backdrop(item_id: str, payload: dict):
 
         # Download the image
         asset_service = AssetService()
-        local_b = asset_service.download_image(backdrop_path, "backdrops", size="w1280")
+        local_b = asset_service.download_image(backdrop_path, "backdrops", size=BACKDROP_SIZE)
         if not local_b:
             return JSONResponse(status_code=500, content={"error": "Failed to download backdrop"})
 

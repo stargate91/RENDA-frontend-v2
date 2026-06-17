@@ -9,7 +9,7 @@ import EmptyState from '@/ui/EmptyState';
 import Button from '@/ui/Button';
 import IconButton from '@/ui/IconButton';
 import NavButton from '@/ui/NavButton';
-import { API_BASE } from '@/lib/backend';
+import { resolveMediaImageUrl } from '@/lib/imageUrls';
 import { Pencil, Play, Plus, Trash2, UserPlus, Check } from 'lucide-react';
 
 const renderUserRatingBadge = (item) => {
@@ -108,17 +108,7 @@ export default function LibraryGrid({
     }
   };
   const resolvePosterUrl = (path) => {
-    if (!path) return '';
-    if (String(path).startsWith('http://') || String(path).startsWith('https://')) {
-      return path;
-    }
-    if (String(path).startsWith('/media/')) {
-      return `${API_BASE}${path}`;
-    }
-    if (String(path).startsWith('/') && !String(path).startsWith('/images/')) {
-      return `https://image.tmdb.org/t/p/w342${path}`;
-    }
-    return `${API_BASE}${path}`;
+    return resolveMediaImageUrl(path, 'poster');
   };
 
 

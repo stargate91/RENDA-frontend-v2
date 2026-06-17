@@ -7,6 +7,7 @@ from ..formatter.formatter import Formatter, FormatterConfig
 from ..repositories.media_repository import MediaRepository
 from ..schemas.media import MediaItemDTO, MediaMatchDTO, MediaImageDTO, ExtraFileDTO, DiscoveryGroupsDTO
 from ..utils.library_utils import _public_image_path, _tmdb_image_url
+from ..utils.library_utils.image_constants import POSTER_SIZE, STILL_SIZE
 
 logger = logging.getLogger(__name__)
 
@@ -117,27 +118,27 @@ class MediaDiscoveryService:
                 loc = self._get_active_loc(am, item)
                 if loc:
                     if item.item_type == ItemType.MOVIE:
-                        movie_poster = self._resolve_image_path(loc.local_poster_path or loc.poster_path, "posters", "w500")
+                        movie_poster = self._resolve_image_path(loc.local_poster_path or loc.poster_path, "posters", POSTER_SIZE)
                         if movie_poster:
                             images.append(MediaImageDTO(type="poster", path=movie_poster, label="poster"))
                     elif item.item_type == ItemType.EPISODE:
                         seen_stills = set()
                         for still in (am.local_all_stills or am.all_stills or []):
-                            still_path = self._resolve_image_path(still, "stills", "w400")
+                            still_path = self._resolve_image_path(still, "stills", STILL_SIZE)
                             if still_path and still_path not in seen_stills:
                                 images.append(MediaImageDTO(type="still", path=still_path, label="still"))
                                 seen_stills.add(still_path)
 
                         if not images:
-                            fallback_still = self._resolve_image_path(am.local_still_path or am.still_path, "stills", "w400")
+                            fallback_still = self._resolve_image_path(am.local_still_path or am.still_path, "stills", STILL_SIZE)
                             if fallback_still:
                                 images.append(MediaImageDTO(type="still", path=fallback_still, label="still"))
 
-                        season_poster = self._resolve_image_path(loc.local_poster_path or loc.poster_path, "posters", "w500")
+                        season_poster = self._resolve_image_path(loc.local_poster_path or loc.poster_path, "posters", POSTER_SIZE)
                         if season_poster:
                             images.append(MediaImageDTO(type="poster", path=season_poster, label="seasonPoster"))
 
-                        series_poster = self._resolve_image_path(loc.local_series_poster_path or loc.series_poster_path, "posters", "w500")
+                        series_poster = self._resolve_image_path(loc.local_series_poster_path or loc.series_poster_path, "posters", POSTER_SIZE)
                         if series_poster and series_poster != season_poster:
                             images.append(MediaImageDTO(type="poster", path=series_poster, label="seriesPoster"))
 

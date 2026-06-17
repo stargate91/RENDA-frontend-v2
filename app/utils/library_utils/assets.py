@@ -5,6 +5,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.db.models import Person, PersonLocalization, ImageStatus
 from app.utils.library_utils.database import _resolve_person_profile_path
+from app.utils.library_utils.image_constants import BACKDROP_SIZE, LOGO_SIZE, PERSON_SIZE, POSTER_SIZE, STILL_SIZE
 
 logger = logging.getLogger(__name__)
 
@@ -46,32 +47,32 @@ def _download_media_assets_sync(
     
     # 1. Poster
     if poster_path and not poster_path.startswith("http"):
-        tasks.append(("posters", poster_path, "w500"))
+        tasks.append(("posters", poster_path, POSTER_SIZE))
         
     # 2. Backdrop
     if backdrop_path and not backdrop_path.startswith("http"):
-        tasks.append(("backdrops", backdrop_path, "w1280"))
+        tasks.append(("backdrops", backdrop_path, BACKDROP_SIZE))
 
     # 2.5. Logo
     if logo_path and not logo_path.startswith("http"):
-        tasks.append(("logos", logo_path, "original"))
+        tasks.append(("logos", logo_path, LOGO_SIZE))
         
     # 3. Cast/Crew profiles
     if cast_profiles:
         for profile in cast_profiles:
             if profile and not profile.startswith("http"):
-                tasks.append(("persons", profile, "h632"))
+                tasks.append(("persons", profile, PERSON_SIZE))
                 
     # 4. Season posters
     if season_posters:
         for sp in season_posters:
             if sp and not sp.startswith("http"):
-                tasks.append(("posters", sp, "w500"))
+                tasks.append(("posters", sp, POSTER_SIZE))
 
     if stills:
         for still in stills:
             if still and not still.startswith("http"):
-                tasks.append(("stills", still, "w400"))
+                tasks.append(("stills", still, STILL_SIZE))
 
     if not tasks:
         return

@@ -5,6 +5,7 @@ import MediaCard from '../../ui/MediaCard';
 import PosterCard from '../../ui/PosterCard';
 import { ChevronLeft, ChevronRight, FileJson, Info } from 'lucide-react';
 import { API_BASE } from '../../lib/backend';
+import { resolveMediaImageUrl } from '@/lib/imageUrls';
 import { useTranslation } from '../../providers/LanguageContext';
 import { useUi } from '../../providers/UiProvider';
 import { useFullMetadataQuery } from '../../queries';
@@ -12,13 +13,7 @@ import '../../styles/OrganizerDetailsPanel.css';
 
 
 const resolveOrganizerImageUrl = (path) => {
-  if (!path) {
-    return '';
-  }
-  if (String(path).startsWith('http://') || String(path).startsWith('https://')) {
-    return path;
-  }
-  return `${API_BASE}${path}`;
+  return resolveMediaImageUrl(path, 'poster', API_BASE);
 };
 
 export default function OrganizerDetailsPanel({

@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from ...db.models import ItemStatus, ItemType, MediaItem, VirtualMediaState
 from ...db.models.metadata import MediaMatch, OMDBCache
 from ...utils.library_utils import _preferred_metadata_languages, _split_genres, _pick_tmdb_cache
+from ...utils.library_utils.image_constants import POSTER_SIZE
 from ...utils.library_helpers import public_image_path as _public_image_path
 from ..library_virtual_cache_service import LibraryVirtualCacheService
 from .formatter import LibraryFormatterService
@@ -320,7 +321,7 @@ class LibraryVirtualQueryService:
                 "release_date": release_date,
                 "poster_path": raw_poster_path,
                 "local_poster_path": local_poster_path,
-                "displayPosterRemote": f"https://image.tmdb.org/t/p/w500{raw_poster_path}" if raw_poster_path else None,
+                "displayPosterRemote": f"https://image.tmdb.org/t/p/{POSTER_SIZE}{raw_poster_path}" if raw_poster_path else None,
                 "rating": raw_data.get("vote_average") or 0,
                 "rating_tmdb": raw_data.get("vote_average") or 0,
                 "rating_imdb": _get_virtual_imdb_rating(raw_data),

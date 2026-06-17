@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, ChevronRight, ChevronLeft, Check, Eye, Play, Clapperboard, Calendar, Tv, Star } from 'lucide-react';
 import IconButton from '@/ui/IconButton';
 import Pill from '@/ui/Pill';
+import { buildTmdbImageUrl, TMDB_IMAGE_SIZES } from '@/lib/imageUrls';
 import { countEpisodesInNumber, formatEpisodeNumber } from '../../../utils/detailUtils';
 import { useMediaDetailContext } from '../MediaDetailContext';
 import './SeasonsPanel.css';
@@ -75,14 +76,12 @@ export default function SeasonsPanel() {
 
   const getPosterUrl = (path) => {
     if (!path) return '';
-    if (String(path).startsWith('http://') || String(path).startsWith('https://')) return path;
-    return `https://image.tmdb.org/t/p/w154${path}`;
+    return buildTmdbImageUrl(path, TMDB_IMAGE_SIZES.posterThumb);
   };
 
   const getStillUrl = (path) => {
     if (!path) return '';
-    if (String(path).startsWith('http://') || String(path).startsWith('https://')) return path;
-    return `https://image.tmdb.org/t/p/w300${path}`;
+    return buildTmdbImageUrl(path, TMDB_IMAGE_SIZES.thumbnail);
   };
 
   const selectedSeasonIndex = seasonsList.findIndex((s) => s.season_number === selectedSeasonNumber);

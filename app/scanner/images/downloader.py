@@ -1,9 +1,9 @@
-import os
 import requests
 import threading
 from typing import Optional
 from pathlib import Path
 from ...utils.logger import logger
+from ...services.image_processing_service import ImageProcessingService
 
 
 class ImageDownloaderMixin:
@@ -11,8 +11,8 @@ class ImageDownloaderMixin:
 
     def _ensure_folders(self):
         """Creates the necessary subdirectories for different image types."""
-        for folder in ["posters", "backdrops", "logos", "persons", "stills"]:
-            (self.storage_path / folder).mkdir(parents=True, exist_ok=True)
+        self.image_processor = ImageProcessingService(self.storage_path)
+        self.image_processor.ensure_folders()
 
     def _get_path_lock(self, target_path: Path) -> threading.Lock:
         key = str(target_path).lower()
@@ -31,16 +31,15 @@ class ImageDownloaderMixin:
             return None
 
         filename = tmdb_path.lstrip("/")
-        local_file_path = self.storage_path / subfolder / filename
+        local_file_path = self.image_processor.build_local_path(subfolder, filename)
         url = f"{self.BASE_URL}{size}{tmdb_path}"
         headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
         path_lock = self._get_path_lock(local_file_path)
         
         with path_lock:
-            if local_file_path.exists():
+            if self.image_processor.exists(local_file_path):
                 return str(local_file_path)
 
-            temp_file_path = local_file_path.with_name(f"{local_file_path.name}.{threading.get_ident()}.tmp")
             try:
                 response = self.session.get(url, stream=True, timeout=(5, 20), headers=headers)
                 if response.status_code == 200:
@@ -50,34 +49,15 @@ class ImageDownloaderMixin:
                         logger.error(f"Invalid content type for {url}: {content_type}")
                         return None
 
-                    with open(temp_file_path, 'wb') as f:
-                        for chunk in response.iter_content(4096):
-                            if chunk:
-                                f.write(chunk)
-                    
-                    # Double check file size - images shouldn't be tiny (e.g. < 100 bytes)
-                    if temp_file_path.stat().st_size < 100:
+                    saved_path = self.image_processor.write_chunks(local_file_path, response.iter_content(4096))
+                    if not saved_path:
                         logger.error(f"Downloaded file too small for {url}")
-                        temp_file_path.unlink(missing_ok=True)
                         return None
 
-                    try:
-                        from PIL import Image
-                        with Image.open(temp_file_path) as img:
-                            img.verify()
-                    except Exception as verify_error:
-                        logger.error(f"Downloaded image validation failed ({url}): {verify_error}")
-                        temp_file_path.unlink(missing_ok=True)
-                        return None
-
-                    os.replace(temp_file_path, local_file_path)
-                    return str(local_file_path)
+                    return saved_path
                 else:
                     logger.error(f"Image download failed ({url}): HTTP {response.status_code}")
             except Exception as e:
                 logger.error(f"Image download failed ({url}): {e}")
-            finally:
-                if temp_file_path.exists():
-                    temp_file_path.unlink(missing_ok=True)
         
         return None

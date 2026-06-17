@@ -30,6 +30,7 @@ from app.utils.library_utils import (
     _pick_backdrop_path,
     _pick_tmdb_cache,
 )
+from app.utils.library_utils.image_constants import PERSON_SIZE
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -389,7 +390,7 @@ def get_person_detail(person_id: int):
             if local_image:
                 local_images.append(local_image)
             elif image_path:
-                local_images.append(f"https://image.tmdb.org/t/p/h632{image_path}")
+                local_images.append(f"https://image.tmdb.org/t/p/{PERSON_SIZE}{image_path}")
 
         for item in all_movies:
             orig_poster = item.get("poster_path")

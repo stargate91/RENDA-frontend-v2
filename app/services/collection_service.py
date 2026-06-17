@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.db.models import MediaCollection, MediaCollectionLocalization
 from app.services.asset_service import AssetService
 from app.utils.library_utils import _pick_backdrop_path
+from app.utils.library_utils.image_constants import BACKDROP_SIZE, POSTER_SIZE
 
 
 class CollectionService:
@@ -134,9 +135,9 @@ class CollectionService:
             collection.local_backdrop_path = None
 
         if loc.poster_path and not loc.local_poster_path:
-            loc.local_poster_path = self.asset_service.download_image(loc.poster_path, "posters", size="w500")
+            loc.local_poster_path = self.asset_service.download_image(loc.poster_path, "posters", size=POSTER_SIZE)
         if collection.backdrop_path and not collection.local_backdrop_path:
-            collection.local_backdrop_path = self.asset_service.download_image(collection.backdrop_path, "backdrops", size="w1280")
+            collection.local_backdrop_path = self.asset_service.download_image(collection.backdrop_path, "backdrops", size=BACKDROP_SIZE)
         self.db.flush()
 
         return collection

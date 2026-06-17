@@ -6,6 +6,7 @@ from ..db.models import ItemType
 from ..repositories.media_repository import MediaRepository
 from ..schemas.media import LibraryCollectionsPageDTO, LibraryCollectionDTO, LibraryCollectionItemDTO
 from ..utils.library_utils import _preferred_metadata_language
+from ..utils.library_utils.image_constants import POSTER_SIZE
 from ..utils.library_helpers import match_language_code as _match_language_code, public_image_path as _public_image_path
 
 class LibraryCollectionService:
@@ -66,7 +67,7 @@ class LibraryCollectionService:
                     "overview": collection_loc.overview if collection_loc else None,
                     "poster_path": local_collection_poster or (collection_loc.poster_path if collection_loc else None),
                     "has_local_poster": bool(local_collection_poster),
-                    "poster_remote_path": f"https://image.tmdb.org/t/p/w500{collection_loc.poster_path}" if collection_loc and collection_loc.poster_path else None,
+                    "poster_remote_path": f"https://image.tmdb.org/t/p/{POSTER_SIZE}{collection_loc.poster_path}" if collection_loc and collection_loc.poster_path else None,
                     "backdrop_path": self._resolve_collection_backdrop(active_match.collection_entity),
                     "owned_count": 0,
                     "total_count": int(getattr(active_match.collection_entity, "total_parts", 0) or 0),

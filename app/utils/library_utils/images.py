@@ -8,25 +8,34 @@ import requests
 from PIL import Image, UnidentifiedImageError
 
 from app.utils.library_utils.lang import _normalize_language_code
+from app.utils.library_utils.image_constants import (
+    BACKDROP_MIN_WIDTH,
+    BACKDROP_PREFERRED_MIN_WIDTH,
+    BACKDROP_PROBE_THUMBNAIL_SIZE,
+    BACKDROP_WHITE_PIXEL_THRESHOLD,
+    LOGO_DARK_PIXEL_THRESHOLD,
+    LOGO_MIN_AVERAGE_LUMINANCE,
+    LOGO_PROBE_THUMBNAIL_SIZE,
+    MIN_CACHED_IMAGE_BYTES,
+    POSTER_SIZE,
+    PUBLIC_IMAGE_CACHE_TTL_SECONDS,
+    TMDB_IMAGE_BASE_ORIGINAL,
+    TMDB_IMAGE_SIZES_BY_SUBFOLDER,
+)
 
 logger = logging.getLogger(__name__)
 
 MEDIA_IMAGE_ROOT = Path("data/media/images")
-TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/original"
+TMDB_IMAGE_BASE = TMDB_IMAGE_BASE_ORIGINAL
 _LOGO_DARKNESS_CACHE: dict[str, Optional[tuple[float, float]]] = {}
 _BACKDROP_TONE_CACHE: dict[str, Optional[tuple[float, float]]] = {}
 _LOGO_PROBE_SESSION = requests.Session()
 _IMAGE_PROBE_SESSION = requests.Session()
-LOGO_DARK_PIXEL_THRESHOLD = 0.2
-LOGO_MIN_AVERAGE_LUMINANCE = 0.32
-BACKDROP_MIN_WIDTH = 1920
-BACKDROP_WHITE_PIXEL_THRESHOLD = 0.58
-
 def _is_remote_image_path(path: Optional[str]) -> bool:
     return bool(path and (path.startswith("http://") or path.startswith("https://")))
 
 
-def _tmdb_image_url(path: Optional[str], size: str = "w500") -> Optional[str]:
+def _tmdb_image_url(path: Optional[str], size: str = POSTER_SIZE) -> Optional[str]:
     if not path or _is_remote_image_path(path):
         return path
     clean = path if str(path).startswith("/") else f"/{path}"
@@ -34,13 +43,7 @@ def _tmdb_image_url(path: Optional[str], size: str = "w500") -> Optional[str]:
 
 
 def _tmdb_size_for_subfolder(subfolder: str) -> str:
-    return {
-        "posters": "w500",
-        "stills": "w400",
-        "backdrops": "w1280",
-        "logos": "original",
-        "persons": "h632",
-    }.get(subfolder, "w500")
+    return TMDB_IMAGE_SIZES_BY_SUBFOLDER.get(subfolder, POSTER_SIZE)
 
 
 _IMAGE_EXISTENCE_CACHE = {}
@@ -52,8 +55,8 @@ def _public_image_path(path: Optional[str], subfolder: str) -> Optional[str]:
     if _is_remote_image_path(path):
         return path
 
-    import time
     cache_key = (path, subfolder)
+    import time
     now = time.time()
     if cache_key in _IMAGE_EXISTENCE_CACHE:
         val, expiry = _IMAGE_EXISTENCE_CACHE[cache_key]
@@ -66,10 +69,10 @@ def _public_image_path(path: Optional[str], subfolder: str) -> Optional[str]:
     local_file = MEDIA_IMAGE_ROOT / subfolder / filename
     
     res = None
-    if local_file.exists() and local_file.stat().st_size > 100:
+    if local_file.exists() and local_file.stat().st_size > MIN_CACHED_IMAGE_BYTES:
         res = f"/{filename}"
         
-    _IMAGE_EXISTENCE_CACHE[cache_key] = (res, now + 15)
+    _IMAGE_EXISTENCE_CACHE[cache_key] = (res, now + PUBLIC_IMAGE_CACHE_TTL_SECONDS)
     return res
 
 
@@ -100,7 +103,7 @@ def _pick_logo_path(raw_data, preferred_language: Optional[str] = None) -> Optio
 
     def measure_logo_darkness(image: Image.Image) -> Optional[tuple[float, float]]:
         rgba = image.convert("RGBA")
-        rgba.thumbnail((256, 256))
+        rgba.thumbnail(LOGO_PROBE_THUMBNAIL_SIZE)
         dark_pixels = 0.0
         weighted_luminance = 0.0
         total_alpha = 0.0
@@ -180,7 +183,7 @@ def _pick_logo_path(raw_data, preferred_language: Optional[str] = None) -> Optio
 
 def _measure_backdrop_tone(image: Image.Image) -> Optional[tuple[float, float]]:
     rgb = image.convert("RGB")
-    rgb.thumbnail((320, 180))
+    rgb.thumbnail(BACKDROP_PROBE_THUMBNAIL_SIZE)
     bright_pixels = 0
     total_pixels = 0
     luminance_total = 0.0
@@ -254,13 +257,13 @@ def _pick_backdrop_path(raw_data, preferred_language: Optional[str] = None, min_
 
     ranked_backdrops = sorted(neutral_backdrops, key=backdrop_score)
 
-    # 1. Try to find a good backdrop >= 2560px first
+    # 1. Try to find a good backdrop >= preferred width first
     fallback_candidate = None
     fallback_tone = None
     for backdrop in ranked_backdrops:
         file_path = backdrop.get("file_path")
         width = int(backdrop.get("width") or 0)
-        if not file_path or width < 2560:
+        if not file_path or width < BACKDROP_PREFERRED_MIN_WIDTH:
             continue
         tone = _probe_backdrop_tone(file_path)
         if tone is None:
@@ -271,7 +274,7 @@ def _pick_backdrop_path(raw_data, preferred_language: Optional[str] = None, min_
             fallback_candidate = file_path
             fallback_tone = tone
 
-    # 2. If no candidate >= 2560px passed the threshold, look for a good one >= 1920px
+    # 2. If no candidate >= preferred width passed the threshold, look for a good one >= min width
     for backdrop in ranked_backdrops:
         file_path = backdrop.get("file_path")
         width = int(backdrop.get("width") or 0)

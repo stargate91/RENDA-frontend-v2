@@ -9,9 +9,9 @@ import IconButton from '@/ui/IconButton';
 import Tooltip from '@/ui/Tooltip';
 import EmptyState from '@/ui/EmptyState';
 import Dropdown from '@/ui/Dropdown';
+import { resolveMediaImageUrl } from '@/lib/imageUrls';
 import { useQueryClient } from '@tanstack/react-query';
 import { Search, Plus, Check, Minus } from 'lucide-react';
-import { API_BASE } from '@/lib/backend';
 
 const QUESTION_MARK = '?';
 
@@ -116,14 +116,7 @@ export default function AddPeopleModalContent({ isAdult, t, onClose }) {
   })();
 
   const resolveProfileUrl = (path) => {
-    if (!path) return '';
-    if (String(path).startsWith('http://') || String(path).startsWith('https://')) {
-      return path;
-    }
-    if (String(path).startsWith('/') && !String(path).startsWith('/images/')) {
-      return `https://image.tmdb.org/t/p/w185${path}`;
-    }
-    return `${API_BASE}${path}`;
+    return resolveMediaImageUrl(path, 'personThumb');
   };
 
   const handleToggleStatus = async (personId, newActiveStatus) => {

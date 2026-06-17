@@ -12,14 +12,15 @@ from ..db.models.metadata import MediaMatch, TMDBCache
 from ..repositories.media_repository import MediaRepository
 from ..schemas.media import LibraryCollectionDTO, LibraryCollectionItemDTO, LibraryCollectionsPageDTO, LibraryGroupedDTO, LibraryStatsDTO
 from ..utils.library_utils import _pick_tmdb_cache, _preferred_metadata_language, _preferred_metadata_languages, _split_genres
+from ..utils.library_utils.image_constants import POSTER_SIZE
 from ..utils.library_helpers import match_language_code as _match_language_code, public_image_path as _public_image_path
 
 logger = logging.getLogger(__name__)
 
 TAG_EMPTY_STATE_SAMPLE_POSTERS = [
-    "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-    "https://image.tmdb.org/t/p/w500/8UlWHLMpgZm9bx6QYh0NFoq67TZ.jpg",
-    "https://image.tmdb.org/t/p/w500/6ELCZlTA5lGUops70hKdB83WJxH.jpg",
+    "https://image.tmdb.org/t/p/w780/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
+    "https://image.tmdb.org/t/p/w780/8UlWHLMpgZm9bx6QYh0NFoq67TZ.jpg",
+    "https://image.tmdb.org/t/p/w780/6ELCZlTA5lGUops70hKdB83WJxH.jpg",
 ]
 
 TAG_PREVIEW_GROUP_ORDER = ("movies", "series", "people", "adult", "adult_series", "adult_people")
@@ -256,7 +257,7 @@ class LibraryQueryService:
                 "backdrop_path": raw_data.get("backdrop_path"),
                 "local_poster_path": local_poster_path,
                 "local_backdrop_path": _public_image_path(raw_data.get("backdrop_path"), "backdrops"),
-                "displayPosterRemote": f"https://image.tmdb.org/t/p/w500{raw_poster_path}" if raw_poster_path else None,
+                "displayPosterRemote": f"https://image.tmdb.org/t/p/{POSTER_SIZE}{raw_poster_path}" if raw_poster_path else None,
                 "rating": raw_data.get("vote_average") or 0,
                 "type": "series" if media_type == "tv" else "movie",
                 "series_tmdb_id": state.tmdb_id if media_type == "tv" else None,

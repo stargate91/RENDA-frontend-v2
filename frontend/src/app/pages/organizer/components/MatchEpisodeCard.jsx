@@ -4,15 +4,9 @@ import Badge from '../../../ui/Badge';
 import MediaCard from '../../../ui/MediaCard';
 import MetaRow from '../../../ui/MetaRow';
 import Button from '../../../ui/Button';
+import { buildTmdbImageUrl, TMDB_IMAGE_SIZES } from '@/lib/imageUrls';
 
-const TMDB_IMAGE_SIZE_STILL = 'w300';
-
-const getImageUrl = (path, size = TMDB_IMAGE_SIZE_STILL) => (
-  !path ? ''
-    : String(path).startsWith('http://') || String(path).startsWith('https://')
-      ? path
-      : `https://image.tmdb.org/t/p/${size}${path}`
-);
+const getImageUrl = (path, size = TMDB_IMAGE_SIZES.thumbnail) => (!path ? '' : buildTmdbImageUrl(path, size));
 
 export default function MatchEpisodeCard({
   episodeEntry,
@@ -24,7 +18,7 @@ export default function MatchEpisodeCard({
   isHighlighted = false,
   t,
 }) {
-  const stillUrl = getImageUrl(episodeEntry.still_path, TMDB_IMAGE_SIZE_STILL);
+  const stillUrl = getImageUrl(episodeEntry.still_path, TMDB_IMAGE_SIZES.thumbnail);
   const cardRef = useRef();
 
   useEffect(() => {

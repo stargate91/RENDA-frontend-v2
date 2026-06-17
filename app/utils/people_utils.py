@@ -19,6 +19,7 @@ from app.db.base import Session
 from app.db.models import *
 from app.utils.people_utils import *
 from app.services.people_service import *
+from app.utils.library_utils.image_constants import BACKDROP_SIZE, PERSON_SIZE, POSTER_SIZE
 
 logger = logging.getLogger(__name__)
 
@@ -446,19 +447,19 @@ def _download_person_detail_assets(profile_path: Optional[str], images: Optional
 
     tasks = []
     if profile_path and not _is_remote_image_path(profile_path) and not _public_image_path(profile_path, "persons"):
-        tasks.append(("persons", profile_path, "h632"))
+        tasks.append(("persons", profile_path, PERSON_SIZE))
 
     for img in images or []:
         if img and not _is_remote_image_path(img) and not _public_image_path(img, "persons"):
-            tasks.append(("persons", img, "h632"))
+            tasks.append(("persons", img, PERSON_SIZE))
 
     for item in [*(movies or []), *(series or [])]:
         poster_path = item.get("poster_path")
         if poster_path and not _is_remote_image_path(poster_path) and not _public_image_path(poster_path, "posters"):
-            tasks.append(("posters", poster_path, "w500"))
+            tasks.append(("posters", poster_path, POSTER_SIZE))
 
     if backdrop_path and not _is_remote_image_path(backdrop_path) and not _public_image_path(backdrop_path, "backdrops"):
-        tasks.append(("backdrops", backdrop_path, "w1280"))
+        tasks.append(("backdrops", backdrop_path, BACKDROP_SIZE))
 
     if not tasks:
         return

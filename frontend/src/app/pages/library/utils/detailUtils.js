@@ -1,3 +1,5 @@
+import { resolveMediaImageUrl } from '@/lib/imageUrls';
+
 export const SOURCE_LABELS = {
   bluray: 'Blu-Ray',
   web: 'WEB-DL',
@@ -95,19 +97,5 @@ export const countEpisodesInNumber = (epNum) => {
 };
 
 export const resolveDetailsImageUrl = (path, API_BASE, imageType = 'backdrop') => {
-  if (!path) return '';
-  if (String(path).startsWith('http://') || String(path).startsWith('https://')) {
-    return path;
-  }
-  if (String(path).startsWith('/media/')) {
-    return `${API_BASE}${path}`;
-  }
-  if (String(path).startsWith('/')) {
-    const size = imageType === 'backdrop' ? 'w1280' : (imageType === 'logo' ? 'original' : 'w500');
-    return `https://image.tmdb.org/t/p/${size}${path}`;
-  }
-  let folder = 'posters';
-  if (imageType === 'backdrop') folder = 'backdrops';
-  else if (imageType === 'logo') folder = 'logos';
-  return `${API_BASE}/media/images/${folder}/${path}`;
+  return resolveMediaImageUrl(path, imageType, API_BASE);
 };

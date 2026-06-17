@@ -18,6 +18,7 @@ from app.db.deletion import delete_extra_files_by_ids, delete_media_items_by_ids
 from app.db.base import Session
 from app.db.models import *
 from app.services.file_system_service import FileSystemService
+from app.utils.library_utils.image_constants import BACKDROP_SIZE, POSTER_SIZE
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -347,11 +348,11 @@ def _cache_recommendation_images(items):
     for item in items or []:
         poster_path = item.get("poster_path")
         if poster_path and not _public_image_path(poster_path, "posters"):
-            tasks.append(("posters", poster_path, "w500"))
+            tasks.append(("posters", poster_path, POSTER_SIZE))
 
         backdrop_path = item.get("backdrop_path")
         if backdrop_path and not _public_image_path(backdrop_path, "backdrops"):
-            tasks.append(("backdrops", backdrop_path, "w1280"))
+            tasks.append(("backdrops", backdrop_path, BACKDROP_SIZE))
 
     if not tasks:
         return

@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 from sqlalchemy.orm import Session
 from ...db.models import MediaMatch, Person, ImageStatus, ItemType
 from ...utils.logger import logger
+from ...utils.library_utils.image_constants import BACKDROP_SIZE, LOGO_SIZE, PERSON_SIZE, POSTER_SIZE, STILL_SIZE
 
 
 class ImageBatchProcessorMixin:
@@ -127,7 +128,7 @@ class ImageBatchProcessorMixin:
                     if loc.local_poster_path and remote_filename not in loc.local_poster_path:
                         loc.local_poster_path = None
                     if not loc.local_poster_path:
-                        local_p = self.download_image(loc.poster_path, "posters", size="w500")
+                        local_p = self.download_image(loc.poster_path, "posters", size=POSTER_SIZE)
                         if local_p:
                             loc.local_poster_path = local_p
                             success = True
@@ -142,7 +143,7 @@ class ImageBatchProcessorMixin:
                     if loc.local_series_poster_path and remote_series_filename not in loc.local_series_poster_path:
                         loc.local_series_poster_path = None
                     if not loc.local_series_poster_path:
-                        local_sp = self.download_image(loc.series_poster_path, "posters", size="w500")
+                        local_sp = self.download_image(loc.series_poster_path, "posters", size=POSTER_SIZE)
                         if local_sp:
                             loc.local_series_poster_path = local_sp
                             success = True
@@ -157,7 +158,7 @@ class ImageBatchProcessorMixin:
                     if loc.local_logo_path and remote_logo_filename not in loc.local_logo_path:
                         loc.local_logo_path = None
                     if not loc.local_logo_path:
-                        local_logo = self.download_image(loc.logo_path, "logos", size="original")
+                        local_logo = self.download_image(loc.logo_path, "logos", size=LOGO_SIZE)
                         if local_logo:
                             loc.local_logo_path = local_logo
                             success = True
@@ -173,7 +174,7 @@ class ImageBatchProcessorMixin:
                 if match.local_still_path and remote_still_filename not in match.local_still_path:
                     match.local_still_path = None
                 if not match.local_still_path:
-                    local_s = self.download_image(match.still_path, "stills", size="w400")
+                    local_s = self.download_image(match.still_path, "stills", size=STILL_SIZE)
                     if local_s:
                         match.local_still_path = local_s
                         success = True
@@ -194,7 +195,7 @@ class ImageBatchProcessorMixin:
                     if any(filename in str(ls) for ls in local_stills):
                         continue
                         
-                    local_s = self.download_image(s_path, "stills", size="w400")
+                    local_s = self.download_image(s_path, "stills", size=STILL_SIZE)
                     if local_s:
                         local_stills.append(local_s)
                         updated_stills = True
@@ -225,7 +226,7 @@ class ImageBatchProcessorMixin:
                         for s in seasons:
                             s_poster = s.get("poster_path")
                             if s_poster:
-                                self.download_image(s_poster, "posters", size="w500")
+                                self.download_image(s_poster, "posters", size=POSTER_SIZE)
                 except Exception as e:
                     logger.error(f"Failed to download season posters for series {series_id}: {e}")
 
@@ -240,7 +241,7 @@ class ImageBatchProcessorMixin:
                             if logo_path:
                                 local_logo = comp.get("local_logo_path")
                                 if not local_logo or not os.path.exists(local_logo):
-                                    local_logo = self.download_image(logo_path, "logos", size="original")
+                                    local_logo = self.download_image(logo_path, "logos", size=LOGO_SIZE)
                                     if local_logo:
                                         comp = dict(comp)
                                         comp["local_logo_path"] = local_logo
@@ -262,7 +263,7 @@ class ImageBatchProcessorMixin:
                             if logo_path:
                                 local_logo = net.get("local_logo_path")
                                 if not local_logo or not os.path.exists(local_logo):
-                                    local_logo = self.download_image(logo_path, "logos", size="original")
+                                    local_logo = self.download_image(logo_path, "logos", size=LOGO_SIZE)
                                     if local_logo:
                                         net = dict(net)
                                         net["local_logo_path"] = local_logo
@@ -350,7 +351,7 @@ class ImageBatchProcessorMixin:
                 if match.local_backdrop_path and remote_bd_filename not in match.local_backdrop_path:
                     match.local_backdrop_path = None
                 if not match.local_backdrop_path:
-                    local_b = self.download_image(match.backdrop_path, "backdrops", size="w1280")
+                    local_b = self.download_image(match.backdrop_path, "backdrops", size=BACKDROP_SIZE)
                     if local_b:
                         match.local_backdrop_path = local_b
                     else:
@@ -457,7 +458,7 @@ class ImageBatchProcessorMixin:
                 if not file_path or file_path == profile_path:
                     continue
                     
-                local_path = self.download_image(file_path, "persons", size="h632")
+                local_path = self.download_image(file_path, "persons", size=PERSON_SIZE)
                 if local_path:
                     downloaded_paths.append(local_path)
                     count += 1
@@ -509,7 +510,7 @@ class ImageBatchProcessorMixin:
         if local_profile_path:
             return
 
-        local_path = self.download_image(profile_path, "persons", size="h632")
+        local_path = self.download_image(profile_path, "persons", size=PERSON_SIZE)
 
         local_db = DbSession()
         try:

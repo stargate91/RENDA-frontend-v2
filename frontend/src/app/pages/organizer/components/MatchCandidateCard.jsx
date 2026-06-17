@@ -2,8 +2,7 @@ import { Clapperboard } from 'lucide-react';
 import Badge from '@/ui/Badge';
 import MetaRow from '@/ui/MetaRow';
 import PosterCard from '@/ui/PosterCard';
-
-const TMDB_IMAGE_SIZE_POSTER = 'w154';
+import { buildTmdbImageUrl, TMDB_IMAGE_SIZES } from '@/lib/imageUrls';
 
 const getDisplayTitle = (candidate, mediaType, t) => (
   candidate?.title
@@ -20,12 +19,7 @@ const getDisplayYear = (candidate, mediaType) => {
   return rawDate ? String(rawDate).slice(0, 4) : null;
 };
 
-const getImageUrl = (path, size = TMDB_IMAGE_SIZE_POSTER) => (
-  !path ? ''
-    : String(path).startsWith('http://') || String(path).startsWith('https://')
-      ? path
-      : `https://image.tmdb.org/t/p/${size}${path}`
-);
+const getImageUrl = (path, size = TMDB_IMAGE_SIZES.posterThumb) => (!path ? '' : buildTmdbImageUrl(path, size));
 
 const normalizeCandidateType = (value, fallbackMode) => {
   const normalized = String(value || '').toLowerCase();
@@ -49,7 +43,7 @@ export default function MatchCandidateCard({
   const displayTitle = getDisplayTitle(candidate, mediaType, t);
   const displayYear = getDisplayYear(candidate, mediaType);
   const candidateId = candidate.tmdb_id || candidate.id;
-  const posterUrl = getImageUrl(candidate.poster_path, TMDB_IMAGE_SIZE_POSTER);
+  const posterUrl = getImageUrl(candidate.poster_path, TMDB_IMAGE_SIZES.posterThumb);
   const isDisabled = isResolvingId === candidateId || isBrowserLoading;
 
   if (variant === 'poster') {

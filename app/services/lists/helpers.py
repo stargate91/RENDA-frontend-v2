@@ -8,6 +8,7 @@ from app.db.models import ItemType, UserSetting
 from app.db.models.media import CustomListItem, MediaItem, VirtualMediaState
 from app.db.models.metadata import MediaMatch, MetadataLocalization, OMDBCache
 from app.utils.library_utils import _is_virtual_media_tracked, _pick_tmdb_cache, _preferred_metadata_languages, _public_image_path
+from app.utils.library_utils.image_constants import POSTER_SIZE
 from app.scanner.image_worker import ImageWorker
 from app.utils.logger import logger as app_logger
 from app.api.tmdb_client import TMDBClient
@@ -258,7 +259,7 @@ def _cache_virtual_poster(poster_path: Optional[str]):
         return
     try:
         worker = ImageWorker(None, "./data")
-        worker.download_image(poster_path, "posters", size="w500")
+        worker.download_image(poster_path, "posters", size=POSTER_SIZE)
     except Exception as exc:
         logger.warning(f"Failed to cache virtual poster {poster_path}: {exc}")
 

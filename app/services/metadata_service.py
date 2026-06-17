@@ -19,6 +19,7 @@ from app.formatter.formatter import Formatter, FormatterConfig
 from app.renamer.renamer_engine import RenamerEngine
 from app.services.resolve_status import determine_resolved_media_shape
 from app.utils.library_utils import _pick_logo_path
+from app.utils.library_utils.image_constants import BACKDROP_SIZE, LOGO_SIZE, PERSON_SIZE, POSTER_SIZE
 
 logger = logging.getLogger(__name__)
 language_sync_status = {"active": False}
@@ -249,9 +250,9 @@ class MetadataService:
                         synchronize_session=False,
                     )
 
-                    _download_if_present(primary_details.get("poster_path"), "posters", "w500")
-                    _download_if_present(primary_details.get("backdrop_path"), "backdrops", "w1280")
-                    _download_if_present(_pick_logo_path(primary_details, target_lang), "logos", "original")
+                    _download_if_present(primary_details.get("poster_path"), "posters", POSTER_SIZE)
+                    _download_if_present(primary_details.get("backdrop_path"), "backdrops", BACKDROP_SIZE)
+                    _download_if_present(_pick_logo_path(primary_details, target_lang), "logos", LOGO_SIZE)
 
                     for person_data, _job in _collect_people(primary_details, normalized_media_type):
                         person_id = person_data.get("id")
@@ -267,7 +268,7 @@ class MetadataService:
 
                         profile_path = person_data.get("profile_path")
                         if profile_path:
-                            _download_if_present(profile_path, "persons", "h632")
+                            _download_if_present(profile_path, "persons", PERSON_SIZE)
 
                         updated = False
                         if person_data.get("popularity") and not person.popularity:

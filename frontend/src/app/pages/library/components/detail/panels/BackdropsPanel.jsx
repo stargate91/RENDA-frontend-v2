@@ -1,6 +1,7 @@
 import { Check } from 'lucide-react';
 import { useFullMetadataQuery } from '@/queries/metadataQueries';
 import { useMediaDetailContext } from '../MediaDetailContext';
+import { buildTmdbImageUrl, TMDB_IMAGE_SIZES } from '@/lib/imageUrls';
 import './BackdropsPanel.css';
 
 
@@ -45,7 +46,7 @@ export default function BackdropsPanel() {
 
       <div className="backdrops-grid">
         {neutralBackdrops.map((bd, idx) => {
-          const tmdbThumbUrl = `https://image.tmdb.org/t/p/w300${bd.file_path}`;
+          const tmdbThumbUrl = buildTmdbImageUrl(bd.file_path, TMDB_IMAGE_SIZES.thumbnail);
           const isSelected = item?.backdrop_path === bd.file_path || (item?.backdrop_path && item.backdrop_path.endsWith(bd.file_path));
           const isPending = overrideBackdropMutation.isPending && overrideBackdropMutation.variables?.backdropPath === bd.file_path;
 

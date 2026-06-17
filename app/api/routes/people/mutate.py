@@ -1,13 +1,13 @@
 from fastapi import APIRouter, UploadFile, File
 from fastapi.responses import JSONResponse
-import shutil
-import os
 import uuid
 import threading
 import logging
 
 from app.db.base import Session
 from app.db.models import Person, Tag, ImageStatus
+from app.utils.library_utils.image_constants import PERSON_SIZE
+from app.services.image_processing_service import ImageProcessingService
 
 from app.utils.people_utils import (
     _add_person_from_tmdb_internal,
@@ -135,7 +135,7 @@ def update_person_profile(person_id: int, payload: dict):
         
         # 2. Download the image locally
         asset_service = AssetService()
-        local_path = asset_service.download_image(profile_path, "persons", size="h632")
+        local_path = asset_service.download_image(profile_path, "persons", size=PERSON_SIZE)
         if local_path:
             person.local_profile_path = local_path
             person.image_status = ImageStatus.COMPLETED
@@ -168,16 +168,15 @@ def upload_person_profile(person_id: int, file: UploadFile = File(...)):
         if not person:
             return JSONResponse(status_code=404, content={"error": "Person not found"})
             
-        # Ensure directory exists
-        os.makedirs("data/media/images/persons", exist_ok=True)
-        
-        # Save file
+        processor = ImageProcessingService("data/media/images")
+        processor.ensure_folders()
+
         ext = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
         filename = f"/{uuid.uuid4().hex}.{ext}"
-        filepath = os.path.join("data/media/images/persons", filename.lstrip("/"))
-        
-        with open(filepath, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        filepath = processor.build_local_path("persons", filename)
+        saved_path = processor.write_upload(filepath, file.file)
+        if not saved_path:
+            return JSONResponse(status_code=400, content={"error": "Invalid image upload"})
             
         person.local_profile_path = filename
         person.profile_path = filename

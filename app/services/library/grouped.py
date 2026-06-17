@@ -8,6 +8,7 @@ from ...db.models import CustomList, CustomListItem, ItemStatus, ItemType, Media
 from ...db.models.metadata import MediaMatch, OMDBCache, TMDBCache
 from ...repositories.media_repository import MediaRepository
 from ...utils.library_utils import _preferred_metadata_language, _preferred_metadata_languages, _split_genres, _pick_tmdb_cache
+from ...utils.library_utils.image_constants import POSTER_SIZE
 from ...utils.library_helpers import match_language_code as _match_language_code, public_image_path as _public_image_path
 
 
@@ -439,7 +440,7 @@ class LibraryGroupedService:
                 "release_date": raw_data.get("first_air_date") if media_type == "tv" else raw_data.get("release_date"),
                 "poster_path": raw_poster_path,
                 "local_poster_path": local_poster_path,
-                "displayPosterRemote": f"https://image.tmdb.org/t/p/w500{raw_poster_path}" if raw_poster_path else None,
+                "displayPosterRemote": f"https://image.tmdb.org/t/p/{POSTER_SIZE}{raw_poster_path}" if raw_poster_path else None,
                 "rating": raw_data.get("vote_average") or 0,
                 "rating_tmdb": raw_data.get("vote_average") or 0,
                 "rating_imdb": _get_virtual_imdb_rating(raw_data),
@@ -493,7 +494,7 @@ class LibraryGroupedService:
                 "release_date": raw_data.get("first_air_date") if media_type == "tv" else raw_data.get("release_date"),
                 "poster_path": raw_poster_path,
                 "local_poster_path": local_poster_path,
-                "displayPosterRemote": f"https://image.tmdb.org/t/p/w500{raw_poster_path}" if raw_poster_path else None,
+                "displayPosterRemote": f"https://image.tmdb.org/t/p/{POSTER_SIZE}{raw_poster_path}" if raw_poster_path else None,
                 "rating": raw_data.get("vote_average") or 0,
                 "rating_tmdb": raw_data.get("vote_average") or 0,
                 "rating_imdb": _get_virtual_imdb_rating(raw_data),

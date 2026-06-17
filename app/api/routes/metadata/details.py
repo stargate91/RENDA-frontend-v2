@@ -5,6 +5,7 @@ from sqlalchemy.orm import joinedload
 from app.db.base import get_db
 from app.db.models import MediaItem, TMDBCache, MediaMatch
 from app.utils.library_utils import _public_image_path, _tmdb_image_url
+from app.utils.library_utils.image_constants import BACKDROP_SIZE, LOGO_SIZE, POSTER_SIZE, STILL_SIZE
 
 import logging
 import traceback
@@ -21,16 +22,16 @@ def _resolve_image_path(path: str | None, local_path: str | None, subfolder: str
     return _tmdb_image_url(path, size=size)
 
 def _resolve_poster_path(path: str | None, local_path: str | None) -> str | None:
-    return _resolve_image_path(path, local_path, "posters", "w500")
+    return _resolve_image_path(path, local_path, "posters", POSTER_SIZE)
 
 def _resolve_backdrop_path(path: str | None, local_path: str | None) -> str | None:
-    return _resolve_image_path(path, local_path, "backdrops", "w1280")
+    return _resolve_image_path(path, local_path, "backdrops", BACKDROP_SIZE)
 
 def _resolve_still_path(path: str | None, local_path: str | None) -> str | None:
-    return _resolve_image_path(path, local_path, "stills", "w400")
+    return _resolve_image_path(path, local_path, "stills", STILL_SIZE)
 
 def _resolve_logo_path(path: str | None, local_path: str | None) -> str | None:
-    return _resolve_image_path(path, local_path, "logos", "original")
+    return _resolve_image_path(path, local_path, "logos", LOGO_SIZE)
 
 router = APIRouter()
 

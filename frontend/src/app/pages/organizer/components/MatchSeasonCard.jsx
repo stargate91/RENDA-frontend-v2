@@ -2,15 +2,9 @@ import { Clapperboard } from 'lucide-react';
 import Badge from '../../../ui/Badge';
 import MediaCard from '../../../ui/MediaCard';
 import MetaRow from '../../../ui/MetaRow';
+import { buildTmdbImageUrl, TMDB_IMAGE_SIZES } from '@/lib/imageUrls';
 
-const TMDB_IMAGE_SIZE_POSTER = 'w154';
-
-const getImageUrl = (path, size = TMDB_IMAGE_SIZE_POSTER) => (
-  !path ? ''
-    : String(path).startsWith('http://') || String(path).startsWith('https://')
-      ? path
-      : `https://image.tmdb.org/t/p/${size}${path}`
-);
+const getImageUrl = (path, size = TMDB_IMAGE_SIZES.posterThumb) => (!path ? '' : buildTmdbImageUrl(path, size));
 
 export default function MatchSeasonCard({
   seasonEntry,
@@ -19,7 +13,7 @@ export default function MatchSeasonCard({
   isActive = false,
   t,
 }) {
-  const posterUrl = getImageUrl(seasonEntry.poster_path, TMDB_IMAGE_SIZE_POSTER);
+  const posterUrl = getImageUrl(seasonEntry.poster_path, TMDB_IMAGE_SIZES.posterThumb);
 
   return (
     <div

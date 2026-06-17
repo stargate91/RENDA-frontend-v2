@@ -4,7 +4,7 @@ import api from '@/lib/api';
 import Spinner from '@/ui/Spinner';
 import Pill from '@/ui/Pill';
 import { Check } from 'lucide-react';
-import { API_BASE } from '@/lib/backend';
+import { resolveMediaImageUrl } from '@/lib/imageUrls';
 
 const getBulkImportResolveStatePrefix = (isAdult) => `bulkImportResolvedRows:${isAdult ? 'nsfw' : 'sfw'}:`;
 
@@ -56,14 +56,7 @@ export default function BulkImportResolveModalContent({ t, isAdult = false }) {
   }
 
   const resolveProfileUrl = (path) => {
-    if (!path) return '';
-    if (String(path).startsWith('http://') || String(path).startsWith('https://')) {
-      return path;
-    }
-    if (String(path).startsWith('/') && !String(path).startsWith('/images/')) {
-      return `https://image.tmdb.org/t/p/w185${path}`;
-    }
-    return `${API_BASE}${path}`;
+    return resolveMediaImageUrl(path, 'personThumb');
   };
 
   const textKey = (adultKey, defaultKey) => (isAdult ? adultKey : defaultKey);
