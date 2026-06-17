@@ -489,6 +489,10 @@
   gap: var(--space-md);
 }
 
+.entity-detail-page__credits-list--fetching {
+  opacity: 0.82;
+}
+
 .entity-detail-page__credit-card {
   display: grid;
   grid-template-columns: 42px minmax(0, 1fr);

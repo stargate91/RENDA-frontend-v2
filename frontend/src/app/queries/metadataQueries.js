@@ -66,3 +66,10 @@ export const usePersonDetailQuery = (personId, options = {}) => useQuery({
   queryFn: () => api.people.getDetail(personId),
   ...options,
 });
+
+export const usePersonCreditsQuery = (personId, mediaType, page, pageSize, options = {}) => useQuery({
+  queryKey: ['person-credits', personId, mediaType, page, pageSize],
+  queryFn: () => api.people.getCredits(personId, mediaType, { page, pageSize }),
+  placeholderData: (previousData) => previousData,
+  ...options,
+});

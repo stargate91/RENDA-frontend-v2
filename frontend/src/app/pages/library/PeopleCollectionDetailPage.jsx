@@ -31,6 +31,7 @@ import { useUi } from '@/providers/UiProvider';
 import { API_BASE } from '@/lib/backend';
 import {
   useLibraryCollectionDetailQuery,
+  usePersonCreditsQuery,
   usePersonDetailQuery,
 } from '@/queries/metadataQueries';
 import { isTvLikeMediaType } from '@/lib/mediaTypes';
@@ -477,14 +478,11 @@ function prioritizePersonCredits(items, knownForItems) {
     });
 }
 
-function PersonCreditsGridSection({ title, items, navigate, t }) {
-  if (!items?.length) {
-    return null;
-  }
-
+function PersonCreditsGridSection({ title, personId, mediaType, totalCount, navigate, t }) {
+  const shouldLoad = Boolean(personId) && Number(totalCount) > 0;
   const containerRef = useRef(null);
   const [columns, setColumns] = useState(1);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
 
   useLayoutEffect(() => {
     const element = containerRef.current;
@@ -532,13 +530,21 @@ function PersonCreditsGridSection({ title, items, navigate, t }) {
   }, []);
 
   const itemsPerPage = Math.max(1, columns * 2);
-  const totalPages = Math.max(1, Math.ceil(items.length / itemsPerPage));
-  const safePage = Math.min(page, totalPages - 1);
-  const visibleItems = items.slice(safePage * itemsPerPage, (safePage + 1) * itemsPerPage);
+  const creditsQuery = usePersonCreditsQuery(personId, mediaType, page, itemsPerPage, {
+    enabled: shouldLoad,
+  });
+  const totalPages = Math.max(1, Number(creditsQuery.data?.total_pages) || Math.ceil(Number(totalCount) / itemsPerPage) || 1);
+  const safePage = Math.min(page, totalPages);
+  const visibleItems = creditsQuery.data?.items || [];
   const fillerCount = Math.max(0, itemsPerPage - visibleItems.length);
+  const isPageFetching = creditsQuery.isFetching;
+
+  if (!shouldLoad) {
+    return null;
+  }
 
   useEffect(() => {
-    setPage((current) => Math.min(current, totalPages - 1));
+    setPage((current) => Math.max(1, Math.min(current, totalPages)));
   }, [totalPages]);
 
   const openItem = (item) => {
@@ -561,8 +567,8 @@ function PersonCreditsGridSection({ title, items, navigate, t }) {
             <button
               type="button"
               className="entity-detail-page__section-pager-btn"
-              onClick={() => setPage((current) => Math.max(0, current - 1))}
-              disabled={safePage === 0}
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              disabled={safePage <= 1}
               aria-label={t('common.previous') || 'Previous'}
             >
               <ChevronLeft size={16} />
@@ -570,8 +576,8 @@ function PersonCreditsGridSection({ title, items, navigate, t }) {
             <button
               type="button"
               className="entity-detail-page__section-pager-btn"
-              onClick={() => setPage((current) => Math.min(totalPages - 1, current + 1))}
-              disabled={safePage >= totalPages - 1}
+              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+              disabled={safePage >= totalPages}
               aria-label={t('common.next') || 'Next'}
             >
               <ChevronRight size={16} />
@@ -579,7 +585,12 @@ function PersonCreditsGridSection({ title, items, navigate, t }) {
           </div>
         )}
       </div>
-      <div ref={containerRef} className="entity-detail-page__credits-list entity-detail-page__credits-list--people-grid">
+      <div
+        ref={containerRef}
+        className={`entity-detail-page__credits-list entity-detail-page__credits-list--people-grid${
+          isPageFetching ? ' entity-detail-page__credits-list--fetching' : ''
+        }`}
+      >
         {visibleItems.map((item) => (
           <button
             key={`credit-grid-${item.media_type || item.type || 'movie'}-${item.tmdb_id || item.id}`}
@@ -646,7 +657,7 @@ function PersonCreditsGridSection({ title, items, navigate, t }) {
         ))}
         {Array.from({ length: fillerCount }).map((_, index) => (
           <div
-            key={`credit-grid-filler-${safePage}-${index}`}
+            key={`credit-grid-filler-${mediaType}-${safePage}-${index}`}
             className="entity-detail-page__credit-card entity-detail-page__credit-card--collection-item entity-detail-page__credit-card--people-grid entity-detail-page__credit-card--placeholder"
             aria-hidden="true"
           />
@@ -912,19 +923,6 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
     () => externalLinks.filter((link) => link.key === 'tmdb' || link.key === 'imdb'),
     [externalLinks]
   );
-  const knownForItems = useMemo(
-    () => (isPeople ? enrichKnownForItems(item?.known_for, item?.movies, item?.series) : []),
-    [isPeople, item?.known_for, item?.movies, item?.series]
-  );
-  const prioritizedMovieCredits = useMemo(
-    () => (isPeople ? prioritizePersonCredits(item?.movies || [], knownForItems) || [] : []),
-    [isPeople, item?.movies, knownForItems]
-  );
-  const prioritizedSeriesCredits = useMemo(
-    () => (isPeople ? prioritizePersonCredits(item?.series || [], knownForItems) || [] : []),
-    [isPeople, item?.series, knownForItems]
-  );
-
   const backdropUrl = resolveDetailsImageUrl(item?.backdrop_path, API_BASE, 'backdrop');
   const mediaUrl = resolveDetailsImageUrl(
     isPeople ? item?.profile_path : item?.poster_path,
@@ -1279,19 +1277,23 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
       </section>
       )}
 
-      {!hasError && isPeople && prioritizedMovieCredits.length > 0 && (
+      {!hasError && isPeople && Number(item?.total_movie_credits) > 0 && (
         <PersonCreditsGridSection
           title={t('library.details.moviesTitle') || 'Movies'}
-          items={prioritizedMovieCredits}
+          personId={id}
+          mediaType="movies"
+          totalCount={item?.total_movie_credits}
           navigate={navigate}
           t={t}
         />
       )}
 
-      {!hasError && isPeople && prioritizedSeriesCredits.length > 0 && (
+      {!hasError && isPeople && Number(item?.total_series_credits) > 0 && (
         <PersonCreditsGridSection
           title={t('library.details.tvShowsTitle') || 'TV Shows'}
-          items={prioritizedSeriesCredits}
+          personId={id}
+          mediaType="series"
+          totalCount={item?.total_series_credits}
           navigate={navigate}
           t={t}
         />

@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import joinedload
 from typing import Optional
@@ -211,13 +211,23 @@ def _resolve_person_known_for_backdrop(
     tmdb_client,
     credits: list[dict],
     preferred_languages: list[str],
+    department: Optional[str] = None,
     adult_only: bool = False,
 ) -> Optional[str]:
     candidates: list[tuple[int, str]] = []
     seen_media: set[tuple[str, int]] = set()
-    max_scan = 48 if adult_only else 3
+    max_scan = 8
 
-    for credit in credits or []:
+    ranked_credits = sorted(
+        credits or [],
+        key=lambda credit: (
+            _known_for_score(credit, department),
+            int(str((credit.get("release_date") if credit.get("media_type") == "movie" else credit.get("first_air_date")) or "0")[:4] or 0),
+        ),
+        reverse=True,
+    )
+
+    for credit in ranked_credits:
         media_type = credit.get("media_type")
         credit_id = credit.get("id")
         if media_type not in {"movie", "tv"} or not credit_id:
@@ -260,6 +270,348 @@ def _resolve_person_known_for_backdrop(
     return candidates[0][1]
 
 
+def _normalize_credit_title(value: Optional[str]) -> str:
+    if not value:
+        return ""
+    normalized = str(value).lower()
+    return "".join(ch if ch.isalnum() else " " for ch in normalized).strip()
+
+
+def _credit_identity_candidates(credit: dict) -> list[str]:
+    values = [
+        credit.get("tmdb_id"),
+        credit.get("series_tmdb_id"),
+        credit.get("library_series_tmdb_id"),
+        credit.get("library_item_id"),
+        credit.get("id"),
+    ]
+    return [str(value) for value in values if value not in (None, "")]
+
+
+def _credit_matches_known_for(credit: dict, known_for_entry: dict) -> bool:
+    if str(credit.get("media_type") or credit.get("type") or "") != str(known_for_entry.get("media_type") or known_for_entry.get("type") or ""):
+        return False
+
+    credit_ids = _credit_identity_candidates(credit)
+    known_for_ids = _credit_identity_candidates(known_for_entry)
+    if any(credit_id in known_for_ids for credit_id in credit_ids):
+        return True
+
+    credit_title = _normalize_credit_title(credit.get("title") or credit.get("name"))
+    known_for_title = _normalize_credit_title(known_for_entry.get("title") or known_for_entry.get("name"))
+    if not credit_title or not known_for_title or credit_title != known_for_title:
+        return False
+
+    credit_year = str(credit.get("year") or "")
+    known_for_year = str(known_for_entry.get("year") or "")
+    return not credit_year or not known_for_year or credit_year == known_for_year
+
+
+def _prioritize_person_credits(items: list[dict], known_for_items: list[dict]) -> list[dict]:
+    if not items:
+        return []
+
+    known_for_rank: dict[str, int] = {}
+    for index, entry in enumerate(known_for_items or []):
+        ids = _credit_identity_candidates(entry)
+        fallback_key = f"{entry.get('media_type') or entry.get('type')}:{_normalize_credit_title(entry.get('title') or entry.get('name'))}:{entry.get('year') or ''}"
+        known_for_rank[ids[0] if ids else fallback_key] = index
+
+    prioritized = []
+    for entry in items:
+        matched = next((known for known in (known_for_items or []) if _credit_matches_known_for(entry, known)), None)
+        ids = _credit_identity_candidates(matched) if matched else []
+        fallback_key = f"{entry.get('media_type') or entry.get('type')}:{_normalize_credit_title(entry.get('title') or entry.get('name'))}:{entry.get('year') or ''}"
+        rank_key = ids[0] if ids else fallback_key
+        prioritized.append({
+            **entry,
+            "is_known_for": bool(matched),
+            "known_for_rank": known_for_rank.get(rank_key, 10**9),
+        })
+
+    prioritized.sort(
+        key=lambda entry: (
+            0 if entry.get("is_known_for") else 1,
+            entry.get("known_for_rank", 10**9),
+            0 if entry.get("in_library") else 1,
+            -(int(entry.get("year") or 0)),
+            str(entry.get("title") or ""),
+        )
+    )
+    return prioritized
+
+
+def _apply_local_poster_paths(items: list[dict]) -> list[dict]:
+    for item in items:
+        original_poster = item.get("poster_path")
+        local_poster = _public_image_path(original_poster, "posters")
+        item["poster_path"] = local_poster if local_poster else original_poster
+        item["has_local_poster"] = bool(local_poster)
+    return items
+
+
+def _paginate_items(items: list[dict], page: int, page_size: int) -> dict:
+    safe_page_size = max(1, min(60, int(page_size or 1)))
+    total_items = len(items)
+    total_pages = max(1, math.ceil(total_items / safe_page_size)) if total_items else 1
+    safe_page = max(1, min(int(page or 1), total_pages))
+    start_index = (safe_page - 1) * safe_page_size
+    return {
+        "items": items[start_index:start_index + safe_page_size],
+        "page": safe_page,
+        "page_size": safe_page_size,
+        "total_items": total_items,
+        "total_pages": total_pages,
+    }
+
+
+def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str, target_lang: str, lead_cast_order_threshold: int = 3) -> dict:
+    links = db.query(MediaPersonLink).join(MediaPersonLink.media_match).join(MediaMatch.media_item).filter(
+        MediaPersonLink.person_id == person_id,
+        MediaMatch.is_active == True,
+        MediaItem.status.in_([ItemStatus.RENAMED, ItemStatus.ORGANIZED])
+    ).options(
+        joinedload(MediaPersonLink.media_match).joinedload(MediaMatch.media_item),
+        joinedload(MediaPersonLink.media_match).joinedload(MediaMatch.localizations)
+    ).all()
+
+    movies = []
+    series_map = {}
+    person_backdrop = None
+
+    for link in links:
+        item = link.media_match.media_item
+        match = link.media_match
+        item_loc = _pick_match_localization(match.localizations, ui_lang)
+
+        title = item_loc.title if item_loc else item.fn_title or item.filename
+        poster_path = item_loc.poster_path if item_loc else None
+
+        if item.item_type == ItemType.MOVIE:
+            movies.append({
+                "id": item.id,
+                "title": title,
+                "type": item.item_type.value,
+                "media_type": "movie",
+                "tmdb_id": match.tmdb_id,
+                "year": match.release_date.year if match.release_date else None,
+                "poster_path": poster_path,
+                "rating": match.rating_tmdb or 0.0,
+                "rating_tmdb": match.rating_tmdb or 0.0,
+                "rating_imdb": match.rating_imdb,
+                "job": link.job,
+                "character": link.character_name,
+                "is_lead": False,
+                "in_library": True,
+                "library_item_id": item.id,
+            })
+        else:
+            series_title = (item_loc.series_title if item_loc else None) or title
+            sid = match.series_tmdb_id or match.tmdb_id or series_title
+            if sid not in series_map:
+                series_map[sid] = {
+                    "id": f"series_{sid}",
+                    "series_tmdb_id": match.series_tmdb_id or match.tmdb_id,
+                    "tmdb_id": match.series_tmdb_id or match.tmdb_id,
+                    "title": series_title,
+                    "type": "series",
+                    "media_type": "tv",
+                    "year": match.first_air_date.year if match.first_air_date else (match.release_date.year if match.release_date else None),
+                    "poster_path": item_loc.series_poster_path if item_loc and item_loc.series_poster_path else poster_path,
+                    "rating": match.rating_tmdb or 0.0,
+                    "rating_tmdb": match.rating_tmdb or 0.0,
+                    "rating_imdb": match.rating_imdb,
+                    "job": link.job,
+                    "character": link.character_name,
+                    "is_lead": False,
+                    "episode_count": 0,
+                    "in_library": True,
+                    "library_series_tmdb_id": match.series_tmdb_id or match.tmdb_id,
+                }
+            series_map[sid]["episode_count"] += 1
+
+    all_movies = movies
+    all_series = list(series_map.values())
+    known_for = []
+    tmdb_data = {}
+
+    try:
+        from app.api.tmdb_client import TMDBClient
+        tmdb_client = TMDBClient(db)
+        tmdb_data = tmdb_client.get_person_details(person_id, language=target_lang)
+        credits_data = tmdb_data.get("combined_credits", {})
+        cast_list = credits_data.get("cast", [])
+        crew_list = credits_data.get("crew", [])
+        person_backdrop = _resolve_person_known_for_backdrop(
+            db,
+            tmdb_client,
+            cast_list + crew_list,
+            [target_lang, "en"],
+            department=person.known_for_department,
+            adult_only=bool(getattr(person, "is_adult", False)),
+        )
+
+        if cast_list or crew_list:
+            preferred_languages = [target_lang, "en"]
+
+            def _get_virtual_credit_imdb_rating(tmdb_id: int, media_type: str):
+                cache = _pick_tmdb_cache(db, tmdb_id, media_type, preferred_languages)
+                if not cache or not isinstance(cache.raw_data, dict):
+                    return None
+                imdb_id = cache.raw_data.get("external_ids", {}).get("imdb_id") or cache.raw_data.get("imdb_id")
+                if not imdb_id:
+                    return None
+                omdb_raw = _get_omdb_ratings_from_imdb(db, imdb_id)
+                return _parse_omdb_float(omdb_raw.get("imdb_rating"))
+
+            local_movies = db.query(MediaMatch.tmdb_id, MediaItem.id, MediaMatch.rating_imdb).join(MediaMatch.media_item).filter(
+                MediaMatch.is_active == True,
+                MediaItem.status.in_([ItemStatus.RENAMED, ItemStatus.ORGANIZED]),
+                MediaItem.item_type == ItemType.MOVIE
+            ).all()
+            local_movies_map = {}
+            for movie in local_movies:
+                if not movie.tmdb_id:
+                    continue
+                existing = local_movies_map.get(movie.tmdb_id)
+                if not existing or (movie.rating_imdb or 0) > (existing.get("rating_imdb") or 0):
+                    local_movies_map[movie.tmdb_id] = {
+                        "library_item_id": movie.id,
+                        "rating_imdb": movie.rating_imdb,
+                    }
+
+            local_series = db.query(MediaMatch.series_tmdb_id, MediaMatch.tmdb_id, MediaMatch.rating_imdb).join(MediaMatch.media_item).filter(
+                MediaMatch.is_active == True,
+                MediaItem.status.in_([ItemStatus.RENAMED, ItemStatus.ORGANIZED]),
+                MediaItem.item_type.in_([ItemType.SERIES, ItemType.EPISODE])
+            ).all()
+            local_series_map = {}
+            for series in local_series:
+                if series.series_tmdb_id:
+                    existing = local_series_map.get(series.series_tmdb_id)
+                    if not existing or (series.rating_imdb or 0) > (existing.get("rating_imdb") or 0):
+                        local_series_map[series.series_tmdb_id] = {"rating_imdb": series.rating_imdb}
+                if series.tmdb_id:
+                    existing = local_series_map.get(series.tmdb_id)
+                    if not existing or (series.rating_imdb or 0) > (existing.get("rating_imdb") or 0):
+                        local_series_map[series.tmdb_id] = {"rating_imdb": series.rating_imdb}
+
+            combined_credits = {}
+            for credit in cast_list + crew_list:
+                cid = credit.get("id")
+                media_type = credit.get("media_type")
+                if not cid or media_type not in {"movie", "tv"}:
+                    continue
+
+                key = (cid, media_type)
+                if "character" in credit and credit["character"]:
+                    role = f"as {credit['character']}"
+                elif "job" in credit and credit["job"]:
+                    role = credit["job"]
+                else:
+                    role = "Actor" if media_type == "movie" else "Cast"
+
+                is_lead = (
+                    media_type in ("movie", "tv")
+                    and bool(credit.get("character"))
+                    and isinstance(credit.get("order"), int)
+                    and credit["order"] <= lead_cast_order_threshold
+                )
+
+                if key not in combined_credits:
+                    date_str = credit.get("release_date") if media_type == "movie" else credit.get("first_air_date")
+                    year = None
+                    if date_str:
+                        try:
+                            year = int(str(date_str).split("-")[0])
+                        except Exception:
+                            year = None
+
+                    title = credit.get("title") if media_type == "movie" else credit.get("name")
+                    in_library = False
+                    library_item_id = None
+                    library_series_tmdb_id = None
+
+                    if media_type == "movie" and cid in local_movies_map:
+                        in_library = True
+                        library_item_id = local_movies_map[cid]["library_item_id"]
+                    elif media_type == "tv" and cid in local_series_map:
+                        in_library = True
+                        library_series_tmdb_id = cid
+
+                    virtual_imdb_rating = _get_virtual_credit_imdb_rating(cid, media_type)
+                    combined_credits[key] = {
+                        "id": cid,
+                        "tmdb_id": cid,
+                        "title": title or "Unknown",
+                        "type": "movie" if media_type == "movie" else "series",
+                        "media_type": media_type,
+                        "year": year,
+                        "poster_path": credit.get("poster_path"),
+                        "rating": credit.get("vote_average") or 0.0,
+                        "rating_tmdb": credit.get("vote_average") or 0.0,
+                        "vote_count": credit.get("vote_count") or 0,
+                        "popularity": credit.get("popularity") or 0.0,
+                        "genre_ids": credit.get("genre_ids") or [],
+                        "rating_imdb": (
+                            local_movies_map.get(cid, {}).get("rating_imdb")
+                            if media_type == "movie"
+                            else local_series_map.get(cid, {}).get("rating_imdb")
+                        ) or virtual_imdb_rating,
+                        "roles": [role],
+                        "is_lead": is_lead,
+                        "order": credit.get("order") if isinstance(credit.get("order"), int) else None,
+                        "character": credit.get("character"),
+                        "in_library": in_library,
+                        "library_item_id": library_item_id,
+                        "library_series_tmdb_id": library_series_tmdb_id,
+                        "series_tmdb_id": cid if media_type == "tv" else None,
+                    }
+                else:
+                    if role and role not in combined_credits[key]["roles"]:
+                        combined_credits[key]["roles"].append(role)
+                    if is_lead:
+                        combined_credits[key]["is_lead"] = True
+
+            parsed_movies = []
+            parsed_series = []
+            ordered_credits = []
+            for credit in combined_credits.values():
+                serialized_credit = {
+                    **credit,
+                    "job": ", ".join(credit["roles"]),
+                }
+                del serialized_credit["roles"]
+                ordered_credits.append(serialized_credit)
+                if serialized_credit["type"] == "movie":
+                    parsed_movies.append(serialized_credit)
+                else:
+                    parsed_series.append(serialized_credit)
+
+            known_for = _select_known_for(ordered_credits, person.known_for_department, limit=8)
+            all_movies = parsed_movies
+            all_series = parsed_series
+    except Exception as ex:
+        logger.error(f"Failed to load or parse TMDB credits for person {person_id}: {ex}")
+
+    if not person_backdrop:
+        for link in links:
+            if link.media_match and link.media_match.backdrop_path:
+                person_backdrop = link.media_match.backdrop_path
+                break
+
+    all_movies.sort(key=lambda entry: entry.get("year") or 0, reverse=True)
+    all_series.sort(key=lambda entry: entry.get("year") or 0, reverse=True)
+
+    return {
+        "tmdb_data": tmdb_data,
+        "person_backdrop": person_backdrop,
+        "known_for": known_for,
+        "movies": all_movies,
+        "series": all_series,
+    }
+
+
 @router.get("/people/{person_id:int}")
 def get_person_detail(person_id: int):
     """Returns comprehensive detail data for a single person, including their biography and associated library items."""
@@ -299,250 +651,19 @@ def get_person_detail(person_id: int):
 
         loc = _pick_person_localization(person, ui_lang)
                 
-        # Query associated library items
-        links = db.query(MediaPersonLink).join(MediaPersonLink.media_match).join(MediaMatch.media_item).filter(
-            MediaPersonLink.person_id == person_id,
-            MediaMatch.is_active == True,
-            MediaItem.status.in_([ItemStatus.RENAMED, ItemStatus.ORGANIZED])
-        ).options(
-            joinedload(MediaPersonLink.media_match).joinedload(MediaMatch.media_item),
-            joinedload(MediaPersonLink.media_match).joinedload(MediaMatch.localizations)
-        ).all()
-        
-        movies = []
-        series_map = {}
-        person_backdrop = None
-        
-        for link in links:
-            item = link.media_match.media_item
-            match = link.media_match
-            
-            # Get best item localization
-            item_loc = _pick_match_localization(match.localizations, ui_lang)
-                    
-            title = item_loc.title if item_loc else item.fn_title or item.filename
-            poster_path = item_loc.poster_path if item_loc else None
-            
-            if item.item_type == ItemType.MOVIE:
-                movies.append({
-                    "id": item.id,
-                    "title": title,
-                    "type": item.item_type.value,
-                    "year": match.release_date.year if match.release_date else None,
-                    "poster_path": poster_path,
-                    "rating": match.rating_tmdb or 0.0,
-                    "rating_imdb": match.rating_imdb,
-                    "job": link.job,
-                    "character": link.character_name,
-                    "is_lead": False
-                })
-            else:  # Episode or Series
-                series_title = (item_loc.series_title if item_loc else None) or title
-                sid = match.series_tmdb_id or match.tmdb_id or series_title
-                if sid not in series_map:
-                    series_map[sid] = {
-                        "id": f"series_{sid}",
-                        "series_tmdb_id": match.series_tmdb_id or match.tmdb_id,
-                        "title": series_title,
-                        "type": "series",
-                        "year": match.first_air_date.year if match.first_air_date else (match.release_date.year if match.release_date else None),
-                        "poster_path": item_loc.series_poster_path if item_loc and item_loc.series_poster_path else poster_path,
-                        "rating": match.rating_tmdb or 0.0,
-                        "rating_imdb": match.rating_imdb,
-                        "job": link.job,
-                        "character": link.character_name,
-                        "is_lead": False,
-                        "episode_count": 0
-                    }
-                series_map[sid]["episode_count"] += 1
-                
-        # Mark local items with in_library = True
-        for m in movies:
-            m["in_library"] = True
-            m["library_item_id"] = m["id"]
-        for s in series_map.values():
-            s["in_library"] = True
-            s["library_series_tmdb_id"] = s["series_tmdb_id"]
-
-        # Now, try to query TMDB combined_credits
-        all_movies = movies
-        all_series = list(series_map.values())
-        known_for = []
-        tmdb_data = {}
-        
-        try:
-            from app.api.tmdb_client import TMDBClient
-            tmdb_client = TMDBClient(db)
-            tmdb_data = tmdb_client.get_person_details(person_id, language=target_lang)
-            credits_data = tmdb_data.get("combined_credits", {})
-            cast_list = credits_data.get("cast", [])
-            crew_list = credits_data.get("crew", [])
-            person_backdrop = _resolve_person_known_for_backdrop(
-                db,
-                tmdb_client,
-                cast_list + crew_list,
-                [target_lang, "en"],
-                adult_only=bool(getattr(person, "is_adult", False)),
-            )
-            
-            if cast_list or crew_list:
-                preferred_languages = [target_lang, "en"]
-
-                def _get_virtual_credit_imdb_rating(tmdb_id: int, media_type: str):
-                    cache = _pick_tmdb_cache(db, tmdb_id, media_type, preferred_languages)
-                    if not cache or not isinstance(cache.raw_data, dict):
-                        return None
-                    imdb_id = cache.raw_data.get("external_ids", {}).get("imdb_id") or cache.raw_data.get("imdb_id")
-                    if not imdb_id:
-                        return None
-                    omdb_raw = _get_omdb_ratings_from_imdb(db, imdb_id)
-                    return _parse_omdb_float(omdb_raw.get("imdb_rating"))
-
-                # Cache local maps
-                # Let's map active movie TMDB IDs in library
-                local_movies = db.query(MediaMatch.tmdb_id, MediaItem.id, MediaMatch.rating_imdb).join(MediaMatch.media_item).filter(
-                    MediaMatch.is_active == True,
-                    MediaItem.status.in_([ItemStatus.RENAMED, ItemStatus.ORGANIZED]),
-                    MediaItem.item_type == ItemType.MOVIE
-                ).all()
-                local_movies_map = {}
-                for m in local_movies:
-                    if not m.tmdb_id:
-                        continue
-                    existing = local_movies_map.get(m.tmdb_id)
-                    if not existing or (m.rating_imdb or 0) > (existing.get("rating_imdb") or 0):
-                        local_movies_map[m.tmdb_id] = {
-                            "library_item_id": m.id,
-                            "rating_imdb": m.rating_imdb,
-                        }
-
-                # Let's map active series TMDB IDs in library
-                local_series = db.query(MediaMatch.series_tmdb_id, MediaMatch.tmdb_id, MediaMatch.rating_imdb).join(MediaMatch.media_item).filter(
-                    MediaMatch.is_active == True,
-                    MediaItem.status.in_([ItemStatus.RENAMED, ItemStatus.ORGANIZED]),
-                    MediaItem.item_type.in_([ItemType.SERIES, ItemType.EPISODE])
-                ).all()
-                local_series_map = {}
-                for s in local_series:
-                    if s.series_tmdb_id:
-                        existing = local_series_map.get(s.series_tmdb_id)
-                        if not existing or (s.rating_imdb or 0) > (existing.get("rating_imdb") or 0):
-                            local_series_map[s.series_tmdb_id] = {"rating_imdb": s.rating_imdb}
-                    if s.tmdb_id:
-                        existing = local_series_map.get(s.tmdb_id)
-                        if not existing or (s.rating_imdb or 0) > (existing.get("rating_imdb") or 0):
-                            local_series_map[s.tmdb_id] = {"rating_imdb": s.rating_imdb}
-
-                combined_credits = {}
-                for credit in cast_list + crew_list:
-                    cid = credit.get("id")
-                    media_type = credit.get("media_type")
-                    if not cid or not media_type:
-                        continue
-                        
-                    key = (cid, media_type)
-                    
-                    role = ""
-                    if "character" in credit and credit["character"]:
-                        role = f"as {credit['character']}"
-                    elif "job" in credit and credit["job"]:
-                        role = credit["job"]
-                    else:
-                        role = "Actor" if media_type == "movie" else "Cast"
-
-                    is_lead = (
-                        media_type in ("movie", "tv")
-                        and bool(credit.get("character"))
-                        and isinstance(credit.get("order"), int)
-                        and credit["order"] <= lead_cast_order_threshold
-                    )
-                        
-                    if key not in combined_credits:
-                        date_str = credit.get("release_date") if media_type == "movie" else credit.get("first_air_date")
-                        year = None
-                        if date_str:
-                            try:
-                                year = int(date_str.split("-")[0])
-                            except:
-                                pass
-                        
-                        title = credit.get("title") if media_type == "movie" else credit.get("name")
-                        
-                        in_library = False
-                        library_item_id = None
-                        library_series_tmdb_id = None
-                        
-                        if media_type == "movie":
-                            if cid in local_movies_map:
-                                in_library = True
-                                library_item_id = local_movies_map[cid]["library_item_id"]
-                        elif media_type == "tv":
-                            if cid in local_series_map:
-                                in_library = True
-                                library_series_tmdb_id = cid
-
-                        virtual_imdb_rating = _get_virtual_credit_imdb_rating(cid, media_type)
-                                
-                        combined_credits[key] = {
-                            "id": cid,
-                            "title": title or "Unknown",
-                            "type": "movie" if media_type == "movie" else "series",
-                            "media_type": media_type,
-                            "year": year,
-                            "poster_path": credit.get("poster_path"),
-                            "rating": credit.get("vote_average") or 0.0,
-                            "vote_count": credit.get("vote_count") or 0,
-                            "popularity": credit.get("popularity") or 0.0,
-                            "genre_ids": credit.get("genre_ids") or [],
-                            "rating_imdb": (
-                                local_movies_map.get(cid, {}).get("rating_imdb")
-                                if media_type == "movie"
-                                else local_series_map.get(cid, {}).get("rating_imdb")
-                            ) or virtual_imdb_rating,
-                            "roles": [role],
-                            "is_lead": is_lead,
-                            "order": credit.get("order") if isinstance(credit.get("order"), int) else None,
-                            "character": credit.get("character"),
-                            "in_library": in_library,
-                            "library_item_id": library_item_id,
-                            "library_series_tmdb_id": library_series_tmdb_id
-                        }
-                    else:
-                        if role and role not in combined_credits[key]["roles"]:
-                            combined_credits[key]["roles"].append(role)
-                        if is_lead:
-                            combined_credits[key]["is_lead"] = True
-
-                parsed_movies = []
-                parsed_series = []
-                ordered_credits = []
-                for credit in combined_credits.values():
-                    serialized_credit = {
-                        **credit,
-                        "job": ", ".join(credit["roles"]),
-                    }
-                    del serialized_credit["roles"]
-                    ordered_credits.append(serialized_credit)
-                    
-                    if serialized_credit["type"] == "movie":
-                        parsed_movies.append(serialized_credit)
-                    else:
-                        parsed_series.append(serialized_credit)
-
-                known_for = _select_known_for(ordered_credits, person.known_for_department, limit=8)
-                        
-                all_movies = parsed_movies
-                all_series = parsed_series
-        except Exception as ex:
-            logger.error(f"Failed to load or parse TMDB credits for person {person_id}: {ex}")
-        if not person_backdrop:
-            for link in links:
-                if link.media_match and link.media_match.backdrop_path:
-                    person_backdrop = link.media_match.backdrop_path
-                    break
-        # Sort films and series by year descending
-        all_movies.sort(key=lambda x: x.get("year") or 0, reverse=True)
-        all_series.sort(key=lambda x: x.get("year") or 0, reverse=True)
+        credit_payload = _load_person_credit_payload(
+            db,
+            person_id=person_id,
+            person=person,
+            ui_lang=ui_lang,
+            target_lang=target_lang,
+            lead_cast_order_threshold=lead_cast_order_threshold,
+        )
+        tmdb_data = credit_payload["tmdb_data"]
+        person_backdrop = credit_payload["person_backdrop"]
+        known_for = _apply_local_poster_paths(credit_payload["known_for"])
+        all_movies = credit_payload["movies"]
+        all_series = credit_payload["series"]
 
         profile_path = person.profile_path
         person_images = list(person.images or [])
@@ -611,8 +732,8 @@ def get_person_detail(person_id: int):
             "external_ids": tmdb_data.get("external_ids") or person.external_ids or {},
             "images": local_images,
             "known_for": known_for,
-            "movies": all_movies,
-            "series": all_series
+            "total_movie_credits": len(all_movies),
+            "total_series_credits": len(all_series),
         }
         
         return JSONResponse(content=result, media_type="application/json; charset=utf-8")
@@ -620,6 +741,56 @@ def get_person_detail(person_id: int):
         import traceback
         logger.error(f"Error getting person detail: {e}")
         logger.error(traceback.format_exc())
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+    finally:
+        db.close()
+
+
+@router.get("/people/{person_id:int}/movies")
+def get_person_movies(person_id: int, page: int = Query(default=1, ge=1), page_size: int = Query(default=8, ge=1, le=60)):
+    db = Session()
+    try:
+        person = db.query(Person).options(joinedload(Person.localizations)).filter(Person.id == person_id).first()
+        if not person:
+            person = _get_or_create_person_db(db, person_id)
+            if person:
+                person = db.query(Person).options(joinedload(Person.localizations)).filter(Person.id == person_id).first()
+        if not person:
+            return JSONResponse(status_code=404, content={"error": "Person not found"})
+
+        ui_lang = _preferred_metadata_language(db)
+        target_lang = ui_lang or "en"
+        credit_payload = _load_person_credit_payload(db, person_id, person, ui_lang, target_lang)
+        prioritized = _prioritize_person_credits(credit_payload["movies"], credit_payload["known_for"])
+        paged = _paginate_items(_apply_local_poster_paths(prioritized), page, page_size)
+        return JSONResponse(content=paged, media_type="application/json; charset=utf-8")
+    except Exception as e:
+        logger.error(f"Error getting person movies for {person_id}: {e}")
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+    finally:
+        db.close()
+
+
+@router.get("/people/{person_id:int}/series")
+def get_person_series(person_id: int, page: int = Query(default=1, ge=1), page_size: int = Query(default=8, ge=1, le=60)):
+    db = Session()
+    try:
+        person = db.query(Person).options(joinedload(Person.localizations)).filter(Person.id == person_id).first()
+        if not person:
+            person = _get_or_create_person_db(db, person_id)
+            if person:
+                person = db.query(Person).options(joinedload(Person.localizations)).filter(Person.id == person_id).first()
+        if not person:
+            return JSONResponse(status_code=404, content={"error": "Person not found"})
+
+        ui_lang = _preferred_metadata_language(db)
+        target_lang = ui_lang or "en"
+        credit_payload = _load_person_credit_payload(db, person_id, person, ui_lang, target_lang)
+        prioritized = _prioritize_person_credits(credit_payload["series"], credit_payload["known_for"])
+        paged = _paginate_items(_apply_local_poster_paths(prioritized), page, page_size)
+        return JSONResponse(content=paged, media_type="application/json; charset=utf-8")
+    except Exception as e:
+        logger.error(f"Error getting person series for {person_id}: {e}")
         return JSONResponse(content={"error": str(e)}, status_code=500)
     finally:
         db.close()
