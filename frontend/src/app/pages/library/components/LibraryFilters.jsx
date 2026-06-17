@@ -1,6 +1,13 @@
 import Dropdown from '@/ui/Dropdown';
 import SegmentedControl from '@/ui/SegmentedControl';
 import Pill from '@/ui/Pill';
+import {
+  isLibraryCollectionTab,
+  isLibraryPeopleTab,
+  isLibrarySeriesTab,
+  isLibraryTagsTab,
+  isLibraryVideoTab,
+} from '@/lib/libraryTabs';
 
 export default function LibraryFilters({
   t,
@@ -36,10 +43,16 @@ export default function LibraryFilters({
   setFavoriteFilter,
   filterData,
 }) {
+  const isVideoTab = isLibraryVideoTab(resolvedTab);
+  const isCollectionTab = isLibraryCollectionTab(resolvedTab);
+  const isPeopleTab = isLibraryPeopleTab(resolvedTab);
+  const isTagsTab = isLibraryTagsTab(resolvedTab);
+  const isSeriesTab = isLibrarySeriesTab(resolvedTab);
+
   return (
     <div className="organizer-panel__row library-filters-row">
       <div className="library-filters-left">
-        {(resolvedTab === 'movies' || resolvedTab === 'series' || resolvedTab === 'collections' || resolvedTab === 'adult_collections' || resolvedTab === 'adult' || resolvedTab === 'people' || resolvedTab === 'adult_people' || resolvedTab === 'tags') && (
+        {(isVideoTab || isCollectionTab || isPeopleTab || isTagsTab) && (
           <div className="library-sorter-container">
             <span className="library-sorter-label">{t('library.sort.label') || 'Sort:'}</span>
             <Dropdown
@@ -55,17 +68,17 @@ export default function LibraryFilters({
                 setCurrentPage(1);
               }}
               options={
-                (resolvedTab === 'collections' || resolvedTab === 'adult_collections')
+                isCollectionTab
                   ? [
                     { value: 'owned_count', label: t('library.sort.ownedCount') || 'Item Count' },
                     { value: 'title', label: t('library.sort.title') || 'Title' },
                   ]
-                  : resolvedTab === 'tags'
+                  : isTagsTab
                     ? [
                       { value: 'total_count', label: t('library.sort.itemCount') || 'Item Count' },
                       { value: 'name', label: t('library.sort.name') || 'Name' },
                     ]
-                  : (resolvedTab === 'people' || resolvedTab === 'adult_people')
+                  : isPeopleTab
                     ? [
                       { value: 'library_count', label: t('library.sort.libraryCount') || 'Library Count' },
                       { value: 'rating', label: t('library.sort.popularity') || 'Popularity' },
@@ -75,8 +88,8 @@ export default function LibraryFilters({
                     ]
                     : [
                       { value: 'title', label: t('library.sort.title') || 'Title' },
-                      { value: 'year', label: resolvedTab === 'series' ? (t('library.sort.firstAirYear') || 'First Air Year') : (t('library.sort.year') || 'Year') },
-                      { value: 'release_date', label: resolvedTab === 'series' ? (t('library.sort.firstAirDate') || 'First Air Date') : (t('library.sort.releaseDate') || 'Release Date') },
+                      { value: 'year', label: isSeriesTab ? (t('library.sort.firstAirYear') || 'First Air Year') : (t('library.sort.year') || 'Year') },
+                      { value: 'release_date', label: isSeriesTab ? (t('library.sort.firstAirDate') || 'First Air Date') : (t('library.sort.releaseDate') || 'Release Date') },
                       { value: 'rating_imdb', label: t('library.sort.imdbRating') || 'IMDb Rating' },
                       { value: 'rating', label: t('library.sort.tmdbRating') || 'TMDb Rating' },
                       { value: 'user_rating', label: t('library.sort.userRating') || 'User Rating' },
@@ -147,7 +160,7 @@ export default function LibraryFilters({
           </div>
         )}
 
-        {(resolvedTab === 'movies' || resolvedTab === 'series' || resolvedTab === 'adult') && (
+        {isVideoTab && (
           <div className="library-sorter-container">
             <span className="library-sorter-label">{t('library.filter.label') || 'Filter:'}</span>
             <Dropdown
@@ -165,7 +178,7 @@ export default function LibraryFilters({
           </div>
         )}
 
-        {(resolvedTab === 'movies' || resolvedTab === 'series' || resolvedTab === 'adult') && (
+        {isVideoTab && (
           <div className="library-sorter-container">
             <span className="library-sorter-label">{t('library.filter.statusLabel') || 'Status:'}</span>
             <Dropdown
@@ -184,7 +197,7 @@ export default function LibraryFilters({
           </div>
         )}
 
-        {(resolvedTab === 'movies' || resolvedTab === 'series' || resolvedTab === 'adult') && (
+        {isVideoTab && (
           <div className="library-sorter-container">
             <span className="library-sorter-label">{t('library.filter.genreLabel') || 'Genre:'}</span>
             <Dropdown
@@ -202,7 +215,7 @@ export default function LibraryFilters({
           </div>
         )}
 
-        {(resolvedTab === 'movies' || resolvedTab === 'series' || resolvedTab === 'adult') && timeFilterMode === 'decade' && (
+        {isVideoTab && timeFilterMode === 'decade' && (
           <div className="library-sorter-container">
             <span className="library-sorter-label">{t('library.filter.decadeLabel') || 'Decade:'}</span>
             <Dropdown
@@ -221,7 +234,7 @@ export default function LibraryFilters({
           </div>
         )}
 
-        {(resolvedTab === 'movies' || resolvedTab === 'series' || resolvedTab === 'adult') && timeFilterMode === 'year' && (
+        {isVideoTab && timeFilterMode === 'year' && (
           <div className="library-sorter-container">
             <span className="library-sorter-label">{t('library.filter.yearLabel') || 'Year:'}</span>
             <Dropdown
@@ -253,7 +266,7 @@ export default function LibraryFilters({
         </Pill>
       )}
 
-      {(resolvedTab === 'movies' || resolvedTab === 'series' || resolvedTab === 'adult') && (
+      {isVideoTab && (
         <SegmentedControl
           variant="filter"
           value={timeFilterMode}

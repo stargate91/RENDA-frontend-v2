@@ -1,5 +1,6 @@
 import { Info, X } from 'lucide-react';
 import Button from '@/ui/Button';
+import { isLibraryPeopleTab } from '@/lib/libraryTabs';
 
 export default function LibraryBulkImportBanner({
   t,
@@ -56,7 +57,7 @@ export default function LibraryBulkImportBanner({
     });
   };
 
-  if (!showBulkImportBanner || (resolvedTab !== 'people' && resolvedTab !== 'adult_people')) {
+  if (!showBulkImportBanner || !isLibraryPeopleTab(resolvedTab)) {
     return null;
   }
 

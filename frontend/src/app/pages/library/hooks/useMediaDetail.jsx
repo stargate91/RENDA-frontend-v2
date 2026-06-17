@@ -6,6 +6,7 @@ import {
 } from '@/queries/mediaQueries';
 import { useSettingsQuery } from '@/queries/settingsQueries';
 import { API_BASE } from '@/lib/backend';
+import { isMovieMediaType } from '@/lib/mediaTypes';
 import {
   getDurationText,
   resolveDetailsImageUrl
@@ -16,7 +17,7 @@ import Button from '@/ui/Button';
 
 export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
   const cleanId = id?.startsWith('series_') ? id.replace('series_', '') : id;
-  const isMovie = type === 'movie';
+  const isMovie = isMovieMediaType(type);
 
   const [hoveredRating, setHoveredRating] = useState(null);
   const [activePanel, setActivePanel] = useState(null);

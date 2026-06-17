@@ -25,9 +25,9 @@
   width: min(580px, 100%);
   max-height: min(88vh, calc(100vh - (var(--space-6) * 2)));
   border-radius: var(--radius-lg);
-  background: var(--ui-surface-card-gradient);
-  border: 1px solid var(--ui-overlay-panel-border);
-  box-shadow: var(--ui-overlay-panel-shadow);
+  background: var(--modal-surface-base);
+  border: 1px solid var(--modal-border);
+  box-shadow: var(--modal-shadow);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -62,9 +62,9 @@
   gap: var(--space-4);
   padding: var(--space-4) var(--space-5);
   background:
-    var(--ui-overlay-panel-highlight),
-    transparent;
-  border-bottom: 1px solid color-mix(in srgb, var(--color-text-primary) 6%, transparent);
+    var(--modal-header-highlight),
+    var(--modal-surface-header);
+  border-bottom: 1px solid var(--modal-divider);
 }
 
 .ui-modal__title {
@@ -75,7 +75,7 @@
   font: var(--text-section);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--color-ink);
+  color: var(--modal-title-color);
   font-family: var(--font-family-display);
   font-weight: var(--font-weight-bold);
 }
@@ -89,15 +89,15 @@
 
 .ui-modal__description {
   margin: var(--space-2) 0 0;
-  color: var(--color-muted);
+  color: var(--modal-description-color);
   font: var(--text-caption);
   font-family: var(--font-family-sans);
 }
 
 .ui-modal__close {
-  border: 1px solid var(--color-border-strong);
-  background: var(--ui-surface-soft);
-  color: var(--color-muted);
+  border: 1px solid var(--modal-close-border);
+  background: var(--modal-close-bg);
+  color: var(--modal-close-color);
   font-family: Consolas, Monaco, monospace;
   font-size: var(--font-size-2xs);
   font-weight: var(--font-weight-bold);
@@ -109,9 +109,9 @@
 }
 
 .ui-modal__close:hover {
-  background: var(--ui-surface-soft-strong);
-  border-color: color-mix(in srgb, var(--color-text-primary) 18%, transparent);
-  color: var(--color-ink);
+  background: var(--modal-close-bg-hover);
+  border-color: var(--modal-close-border-hover);
+  color: var(--modal-close-color-hover);
 }
 
 .ui-modal__close:hover svg {
@@ -129,14 +129,15 @@
   overflow-y: auto;
   padding: var(--space-5);
   font: var(--text-body);
-  color: var(--color-ink);
+  color: var(--modal-title-color);
   line-height: 1.6;
+  background: var(--modal-surface-base);
 }
 
 .ui-modal__body-text {
   padding: var(--space-2xs) 0;
   font-size: var(--font-size-sm);
-  color: var(--color-muted);
+  color: var(--modal-description-color);
 }
 
 .ui-modal__header,
@@ -150,9 +151,10 @@
   justify-content: flex-end;
   gap: var(--space-3);
   padding: var(--space-4) var(--space-5);
-  border-top: 1px solid color-mix(in srgb, var(--color-text-primary) 4%, transparent);
+  border-top: 1px solid var(--modal-divider-subtle);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.012));
+    var(--modal-footer-highlight),
+    var(--modal-surface-footer);
 }
 
 .ui-modal--danger {

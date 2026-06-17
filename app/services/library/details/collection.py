@@ -45,14 +45,26 @@ class CollectionDetailProvider(BaseDetailProvider):
                 MediaMatch.is_adult == False,
             ).all()
 
-            if not collection and not items:
+            tmdb_details = {}
+            try:
+                tmdb_details = tmdb_client._call_api(  # noqa: SLF001
+                    f"/collection/{collection_tmdb_id_int}",
+                    {
+                        "api_key": getattr(tmdb_client, "_api_key", ""),
+                        "language": ui_lang,
+                    },
+                ) or {}
+            except Exception:
+                tmdb_details = {}
+
+            if not collection and not items and not tmdb_details:
                 return JSONResponse(status_code=404, content={"error": "Collection not found"})
 
             if not collection and items:
                 active_match = next((match for match in items[0].matches if match.is_active), None)
                 collection = active_match.collection_entity if active_match else None
 
-            collection_loc = self.formatter.pick_collection_localization(collection, ui_lang)
+            collection_loc = self.formatter.pick_collection_localization(collection, ui_lang) if collection else None
             if collection_loc:
                 missing_poster = None
                 missing_backdrop = None
@@ -60,7 +72,7 @@ class CollectionDetailProvider(BaseDetailProvider):
                     local_p = os.path.join("data", "media", "images", "posters", collection_loc.poster_path.lstrip("/"))
                     if not os.path.exists(local_p):
                         missing_poster = collection_loc.poster_path
-                if collection.backdrop_path and not _public_image_path(collection.local_backdrop_path, "backdrops"):
+                if collection and collection.backdrop_path and not _public_image_path(collection.local_backdrop_path, "backdrops"):
                     local_b = os.path.join("data", "media", "images", "backdrops", collection.backdrop_path.lstrip("/"))
                     if not os.path.exists(local_b):
                         missing_backdrop = collection.backdrop_path
@@ -76,7 +88,7 @@ class CollectionDetailProvider(BaseDetailProvider):
                         if os.path.exists(local_p_rel):
                             collection_loc.local_poster_path = local_p_rel
                             updated = True
-                    if missing_backdrop:
+                    if collection and missing_backdrop:
                         local_b_rel = f"data/media/images/backdrops/{missing_backdrop.lstrip('/')}"
                         if os.path.exists(local_b_rel):
                             collection.local_backdrop_path = local_b_rel
@@ -84,17 +96,6 @@ class CollectionDetailProvider(BaseDetailProvider):
                     if updated:
                         db.commit()
 
-            tmdb_details = {}
-            try:
-                tmdb_details = tmdb_client._call_api(  # noqa: SLF001
-                    f"/collection/{collection_tmdb_id_int}",
-                    {
-                        "api_key": getattr(tmdb_client, "_api_key", ""),
-                        "language": ui_lang,
-                    },
-                ) or {}
-            except Exception:
-                tmdb_details = {}
             preferred_collection_backdrop = _pick_backdrop_path(tmdb_details, ui_lang) if tmdb_details else None
 
             movies = []

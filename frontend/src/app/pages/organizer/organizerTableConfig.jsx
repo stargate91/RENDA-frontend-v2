@@ -2,6 +2,7 @@ import { ArrowRight } from 'lucide-react';
 import Checkbox from '../../ui/Checkbox';
 import Pill from '../../ui/Pill';
 import Tooltip from '../../ui/Tooltip';
+import { isEpisodeMediaType, isMovieMediaType, isMovieOrEpisodeMediaType } from '@/lib/mediaTypes';
 import { mapCollisionStrategyLabel, shouldShowCollisionStrategy } from './organizerMappers';
 
 const renderSelectColumn = (paginatedRows, selectedRowIds, handleToggleAll, handleToggleRow) => ({
@@ -53,7 +54,7 @@ const renderProposedFilename = (value, row, activeMainTab, onOpenMatch, onOpenOv
   })();
 
   if (isManualReview && row.rawType !== 'extra') {
-    const isEpisode = row.rawType === 'episode';
+    const isEpisode = isEpisodeMediaType(row.rawType);
     const isMissingSeason = isEpisode && (row.season === null || row.season === undefined || row.season === '');
     const isMissingEpisode = isEpisode && (row.episode === null || row.episode === undefined || row.episode === '');
 
@@ -106,19 +107,19 @@ const renderProposedFilename = (value, row, activeMainTab, onOpenMatch, onOpenOv
 const renderStatusCell = (value, row, collisionStrategy, normalizeStatusTone, t) => (
   <span className="organizer-status-cell">
     <Pill variant={normalizeStatusTone(value, t)}>{value}</Pill>
-    {(row.rawType === 'movie' || row.rawType === 'episode') && shouldShowCollisionStrategy(row) ? (
+    {isMovieOrEpisodeMediaType(row.rawType) && shouldShowCollisionStrategy(row) ? (
       <Pill className="organizer-status-cell__policy" variant="default">
         {mapCollisionStrategyLabel(row.rawAction || collisionStrategy, t)}
       </Pill>
     ) : null}
-    {row.rawStatus === 'uncertain' && row.rawType !== 'movie' && (row.season === null || row.season === undefined || row.season === '') ? (
+    {row.rawStatus === 'uncertain' && !isMovieMediaType(row.rawType) && (row.season === null || row.season === undefined || row.season === '') ? (
       <Tooltip content={t('organizer.status.missingSeasonTooltip')} side="top">
         <Pill className="organizer-status-cell__policy" variant="default">
           {t('organizer.status.missingSeason')}
         </Pill>
       </Tooltip>
     ) : null}
-    {row.rawStatus === 'uncertain' && row.rawType !== 'movie' && (row.episode === null || row.episode === undefined || row.episode === '') ? (
+    {row.rawStatus === 'uncertain' && !isMovieMediaType(row.rawType) && (row.episode === null || row.episode === undefined || row.episode === '') ? (
       <Tooltip content={t('organizer.status.missingEpisodeTooltip')} side="top">
         <Pill className="organizer-status-cell__policy" variant="default">
           {t('organizer.status.missingEpisode')}

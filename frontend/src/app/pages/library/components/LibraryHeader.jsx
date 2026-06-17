@@ -4,6 +4,7 @@ import { Tabs } from '@/ui/Tabs';
 import Input from '@/ui/Input';
 import Button from '@/ui/Button';
 import Dropdown from '@/ui/Dropdown';
+import { isLibraryPeopleTab, isLibraryTagsTab } from '@/lib/libraryTabs';
 
 const SearchInput = React.memo(({ placeholder, onSearchChange }) => {
   const [value, setValue] = useState('');
@@ -52,7 +53,7 @@ export default function LibraryHeader({
 }) {
   const currentTabObj = tabs.find(tab => tab.value === resolvedTab);
   const hasItems = currentTabObj ? (currentTabObj.count > 0) : false;
-  const showInlineSorter = !showTabs && resolvedTab === 'tags' && setSortKey && setSortDirection && setCurrentPage;
+  const showInlineSorter = !showTabs && isLibraryTagsTab(resolvedTab) && setSortKey && setSortDirection && setCurrentPage;
   const btnVariant = 'primary';
 
   return (
@@ -62,13 +63,13 @@ export default function LibraryHeader({
         <span className="organizer-panel__title">
           {pageTitle || (activeSessionMode === 'nsfw' ? (t('library.adultTitle') || 'Adult Library') : t('library.title'))}
         </span>
-        {(resolvedTab === 'people' || resolvedTab === 'adult_people') && hasItems && onAddPeople && (
+        {isLibraryPeopleTab(resolvedTab) && hasItems && onAddPeople && (
           <Button variant={btnVariant} size="sm" onClick={onAddPeople} className="library-header-btn">
             <UserPlus size={14} />
             {t('library.people.addPeopleBtn') || 'Add People'}
           </Button>
         )}
-        {resolvedTab === 'tags' && hasItems && onCreateTag && (
+        {isLibraryTagsTab(resolvedTab) && hasItems && onCreateTag && (
           <Button variant={btnVariant} size="sm" onClick={onCreateTag} className="library-header-btn">
             <Plus size={14} />
             {t('library.tags.createBtn') || 'Create Tag'}

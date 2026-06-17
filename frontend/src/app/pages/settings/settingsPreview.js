@@ -1,121 +1,113 @@
+const PREVIEW_CONTEXTS = {
+  movie: {
+    title: 'The Matrix',
+    original_title: 'The Matrix',
+    year: '1999',
+    release_date: '1999-03-31',
+    resolution: '1080p',
+    edition: 'Ultimate Edition',
+    collection: 'The Matrix Collection',
+    source: 'BluRay',
+    video_codec: 'h264',
+    audio_codec: 'DTS-HD',
+    audio_channels: '5.1',
+    imdb_id: 'tt0133093',
+    tmdb_id: '603',
+    rating_imdb: '8.7',
+  },
+  adultMovie: {
+    title: 'Velvet Nights XXX',
+    original_title: 'Velvet Nights XXX',
+    year: '2018',
+    release_date: '2018-06-14',
+    resolution: '1080p',
+    edition: 'Extended Cut',
+    collection: '',
+    source: 'WEB-DL',
+    video_codec: 'h264',
+    audio_codec: 'AAC',
+    audio_channels: '2.0',
+    imdb_id: 'tt0000000',
+    tmdb_id: '0',
+    rating_imdb: '6.4',
+  },
+  show: {
+    series_title: 'Stranger Things',
+    series_original_title: 'Stranger Things',
+    year: '2016',
+    first_air_year: '2016',
+    first_air_date: '2016-07-15',
+    last_air_year: '2022',
+    last_air_date: '2022-07-01',
+    year_range: '2016-2022',
+    series_tmdb_id: '66732',
+  },
+  season: {
+    season: '01',
+    season_name: 'Season 1',
+    series_title: 'Stranger Things',
+  },
+  collection: {
+    collection: 'The Matrix Collection',
+  },
+  extraVideo: {
+    parent_name: 'The Matrix (1999)',
+    sub_category: 'trailer',
+  },
+  extraSub: {
+    parent_name: 'The Matrix (1999)',
+    language: 'en',
+    sub_category: 'forced',
+  },
+  extraAudio: {
+    parent_name: 'The Matrix (1999)',
+    language: 'en',
+    sub_category: 'commentary',
+  },
+  extraImg: {
+    parent_name: 'The Matrix (1999)',
+    sub_category: 'poster',
+  },
+  extraMeta: {
+    parent_name: 'The Matrix (1999)',
+  },
+  episode: {
+    series_title: 'Stranger Things',
+    series_original_title: 'Stranger Things',
+    season: '01',
+    episode: '03',
+    episode_title: 'Holly, Jolly',
+    resolution: '1080p',
+    video_codec: 'h264',
+    audio_codec: 'EAC3',
+    audio_channels: '5.1',
+    series_tmdb_id: '66732',
+    first_air_year: '2016',
+  },
+};
+
+const PREVIEW_EXTENSIONS = {
+  extraAudio: '.ac3',
+  extraImg: '.jpg',
+  extraMeta: '.nfo',
+  extraSub: '.srt',
+  extraVideo: '.mp4',
+};
+
+const isMoviePreviewType = (type) => type === 'movie' || type === 'adultMovie';
+const isShowPreviewType = (type) => type === 'show';
+const isCollectionPreviewType = (type) => type === 'collection';
+const isSeasonLikePreviewType = (type) => type === 'season' || type === 'episode';
+
 export function generatePreview(template, type, casing, separator, customTag, isFile = true, sortOptions = null) {
   if (!template) return '';
 
-  let context = {};
-  let ext = isFile ? '.mp4' : '';
-  if (type === 'movie') {
-    context = {
-      title: 'The Matrix',
-      original_title: 'The Matrix',
-      year: '1999',
-      release_date: '1999-03-31',
-      resolution: '1080p',
-      edition: 'Ultimate Edition',
-      collection: 'The Matrix Collection',
-      source: 'BluRay',
-      video_codec: 'h264',
-      audio_codec: 'DTS-HD',
-      audio_channels: '5.1',
-      imdb_id: 'tt0133093',
-      tmdb_id: '603',
-      rating_imdb: '8.7',
-      custom: customTag || 'custom'
-    };
-  } else if (type === 'adultMovie') {
-    context = {
-      title: 'Velvet Nights XXX',
-      original_title: 'Velvet Nights XXX',
-      year: '2018',
-      release_date: '2018-06-14',
-      resolution: '1080p',
-      edition: 'Extended Cut',
-      collection: '',
-      source: 'WEB-DL',
-      video_codec: 'h264',
-      audio_codec: 'AAC',
-      audio_channels: '2.0',
-      imdb_id: 'tt0000000',
-      tmdb_id: '0',
-      rating_imdb: '6.4',
-      custom: customTag || 'custom'
-    };
-  } else if (type === 'show') {
-    context = {
-      series_title: 'Stranger Things',
-      series_original_title: 'Stranger Things',
-      year: '2016',
-      first_air_year: '2016',
-      first_air_date: '2016-07-15',
-      last_air_year: '2022',
-      last_air_date: '2022-07-01',
-      year_range: '2016-2022',
-      series_tmdb_id: '66732',
-      custom: customTag || 'custom'
-    };
-  } else if (type === 'season') {
-    context = {
-      season: '01',
-      season_name: 'Season 1',
-      series_title: 'Stranger Things',
-      custom: customTag || 'custom'
-    };
-  } else if (type === 'collection') {
-    context = {
-      collection: 'The Matrix Collection',
-      custom: customTag || 'custom'
-    };
-  } else if (type === 'extraVideo') {
-    ext = isFile ? '.mp4' : '';
-    context = {
-      parent_name: 'The Matrix (1999)',
-      sub_category: 'trailer',
-      custom: customTag || 'custom'
-    };
-  } else if (type === 'extraSub') {
-    ext = isFile ? '.srt' : '';
-    context = {
-      parent_name: 'The Matrix (1999)',
-      language: 'en',
-      sub_category: 'forced',
-      custom: customTag || 'custom'
-    };
-  } else if (type === 'extraAudio') {
-    ext = isFile ? '.ac3' : '';
-    context = {
-      parent_name: 'The Matrix (1999)',
-      language: 'en',
-      sub_category: 'commentary',
-      custom: customTag || 'custom'
-    };
-  } else if (type === 'extraImg') {
-    ext = isFile ? '.jpg' : '';
-    context = {
-      parent_name: 'The Matrix (1999)',
-      sub_category: 'poster',
-      custom: customTag || 'custom'
-    };
-  } else if (type === 'extraMeta') {
-    ext = isFile ? '.nfo' : '';
-    context = {
-      parent_name: 'The Matrix (1999)',
-      custom: customTag || 'custom'
-    };
-  } else {
-    context = {
-      series_title: 'Stranger Things',
-      series_original_title: 'Stranger Things',
-      season: '01',
-      episode: '03',
-      episode_title: 'Holly, Jolly',
-      resolution: '1080p',
-      video_codec: 'h264',
-      audio_codec: 'EAC3',
-      audio_channels: '5.1',
-      series_tmdb_id: '66732',
-      first_air_year: '2016',
-      custom: customTag || 'custom'
-    };
-  }
+  const previewType = PREVIEW_CONTEXTS[type] ? type : 'episode';
+  const context = {
+    ...PREVIEW_CONTEXTS[previewType],
+    custom: customTag || 'custom',
+  };
+  const ext = isFile ? (PREVIEW_EXTENSIONS[previewType] || '.mp4') : '';
 
   let result = template.replace(/\{(\w+)\}/g, (match, p1) => {
     const key = p1.toLowerCase().replace(/_/g, '');
@@ -159,19 +151,19 @@ export function generatePreview(template, type, casing, separator, customTag, is
       finalResult = `${result}/The Matrix (1999) 1080p.mp4`;
     } else if (type === 'adultMovie') {
       finalResult = `${result}/Velvet Nights XXX (2018) 1080p.mp4`;
-    } else if (type === 'show') {
+    } else if (isShowPreviewType(type)) {
       finalResult = `${result}/Season 01/Stranger Things - S01E03 - Holly, Jolly.mp4`;
-    } else if (type === 'season' || type === 'episode') {
+    } else if (isSeasonLikePreviewType(type)) {
       finalResult = `${result}/Stranger Things - S01E03 - Holly, Jolly.mp4`;
     }
-  } else if (type === 'collection') {
+  } else if (isCollectionPreviewType(type)) {
     finalResult = result ? `${result}/The Matrix (1999).mp4` : '';
   } else {
     finalResult = result ? `${result}${ext}` : '';
   }
 
-  if (sortOptions && sortOptions.enabled && (!isFile || type === 'collection') && finalResult) {
-    const rootName = (type === 'movie' || type === 'collection')
+  if (sortOptions && sortOptions.enabled && (!isFile || isCollectionPreviewType(type)) && finalResult) {
+    const rootName = (isMoviePreviewType(type) || isCollectionPreviewType(type))
       ? (sortOptions.moviesName || 'Movies')
       : (sortOptions.seriesName || 'TV Shows');
     finalResult = `${rootName}/${finalResult}`;

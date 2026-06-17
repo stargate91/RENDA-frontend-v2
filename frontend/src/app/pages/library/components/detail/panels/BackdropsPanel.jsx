@@ -1,7 +1,8 @@
-import { Check } from 'lucide-react';
+import { Check, ImageOff } from 'lucide-react';
 import { useFullMetadataQuery } from '@/queries/metadataQueries';
 import { useMediaDetailContext } from '../MediaDetailContext';
 import { buildTmdbImageUrl, TMDB_IMAGE_SIZES } from '@/lib/imageUrls';
+import EmptyState from '@/ui/EmptyState';
 import './BackdropsPanel.css';
 
 
@@ -82,9 +83,12 @@ export default function BackdropsPanel() {
         })}
 
         {neutralBackdrops.length === 0 && (
-          <div className="backdrops-panel__empty">
-            {t('library.details.noBackdropsAvailable') || 'No neutral Full HD backdrops available.'}
-          </div>
+          <EmptyState
+            variant="detail-panel"
+            icon={ImageOff}
+            className="backdrops-panel__empty-state"
+            title={t('library.details.noBackdropsAvailable') || 'No neutral Full HD backdrops available.'}
+          />
         )}
       </div>
     </div>

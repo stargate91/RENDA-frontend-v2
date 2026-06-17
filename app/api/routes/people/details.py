@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import joinedload
 from typing import Optional
 import logging
+import math
 import threading
 
 from app.db.base import Session
@@ -29,11 +30,161 @@ from app.utils.people_utils import (
 from app.utils.library_utils import (
     _pick_backdrop_path,
     _pick_tmdb_cache,
+    _get_omdb_ratings_from_imdb,
+    _parse_omdb_float,
 )
 from app.utils.library_utils.image_constants import PERSON_SIZE
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+TALK_LIKE_GENRE_IDS = {10763, 10764, 10767}
+SELF_ROLE_KEYWORDS = {
+    "self",
+    "himself",
+    "herself",
+    "themselves",
+    "guest",
+    "host",
+    "presenter",
+    "interviewer",
+}
+DIRECTING_JOBS = {"director", "creator"}
+WRITING_JOBS = {"writer", "screenplay", "story", "teleplay"}
+
+
+def _normalize_words(value: Optional[str]) -> set[str]:
+    if not value:
+        return set()
+    return {
+        word.strip(".,:;!?()[]{}\"'").lower()
+        for word in str(value).replace("/", " ").replace("-", " ").split()
+        if word.strip()
+    }
+
+
+def _is_self_or_guest_credit(credit: dict) -> bool:
+    role_words = _normalize_words(credit.get("job"))
+    if role_words.intersection(SELF_ROLE_KEYWORDS):
+        return True
+
+    if any(word in {"self", "guest"} for word in _normalize_words(credit.get("character"))):
+        return True
+
+    genre_ids = set(credit.get("genre_ids") or [])
+    if genre_ids.intersection(TALK_LIKE_GENRE_IDS) and not credit.get("character"):
+        return True
+
+    return False
+
+
+def _department_matches_credit(credit: dict, department: Optional[str]) -> bool:
+    normalized_department = str(department or "").strip().lower()
+    if not normalized_department:
+        return False
+
+    job_words = _normalize_words(credit.get("job"))
+    media_type = credit.get("media_type")
+
+    if normalized_department == "acting":
+        return media_type in {"movie", "tv"} and bool(credit.get("character"))
+    if normalized_department in {"directing", "creator"}:
+        return bool(job_words.intersection(DIRECTING_JOBS))
+    if normalized_department == "writing":
+        return bool(job_words.intersection(WRITING_JOBS))
+
+    return False
+
+
+def _known_for_score(credit: dict, department: Optional[str]) -> float:
+    score = 0.0
+
+    vote_average = float(credit.get("rating") or 0.0)
+    vote_count = float(credit.get("vote_count") or 0.0)
+    popularity = float(credit.get("popularity") or 0.0)
+
+    score += vote_average * 6.0
+    score += math.log1p(max(vote_count, 0.0)) * 10.0
+    score += min(popularity, 1000.0) * 0.3
+
+    order = credit.get("order")
+    if isinstance(order, int):
+        if order <= 2:
+            score += 35.0
+        elif order <= 5:
+            score += 24.0
+        elif order <= 10:
+            score += 12.0
+
+    if credit.get("is_lead"):
+        score += 18.0
+
+    if bool(credit.get("character")) and credit.get("order") == 0:
+        score += 17.0
+
+    if _department_matches_credit(credit, department):
+        score += 22.0
+
+    if credit.get("poster_path"):
+        score += 4.0
+
+    if _is_self_or_guest_credit(credit):
+        score -= 45.0
+
+    return score
+
+
+def _select_known_for(credits: list[dict], department: Optional[str], limit: int = 8) -> list[dict]:
+    if not credits:
+        return []
+
+    ranked = sorted(
+        credits,
+        key=lambda credit: (_known_for_score(credit, department), credit.get("year") or 0),
+        reverse=True,
+    )
+
+    selected: list[dict] = []
+    selected_ids: set[tuple[int, str]] = set()
+    self_like_count = 0
+
+    def add_from_pool(pool: list[dict], max_self_like: Optional[int] = None):
+        nonlocal self_like_count
+        for credit in pool:
+            if len(selected) >= limit:
+                break
+            credit_key = (int(credit.get("id") or 0), str(credit.get("type") or ""))
+            if credit_key in selected_ids:
+                continue
+
+            is_self_like = _is_self_or_guest_credit(credit)
+            if max_self_like is not None and is_self_like and self_like_count >= max_self_like:
+                continue
+
+            selected.append(credit)
+            selected_ids.add(credit_key)
+            if is_self_like:
+                self_like_count += 1
+
+    primary_pool = [
+        credit for credit in ranked
+        if _department_matches_credit(credit, department) and not _is_self_or_guest_credit(credit)
+    ]
+    secondary_pool = [
+        credit for credit in ranked
+        if _department_matches_credit(credit, department)
+    ]
+    tertiary_pool = [
+        credit for credit in ranked
+        if not _is_self_or_guest_credit(credit)
+    ]
+
+    add_from_pool(primary_pool, max_self_like=0)
+    add_from_pool(secondary_pool, max_self_like=1)
+    add_from_pool(tertiary_pool, max_self_like=1)
+    add_from_pool(ranked, max_self_like=1)
+
+    return selected[:limit]
 
 def _backdrop_resolution_from_raw(raw_data: Optional[dict], backdrop_path: Optional[str]) -> int:
     if not raw_data or not backdrop_path:
@@ -217,6 +368,7 @@ def get_person_detail(person_id: int):
         all_movies = movies
         all_series = list(series_map.values())
         known_for = []
+        tmdb_data = {}
         
         try:
             from app.api.tmdb_client import TMDBClient
@@ -234,6 +386,18 @@ def get_person_detail(person_id: int):
             )
             
             if cast_list or crew_list:
+                preferred_languages = [target_lang, "en"]
+
+                def _get_virtual_credit_imdb_rating(tmdb_id: int, media_type: str):
+                    cache = _pick_tmdb_cache(db, tmdb_id, media_type, preferred_languages)
+                    if not cache or not isinstance(cache.raw_data, dict):
+                        return None
+                    imdb_id = cache.raw_data.get("external_ids", {}).get("imdb_id") or cache.raw_data.get("imdb_id")
+                    if not imdb_id:
+                        return None
+                    omdb_raw = _get_omdb_ratings_from_imdb(db, imdb_id)
+                    return _parse_omdb_float(omdb_raw.get("imdb_rating"))
+
                 # Cache local maps
                 # Let's map active movie TMDB IDs in library
                 local_movies = db.query(MediaMatch.tmdb_id, MediaItem.id, MediaMatch.rating_imdb).join(MediaMatch.media_item).filter(
@@ -316,17 +480,29 @@ def get_person_detail(person_id: int):
                             if cid in local_series_map:
                                 in_library = True
                                 library_series_tmdb_id = cid
+
+                        virtual_imdb_rating = _get_virtual_credit_imdb_rating(cid, media_type)
                                 
                         combined_credits[key] = {
                             "id": cid,
                             "title": title or "Unknown",
                             "type": "movie" if media_type == "movie" else "series",
+                            "media_type": media_type,
                             "year": year,
                             "poster_path": credit.get("poster_path"),
                             "rating": credit.get("vote_average") or 0.0,
-                            "rating_imdb": local_movies_map.get(cid, {}).get("rating_imdb") if media_type == "movie" else local_series_map.get(cid, {}).get("rating_imdb"),
+                            "vote_count": credit.get("vote_count") or 0,
+                            "popularity": credit.get("popularity") or 0.0,
+                            "genre_ids": credit.get("genre_ids") or [],
+                            "rating_imdb": (
+                                local_movies_map.get(cid, {}).get("rating_imdb")
+                                if media_type == "movie"
+                                else local_series_map.get(cid, {}).get("rating_imdb")
+                            ) or virtual_imdb_rating,
                             "roles": [role],
                             "is_lead": is_lead,
+                            "order": credit.get("order") if isinstance(credit.get("order"), int) else None,
+                            "character": credit.get("character"),
                             "in_library": in_library,
                             "library_item_id": library_item_id,
                             "library_series_tmdb_id": library_series_tmdb_id
@@ -353,9 +529,7 @@ def get_person_detail(person_id: int):
                     else:
                         parsed_series.append(serialized_credit)
 
-                preferred_known_for = [credit for credit in ordered_credits if credit.get("poster_path")]
-                fallback_known_for = [credit for credit in ordered_credits if not credit.get("poster_path")]
-                known_for = (preferred_known_for + fallback_known_for)[:3]
+                known_for = _select_known_for(ordered_credits, person.known_for_department, limit=8)
                         
                 all_movies = parsed_movies
                 all_series = parsed_series
@@ -413,6 +587,10 @@ def get_person_detail(person_id: int):
         result = {
             "id": person.id,
             "name": loc.name if loc else "Unknown",
+            "alternate_names": [
+                alias for alias in (tmdb_data.get("also_known_as") or [])
+                if isinstance(alias, str) and alias.strip() and alias.strip() != (loc.name if loc else "Unknown")
+            ],
             "biography": loc.biography if loc else None,
             "birthday": person.birthday,
             "deathday": person.deathday,
@@ -429,6 +607,8 @@ def get_person_detail(person_id: int):
             "is_favorite": person.is_favorite,
             "user_rating": person.user_rating,
             "custom_tags": person.custom_tags or [],
+            "homepage": tmdb_data.get("homepage") or None,
+            "external_ids": tmdb_data.get("external_ids") or person.external_ids or {},
             "images": local_images,
             "known_for": known_for,
             "movies": all_movies,

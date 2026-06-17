@@ -1,13 +1,7 @@
 import { useMatchSearch } from './hooks/useMatchSearch';
 import { useMatchBrowser } from './hooks/useMatchBrowser';
 import { useMatchResolve } from './hooks/useMatchResolve';
-
-const normalizeCandidateType = (value) => {
-  const normalized = String(value || '').toLowerCase();
-  return normalized === 'tv' || normalized === 'series' || normalized === 'season' || normalized === 'episode'
-    ? 'tv'
-    : 'movie';
-};
+import { MEDIA_TYPES, toMetadataMediaType } from '@/lib/mediaTypes';
 
 export default function useMatchModalViewModel({
   row,
@@ -81,7 +75,7 @@ export default function useMatchModalViewModel({
   const handleSearch = async (event) => {
     event?.preventDefault();
     const searchResults = await performSearch(resetBrowser);
-    if (searchResults && searchResults.length === 1 && mode === 'tv') {
+    if (searchResults && searchResults.length === 1 && mode === MEDIA_TYPES.TV) {
       const parsedSeason = Number.parseInt(season, 10);
       if (Number.isFinite(parsedSeason)) {
         handleDirectBrowse(searchResults[0], parsedSeason);
@@ -101,7 +95,7 @@ export default function useMatchModalViewModel({
 
     if (hasSearched && !isSearching) {
       const searchResults = await performSearch(resetBrowser, nextMode);
-      if (searchResults && searchResults.length === 1 && nextMode === 'tv') {
+      if (searchResults && searchResults.length === 1 && nextMode === MEDIA_TYPES.TV) {
         const parsedSeason = Number.parseInt(season, 10);
         if (Number.isFinite(parsedSeason)) {
           handleDirectBrowse(searchResults[0], parsedSeason);
@@ -113,8 +107,8 @@ export default function useMatchModalViewModel({
   };
 
   const handleCandidateSelect = async (candidate) => {
-    const mediaType = normalizeCandidateType(candidate.type || candidate.media_type || mode);
-    if (mediaType === 'tv') {
+    const mediaType = toMetadataMediaType(candidate.type || candidate.media_type || mode, mode);
+    if (mediaType === MEDIA_TYPES.TV) {
       await handleBrowseSeries(candidate);
       return;
     }

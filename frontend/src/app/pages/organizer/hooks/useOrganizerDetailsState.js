@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { isEpisodeMediaType, isMovieOrEpisodeMediaType } from '@/lib/mediaTypes';
 
 export function useOrganizerDetailsState({ sortedRows = [], paginatedRows = [] }) {
   const [activeRowId, setActiveRowId] = useState(null);
@@ -33,10 +34,10 @@ export function useOrganizerDetailsState({ sortedRows = [], paginatedRows = [] }
   const activeImage = activeImages[activeImageIndex] || activeImages[0] || null;
 
   const shouldShowDetailsPoster = (activeRow?.rawStatus === 'matched' || activeRow?.rawStatus === 'uncertain' || activeRow?.rawStatus === 'multiple') &&
-    (activeRow?.rawType === 'movie' || activeRow?.rawType === 'episode') &&
+    isMovieOrEpisodeMediaType(activeRow?.rawType) &&
     activeImages.length > 0;
 
-  const shouldShowDetailsCarousel = activeRow?.rawType === 'episode' && activeImages.length > 1;
+  const shouldShowDetailsCarousel = isEpisodeMediaType(activeRow?.rawType) && activeImages.length > 1;
 
   const handleToggleDetails = () => {
     setIsDetailsCollapsed((current) => {

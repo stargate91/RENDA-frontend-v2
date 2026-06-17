@@ -1,12 +1,6 @@
 import { useState } from 'react';
 import { useResolveMetadataMutation, useBulkResolveMetadataMutation } from '@/queries';
-
-const normalizeCandidateType = (value) => {
-  const normalized = String(value || '').toLowerCase();
-  return normalized === 'tv' || normalized === 'series' || normalized === 'season' || normalized === 'episode'
-    ? 'tv'
-    : 'movie';
-};
+import { MEDIA_TYPES, isEpisodeMediaType, toMetadataMediaType } from '@/lib/mediaTypes';
 
 const toOptionalNumber = (value) => {
   const normalized = String(value ?? '').trim();
@@ -19,7 +13,7 @@ const toOptionalNumber = (value) => {
 
 const buildResolvePayload = (row, candidate, selectedMode, seasonValue, episodeValue) => {
   const episodeList = Array.isArray(candidate?.episodes) ? candidate.episodes : [];
-  const mediaType = normalizeCandidateType(candidate?.type || candidate?.media_type || selectedMode);
+  const mediaType = toMetadataMediaType(candidate?.type || candidate?.media_type || selectedMode, selectedMode);
   const season = toOptionalNumber(seasonValue);
   const episode = toOptionalNumber(episodeValue);
 
@@ -28,9 +22,10 @@ const buildResolvePayload = (row, candidate, selectedMode, seasonValue, episodeV
     item_type: mediaType,
   };
 
-  const isMatchedEpisode = row.rawType === 'episode' && (row.rawStatus === 'matched' || row.rawStatus === 'renamed' || row.rawStatus === 'organized');
+  const isMatchedEpisode = isEpisodeMediaType(row.rawType)
+    && (row.rawStatus === 'matched' || row.rawStatus === 'renamed' || row.rawStatus === 'organized');
 
-  if (mediaType === 'tv') {
+  if (mediaType === MEDIA_TYPES.TV) {
     if (season != null) {
       target.season = season;
     } else if (isMatchedEpisode) {
@@ -80,7 +75,8 @@ export function useMatchResolve({ rows = [], t, toast, onResolved, mode }) {
     let existingDetails = '';
 
     for (const r of rows) {
-      const isMatchedEpisode = r.rawType === 'episode' && (r.rawStatus === 'matched' || r.rawStatus === 'renamed' || r.rawStatus === 'organized');
+      const isMatchedEpisode = isEpisodeMediaType(r.rawType)
+        && (r.rawStatus === 'matched' || r.rawStatus === 'renamed' || r.rawStatus === 'organized');
       if (!isMatchedEpisode) {
         continue;
       }
@@ -121,7 +117,10 @@ export function useMatchResolve({ rows = [], t, toast, onResolved, mode }) {
     const effectiveSeason = overrides.season !== undefined ? overrides.season : null;
     const effectiveEpisode = overrides.episode !== undefined ? overrides.episode : null;
 
-    const isMatchedEpisode = rows.some(r => r.rawType === 'episode' && (r.rawStatus === 'matched' || r.rawStatus === 'renamed' || r.rawStatus === 'organized'));
+    const isMatchedEpisode = rows.some((r) => (
+      isEpisodeMediaType(r.rawType)
+      && (r.rawStatus === 'matched' || r.rawStatus === 'renamed' || r.rawStatus === 'organized')
+    ));
 
     const performResolve = async () => {
       setIsResolvingId(candidateId);
@@ -129,7 +128,7 @@ export function useMatchResolve({ rows = [], t, toast, onResolved, mode }) {
         await onResolved(async () => {
           if (rows.length > 1) {
             const episodeList = Array.isArray(candidate?.episodes) ? candidate.episodes : [];
-            const mediaType = normalizeCandidateType(candidate?.type || candidate?.media_type || mode);
+            const mediaType = toMetadataMediaType(candidate?.type || candidate?.media_type || mode, mode);
             const seasonVal = toOptionalNumber(effectiveSeason);
             const episodeVal = toOptionalNumber(effectiveEpisode);
 
@@ -138,7 +137,7 @@ export function useMatchResolve({ rows = [], t, toast, onResolved, mode }) {
               item_type: mediaType,
             };
 
-            if (mediaType === 'tv') {
+            if (mediaType === MEDIA_TYPES.TV) {
               if (seasonVal != null) {
                 target.season = seasonVal;
               } else if (isMatchedEpisode) {
@@ -174,7 +173,7 @@ export function useMatchResolve({ rows = [], t, toast, onResolved, mode }) {
       }
     };
 
-    const isBucket = mode === 'tv' && effectiveSeason !== null && effectiveEpisode === null && Array.isArray(candidate?.episodes) && candidate.episodes.length > 0;
+    const isBucket = mode === MEDIA_TYPES.TV && effectiveSeason !== null && effectiveEpisode === null && Array.isArray(candidate?.episodes) && candidate.episodes.length > 0;
 
     if (isBucket) {
       requestConfirm('bucket', 'renda_skip_confirm_bucket', performResolve);
@@ -182,11 +181,11 @@ export function useMatchResolve({ rows = [], t, toast, onResolved, mode }) {
     }
 
     if (isMatchedEpisode) {
-      if (mode === 'tv' && effectiveSeason === null && effectiveEpisode === null) {
+      if (mode === MEDIA_TYPES.TV && effectiveSeason === null && effectiveEpisode === null) {
         requestConfirm('series', 'renda_skip_confirm_series', performResolve);
         return;
       }
-      if (mode === 'tv' && effectiveSeason !== null && effectiveEpisode === null) {
+      if (mode === MEDIA_TYPES.TV && effectiveSeason !== null && effectiveEpisode === null) {
         requestConfirm('season', 'renda_skip_confirm_season', performResolve);
         return;
       }

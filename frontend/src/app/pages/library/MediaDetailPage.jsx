@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from '@/providers/LanguageContext';
 import { useUi } from '@/providers/UiProvider';
+import { isMovieMediaType, normalizeMediaType } from '@/lib/mediaTypes';
 
 // Context
 import { MediaDetailProvider } from './components/detail/MediaDetailContext';
@@ -34,11 +35,12 @@ export default function MediaDetailPage({ type = 'movie' }) {
   const { t } = useTranslation();
   const { openModal, closeModal, toast } = useUi();
 
-  const isMovie = type === 'movie';
+  const normalizedType = normalizeMediaType(type, type);
+  const isMovie = isMovieMediaType(normalizedType);
 
   const detailState = useMediaDetail({
     id,
-    type,
+    type: normalizedType,
     t,
     openModal,
     closeModal
@@ -89,7 +91,7 @@ export default function MediaDetailPage({ type = 'movie' }) {
   }
 
   return (
-    <MediaDetailProvider value={{ ...detailState, t, navigate, toast, type, id }}>
+    <MediaDetailProvider value={{ ...detailState, t, navigate, toast, type: normalizedType, id }}>
       <DetailPageShell
         backdropUrl={backdropUrl}
         backLabel={t('common.back') || 'Back'}

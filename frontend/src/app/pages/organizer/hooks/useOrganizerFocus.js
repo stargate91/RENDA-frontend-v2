@@ -7,6 +7,7 @@ import {
   normalizeItemStatus,
 } from '../organizerMappers';
 import { scrollOrganizerToTop } from '../organizerScroll';
+import { isEpisodeMediaType, isMovieMediaType, isTvLikeMediaType } from '@/lib/mediaTypes';
 
 export function useOrganizerFocus({
   discovery,
@@ -45,16 +46,16 @@ export function useOrganizerFocus({
       ...(nextDiscovery.collisions || []),
     ];
     const movieRows = matchedMedia
-      .filter((item) => item.type === 'movie' && MATCHED_STATUSES.has(normalizeItemStatus(item.status)))
+      .filter((item) => isMovieMediaType(item.type) && MATCHED_STATUSES.has(normalizeItemStatus(item.status)))
       .map((item) => mapDiscoveryItemRow(item, t));
     const episodeRows = matchedMedia
-      .filter((item) => item.type === 'episode' && MATCHED_STATUSES.has(normalizeItemStatus(item.status)))
+      .filter((item) => isEpisodeMediaType(item.type) && MATCHED_STATUSES.has(normalizeItemStatus(item.status)))
       .map((item) => mapDiscoveryItemRow(item, t));
     const manualMovieRows = reviewMedia
-      .filter((item) => item.type === 'movie' && MANUAL_REVIEW_STATUSES.has(normalizeItemStatus(item.status)))
+      .filter((item) => isMovieMediaType(item.type) && MANUAL_REVIEW_STATUSES.has(normalizeItemStatus(item.status)))
       .map((item) => mapDiscoveryItemRow(item, t));
     const manualEpisodeRows = reviewMedia
-      .filter((item) => item.type !== 'movie' && MANUAL_REVIEW_STATUSES.has(normalizeItemStatus(item.status)))
+      .filter((item) => isTvLikeMediaType(item.type) && MANUAL_REVIEW_STATUSES.has(normalizeItemStatus(item.status)))
       .map((item) => mapDiscoveryItemRow(item, t));
     const extraTabPriority = ['bonus', 'subtitles', 'audio', 'images', 'metadata'];
     const firstExtraTab = extraTabPriority.find((tab) =>

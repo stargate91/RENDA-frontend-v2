@@ -10,7 +10,15 @@ import Button from '@/ui/Button';
 import IconButton from '@/ui/IconButton';
 import NavButton from '@/ui/NavButton';
 import { resolveMediaImageUrl } from '@/lib/imageUrls';
-import { Pencil, Play, Plus, Trash2, UserPlus, Check } from 'lucide-react';
+import {
+  getLibraryTagBucketKeys,
+  isLibraryMovieTab,
+  isLibraryPeopleTab,
+  isLibrarySeriesTab,
+  isLibraryTagsTab,
+} from '@/lib/libraryTabs';
+import { isMovieMediaType, isPersonMediaType, isTvLikeMediaType } from '@/lib/mediaTypes';
+import { Pencil, Play, Plus, Trash2, UserPlus } from 'lucide-react';
 
 const renderUserRatingBadge = (item) => {
   const rating = Number(item?.user_rating);
@@ -75,12 +83,12 @@ export default function LibraryGrid({
 
     if (playMutation.isPending) return;
 
-    if (resolvedTab === 'movies') {
+    if (isLibraryMovieTab(resolvedTab)) {
       playMutation.mutate(item.id);
       return;
     }
 
-    if (resolvedTab !== 'series') return;
+    if (!isLibrarySeriesTab(resolvedTab)) return;
 
     try {
       const seriesId = String(item.id).startsWith('series_') ? String(item.id).slice(7) : item.id;
@@ -99,11 +107,11 @@ export default function LibraryGrid({
 
     if (isCollections) {
       navigate(`/library/collection/${item.tmdb_id || item.id}`);
-    } else if (resolvedTab === 'people' || resolvedTab === 'adult_people') {
+    } else if (isLibraryPeopleTab(resolvedTab)) {
       navigate(`/library/people/${item.id}`);
-    } else if (resolvedTab === 'movies') {
+    } else if (isLibraryMovieTab(resolvedTab)) {
       navigate(`/library/movie/${item.id}`);
-    } else if (resolvedTab === 'series') {
+    } else if (isLibrarySeriesTab(resolvedTab)) {
       navigate(`/library/series/${item.id}`);
     }
   };
@@ -131,7 +139,7 @@ export default function LibraryGrid({
         ratingTmdb: item.rating,
       };
     }
-    if (resolvedTab === 'people' || resolvedTab === 'adult_people') {
+    if (isLibraryPeopleTab(resolvedTab)) {
       return {
         title: item.name || item.title,
         subtitle: item.people_role ? t(`library.people.roles.${item.people_role}`, { defaultValue: item.people_role }) : '',
@@ -154,15 +162,15 @@ export default function LibraryGrid({
       badge: renderUserRatingBadge(item),
       ratingImdb: item.rating_imdb,
       ratingTmdb: item.rating,
-      playOverlay: item.in_library !== false && (resolvedTab === 'movies' || resolvedTab === 'series')
+      playOverlay: item.in_library !== false && (isLibraryMovieTab(resolvedTab) || isLibrarySeriesTab(resolvedTab))
         ? {
             onClick: (event) => {
               void handlePlayOverlayClick(event, item);
             },
-            title: resolvedTab === 'series'
+            title: isLibrarySeriesTab(resolvedTab)
               ? (t('library.details.continue') || 'Continue')
               : ((item.resume_position || 0) > 0 ? (t('library.details.resume') || 'Resume') : (t('library.details.play') || 'Play')),
-            label: resolvedTab === 'series'
+            label: isLibrarySeriesTab(resolvedTab)
               ? (t('library.details.continue') || 'Continue')
               : ((item.resume_position || 0) > 0 ? (t('library.details.resume') || 'Resume') : (t('library.details.play') || 'Play')),
             disabled: playMutation.isPending,
@@ -211,7 +219,7 @@ export default function LibraryGrid({
                 const singlePreview = previewCount === 1 ? samplePreviews[0] : null;
                  const singlePreviewImage = (() => {
                    if (!singlePreview) return '';
-                   const isPerson = singlePreview.kind === 'person' || singlePreview.kind === 'adult_star';
+                   const isPerson = isPersonMediaType(singlePreview.kind);
                    if (isPerson) {
                      return singlePreview.backdrop ? resolvePosterUrl(singlePreview.backdrop) : '';
                    }
@@ -310,12 +318,12 @@ export default function LibraryGrid({
           description={emptyDescription}
           icon={emptyIcon}
           actions={
-            (resolvedTab === 'people' || resolvedTab === 'adult_people') && onAddPeople && !hasActiveFilters ? (
+            isLibraryPeopleTab(resolvedTab) && onAddPeople && !hasActiveFilters ? (
               <Button variant="primary" size="sm" onClick={onAddPeople}>
                 <UserPlus size={16} />
                 {t('library.people.addPeopleBtn') || 'Add People'}
               </Button>
-            ) : resolvedTab === 'tags' && onCreateTag && !hasActiveFilters ? (
+            ) : isLibraryTagsTab(resolvedTab) && onCreateTag && !hasActiveFilters ? (
               <Button variant="primary" size="sm" onClick={onCreateTag}>
                 <Plus size={16} />
                 {t('library.tags.createBtn') || 'Create Tag'}
@@ -334,20 +342,7 @@ function ExpandedTagPanel({ tag, t, resolvePosterUrl, emptyIcon, isFocusMode = f
     if (Array.isArray(tag.mode_items)) {
       return tag.mode_items;
     }
-    const isNsfw = activeSessionMode === 'nsfw';
-    if (isNsfw) {
-      return [
-        ...(tag.adult || []),
-        ...(tag.adult_series || []),
-        ...(tag.adult_people || []),
-      ];
-    } else {
-      return [
-        ...(tag.movies || []),
-        ...(tag.series || []),
-        ...(tag.people || []),
-      ];
-    }
+    return getLibraryTagBucketKeys(activeSessionMode).flatMap((key) => tag[key] || []);
   }, [tag, activeSessionMode]);
 
   const [visibleCount, setVisibleCount] = useState(20);
@@ -355,7 +350,7 @@ function ExpandedTagPanel({ tag, t, resolvePosterUrl, emptyIcon, isFocusMode = f
   const hasMore = allItems.length > visibleCount;
 
   const getCardProps = (item) => {
-    const isPerson = item.type === 'person' || item.type === 'adult_star';
+    const isPerson = isPersonMediaType(item.type);
     if (isPerson) {
       return {
         variant: isFocusMode ? 'overlay-title' : 'default',
@@ -428,15 +423,14 @@ function ExpandedTagPanel({ tag, t, resolvePosterUrl, emptyIcon, isFocusMode = f
             key={item.id}
             isWatched={item.is_watched}
             onClick={() => {
-              const isPerson = item.type === 'person' || item.type === 'adult_star';
+              const isPerson = isPersonMediaType(item.type);
               if (isPerson) {
                 navigate(`/library/people/${item.id}`);
                 return;
               }
-              const type = item.type;
-              if (type === 'movie' || type === 'adult') {
+              if (isMovieMediaType(item.type)) {
                 navigate(`/library/movie/${item.id}`);
-              } else if (type === 'series' || type === 'adult_series') {
+              } else if (isTvLikeMediaType(item.type)) {
                 navigate(`/library/series/${item.id}`);
               }
             }}

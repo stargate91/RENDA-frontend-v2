@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { selectFolder } from '../../../lib/ipc';
 import { scrollOrganizerToTop } from '../organizerScroll';
 import { useScanMutation } from '../../../queries';
+import { isEpisodeMediaType } from '@/lib/mediaTypes';
 
 const EMPTY_DISCOVERY = {
   manual: [],
@@ -143,7 +144,7 @@ export function useOrganizerScan({
             queryClient.setQueryData(['discovery'], mergedDiscovery);
             onResultsReady?.(mergedDiscovery);
             const matchedMovies = (nextDiscovery.movies || []).length;
-            const matchedEpisodes = (nextDiscovery.series || []).filter((item) => item.type === 'episode').length;
+            const matchedEpisodes = (nextDiscovery.series || []).filter((item) => isEpisodeMediaType(item.type)).length;
             const matchedReady = matchedMovies + matchedEpisodes;
             toast(t('organizer.toasts.scanComplete').replace('{count}', matchedReady), 'success');
           }

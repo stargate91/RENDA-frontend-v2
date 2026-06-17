@@ -3,30 +3,24 @@ import Badge from '@/ui/Badge';
 import MetaRow from '@/ui/MetaRow';
 import PosterCard from '@/ui/PosterCard';
 import { buildTmdbImageUrl, TMDB_IMAGE_SIZES } from '@/lib/imageUrls';
+import { MEDIA_TYPES, isTvLikeMediaType, toMetadataMediaType } from '@/lib/mediaTypes';
 
 const getDisplayTitle = (candidate, mediaType, t) => (
   candidate?.title
   || candidate?.name
   || candidate?.original_title
   || candidate?.original_name
-  || (mediaType === 'tv' ? t('organizer.details.matchModal.unknownSeries') : t('organizer.details.matchModal.unknownMovie'))
+  || (mediaType === MEDIA_TYPES.TV ? t('organizer.details.matchModal.unknownSeries') : t('organizer.details.matchModal.unknownMovie'))
 );
 
 const getDisplayYear = (candidate, mediaType) => {
-  const rawDate = mediaType === 'tv'
+  const rawDate = mediaType === MEDIA_TYPES.TV
     ? candidate?.first_air_date
     : candidate?.release_date;
   return rawDate ? String(rawDate).slice(0, 4) : null;
 };
 
 const getImageUrl = (path, size = TMDB_IMAGE_SIZES.posterThumb) => (!path ? '' : buildTmdbImageUrl(path, size));
-
-const normalizeCandidateType = (value, fallbackMode) => {
-  const normalized = String(value || '').toLowerCase();
-  return normalized === 'tv' || normalized === 'series' || normalized === 'season' || normalized === 'episode'
-    ? 'tv'
-    : fallbackMode === 'tv' ? 'tv' : 'movie';
-};
 
 export default function MatchCandidateCard({
   candidate,
@@ -39,7 +33,7 @@ export default function MatchCandidateCard({
   t,
   rowStatus,
 }) {
-  const mediaType = normalizeCandidateType(candidate.type || candidate.media_type, mode);
+  const mediaType = toMetadataMediaType(candidate.type || candidate.media_type, mode);
   const displayTitle = getDisplayTitle(candidate, mediaType, t);
   const displayYear = getDisplayYear(candidate, mediaType);
   const candidateId = candidate.tmdb_id || candidate.id;
@@ -62,7 +56,7 @@ export default function MatchCandidateCard({
             className="organizer-match-modal__poster-card-meta"
             items={[
               displayYear,
-              mediaType === 'tv' ? t('organizer.details.matchModal.series') : t('organizer.details.matchModal.movie'),
+              isTvLikeMediaType(mediaType) ? t('organizer.details.matchModal.series') : t('organizer.details.matchModal.movie'),
             ]}
           />
         }
@@ -118,7 +112,7 @@ export default function MatchCandidateCard({
         <MetaRow
           className="organizer-match-modal__result-meta"
           items={[
-            mediaType === 'tv' ? t('organizer.details.matchModal.series') : t('organizer.details.matchModal.movie'),
+            isTvLikeMediaType(mediaType) ? t('organizer.details.matchModal.series') : t('organizer.details.matchModal.movie'),
             displayYear,
           ]}
         />

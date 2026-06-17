@@ -63,7 +63,13 @@ def get_people(
 
         query = db.query(
             Person,
-            func.count(func.distinct(library_key)).label("library_count")
+            func.count(func.distinct(library_key)).label("library_count"),
+            func.max(
+                case(
+                    (MediaMatch.is_adult == True, 1),
+                    else_=0
+                )
+            ).label("linked_adult_flag")
         ).select_from(Person).outerjoin(
             MediaPersonLink, join_cond
         ).outerjoin(
@@ -93,25 +99,38 @@ def get_people(
                 adult_pref = str(adult_pref_setting.value).strip().lower()
 
         people_list = []
-        for person, library_count in results:
+        for person, library_count, linked_adult_flag in results:
             # Active people only OR people with a library match
             if not include_inactive and not person.is_active:
                 continue
             if include_inactive and not person.is_active and library_count == 0:
                 continue
+            effective_is_adult = bool(getattr(person, "is_adult", False)) or bool(linked_adult_flag)
             if adult_only:
-                if not bool(getattr(person, "is_adult", False)):
+                if not effective_is_adult:
                     continue
                 if adult_pref == "female" and person.gender != 1:
                     continue
                 if adult_pref == "male" and person.gender != 2:
                     continue
             else:
-                if bool(getattr(person, "is_adult", False)):
+                if effective_is_adult:
                     continue
             
             loc = _pick_person_localization(person, preferred_lang)
-            name = loc.name if loc else "Unknown"
+            fallback_loc = next(
+                (
+                    localization
+                    for localization in (person.localizations or [])
+                    if getattr(localization, "name", None)
+                ),
+                None,
+            )
+            name = (
+                (loc.name if loc and getattr(loc, "name", None) else None)
+                or (fallback_loc.name if fallback_loc else None)
+                or "Unknown"
+            )
             
             # Search filtering
             if search and search.lower() not in name.lower():
@@ -123,7 +142,7 @@ def get_people(
                 "profile_path": _resolve_person_profile_path(person),
                 "gender": person.gender,
                 "popularity": person.popularity or 0.0,
-                "is_adult": bool(getattr(person, "is_adult", False)),
+                "is_adult": effective_is_adult,
                 "is_active": person.is_active,
                 "is_favorite": person.is_favorite,
                 "user_rating": person.user_rating,

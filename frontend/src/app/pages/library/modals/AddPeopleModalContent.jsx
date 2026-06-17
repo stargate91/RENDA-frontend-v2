@@ -52,7 +52,6 @@ export default function AddPeopleModalContent({ isAdult, t, onClose }) {
   const [activeMode, setActiveMode] = useState('local'); // 'local', 'search', 'bulk'
   const [searchQuery, setSearchQuery] = useState('');
   const [optimisticStatus, setOptimisticStatus] = useState({});
-  const [activatedThisSession, setActivatedThisSession] = useState(() => new Set());
   // eslint-disable-next-line no-unused-vars
   const [loadingIds, setLoadingIds] = useState(new Set());
   const [roleFilter, setRoleFilter] = useState('all');
@@ -96,14 +95,7 @@ export default function AddPeopleModalContent({ isAdult, t, onClose }) {
   const people = useMemo(() => {
     return data?.pages.flatMap(page => page.items) || [];
   }, [data]);
-  const visiblePeople = useMemo(() => {
-    return people.filter((person) => {
-      const isActive = optimisticStatus[person.id] !== undefined
-        ? optimisticStatus[person.id]
-        : person.is_active;
-      return !isActive || activatedThisSession.has(person.id);
-    });
-  }, [people, optimisticStatus, activatedThisSession]);
+  const visiblePeople = useMemo(() => people, [people]);
   const hasSearchQuery = searchQuery.trim().length > 0;
   const hasActiveFilters = roleFilter !== 'all' || (!hideGenderFilter && genderFilter !== 'all');
   const textKey = (adultKey, defaultKey) => (isAdult ? adultKey : defaultKey);
@@ -121,15 +113,6 @@ export default function AddPeopleModalContent({ isAdult, t, onClose }) {
 
   const handleToggleStatus = async (personId, newActiveStatus) => {
     setOptimisticStatus((prev) => ({ ...prev, [personId]: newActiveStatus }));
-    setActivatedThisSession((prev) => {
-      const next = new Set(prev);
-      if (newActiveStatus) {
-        next.add(personId);
-      } else {
-        next.delete(personId);
-      }
-      return next;
-    });
     setLoadingIds((prev) => {
       const next = new Set(prev);
       next.add(personId);
@@ -143,15 +126,6 @@ export default function AddPeopleModalContent({ isAdult, t, onClose }) {
     } catch (err) {
       console.error(err);
       setOptimisticStatus((prev) => ({ ...prev, [personId]: !newActiveStatus }));
-      setActivatedThisSession((prev) => {
-        const next = new Set(prev);
-        if (newActiveStatus) {
-          next.delete(personId);
-        } else {
-          next.add(personId);
-        }
-        return next;
-      });
     } finally {
       setLoadingIds((prev) => {
         const next = new Set(prev);

@@ -44,7 +44,7 @@ def add_person_tmdb(payload: dict):
 
 @router.post("/people/{person_id:int}/status")
 def update_person_status(person_id: int, payload: dict):
-    """Updates the status (is_active, is_favorite, user_rating) of a person."""
+    """Updates the status (is_active, is_favorite, user_rating, user_comment) of a person."""
     db = Session()
     try:
         person = _get_or_create_person_db(db, person_id)
@@ -58,6 +58,8 @@ def update_person_status(person_id: int, payload: dict):
             person.is_favorite = bool(payload["is_favorite"])
         if "user_rating" in payload:
             person.user_rating = _normalize_user_rating(payload["user_rating"])
+        if "user_comment" in payload:
+            person.user_comment = (str(payload["user_comment"]).strip() if payload["user_comment"] not in (None, "") else None)
         if "custom_tags" in payload:
             is_adult = bool(getattr(person, "is_adult", False))
             new_tag_names = [str(t).strip() for t in payload["custom_tags"] if str(t).strip()]
@@ -93,6 +95,7 @@ def update_person_status(person_id: int, payload: dict):
             "is_active": person.is_active,
             "is_favorite": person.is_favorite,
             "user_rating": person.user_rating,
+            "user_comment": person.user_comment,
             "custom_tags": person.custom_tags or []
         }
     except Exception as e:

@@ -7,6 +7,7 @@ import {
   MATCHED_STATUSES,
   normalizeItemStatus,
 } from '../organizerMappers';
+import { isEpisodeMediaType, isMovieMediaType, isTvLikeMediaType } from '@/lib/mediaTypes';
 
 export function useOrganizerFilteredRows({
   discovery,
@@ -42,22 +43,22 @@ export function useOrganizerFilteredRows({
 
     const manualMoviesCount = reviewDiscoveryMedia.filter((item) => {
       const id = `item-${item.id}`;
-      return !dismissedRowIds.has(id) && item.type === 'movie' && MANUAL_REVIEW_STATUSES.has(normalizeItemStatus(item.status));
+      return !dismissedRowIds.has(id) && isMovieMediaType(item.type) && MANUAL_REVIEW_STATUSES.has(normalizeItemStatus(item.status));
     }).length;
 
     const manualEpisodesCount = reviewDiscoveryMedia.filter((item) => {
       const id = `item-${item.id}`;
-      return !dismissedRowIds.has(id) && item.type !== 'movie' && MANUAL_REVIEW_STATUSES.has(normalizeItemStatus(item.status));
+      return !dismissedRowIds.has(id) && isTvLikeMediaType(item.type) && MANUAL_REVIEW_STATUSES.has(normalizeItemStatus(item.status));
     }).length;
 
     const moviesCount = matchedDiscoveryMedia.filter((item) => {
       const id = `item-${item.id}`;
-      return !dismissedRowIds.has(id) && item.type === 'movie' && MATCHED_STATUSES.has(normalizeItemStatus(item.status));
+      return !dismissedRowIds.has(id) && isMovieMediaType(item.type) && MATCHED_STATUSES.has(normalizeItemStatus(item.status));
     }).length;
 
     const episodesCount = matchedDiscoveryMedia.filter((item) => {
       const id = `item-${item.id}`;
-      return !dismissedRowIds.has(id) && item.type === 'episode' && MATCHED_STATUSES.has(normalizeItemStatus(item.status));
+      return !dismissedRowIds.has(id) && isEpisodeMediaType(item.type) && MATCHED_STATUSES.has(normalizeItemStatus(item.status));
     }).length;
 
     const extrasCount = (discovery.extras || []).filter((item) => {
@@ -74,17 +75,17 @@ export function useOrganizerFilteredRows({
     if (activeMainTab === 'manual') {
       rows = reviewDiscoveryMedia
         .filter((item) => {
-          const isTargetType = activeManualTab === 'movies' ? item.type === 'movie' : item.type !== 'movie';
+          const isTargetType = activeManualTab === 'movies' ? isMovieMediaType(item.type) : isTvLikeMediaType(item.type);
           return isTargetType && MANUAL_REVIEW_STATUSES.has(normalizeItemStatus(item.status));
         })
         .map((item) => mapDiscoveryItemRow(item, t));
     } else if (activeMainTab === 'movies') {
       rows = matchedDiscoveryMedia
-        .filter((item) => item.type === 'movie' && MATCHED_STATUSES.has(normalizeItemStatus(item.status)))
+        .filter((item) => isMovieMediaType(item.type) && MATCHED_STATUSES.has(normalizeItemStatus(item.status)))
         .map((item) => mapDiscoveryItemRow(item, t));
     } else if (activeMainTab === 'episodes') {
       rows = matchedDiscoveryMedia
-        .filter((item) => item.type === 'episode' && MATCHED_STATUSES.has(normalizeItemStatus(item.status)))
+        .filter((item) => isEpisodeMediaType(item.type) && MATCHED_STATUSES.has(normalizeItemStatus(item.status)))
         .map((item) => mapDiscoveryItemRow(item, t));
     } else if (activeMainTab === 'extras') {
       rows = (discovery.extras || [])

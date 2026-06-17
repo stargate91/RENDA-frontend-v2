@@ -1,6 +1,15 @@
+import {
+  isLibraryCollectionTab,
+  isLibraryMovieTab,
+  isLibraryPeopleTab,
+  isLibrarySeriesTab,
+  isLibraryTagsTab,
+  isLibraryVideoTab,
+} from '@/lib/libraryTabs';
+
 export function sortLibraryItems(items, resolvedTab, sortKey, sortDirection) {
   return [...items].sort((a, b) => {
-    if (resolvedTab === 'movies' || resolvedTab === 'series' || resolvedTab === 'adult') {
+    if (isLibraryVideoTab(resolvedTab)) {
       let valA, valB;
       if (sortKey === 'title') {
         valA = String(a.title || '').toLowerCase();
@@ -35,7 +44,7 @@ export function sortLibraryItems(items, resolvedTab, sortKey, sortDirection) {
       return 0;
     }
 
-    if (resolvedTab === 'collections') {
+    if (isLibraryCollectionTab(resolvedTab)) {
       let valA, valB;
       if (sortKey === 'title') {
         valA = String(a.title || '').toLowerCase();
@@ -49,7 +58,7 @@ export function sortLibraryItems(items, resolvedTab, sortKey, sortDirection) {
       return 0;
     }
 
-    if (resolvedTab === 'people' || resolvedTab === 'adult_people') {
+    if (isLibraryPeopleTab(resolvedTab)) {
       let valA, valB;
       if (sortKey === 'name' || sortKey === 'title') {
         valA = String(a.name || '').toLowerCase();
@@ -72,7 +81,7 @@ export function sortLibraryItems(items, resolvedTab, sortKey, sortDirection) {
       return 0;
     }
 
-    if (resolvedTab === 'tags') {
+    if (isLibraryTagsTab(resolvedTab)) {
       let valA, valB;
       if (sortKey === 'name' || sortKey === 'title') {
         valA = String(a.name || '').toLowerCase();

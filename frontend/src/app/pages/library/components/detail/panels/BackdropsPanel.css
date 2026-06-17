@@ -111,3 +111,8 @@
   padding: var(--space-4xl) 0;
   font-style: italic;
 }
+
+.backdrops-panel__empty-state {
+  grid-column: 1 / -1;
+  width: 100%;
+}

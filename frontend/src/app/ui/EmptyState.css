@@ -78,6 +78,41 @@
   color: var(--color-text-faint, var(--color-muted));
 }
 
+.ui-empty-state--detail-panel {
+  min-height: 0;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  border: 1px dashed var(--media-detail-panel-card-border, var(--color-border-default));
+  border-radius: var(--radius-lg, 16px);
+  background: color-mix(in srgb, var(--media-detail-panel-card-bg, var(--color-surface-card)) 88%, transparent);
+}
+
+.ui-empty-state--detail-panel .ui-empty-state__icon {
+  width: 44px;
+  height: 44px;
+  color: var(--color-text-secondary);
+  background: color-mix(in srgb, var(--color-surface-glass-strong) 72%, transparent);
+  border-color: color-mix(in srgb, var(--color-border-default) 72%, transparent);
+}
+
+.ui-empty-state--detail-panel .ui-empty-state__body {
+  max-width: 420px;
+  gap: var(--space-xs);
+}
+
+.ui-empty-state--detail-panel .ui-empty-state__title {
+  font-size: var(--font-size-md, 16px);
+  font-weight: var(--font-weight-semibold, 600);
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary);
+}
+
+.ui-empty-state--detail-panel .ui-empty-state__description {
+  font-size: var(--font-size-sm, 14px);
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+}
+
 .ui-empty-state--modal,
 .ui-empty-state--modal-default,
 .ui-empty-state--modal-intro,

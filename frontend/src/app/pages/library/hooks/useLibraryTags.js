@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useAllTagsQuery, useTagsQuery } from '@/queries/libraryQueries';
+import { getLibraryTagBucketKeys } from '@/lib/libraryTabs';
 
 export function useLibraryTags({ activeSessionMode }) {
   const isNsfw = activeSessionMode === 'nsfw';
@@ -10,6 +11,7 @@ export function useLibraryTags({ activeSessionMode }) {
     const usageTags = Array.isArray(tagsData) ? tagsData : [];
     const allDefinedTags = Array.isArray(allTags) ? allTags : [];
     const isNsfw = activeSessionMode === 'nsfw';
+    const bucketKeys = getLibraryTagBucketKeys(activeSessionMode);
     const usageByName = new Map(
       usageTags.map((tag) => [tag.name?.toLowerCase?.() || '', tag])
     );
@@ -40,13 +42,8 @@ export function useLibraryTags({ activeSessionMode }) {
           custom_images: usageTag.custom_images ?? definedTag.custom_images,
           color: usageTag.color ?? definedTag.color,
         };
-        const localCount = isNsfw
-          ? (tag.adult?.length || 0) + (tag.adult_series?.length || 0) + (tag.adult_people?.length || 0)
-          : (tag.movies?.length || 0) + (tag.series?.length || 0) + (tag.people?.length || 0);
-
-        const modeItems = isNsfw
-          ? [...(tag.adult || []), ...(tag.adult_series || []), ...(tag.adult_people || [])]
-          : [...(tag.movies || []), ...(tag.series || []), ...(tag.people || [])];
+        const modeItems = bucketKeys.flatMap((key) => tag[key] || []);
+        const localCount = modeItems.length;
 
         const hasCustomImages = Array.isArray(tag.custom_images) && tag.custom_images.length > 0;
         const localPreviews = hasCustomImages

@@ -249,6 +249,23 @@ def bulk_update_item_watched(payload: dict):
             else:
                 item.watch_count = 0
 
+            # Sync watched state to VirtualMediaState
+            active_match = next((m for m in item.matches if m.is_active), None)
+            if active_match:
+                from app.db.models import ItemType
+                v_media_type = "tv" if item.item_type == ItemType.EPISODE else "movie"
+                v_tmdb_id = active_match.series_tmdb_id or active_match.tmdb_id if v_media_type == "tv" else active_match.tmdb_id
+                if v_tmdb_id:
+                    v_state = _get_or_create_virtual_media_state(db, v_tmdb_id, v_media_type)
+                    if v_media_type == "tv":
+                        # For series, only track — don't overwrite aggregate is_watched
+                        if watched:
+                            v_state.is_tracked = True
+                    else:
+                        v_state.is_watched = watched
+                        if watched:
+                            v_state.is_tracked = True
+
         updated_ids = [item.id for item in items]
         for raw_id, episode_key in virtual_episode_ids:
             state = _get_or_create_virtual_episode_state(

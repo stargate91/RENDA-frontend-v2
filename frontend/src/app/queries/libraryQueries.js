@@ -130,10 +130,12 @@ export const useUpdatePersonStatusMutation = () => {
       await queryClient.cancelQueries({ queryKey: ['people'] });
       await queryClient.cancelQueries({ queryKey: ['people-infinite'] });
       await queryClient.cancelQueries({ queryKey: ['library'] });
+      await queryClient.cancelQueries({ queryKey: ['person-detail', personId] });
 
       const previousLibraryQueries = queryClient.getQueriesData({ queryKey: ['library'] });
       const previousPeopleQueries = queryClient.getQueriesData({ queryKey: ['people'] });
       const previousPeopleInfiniteQueries = queryClient.getQueriesData({ queryKey: ['people-infinite'] });
+      const previousPersonDetail = queryClient.getQueryData(['person-detail', personId]);
 
       let foundPerson = null;
 
@@ -167,7 +169,12 @@ export const useUpdatePersonStatusMutation = () => {
           ...oldData,
           pages: oldData.pages.map(page => ({
             ...page,
-            items: page.items.map(p => p.id === personId ? { ...p, is_active: payload.is_active } : p)
+            items: page.items.map(p => p.id === personId ? {
+              ...p,
+              ...(payload.is_active !== undefined ? { is_active: payload.is_active } : {}),
+              ...(payload.is_favorite !== undefined ? { is_favorite: payload.is_favorite } : {}),
+              ...('user_rating' in payload ? { user_rating: payload.user_rating } : {}),
+            } : p)
           }))
         };
       });
@@ -177,7 +184,23 @@ export const useUpdatePersonStatusMutation = () => {
         if (!oldData?.items) return oldData;
         return {
           ...oldData,
-          items: oldData.items.map(p => p.id === personId ? { ...p, is_active: payload.is_active } : p)
+          items: oldData.items.map(p => p.id === personId ? {
+            ...p,
+            ...(payload.is_active !== undefined ? { is_active: payload.is_active } : {}),
+            ...(payload.is_favorite !== undefined ? { is_favorite: payload.is_favorite } : {}),
+            ...('user_rating' in payload ? { user_rating: payload.user_rating } : {}),
+          } : p)
+        };
+      });
+
+      queryClient.setQueryData(['person-detail', personId], (oldData) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          ...(payload.is_active !== undefined ? { is_active: payload.is_active } : {}),
+          ...(payload.is_favorite !== undefined ? { is_favorite: payload.is_favorite } : {}),
+          ...('user_rating' in payload ? { user_rating: payload.user_rating } : {}),
+          ...('user_comment' in payload ? { user_comment: payload.user_comment } : {}),
         };
       });
 
@@ -210,7 +233,7 @@ export const useUpdatePersonStatusMutation = () => {
         return oldData;
       });
 
-      return { previousLibraryQueries, previousPeopleQueries, previousPeopleInfiniteQueries };
+      return { previousLibraryQueries, previousPeopleQueries, previousPeopleInfiniteQueries, previousPersonDetail, personId };
     },
     onError: (err, variables, context) => {
       if (context?.previousLibraryQueries) {
@@ -228,11 +251,15 @@ export const useUpdatePersonStatusMutation = () => {
           queryClient.setQueryData(key, value);
         });
       }
+      if (context && 'previousPersonDetail' in context) {
+        queryClient.setQueryData(['person-detail', context.personId], context.previousPersonDetail);
+      }
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['people'] });
       queryClient.invalidateQueries({ queryKey: ['people-infinite'] });
       queryClient.invalidateQueries({ queryKey: ['library'] });
+      queryClient.invalidateQueries({ queryKey: ['person-detail'] });
       queryClient.invalidateQueries({ queryKey: ['libraryTags'] });
       queryClient.invalidateQueries({ queryKey: ['allTags'] });
       queryClient.invalidateQueries({ queryKey: ['stats'] });

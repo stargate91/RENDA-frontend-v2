@@ -4,6 +4,7 @@ import SelectableCard from '../../../ui/SelectableCard';
 import { useTranslation } from '../../../providers/LanguageContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUpdateMediaMutation } from '../../../queries';
+import { isEpisodeMediaType } from '@/lib/mediaTypes';
 import OverrideMovieFields from './OverrideMovieFields';
 import OverrideEpisodeFields from './OverrideEpisodeFields';
 import OverrideExtraFields from './OverrideExtraFields';
@@ -107,7 +108,7 @@ export default function OrganizerOverrideModalContent({ row, onClose, toast }) {
   const [matchAction, setMatchAction] = useState('keep');
   const updateMediaMutation = useUpdateMediaMutation();
 
-  const isMatchedEpisode = row.rawType === 'episode' && row.rawStatus === 'matched';
+  const isMatchedEpisode = isEpisodeMediaType(row.rawType) && row.rawStatus === 'matched';
   const isSeasonModified = String(seasonNum) !== String(initialSeason);
   const isEpisodeModified = String(episodeNum) !== String(initialEpisode);
   const showSelector = isMatchedEpisode && (isSeasonModified || isEpisodeModified);

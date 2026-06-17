@@ -215,6 +215,29 @@ def update_item_status(item_id: str, payload: dict):
                     item.watch_count = 1
             else:
                 item.watch_count = 0
+
+            # Sync watched state to VirtualMediaState so it persists independently
+            active_match = next((m for m in item.matches if m.is_active), None)
+            if active_match:
+                v_media_type = media_type if media_type in ("movie", "tv", "series") else None
+                if not v_media_type:
+                    from app.db.models import ItemType
+                    v_media_type = "tv" if item.item_type == ItemType.EPISODE else "movie"
+                if v_media_type in ("series",):
+                    v_media_type = "tv"
+                v_tmdb_id = active_match.tmdb_id
+                if v_media_type == "tv":
+                    v_tmdb_id = active_match.series_tmdb_id or active_match.tmdb_id
+                if v_tmdb_id:
+                    v_state = _get_or_create_virtual_media_state(db, v_tmdb_id, v_media_type)
+                    if v_media_type == "tv":
+                        # For series, only track — don't overwrite aggregate is_watched
+                        if item.is_watched:
+                            v_state.is_tracked = True
+                    else:
+                        v_state.is_watched = item.is_watched
+                        if item.is_watched:
+                            v_state.is_tracked = True
         if "custom_tags" in payload:
             active_match = next((m for m in item.matches if m.is_active), None)
             is_item_adult = bool(active_match.is_adult) if active_match else False

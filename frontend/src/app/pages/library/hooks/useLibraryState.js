@@ -8,6 +8,14 @@ import { usePaginationVisibility } from '../../../hooks/usePaginationVisibility'
 import { useTranslation } from '@/providers/LanguageContext';
 import { useLocalListSearch } from '../../../hooks/useLocalListSearch';
 import { Clapperboard, Tv, Users, Tag, Layers } from 'lucide-react';
+import {
+  getLibraryEmptyStateKey,
+  getLibraryTabTranslationKey,
+  isLibraryCollectionTab,
+  isLibraryPeopleTab,
+  isLibraryTagsTab,
+  resolveLibraryBackendTab,
+} from '@/lib/libraryTabs';
 import { sortLibraryItems } from '../utils/librarySort';
 
 export function useLibraryState({ initialTab = 'movies', lockTab = false, includeTagsTab = false } = {}) {
@@ -65,19 +73,14 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
     setYearFilter('');
   };
 
-  const isCollections = activeTab === 'collections';
-  const isTags = activeTab === 'tags';
-  const isPeople = activeTab === 'people';
+  const isCollections = isLibraryCollectionTab(activeTab);
+  const isTags = isLibraryTagsTab(activeTab);
+  const isPeople = isLibraryPeopleTab(activeTab);
 
-  const backendTab = useMemo(() => {
-    if (activeSessionMode === 'nsfw') {
-      if (activeTab === 'movies') return 'adult';
-      if (activeTab === 'series') return 'adult_series';
-      if (activeTab === 'collections') return 'adult_collections';
-      if (activeTab === 'people') return 'adult_people';
-    }
-    return activeTab;
-  }, [activeTab, activeSessionMode]);
+  const backendTab = useMemo(
+    () => resolveLibraryBackendTab(activeTab, activeSessionMode),
+    [activeTab, activeSessionMode]
+  );
 
   const resolvedGenderFilter = isPeople
     ? (activeSessionMode === 'nsfw' && settings?.adult_gender_preference && settings.adult_gender_preference !== 'all'
@@ -142,16 +145,19 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
   const { processedTags, isTagsLoading } = useLibraryTags({ activeSessionMode });
 
   const counts = libraryData?.counts || {};
+  const movieCountKey = resolveLibraryBackendTab('movies', activeSessionMode);
+  const collectionCountKey = resolveLibraryBackendTab('collections', activeSessionMode);
+  const peopleCountKey = resolveLibraryBackendTab('people', activeSessionMode);
 
   const tabs = [
-    { value: 'movies', label: t('library.tabs.movies'), count: activeSessionMode === 'nsfw' ? counts.adult : counts.movies, icon: Clapperboard },
+    { value: 'movies', label: t('library.tabs.movies'), count: counts[movieCountKey], icon: Clapperboard },
     ...(settings?.folder_collection_mode !== 'never' ? [
-      { value: 'collections', label: t('library.tabs.collections'), count: activeSessionMode === 'nsfw' ? counts.adult_collections : counts.collections, icon: Layers }
+      { value: 'collections', label: t('library.tabs.collections'), count: counts[collectionCountKey], icon: Layers }
     ] : []),
     ...(activeSessionMode !== 'nsfw' ? [
       { value: 'series', label: t('library.tabs.series'), count: counts.series, icon: Tv }
     ] : []),
-    { value: 'people', label: t('library.tabs.people'), count: activeSessionMode === 'nsfw' ? counts.adult_people : counts.people, icon: Users },
+    { value: 'people', label: t('library.tabs.people'), count: counts[peopleCountKey], icon: Users },
     ...(includeTagsTab ? [
       { value: 'tags', label: t('library.tabs.tags'), count: processedTags.length, icon: Tag },
     ] : []),
@@ -298,10 +304,8 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
     }
   }, [isServerPaged, libraryQueryParams, currentPage, totalPages, queryClient]);
 
-  const translationKey = activeSessionMode === 'nsfw' && resolvedTab === 'people' ? 'adultPeople' : resolvedTab;
-  const emptyStateTranslationKey = activeSessionMode === 'nsfw'
-    ? (resolvedTab === 'movies' ? 'adult' : resolvedTab === 'series' ? 'adult_series' : resolvedTab === 'people' ? 'adultPeople' : resolvedTab === 'collections' ? 'adultCollections' : resolvedTab === 'tags' ? 'adultTags' : resolvedTab)
-    : resolvedTab;
+  const translationKey = getLibraryTabTranslationKey(resolvedTab, activeSessionMode);
+  const emptyStateTranslationKey = getLibraryEmptyStateKey(resolvedTab, activeSessionMode);
 
   const tabTotalCount = counts[backendTab] ?? allItems.length;
   const tabLabel = t(`library.tabs.${translationKey}`);

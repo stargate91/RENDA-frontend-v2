@@ -1,9 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useSearchMetadataQuery } from '@/queries';
+import { MEDIA_TYPES, toMetadataMediaType } from '@/lib/mediaTypes';
 
-const getDefaultType = (row) => (
-  row?.rawType === 'episode' || row?.rawType === 'series' ? 'tv' : 'movie'
-);
+const getDefaultType = (row) => toMetadataMediaType(row?.rawType, MEDIA_TYPES.MOVIE);
 
 const getDefaultQuery = (row) => {
   const payload = row?.rawPayload || {};
@@ -29,13 +28,13 @@ export function useMatchSearch({ rows = [], t, toast }) {
   const primaryRow = rows[0] || null;
   const isBulk = rows.length > 1;
   const [query, setQuery] = useState(() => (isBulk ? '' : getDefaultQuery(primaryRow)));
-  const [mode, setMode] = useState(() => (isBulk ? 'tv' : getDefaultType(primaryRow)));
+  const [mode, setMode] = useState(() => (isBulk ? MEDIA_TYPES.TV : getDefaultType(primaryRow)));
   const [year, setYear] = useState(() => (isBulk ? '' : String(getDefaultYear(primaryRow) || '')));
   const [season, setSeason] = useState(() => (isBulk ? '' : String(getDefaultSeason(primaryRow) || '')));
   const [episode, setEpisode] = useState(() => (isBulk ? '' : String(getDefaultEpisode(primaryRow) || '')));
   const [results, setResults] = useState([]);
   const [hasSearched, setHasSearched] = useState(false);
-  const isSeriesMode = mode === 'tv';
+  const isSeriesMode = mode === MEDIA_TYPES.TV;
 
   const { refetch: refetchSearch, isFetching: isSearching } = useSearchMetadataQuery(
     query,
@@ -85,7 +84,7 @@ export function useMatchSearch({ rows = [], t, toast }) {
       const searchResults = Array.isArray(data)
         ? data.map((candidate) => ({
             ...candidate,
-            media_type: candidate.media_type || searchMode,
+            media_type: toMetadataMediaType(candidate.media_type || candidate.type || searchMode, searchMode),
           }))
         : [];
       setResults(searchResults);

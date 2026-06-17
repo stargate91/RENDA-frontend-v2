@@ -13,6 +13,7 @@ import UtilityBarPortal from '../../../components/UtilityBarPortal';
 import { useDeleteTagMutation } from '@/queries';
 import { useUi } from '@/providers/UiProvider';
 import { useEffect, useMemo, useState } from 'react';
+import { isLibraryPeopleTab, isLibraryTagsTab } from '@/lib/libraryTabs';
 import './LibraryPage.css';
 
 export default function LibraryPage({ initialTab = 'movies', lockTab = false, showTabs = true, pageTitle = null }) {
@@ -28,7 +29,7 @@ export default function LibraryPage({ initialTab = 'movies', lockTab = false, sh
   });
 
   const isAdultMode = state.activeSessionMode === 'nsfw';
-  const isPeopleTab = state.resolvedTab === 'people' || state.resolvedTab === 'adult_people';
+  const isPeopleTab = isLibraryPeopleTab(state.resolvedTab);
 
   const bulkImport = useLibraryBulkImport({ isAdultMode, isPeopleTab });
 
@@ -100,7 +101,7 @@ export default function LibraryPage({ initialTab = 'movies', lockTab = false, sh
             activeSessionMode={state.activeSessionMode}
           />
 
-          {!(state.resolvedTab === 'tags' && !showTabs) ? (
+          {!(isLibraryTagsTab(state.resolvedTab) && !showTabs) ? (
             <LibraryFilters
               t={state.t}
               settings={state.settings}
