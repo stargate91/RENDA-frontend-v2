@@ -199,3 +199,28 @@ export const useOverrideBackdropMutation = () => {
     },
   });
 };
+
+export const useToggleVirtualTrackedMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ tmdbId, mediaType, isTracked }) => (
+      isTracked
+        ? api.media.untrackVirtual(tmdbId, mediaType)
+        : api.media.trackVirtual(tmdbId, mediaType)
+    ),
+    onSuccess: (data, variables) => {
+      const cleanId = String(variables.tmdbId);
+      const seriesId = `series_${cleanId}`;
+      const virtualId = `tmdb_${cleanId}`;
+      queryClient.invalidateQueries({ queryKey: ['library'] });
+      queryClient.invalidateQueries({ queryKey: ['stats'] });
+      queryClient.invalidateQueries({ queryKey: ['full-metadata', cleanId] });
+      queryClient.invalidateQueries({ queryKey: ['full-metadata', seriesId] });
+      queryClient.invalidateQueries({ queryKey: ['full-metadata', virtualId] });
+      queryClient.invalidateQueries({ queryKey: ['library-item-detail', cleanId] });
+      queryClient.invalidateQueries({ queryKey: ['library-item-detail', virtualId] });
+      queryClient.invalidateQueries({ queryKey: ['library-series-detail', cleanId] });
+      queryClient.invalidateQueries({ queryKey: ['library-series-detail', seriesId] });
+    },
+  });
+};

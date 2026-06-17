@@ -82,7 +82,6 @@ export function useOrganizerScan({
   const lastScanPathsRef = useRef([]);
   const scanMutation = useScanMutation();
   const wasStopRequestedRef = useRef(false);
-  const lastProcessedCountRef = useRef(0);
   const scanStatus = scanStatusQuery?.data || null;
   const lastCompletedRef = useRef(scanStatus?.last_completed || 0);
 
@@ -90,9 +89,6 @@ export function useOrganizerScan({
     if (isScanActive && scanStatus) {
       if (scanStatus.stop_requested) {
         wasStopRequestedRef.current = true;
-      }
-      if (scanStatus.current !== undefined) {
-        lastProcessedCountRef.current = scanStatus.current;
       }
     }
   }, [isScanActive, scanStatus]);
@@ -115,8 +111,6 @@ export function useOrganizerScan({
 
         const wasAborted = wasStopRequestedRef.current;
         wasStopRequestedRef.current = false;
-        const processedCount = lastProcessedCountRef.current;
-        lastProcessedCountRef.current = 0;
 
         const currentVisibleDiscovery = queryClient.getQueryData(['discovery']) || EMPTY_DISCOVERY;
 
@@ -132,7 +126,7 @@ export function useOrganizerScan({
             queryClient.setQueryData(['discovery'], nextDiscovery);
             onResultsReady?.(nextDiscovery);
             if (wasAborted) {
-              toast(t('organizer.toasts.renameAborted').replace('{count}', processedCount), 'warning');
+              toast('Renaming stopped.', 'warning');
             } else {
               toast(t('organizer.toasts.renameComplete') || 'Renaming complete!', 'success');
             }

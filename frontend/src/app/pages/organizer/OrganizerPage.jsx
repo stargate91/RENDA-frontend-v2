@@ -34,7 +34,14 @@ export default function OrganizerPage() {
   const discoveryCountQuery = useDiscoveryCountQuery();
   const statsQuery = useStatsQuery();
   const settingsQuery = useSettingsQuery();
-  const scanStatusQuery = useScanStatusQuery();
+  const scanStatusQuery = useScanStatusQuery({
+    select: (data) => ({
+      active: Boolean(data?.active),
+      phase: data?.phase || 'idle',
+      stop_requested: Boolean(data?.stop_requested),
+      last_completed: data?.last_completed || 0,
+    }),
+  });
   const discovery = discoveryQuery.data || EMPTY_DISCOVERY;
   const scanStatus = scanStatusQuery.data || null;
   const settings = settingsQuery.data || EMPTY_SETTINGS;

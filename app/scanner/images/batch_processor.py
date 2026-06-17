@@ -22,6 +22,11 @@ class ImageBatchProcessorMixin:
 
     def process_all(self, max_workers: int = 5):
         """Executes all pending downloads and processing in parallel."""
+        # Recover any stale DOWNLOADING rows before checking for new work.
+        # Without this, a failed worker pass can leave the progress bar stuck active
+        # while subsequent loops only look for PENDING items.
+        self.reset_stale_tasks(self.db)
+
         for attempt in range(3):
             # Check if there is any pending work before starting the heavy executors
             has_media = self.db.query(MediaMatch.id).filter(MediaMatch.image_status == ImageStatus.PENDING).first() is not None

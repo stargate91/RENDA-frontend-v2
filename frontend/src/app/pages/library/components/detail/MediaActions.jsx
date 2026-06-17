@@ -1,4 +1,4 @@
-import { FolderOpen, Video, Check, Eye, Play } from 'lucide-react';
+import { FolderOpen, Video, Check, Eye, Play, BookmarkPlus, BookmarkCheck } from 'lucide-react';
 import Button from '@/ui/Button';
 import { formatEpisodeNumber } from '../../utils/detailUtils';
 import { useMediaDetailContext } from './MediaDetailContext';
@@ -9,6 +9,8 @@ export default function MediaActions() {
     isOwned,
     isMovie,
     item,
+    isTracked,
+    canToggleTracked,
     isWatched,
     canToggleWatched,
     nextEpisodeInfo
@@ -17,19 +19,21 @@ export default function MediaActions() {
   const {
     handleTrailerClick,
     handleToggleWatched,
+    handleToggleTracked,
     handlePlayClick
   } = actions;
 
   const {
     updateStatusMutation,
     bulkUpdateWatchedMutation,
+    toggleVirtualTrackedMutation,
     playMutation
   } = mutations;
 
   const hasCollection = isMovie && item?.collection_data;
   const hasTrailer = item?.trailer_key;
 
-  if (!isOwned && !canToggleWatched && !hasCollection && !hasTrailer) return null;
+  if (!isOwned && !canToggleTracked && !canToggleWatched && !hasCollection && !hasTrailer) return null;
 
   return (
     <div className="media-detail-page__actions-row">
@@ -61,6 +65,17 @@ export default function MediaActions() {
         >
           {isWatched ? <Check size={16} /> : <Eye size={16} />}
           {isWatched ? (t('library.details.watched') || 'Watched') : (t('library.details.markWatched') || 'Mark as Watched')}
+        </Button>
+      )}
+
+      {canToggleTracked && (
+        <Button
+          variant="ghost"
+          onClick={handleToggleTracked}
+          disabled={toggleVirtualTrackedMutation.isPending}
+        >
+          {isTracked ? <BookmarkCheck size={16} /> : <BookmarkPlus size={16} />}
+          {isTracked ? 'Tracked' : 'Track'}
         </Button>
       )}
 

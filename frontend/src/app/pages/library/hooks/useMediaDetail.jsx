@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useLibraryItemDetailQuery, useLibrarySeriesDetailQuery } from '@/queries/metadataQueries';
 import {
   useUpdateMediaStatusMutation, usePlayMediaMutation,
-  useBulkUpdateWatchedMutation, useOverrideBackdropMutation
+  useBulkUpdateWatchedMutation, useOverrideBackdropMutation, useToggleVirtualTrackedMutation
 } from '@/queries/mediaQueries';
 import { useSettingsQuery } from '@/queries/settingsQueries';
 import { API_BASE } from '@/lib/backend';
@@ -35,6 +35,7 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
 
   const updateStatusMutation = useUpdateMediaStatusMutation();
   const overrideBackdropMutation = useOverrideBackdropMutation();
+  const toggleVirtualTrackedMutation = useToggleVirtualTrackedMutation();
   const playMutation = usePlayMediaMutation();
   const bulkUpdateWatchedMutation = useBulkUpdateWatchedMutation();
 
@@ -276,6 +277,12 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
   ));
 
   const isOwned = item && item.in_library !== false;
+  const isTracked = Boolean(item?.is_tracked);
+  const virtualTmdbId = !isOwned
+    ? Number(item?.series_tmdb_id || item?.tmdb_id || cleanId || 0)
+    : 0;
+  const virtualMediaType = isMovie ? 'movie' : 'tv';
+  const canToggleTracked = !isOwned && Number.isFinite(virtualTmdbId) && virtualTmdbId > 0;
 
   const getIsSeriesWatched = () => {
     if (!item?.seasons) return false;
@@ -375,6 +382,17 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
     }
   };
 
+  const handleToggleTracked = () => {
+    if (!canToggleTracked || toggleVirtualTrackedMutation.isPending) {
+      return;
+    }
+    toggleVirtualTrackedMutation.mutate({
+      tmdbId: virtualTmdbId,
+      mediaType: virtualMediaType,
+      isTracked,
+    });
+  };
+
   useEffect(() => {
     if (overviewRef.current) {
       const el = overviewRef.current;
@@ -437,6 +455,8 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
       hasTechnicalPanel,
       isMovie,
       isOwned,
+      isTracked,
+      canToggleTracked,
       isWatched,
       canToggleWatched,
       nextEpisodeInfo,
@@ -459,12 +479,14 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
       handleTrailerClick,
       handlePlayClick,
       handleToggleWatched,
+      handleToggleTracked,
       handleReadMore,
       setIsWatchLogsExpanded
     },
     mutations: {
       updateStatusMutation,
       overrideBackdropMutation,
+      toggleVirtualTrackedMutation,
       playMutation,
       bulkUpdateWatchedMutation
     }
