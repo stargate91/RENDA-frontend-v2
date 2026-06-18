@@ -6,6 +6,7 @@ import PosterCard from '@/ui/PosterCard';
 import Pill from '@/ui/Pill';
 import NavButton from '@/ui/NavButton';
 import EmptyState from '@/ui/EmptyState';
+import Button from '@/ui/Button';
 import { useOverridePersonBackdropMutation, useUpdatePersonStatusMutation } from '@/queries/libraryQueries';
 import { useOverrideBackdropMutation } from '@/queries/mediaQueries';
 import SegmentedControl from '@/ui/SegmentedControl';

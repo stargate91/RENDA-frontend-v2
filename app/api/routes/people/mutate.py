@@ -91,14 +91,24 @@ def update_person_status(person_id: int, payload: dict):
             return JSONResponse(status_code=404, content={"error": "Person not found"})
             
         was_active = person.is_active
+        normalized_user_rating = None
         if "is_active" in payload:
             person.is_active = bool(payload["is_active"])
         if "is_favorite" in payload:
             person.is_favorite = bool(payload["is_favorite"])
         if "user_rating" in payload:
-            person.user_rating = _normalize_user_rating(payload["user_rating"])
+            normalized_user_rating = _normalize_user_rating(payload["user_rating"])
+            person.user_rating = normalized_user_rating
+        normalized_user_comment = None
         if "user_comment" in payload:
-            person.user_comment = (str(payload["user_comment"]).strip() if payload["user_comment"] not in (None, "") else None)
+            normalized_user_comment = (str(payload["user_comment"]).strip() if payload["user_comment"] not in (None, "") else None)
+            person.user_comment = normalized_user_comment
+        if (
+            payload.get("is_favorite") is True
+            or ("user_rating" in payload and normalized_user_rating is not None)
+            or ("user_comment" in payload and normalized_user_comment is not None)
+        ):
+            person.is_active = True
         if "custom_tags" in payload:
             is_adult = bool(getattr(person, "is_adult", False))
             new_tag_names = [str(t).strip() for t in payload["custom_tags"] if str(t).strip()]

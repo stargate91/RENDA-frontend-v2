@@ -136,6 +136,11 @@ export const useUpdatePersonStatusMutation = () => {
       const previousPeopleQueries = queryClient.getQueriesData({ queryKey: ['people'] });
       const previousPeopleInfiniteQueries = queryClient.getQueriesData({ queryKey: ['people-infinite'] });
       const previousPersonDetail = queryClient.getQueryData(['person-detail', personId]);
+      const shouldAutoActivate =
+        payload?.is_favorite === true
+        || ('user_rating' in payload && payload.user_rating !== null && payload.user_rating !== undefined)
+        || ('user_comment' in payload && payload.user_comment !== null && payload.user_comment !== undefined && String(payload.user_comment).trim() !== '');
+      const effectiveIsActive = payload.is_active !== undefined ? payload.is_active : (shouldAutoActivate ? true : undefined);
 
       let foundPerson = null;
 
@@ -144,7 +149,7 @@ export const useUpdatePersonStatusMutation = () => {
           for (const page of cacheData.pages) {
             const item = page.items?.find(p => p.id === personId);
             if (item) {
-              foundPerson = { ...item, is_active: payload.is_active };
+              foundPerson = { ...item, ...(effectiveIsActive !== undefined ? { is_active: effectiveIsActive } : {}) };
               break;
             }
           }
@@ -156,7 +161,7 @@ export const useUpdatePersonStatusMutation = () => {
         for (const [, cacheData] of previousPeopleQueries) {
           const item = cacheData?.items?.find(p => p.id === personId);
           if (item) {
-            foundPerson = { ...item, is_active: payload.is_active };
+            foundPerson = { ...item, ...(effectiveIsActive !== undefined ? { is_active: effectiveIsActive } : {}) };
             break;
           }
         }
@@ -171,7 +176,7 @@ export const useUpdatePersonStatusMutation = () => {
             ...page,
             items: page.items.map(p => p.id === personId ? {
               ...p,
-              ...(payload.is_active !== undefined ? { is_active: payload.is_active } : {}),
+              ...(effectiveIsActive !== undefined ? { is_active: effectiveIsActive } : {}),
               ...(payload.is_favorite !== undefined ? { is_favorite: payload.is_favorite } : {}),
               ...('user_rating' in payload ? { user_rating: payload.user_rating } : {}),
             } : p)
@@ -186,7 +191,7 @@ export const useUpdatePersonStatusMutation = () => {
           ...oldData,
           items: oldData.items.map(p => p.id === personId ? {
             ...p,
-            ...(payload.is_active !== undefined ? { is_active: payload.is_active } : {}),
+            ...(effectiveIsActive !== undefined ? { is_active: effectiveIsActive } : {}),
             ...(payload.is_favorite !== undefined ? { is_favorite: payload.is_favorite } : {}),
             ...('user_rating' in payload ? { user_rating: payload.user_rating } : {}),
           } : p)
@@ -197,7 +202,7 @@ export const useUpdatePersonStatusMutation = () => {
         if (!oldData) return oldData;
         return {
           ...oldData,
-          ...(payload.is_active !== undefined ? { is_active: payload.is_active } : {}),
+          ...(effectiveIsActive !== undefined ? { is_active: effectiveIsActive } : {}),
           ...(payload.is_favorite !== undefined ? { is_favorite: payload.is_favorite } : {}),
           ...('user_rating' in payload ? { user_rating: payload.user_rating } : {}),
           ...('user_comment' in payload ? { user_comment: payload.user_comment } : {}),
@@ -208,12 +213,12 @@ export const useUpdatePersonStatusMutation = () => {
       queryClient.setQueriesData({ queryKey: ['library'] }, (oldData) => {
         if (!oldData?.items) return oldData;
 
-        if (payload.is_active === false) {
+        if (effectiveIsActive === false) {
           return {
             ...oldData,
             items: oldData.items.filter(p => p.id !== personId)
           };
-        } else if (payload.is_active === true && foundPerson) {
+        } else if (effectiveIsActive === true && foundPerson) {
           if (oldData.items.some(p => p.id === personId)) return oldData;
 
           const libraryPerson = {

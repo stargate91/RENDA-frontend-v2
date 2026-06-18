@@ -15,6 +15,7 @@ export default function PosterCard({
   title,
   subtitle,
   badge,
+  topRightBadge,
   isWatched = false,
   overlay,
   playOverlay,
@@ -60,6 +61,7 @@ export default function PosterCard({
             )}
             {overlay}
             {badge}
+            {topRightBadge}
             {isWatched && (
               <div className="ui-poster-card__watched-badge">
                 <Check size={14} strokeWidth={3} />

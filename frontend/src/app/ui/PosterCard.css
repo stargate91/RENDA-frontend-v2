@@ -126,6 +126,32 @@ div.ui-poster-card__image-wrapper:focus-visible {
   z-index: 5;
 }
 
+.ui-poster-card__favorite-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full, 9999px);
+  border: 1px solid color-mix(in srgb, var(--color-state-danger, #ef4444) 48%, var(--button-secondary-border));
+  background-color: color-mix(in srgb, var(--color-panel, #151619) 82%, transparent);
+  background-image: var(--button-secondary-bg);
+  color: var(--color-state-danger, #ef4444);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+
+.ui-poster-card__favorite-badge svg {
+  display: block;
+  flex-shrink: 0;
+  transform: translate(0.5px, 0);
+  transform-origin: center;
+}
+
 .ui-poster-card__title-overlay {
   position: absolute;
   inset: 0;

@@ -838,6 +838,7 @@ def get_person_detail(person_id: int):
             "is_active": person.is_active,
             "is_favorite": person.is_favorite,
             "user_rating": person.user_rating,
+            "user_comment": person.user_comment,
             "custom_tags": person.custom_tags or [],
             "homepage": tmdb_data.get("homepage") or None,
             "external_ids": tmdb_data.get("external_ids") or person.external_ids or {},

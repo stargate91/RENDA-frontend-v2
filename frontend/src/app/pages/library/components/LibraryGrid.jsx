@@ -18,7 +18,7 @@ import {
   isLibraryTagsTab,
 } from '@/lib/libraryTabs';
 import { isMovieMediaType, isPersonMediaType, isTvLikeMediaType } from '@/lib/mediaTypes';
-import { Pencil, Play, Plus, Trash2, UserPlus } from 'lucide-react';
+import { Heart, Pencil, Play, Plus, Trash2, UserPlus } from 'lucide-react';
 
 const renderUserRatingBadge = (item) => {
   const rating = Number(item?.user_rating);
@@ -28,6 +28,19 @@ const renderUserRatingBadge = (item) => {
     <Badge className="ui-poster-card__user-rating-badge">
       {label}
     </Badge>
+  );
+};
+
+const renderFavoriteBadge = (item, t) => {
+  if (!item?.is_favorite) return null;
+  return (
+    <div
+      className="ui-poster-card__favorite-badge"
+      title={t('library.filter.favorite') || 'Favourite'}
+      aria-label={t('library.filter.favorite') || 'Favourite'}
+    >
+      <Heart size={14} fill="currentColor" strokeWidth={2.2} />
+    </div>
   );
 };
 
@@ -146,6 +159,8 @@ export default function LibraryGrid({
         imageUrl: resolvePosterUrl(item.displayPoster || item.poster_path),
         icon: emptyIcon,
         className: 'library-person-card',
+        badge: renderUserRatingBadge(item),
+        topRightBadge: renderFavoriteBadge(item, t),
       };
     }
     const subtitleParts = [];
@@ -359,6 +374,8 @@ function ExpandedTagPanel({ tag, t, resolvePosterUrl, emptyIcon, isFocusMode = f
         imageUrl: resolvePosterUrl(item.displayPoster || item.poster_path),
         icon: emptyIcon,
         className: 'library-person-card',
+        badge: renderUserRatingBadge(item),
+        topRightBadge: renderFavoriteBadge(item, t),
       };
     }
     const subtitleParts = [];
