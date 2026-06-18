@@ -1,5 +1,5 @@
 import Pill from '@/ui/Pill';
-import { Layers, User, Camera } from 'lucide-react';
+import { Layers, User, PenLine } from 'lucide-react';
 import { OverviewContent } from './EntityDetailSections';
 import PersonRatingControls from './PersonRatingControls';
 import './EntityDetailHeroSection.css';
@@ -48,9 +48,18 @@ export default function EntityDetailHeroSection({
               {isPeople ? <User size={44} /> : <Layers size={44} />}
             </div>
           )}
-          <div className="entity-detail-page__media-edit-overlay">
-            <Camera size={24} />
-          </div>
+          <button
+            type="button"
+            className="entity-detail-page__media-edit-badge"
+            onClick={(event) => {
+              event.stopPropagation();
+              onMediaCardClick?.();
+            }}
+            title={isPeople ? (t('library.details.changeProfile') || 'Change Profile Picture') : (t('library.details.changePoster') || 'Change Poster')}
+            aria-label={isPeople ? (t('library.details.changeProfile') || 'Change Profile Picture') : (t('library.details.changePoster') || 'Change Poster')}
+          >
+            <PenLine size={14} />
+          </button>
         </div>
 
 

@@ -345,30 +345,47 @@
 
 .entity-detail-page__media-card--editable {
   position: relative;
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .entity-detail-page__media-card--editable:hover {
-  transform: scale(1.02);
+  transform: translateY(-2px);
   border-color: var(--color-accent-blue);
+  box-shadow: 0 28px 54px rgba(0, 0, 0, 0.4);
 }
 
-.entity-detail-page__media-edit-overlay {
+.entity-detail-page__media-edit-badge {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full, 9999px);
+  border: 1px solid color-mix(in srgb, var(--color-accent-blue) 48%, var(--button-secondary-border));
+  background-color: color-mix(in srgb, var(--app-shell-color-panel) 82%, transparent);
+  background-image: var(--button-secondary-bg);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(10px);
   opacity: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  transition: opacity 0.2s ease;
+  color: var(--button-secondary-color);
+  transition: opacity 0.2s ease, transform 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  transform: translateY(-4px);
+  z-index: 5;
+  cursor: pointer;
 }
 
-.entity-detail-page__media-card--editable:hover .entity-detail-page__media-edit-overlay {
+.entity-detail-page__media-card--editable:hover .entity-detail-page__media-edit-badge,
+.entity-detail-page__media-card--editable:focus-within .entity-detail-page__media-edit-badge {
   opacity: 1;
+  transform: translateY(0);
 }
 
+.entity-detail-page__media-edit-badge:hover,
+.entity-detail-page__media-edit-badge:focus-visible {
+  color: var(--color-text-primary);
+  border-color: color-mix(in srgb, var(--color-accent-blue) 72%, var(--button-secondary-border));
+  outline: none;
+}

@@ -8,7 +8,11 @@
   box-shadow: var(--ui-utility-button-inset-border);
   color: var(--color-muted);
   cursor: pointer;
-  transition: 140ms ease;
+  transition:
+    background-color var(--motion-fast),
+    color var(--motion-fast),
+    box-shadow var(--motion-fast),
+    transform var(--motion-fast);
   outline: none;
 }
 
@@ -39,7 +43,7 @@
 }
 
 .ui-utility-button:focus-visible {
-  box-shadow: 0 0 0 2px var(--color-accent);
+  box-shadow: var(--focus-ring);
 }
 
 .window-titlebar__button:focus,
@@ -65,7 +69,14 @@
   line-height: 1;
   letter-spacing: 0.01em;
   cursor: pointer;
-  transition: 160ms ease;
+  transition:
+    background-color var(--motion-fast),
+    border-color var(--motion-fast),
+    color var(--motion-fast),
+    box-shadow var(--motion-fast),
+    filter var(--motion-fast),
+    transform var(--motion-fast),
+    opacity var(--motion-fast);
   outline: none;
   text-decoration: none;
   text-align: center;
@@ -79,7 +90,14 @@
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: 160ms ease;
+  transition:
+    background-color var(--motion-fast),
+    border-color var(--motion-fast),
+    color var(--motion-fast),
+    box-shadow var(--motion-fast),
+    filter var(--motion-fast),
+    transform var(--motion-fast),
+    opacity var(--motion-fast);
   outline: none;
   text-decoration: none;
   line-height: 1;
@@ -196,11 +214,11 @@
 }
 
 .ui-button:hover:not(:disabled) {
-  transform: translateY(-1px);
+  transform: translateY(var(--motion-lift-distance-sm));
 }
 
 .ui-icon-button:hover:not(:disabled) {
-  transform: translateY(-1px);
+  transform: translateY(var(--motion-lift-distance-sm));
 }
 
 .ui-button--primary:hover:not(:disabled) {
@@ -267,20 +285,20 @@
 
 .ui-button:focus-visible {
   outline: none;
-  box-shadow: var(--button-focus-ring);
+  box-shadow: var(--button-focus-ring, var(--focus-ring));
 }
 
 .ui-icon-button:focus-visible {
   outline: none;
-  box-shadow: var(--button-focus-ring);
+  box-shadow: var(--button-focus-ring, var(--focus-ring));
 }
 
 .ui-button--danger:focus-visible {
-  box-shadow: var(--button-danger-focus-ring);
+  box-shadow: var(--button-danger-focus-ring, var(--focus-ring-danger));
 }
 
 .ui-icon-button--danger:focus-visible {
-  box-shadow: var(--button-danger-focus-ring);
+  box-shadow: var(--button-danger-focus-ring, var(--focus-ring-danger));
 }
 
 /* Play Overlay Variant for Posters & Stills */
@@ -302,7 +320,12 @@
   justify-content: center;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  transition:
+    opacity var(--motion-fast),
+    background-color var(--motion-fast),
+    background-image var(--motion-fast),
+    border-color var(--motion-fast),
+    box-shadow var(--motion-fast);
   z-index: 5;
 }
 

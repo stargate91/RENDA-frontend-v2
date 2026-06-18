@@ -27,6 +27,7 @@ from app.api.routes.overrides.logic import (
     _preferred_metadata_language,
     _hydrate_virtual_metadata,
 )
+from app.utils.library_utils import _match_language_code
 from app.utils.library_utils.image_constants import BACKDROP_SIZE, LOGO_SIZE, POSTER_SIZE
 
 import logging
@@ -536,7 +537,7 @@ def update_item_poster(item_id: str, payload: dict):
                 db.flush()
 
             ui_lang = _preferred_metadata_language(db) or "en"
-            loc = next((entry for entry in collection.localizations if entry.locale == ui_lang), None)
+            loc = next((entry for entry in collection.localizations if _match_language_code(entry.locale, ui_lang)), None)
             if not loc:
                 loc = next(iter(collection.localizations), None)
             if not loc:

@@ -33,11 +33,14 @@ export const useBulkResolveMetadataMutation = () => useMutation({
   mutationFn: (payload) => api.metadata.bulkResolve(payload),
 });
 
-export const useFullMetadataQuery = (itemId, mediaType, options = {}) => useQuery({
-  queryKey: ['full-metadata', itemId, mediaType || null],
-  queryFn: () => api.metadata.getItemFullMetadata(itemId, mediaType),
-  ...options,
-});
+export const useFullMetadataQuery = (itemId, mediaType, options = {}) => {
+  const { language, ...queryOptions } = options;
+  return useQuery({
+    queryKey: ['full-metadata', itemId, mediaType || null, language || null],
+    queryFn: () => api.metadata.getItemFullMetadata(itemId, mediaType, { language }),
+    ...queryOptions,
+  });
+};
 
 export const useSyncLanguageMutation = () => useMutation({
   mutationFn: () => api.metadata.syncLanguage(),
@@ -55,11 +58,14 @@ export const useLibrarySeriesDetailQuery = (seriesId, options = {}) => useQuery(
   ...options,
 });
 
-export const useLibraryCollectionDetailQuery = (collectionId, options = {}) => useQuery({
-  queryKey: ['library-collection-detail', collectionId],
-  queryFn: () => api.library.getCollectionDetail(collectionId),
-  ...options,
-});
+export const useLibraryCollectionDetailQuery = (collectionId, options = {}) => {
+  const { language, ...queryOptions } = options;
+  return useQuery({
+    queryKey: ['library-collection-detail', collectionId, language || null],
+    queryFn: () => api.library.getCollectionDetail(collectionId, { language }),
+    ...queryOptions,
+  });
+};
 
 export const usePersonDetailQuery = (personId, options = {}) => useQuery({
   queryKey: ['person-detail', personId],

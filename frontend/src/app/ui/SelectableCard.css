@@ -4,7 +4,12 @@
   width: 100%;
   color: inherit;
   cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    border-color var(--motion-fast),
+    background-color var(--motion-fast),
+    box-shadow var(--motion-fast),
+    opacity var(--motion-fast),
+    transform var(--motion-fast);
   user-select: none;
 }
 
@@ -31,7 +36,7 @@
 .ui-selectable-card--default:focus-visible {
   outline: none;
   border-color: var(--color-accent);
-  box-shadow: var(--ui-control-focus-ring);
+  box-shadow: var(--ui-control-focus-ring, var(--focus-ring));
 }
 
 .ui-selectable-card--default.is-selected {
@@ -51,7 +56,7 @@
 }
 
 .ui-selectable-card--theme:hover:not(:disabled):not(.is-selected) {
-  transform: translateY(-2px);
+  transform: translateY(var(--motion-lift-distance-md));
   background: var(--ui-control-bg-hover, rgba(255, 255, 255, 0.04));
   border-color: var(--color-border-strong);
   box-shadow: var(--app-shell-shadow-sm);
@@ -60,7 +65,7 @@
 .ui-selectable-card--theme:focus-visible {
   outline: none;
   border-color: var(--color-accent-blue);
-  box-shadow: var(--ui-control-focus-ring);
+  box-shadow: var(--ui-control-focus-ring, var(--focus-ring));
 }
 
 .ui-selectable-card--theme.is-selected {
@@ -89,11 +94,11 @@
   inset: 0;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), transparent);
   opacity: 0;
-  transition: opacity 0.25s ease;
+  transition: opacity var(--motion-base);
 }
 
 .ui-selectable-card--chooser:hover:not(:disabled) {
-  transform: translateY(-4px);
+  transform: translateY(calc(var(--motion-lift-distance-md) * 2));
   background: rgba(255, 255, 255, 0.03);
 }
 
@@ -134,4 +139,9 @@
 .ui-selectable-card--chooser:hover:not(:disabled) .library-chooser-card__icon,
 .ui-selectable-card--chooser:focus-visible .library-chooser-card__icon {
   transform: scale(1.1);
+}
+
+.ui-selectable-card--chooser:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }

@@ -41,9 +41,10 @@ export default function BackdropsPanel({ showTitle = true }) {
         onSelect={handleSelectBackdrop}
         isPending={overrideBackdropMutation.isPending}
         pendingPath={overrideBackdropMutation.variables?.backdropPath}
+        initialVisibleCount={12}
+        visibleStep={12}
         t={t}
       />
     </div>
   );
 }
-

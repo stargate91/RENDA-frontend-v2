@@ -145,6 +145,41 @@ div.ui-poster-card__image-wrapper:focus-visible {
   z-index: 5;
 }
 
+.ui-poster-card__edit-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full, 9999px);
+  border: 1px solid color-mix(in srgb, var(--color-accent-blue) 48%, var(--button-secondary-border));
+  background-color: color-mix(in srgb, var(--app-shell-color-panel) 82%, transparent);
+  background-image: var(--button-secondary-bg);
+  color: var(--button-secondary-color);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 6;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity var(--motion-fast), transform var(--motion-fast), color var(--motion-fast), border-color var(--motion-fast);
+}
+
+.ui-poster-card__media-shell:hover .ui-poster-card__edit-badge,
+.ui-poster-card__media-shell:focus-within .ui-poster-card__edit-badge {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ui-poster-card__edit-badge:hover,
+.ui-poster-card__edit-badge:focus-visible {
+  color: var(--color-text-primary);
+  border-color: color-mix(in srgb, var(--color-accent-blue) 72%, var(--button-secondary-border));
+  outline: none;
+}
+
 .ui-poster-card__favorite-badge svg {
   display: block;
   flex-shrink: 0;

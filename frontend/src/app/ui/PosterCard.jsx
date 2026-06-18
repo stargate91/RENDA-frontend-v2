@@ -16,6 +16,7 @@ export default function PosterCard({
   subtitle,
   badge,
   topRightBadge,
+  topRightAction,
   isWatched = false,
   overlay,
   playOverlay,
@@ -76,6 +77,7 @@ export default function PosterCard({
             {children}
           </MediaCard>
         </DefaultComponent>
+        {topRightAction}
         {playOverlay ? (
           <IconButton
             variant="play-overlay"

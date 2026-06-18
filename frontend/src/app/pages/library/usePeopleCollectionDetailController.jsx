@@ -56,7 +56,7 @@ export default function usePeopleCollectionDetailController({
   const mediaUrl = resolveDetailsImageUrl(
     isPeople ? item?.profile_path : item?.poster_path,
     API_BASE,
-    'poster'
+    isPeople ? 'person' : 'poster'
   );
   const metaPills = useMemo(
     () => buildEntityMetaPills({ isPeople, item, t }),

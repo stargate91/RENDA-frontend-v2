@@ -19,7 +19,11 @@
   background: var(--color-input-bg, var(--ui-control-bg));
   color: var(--ui-control-text);
   outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  transition:
+    border-color var(--motion-fast),
+    box-shadow var(--motion-fast),
+    background-color var(--motion-fast),
+    color var(--motion-fast);
 }
 
 .ui-input::placeholder {
@@ -37,9 +41,11 @@
 }
 
 .ui-input:focus,
-.ui-select:focus {
+.ui-input:focus-visible,
+.ui-select:focus,
+.ui-select:focus-visible {
   border-color: var(--color-accent);
-  box-shadow: var(--ui-control-shadow-focus);
+  box-shadow: var(--ui-control-shadow-focus, var(--focus-ring));
 }
 
 .ui-input--error {
@@ -48,7 +54,12 @@
 
 .ui-input--error:focus {
   border-color: var(--color-state-danger);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-state-danger) 22%, transparent);
+  box-shadow: var(--focus-ring-danger);
+}
+
+.ui-input--error:focus-visible {
+  border-color: var(--color-state-danger);
+  box-shadow: var(--focus-ring-danger);
 }
 
 .ui-input__toggle {
@@ -64,9 +75,15 @@
   background: none;
   color: var(--color-text-secondary);
   cursor: pointer;
+  transition: color var(--motion-fast), transform var(--motion-fast);
 }
 
 .ui-input__toggle:hover {
+  color: var(--color-ink);
+}
+
+.ui-input__toggle:focus-visible {
+  outline: none;
   color: var(--color-ink);
 }
 

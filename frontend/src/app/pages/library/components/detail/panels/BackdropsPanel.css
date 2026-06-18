@@ -8,8 +8,20 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-md);
+  padding-inline: 0.25rem;
   padding-top: var(--space-2xs);
   padding-bottom: var(--space-2xs);
+  box-sizing: border-box;
+  contain: layout paint;
+}
+
+.backdrops-grid > * {
+  content-visibility: auto;
+  contain-intrinsic-size: 180px 108px;
+}
+
+.backdrops-panel .ui-backdrop-card {
+  contain: paint;
 }
 
 .backdrops-panel__empty {
@@ -23,6 +35,11 @@
 .backdrops-panel__empty-state {
   grid-column: 1 / -1;
   width: 100%;
+}
+
+.backdrops-panel__load-more-trigger {
+  grid-column: 1 / -1;
+  height: 1px;
 }
 
 @media (max-width: 1200px) {
@@ -55,5 +72,3 @@
 .ui-backdrop-card--poster {
   padding-bottom: 150% !important; /* 2:3 aspect ratio */
 }
-
-

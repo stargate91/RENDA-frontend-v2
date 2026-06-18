@@ -1,6 +1,106 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 
+const matchesLibraryEntity = (item, rawItemId, cleanId) => {
+  if (!item || typeof item !== 'object') return false;
+  const itemId = String(item.id ?? '');
+  const tmdbId = String(item.tmdb_id ?? '');
+  const seriesTmdbId = String(item.series_tmdb_id ?? '');
+  return (
+    itemId === String(rawItemId)
+    || itemId === String(cleanId)
+    || itemId === `series_${cleanId}`
+    || itemId === `collection_${cleanId}`
+    || tmdbId === String(cleanId)
+    || seriesTmdbId === String(cleanId)
+  );
+};
+
+const normalizeLocalPosterPath = (path) => {
+  if (!path || typeof path !== 'string') return path;
+  const cleanPath = path.replace(/\\/g, '/');
+  const marker = 'media/images/posters/';
+  if (cleanPath.includes(marker)) {
+    return cleanPath.split(marker).pop();
+  }
+  return path;
+};
+
+const applyPosterFields = (item, data, rawItemId) => {
+  if (!item || typeof item !== 'object') return item;
+  const nextPosterPath = data?.poster_path ?? item.poster_path;
+  const nextLocalPosterPath = normalizeLocalPosterPath(data?.local_poster_path ?? item.local_poster_path);
+  const nextDisplayPoster = nextLocalPosterPath || nextPosterPath || item.displayPoster;
+
+  const nextItem = {
+    ...item,
+    poster_path: nextPosterPath,
+    local_poster_path: nextLocalPosterPath,
+    displayPoster: nextDisplayPoster,
+  };
+
+  if (String(rawItemId).startsWith('series_')) {
+    nextItem.series_poster_path = nextPosterPath;
+  }
+
+  return nextItem;
+};
+
+const updatePosterInCacheData = (cacheData, rawItemId, cleanId, data) => {
+  if (!cacheData || typeof cacheData !== 'object') return cacheData;
+
+  if (Array.isArray(cacheData)) {
+    let changed = false;
+    const nextArray = cacheData.map((entry) => {
+      const nextEntry = updatePosterInCacheData(entry, rawItemId, cleanId, data);
+      if (nextEntry !== entry) changed = true;
+      return nextEntry;
+    });
+    return changed ? nextArray : cacheData;
+  }
+
+  if (matchesLibraryEntity(cacheData, rawItemId, cleanId)) {
+    return applyPosterFields(cacheData, data, rawItemId);
+  }
+
+  let changed = false;
+  const nextObject = {};
+  for (const [key, value] of Object.entries(cacheData)) {
+    const nextValue = updatePosterInCacheData(value, rawItemId, cleanId, data);
+    if (nextValue !== value) changed = true;
+    nextObject[key] = nextValue;
+  }
+
+  return changed ? nextObject : cacheData;
+};
+
+const syncPosterCaches = (queryClient, rawItemId, data) => {
+  const cleanId = String(rawItemId).replace('series_', '').replace('collection_', '');
+
+  queryClient.setQueriesData({ queryKey: ['library'] }, (oldData) => (
+    updatePosterInCacheData(oldData, rawItemId, cleanId, data)
+  ));
+  queryClient.setQueriesData({ queryKey: ['libraryCollections'] }, (oldData) => (
+    updatePosterInCacheData(oldData, rawItemId, cleanId, data)
+  ));
+
+  const detailKeys = [
+    ['library-item-detail', rawItemId],
+    ['library-item-detail', cleanId],
+    ['library-series-detail', rawItemId],
+    ['library-series-detail', cleanId],
+  ];
+
+  if (String(rawItemId).startsWith('collection_')) {
+    detailKeys.push(['library-collection-detail', rawItemId]);
+    detailKeys.push(['library-collection-detail', cleanId]);
+  }
+
+  detailKeys.forEach((key) => {
+    queryClient.setQueryData(key, (oldData) => updatePosterInCacheData(oldData, rawItemId, cleanId, data));
+  });
+};
+
 export const useUpdateMediaMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -207,6 +307,7 @@ export const useOverridePosterMutation = () => {
     onSuccess: (data, variables) => {
       const cleanId = String(variables.itemId).replace('series_', '');
       const isCollection = String(variables.itemId).startsWith('collection_');
+      syncPosterCaches(queryClient, variables.itemId, data);
       queryClient.invalidateQueries({ queryKey: ['full-metadata', variables.itemId] });
       queryClient.invalidateQueries({ queryKey: ['full-metadata', cleanId] });
       queryClient.invalidateQueries({ queryKey: ['library-item-detail', variables.itemId] });
@@ -219,6 +320,7 @@ export const useOverridePosterMutation = () => {
         queryClient.invalidateQueries({ queryKey: ['library-collection-detail', variables.itemId] });
       }
       queryClient.invalidateQueries({ queryKey: ['library'] });
+      queryClient.invalidateQueries({ queryKey: ['libraryCollections'] });
     },
   });
 };
@@ -230,6 +332,7 @@ export const useUploadPosterMutation = () => {
     onSuccess: (data, variables) => {
       const cleanId = String(variables.itemId).replace('series_', '');
       const isCollection = String(variables.itemId).startsWith('collection_');
+      syncPosterCaches(queryClient, variables.itemId, data);
       queryClient.invalidateQueries({ queryKey: ['full-metadata', variables.itemId] });
       queryClient.invalidateQueries({ queryKey: ['full-metadata', cleanId] });
       queryClient.invalidateQueries({ queryKey: ['library-item-detail', variables.itemId] });
@@ -242,6 +345,7 @@ export const useUploadPosterMutation = () => {
         queryClient.invalidateQueries({ queryKey: ['library-collection-detail', variables.itemId] });
       }
       queryClient.invalidateQueries({ queryKey: ['library'] });
+      queryClient.invalidateQueries({ queryKey: ['libraryCollections'] });
     },
   });
 };

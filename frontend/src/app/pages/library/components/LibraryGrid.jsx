@@ -9,6 +9,8 @@ import EmptyState from '@/ui/EmptyState';
 import Button from '@/ui/Button';
 import IconButton from '@/ui/IconButton';
 import NavButton from '@/ui/NavButton';
+import { useUi } from '@/providers/UiProvider';
+import UniversalImagePickerModal from '../modals/UniversalImagePickerModal';
 import { resolveMediaImageUrl } from '@/lib/imageUrls';
 import {
   getLibraryTagBucketKeys,
@@ -67,6 +69,7 @@ export default function LibraryGrid({
 }) {
   const navigate = useNavigate();
   const playMutation = usePlayMediaMutation();
+  const { openModal, closeModal, toast } = useUi();
 
   const getNextOwnedEpisode = (seriesDetail) => {
     const seasons = Array.isArray(seriesDetail?.seasons) ? seriesDetail.seasons : [];
@@ -132,6 +135,59 @@ export default function LibraryGrid({
     return resolveMediaImageUrl(path, 'poster');
   };
 
+  const openImagePicker = (item) => {
+    const isPeopleCard = isLibraryPeopleTab(resolvedTab);
+    const entityId = isCollections
+      ? `collection_${item.tmdb_id || item.id}`
+      : item.id;
+    const entityType = isPeopleCard
+      ? 'person'
+      : isCollections
+      ? 'collection'
+      : (isLibrarySeriesTab(resolvedTab) ? 'series' : 'movie');
+    const imageType = isPeopleCard ? 'profile' : 'poster';
+    const currentPath = isPeopleCard ? item.profile_path : item.poster_path;
+    const tmdbId = isPeopleCard ? item.id : (item.tmdb_id || item.series_tmdb_id || item.id);
+
+    openModal({
+      title: isPeopleCard
+        ? (t('library.details.changeProfile') || 'Change Profile Picture')
+        : (t('library.details.changePoster') || 'Change Poster'),
+      variant: 'wide',
+      content: (
+        <UniversalImagePickerModal
+          entityId={entityId}
+          tmdbId={tmdbId}
+          imageType={imageType}
+          entityType={entityType}
+          currentPath={currentPath}
+          t={t}
+          toast={toast}
+          onClose={closeModal}
+        />
+      ),
+    });
+  };
+
+  const renderEditBadge = (item) => (
+    <button
+      type="button"
+      className="ui-poster-card__edit-badge"
+      title={isLibraryPeopleTab(resolvedTab)
+        ? (t('library.details.changeProfile') || 'Change Profile Picture')
+        : (t('library.details.changePoster') || 'Change Poster')}
+      aria-label={isLibraryPeopleTab(resolvedTab)
+        ? (t('library.details.changeProfile') || 'Change Profile Picture')
+        : (t('library.details.changePoster') || 'Change Poster')}
+      onClick={(event) => {
+        event.stopPropagation();
+        openImagePicker(item);
+      }}
+    >
+      <Pencil size={14} />
+    </button>
+  );
+
 
 
   const getCardProps = (item) => {
@@ -150,6 +206,7 @@ export default function LibraryGrid({
         icon: emptyIcon,
         ratingImdb: item.rating_imdb,
         ratingTmdb: item.rating,
+        topRightAction: renderEditBadge(item),
       };
     }
     if (isLibraryPeopleTab(resolvedTab)) {
@@ -161,6 +218,7 @@ export default function LibraryGrid({
         className: 'library-person-card',
         badge: renderUserRatingBadge(item),
         topRightBadge: renderFavoriteBadge(item, t),
+        topRightAction: renderEditBadge(item),
       };
     }
     const subtitleParts = [];
@@ -175,6 +233,7 @@ export default function LibraryGrid({
       icon: emptyIcon,
       backgroundColor: item.color,
       badge: renderUserRatingBadge(item),
+      topRightAction: renderEditBadge(item),
       ratingImdb: item.rating_imdb,
       ratingTmdb: item.rating,
       playOverlay: item.in_library !== false && (isLibraryMovieTab(resolvedTab) || isLibrarySeriesTab(resolvedTab))

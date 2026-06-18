@@ -8,7 +8,7 @@
   padding: var(--space-6);
   background: var(--ui-overlay-backdrop-bg);
   backdrop-filter: var(--ui-overlay-backdrop-blur);
-  animation: ui-modal-backdrop-fade-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: ui-modal-backdrop-fade-in var(--motion-duration-base) var(--motion-ease-emphasized) forwards;
 }
 
 @keyframes ui-modal-backdrop-fade-in {
@@ -31,7 +31,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: ui-modal-scale-up 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: ui-modal-scale-up var(--motion-duration-slow) var(--motion-ease-emphasized) forwards;
 }
 
 .ui-modal--wide {
@@ -105,7 +105,7 @@
 }
 
 .ui-modal__close svg {
-  transition: transform 0.15s ease !important;
+  transition: transform var(--motion-fast) !important;
 }
 
 .ui-modal__close:hover {
@@ -120,7 +120,7 @@
 
 .ui-modal__close:focus-visible {
   border-color: color-mix(in srgb, var(--color-accent) 42%, rgba(255, 255, 255, 0.16));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 16%, transparent);
+  box-shadow: var(--focus-ring);
 }
 
 .ui-modal__body {
@@ -209,7 +209,7 @@
 
 .ui-modal--danger .ui-modal__close:focus-visible {
   border-color: color-mix(in srgb, var(--color-state-danger) 62%, rgba(255, 255, 255, 0.14));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-state-danger) 28%, transparent);
+  box-shadow: var(--focus-ring-danger);
 }
 
 .ui-modal__actions-list {
@@ -229,19 +229,23 @@
   color: inherit;
   text-align: left;
   cursor: pointer;
-  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+  transition:
+    border-color var(--motion-fast),
+    background-color var(--motion-fast),
+    transform var(--motion-fast),
+    box-shadow var(--motion-fast);
 }
 
 .ui-modal__action-card:hover {
   border-color: color-mix(in srgb, var(--color-text-primary) 16%, transparent);
   background: color-mix(in srgb, var(--ui-surface-soft-strong) 54%, transparent);
-  transform: translateY(-1px);
+  transform: translateY(var(--motion-lift-distance-sm));
 }
 
 .ui-modal__action-card:focus-visible {
   outline: none;
   border-color: color-mix(in srgb, var(--color-accent) 55%, white);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 18%, transparent);
+  box-shadow: var(--focus-ring);
 }
 
 .ui-modal__action-card--danger {
@@ -257,7 +261,7 @@
 
 .ui-modal__action-card--danger:focus-visible {
   border-color: color-mix(in srgb, var(--color-state-danger) 62%, rgba(255, 255, 255, 0.12));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-state-danger) 26%, transparent);
+  box-shadow: var(--focus-ring-danger);
 }
 
 .ui-modal__action-copy {
@@ -289,7 +293,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  animation: ui-confirm-fade-in 0.2s ease-out;
+  animation: ui-confirm-fade-in var(--motion-duration-base) var(--motion-ease-standard);
   padding: var(--space-2xl);
 }
 
@@ -306,7 +310,7 @@
     inset 0 0 0 1px rgba(255, 255, 255, 0.04);
   display: grid;
   gap: var(--space-2xl);
-  animation: ui-confirm-scale-up 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: ui-confirm-scale-up var(--motion-duration-slow) var(--motion-ease-emphasized);
 }
 
 .ui-confirm-header {

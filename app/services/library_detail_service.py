@@ -19,8 +19,8 @@ class LibraryDetailService:
     def get_library_item_detail(self, item_id: str, full_people: bool = False):
         return self.item_provider.get_library_item_detail(item_id, full_people=full_people)
 
-    def get_collection_detail(self, collection_tmdb_id: int):
-        return self.collection_provider.get_collection_detail(collection_tmdb_id)
+    def get_collection_detail(self, collection_tmdb_id: int, language: str | None = None):
+        return self.collection_provider.get_collection_detail(collection_tmdb_id, language=language)
 
     def get_library_series_detail(self, series_tmdb_id: int):
         return self.series_provider.get_library_series_detail(series_tmdb_id)

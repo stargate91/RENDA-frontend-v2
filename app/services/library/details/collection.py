@@ -17,7 +17,7 @@ from app.db.models import *
 logger = logging.getLogger(__name__)
 
 class CollectionDetailProvider(BaseDetailProvider):
-    def get_collection_detail(self, collection_tmdb_id: str):
+    def get_collection_detail(self, collection_tmdb_id: str, language: str | None = None):
         db = self.db
         try:
             from app.api.tmdb_client import TMDBClient
@@ -27,7 +27,7 @@ class CollectionDetailProvider(BaseDetailProvider):
             except ValueError:
                 return JSONResponse(status_code=400, content={"error": "Invalid collection TMDB ID"})
 
-            ui_lang = _preferred_metadata_language(db)
+            ui_lang = (language or _preferred_metadata_language(db) or "en-US").strip()
             tmdb_client = TMDBClient(db)
             collection = db.query(MediaCollection).options(
                 joinedload(MediaCollection.localizations)

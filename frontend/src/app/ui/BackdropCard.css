@@ -8,19 +8,34 @@
   border: 1px solid var(--media-detail-panel-card-border);
   background: var(--media-detail-panel-card-bg);
   cursor: pointer;
-  transition: all var(--motion-base);
+  transition:
+    transform var(--motion-emphasized),
+    border-color var(--motion-fast),
+    box-shadow var(--motion-fast),
+    opacity var(--motion-fast);
   box-shadow: var(--media-detail-panel-card-shadow);
 }
 
 .ui-backdrop-card:hover:not(.ui-backdrop-card--disabled) {
-  transform: translateY(-2px);
+  transform: translateY(var(--motion-lift-distance-md));
   border-color: var(--color-border-heavy);
   box-shadow: var(--shadow-md);
+}
+
+.ui-backdrop-card:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 .ui-backdrop-card--selected {
   border-color: var(--color-accent-blue);
   box-shadow: 0 0 0 2px var(--color-accent-blue);
+}
+
+.ui-backdrop-card--selected:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--color-accent-blue),
+    var(--focus-ring);
 }
 
 .ui-backdrop-card--disabled {
@@ -87,4 +102,3 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
   z-index: 1;
 }
-

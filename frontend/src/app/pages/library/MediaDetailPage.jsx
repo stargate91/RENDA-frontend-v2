@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Users, BadgeInfo, Layers3, Tags, Clapperboard,
-  SlidersHorizontal, CheckCheck, Image as ImageIcon, Camera, FileImage
+  SlidersHorizontal, CheckCheck, Image as ImageIcon
 } from 'lucide-react';
 import { useTranslation } from '@/providers/LanguageContext';
 import { useUi } from '@/providers/UiProvider';
@@ -65,7 +65,7 @@ export default function MediaDetailPage({ type = 'movie' }) {
   const handleOpenBackdropModal = () => {
     openModal({
       title: t('library.details.chooseBackdrop') || 'Choose Backdrop',
-      variant: 'extra-wide',
+      variant: 'wide',
       content: (
         <MediaDetailProvider value={{ ...detailState, t, navigate, toast, type: normalizedType, id }}>
           <BackdropsPanel showTitle={false} />
@@ -140,7 +140,7 @@ export default function MediaDetailPage({ type = 'movie' }) {
   }
 
   return (
-    <MediaDetailProvider value={{ ...detailState, t, navigate, toast, type: normalizedType, id, handleOpenLogoModal }}>
+    <MediaDetailProvider value={{ ...detailState, t, navigate, toast, type: normalizedType, id, handleOpenLogoModal, handleOpenPosterModal }}>
       <DetailPageShell
         backdropUrl={backdropUrl}
         backLabel={t('common.back') || 'Back'}
@@ -148,24 +148,14 @@ export default function MediaDetailPage({ type = 'movie' }) {
         isSideNavVisible={isSideNavVisible}
         onToggleSideNav={handleToggleSideNav}
         topRightControls={(
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              type="button"
-              onClick={handleOpenPosterModal}
-              className="media-detail-page__side-nav-toggle"
-              title={t('library.details.posters') || 'Choose Poster'}
-            >
-              <FileImage size={18} />
-            </button>
-            <button
-              type="button"
-              onClick={handleOpenBackdropModal}
-              className="media-detail-page__side-nav-toggle"
-              title={t('library.details.backdrops') || 'Choose Backdrop'}
-            >
-              <ImageIcon size={18} />
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleOpenBackdropModal}
+            className="media-detail-page__side-nav-toggle"
+            title={t('library.details.backdrops') || 'Choose Backdrop'}
+          >
+            <ImageIcon size={18} />
+          </button>
         )}
         renderPanelContent={renderPanelContent}
         sideNav={(

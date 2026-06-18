@@ -422,6 +422,8 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
 
   const logoPath = item?.logo_path || '';
   const logoUrl = resolveDetailsImageUrl(logoPath, API_BASE, 'logo');
+  const posterPath = item?.poster_path || '';
+  const posterUrl = resolveDetailsImageUrl(posterPath, API_BASE, 'poster');
 
   return {
     state: {
@@ -463,6 +465,7 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
       nextEpisodeInfo,
       backdropUrl,
       logoUrl,
+      posterUrl,
       item,
       isLoading,
       settings,

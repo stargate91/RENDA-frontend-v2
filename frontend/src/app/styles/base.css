@@ -66,6 +66,23 @@
   --shadow-md: var(--app-shell-shadow-md);
   --shadow-lg: var(--app-shell-shadow-lg);
 
+  --motion-duration-fast: 140ms;
+  --motion-duration-base: 200ms;
+  --motion-duration-slow: 260ms;
+  --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --motion-ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-fast: var(--motion-duration-fast) var(--motion-ease-standard);
+  --motion-base: var(--motion-duration-base) var(--motion-ease-standard);
+  --motion-slow: var(--motion-duration-slow) var(--motion-ease-emphasized);
+  --motion-emphasized: var(--motion-duration-base) var(--motion-ease-emphasized);
+  --motion-lift-distance-sm: -1px;
+  --motion-lift-distance-md: -2px;
+  --focus-ring-width: 3px;
+  --focus-ring-color: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  --focus-ring-color-danger: color-mix(in srgb, var(--color-state-danger) 26%, transparent);
+  --focus-ring: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+  --focus-ring-danger: 0 0 0 var(--focus-ring-width) var(--focus-ring-color-danger);
+
   --text-hero: var(--app-shell-text-hero);
   --text-title: var(--app-shell-text-title);
   --text-section: var(--app-shell-text-section);
@@ -149,4 +166,14 @@ a {
 
 .link-reset {
   text-decoration: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-duration-fast: 0.01ms;
+    --motion-duration-base: 0.01ms;
+    --motion-duration-slow: 0.01ms;
+    --motion-lift-distance-sm: 0px;
+    --motion-lift-distance-md: 0px;
+  }
 }

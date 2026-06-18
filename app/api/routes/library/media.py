@@ -27,10 +27,10 @@ def get_library_series_detail(series_tmdb_id: str, background_tasks: BackgroundT
 
 
 @router.get("/library/collection/{collection_tmdb_id}")
-def get_library_collection_detail(collection_tmdb_id: str):
+def get_library_collection_detail(collection_tmdb_id: str, language: str | None = None):
     db = Session()
     try:
         service = LibraryDetailService(db)
-        return service.get_collection_detail(collection_tmdb_id)
+        return service.get_collection_detail(collection_tmdb_id, language=language)
     finally:
         db.close()

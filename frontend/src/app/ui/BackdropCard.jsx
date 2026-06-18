@@ -36,6 +36,9 @@ export default function BackdropCard({
           src={imageUrl}
           alt={alt}
           className="ui-backdrop-card__img"
+          loading="lazy"
+          decoding="async"
+          draggable="false"
         />
       )}
       {isPending && (

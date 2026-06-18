@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from ...db.models import VirtualMediaState, ItemType
 from ...utils.library_utils import _split_genres
 from ...utils.library_utils import _pick_tmdb_cache, _preferred_metadata_languages
+from ...utils.library_helpers import public_image_path as _public_image_path
 from ...utils.library_helpers import match_language_code as _match_language_code
 
 class LibraryFormatterService:
@@ -148,6 +149,24 @@ class LibraryFormatterService:
         from app.services.language_service import LanguageService
         loc = LanguageService.pick_localization(active_match.localizations, [ui_lang] if ui_lang else []) if active_match else None
 
+        poster_path = (
+            _public_image_path(getattr(loc, "manual_local_poster_path", None), "posters")
+            or _public_image_path(loc.local_poster_path, "posters")
+            or getattr(loc, "manual_poster_path", None)
+            or loc.poster_path
+        ) if loc else None
+
+        series_poster_path = (
+            _public_image_path(getattr(loc, "manual_local_series_poster_path", None), "posters")
+            or _public_image_path(getattr(loc, "manual_local_poster_path", None), "posters")
+            or _public_image_path(loc.local_series_poster_path, "posters")
+            or _public_image_path(loc.local_poster_path, "posters")
+            or getattr(loc, "manual_series_poster_path", None)
+            or getattr(loc, "manual_poster_path", None)
+            or loc.series_poster_path
+            or loc.poster_path
+        ) if loc else None
+
         def _library_year():
             if not active_match:
                 return item.fn_year or item.fd_year
@@ -176,8 +195,8 @@ class LibraryFormatterService:
             "original_title": loc.original_title if loc else None,
             "original_series_title": loc.original_series_title if loc else None,
             "year": _library_year(),
-            "poster_path": loc.poster_path if loc else None,
-            "series_poster_path": loc.series_poster_path if loc else None,
+            "poster_path": poster_path,
+            "series_poster_path": series_poster_path,
             "rating": active_match.rating_tmdb if active_match else 0,
             "rating_imdb": active_match.rating_imdb if active_match else None,
             "type": item.item_type.value,
