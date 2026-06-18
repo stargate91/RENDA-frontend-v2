@@ -312,24 +312,63 @@ function CollectionBackdropsPanel({ item, collectionId, t, toast, overrideBackdr
   };
 
   const [selectedBackdropPath, setSelectedBackdropPath] = useState(item?.backdrop_path || '');
-  const seen = new Set();
-  const backdropOptions = [];
+  const backdropOptions = useMemo(() => {
+    const seen = new Set();
+    const collectionBackdrops = [];
 
-  for (const movie of item?.movies || []) {
-    const backdropPath = movie?.backdrop_path;
-    const backdropKey = normalizeBackdropKey(backdropPath);
-    if (!backdropPath || !backdropKey || seen.has(backdropKey)) {
-      continue;
+    for (const option of (item?.collection_backdrops || [])
+      .filter((bd) => (!bd?.iso_639_1 || bd.iso_639_1 === '') && Number(bd?.width) >= 1280)
+      .map((bd, index) => ({
+        backdrop_path: bd.file_path,
+        backdrop_key: normalizeBackdropKey(bd.file_path),
+        title: item?.title || 'Collection',
+        subtitle: t('library.details.collectionBackdrop') || 'Collection backdrop',
+        sort_score: Number(bd.vote_average) || 0,
+        sort_votes: Number(bd.vote_count) || 0,
+        sort_index: index,
+      }))
+      .filter((option) => option.backdrop_path && option.backdrop_key)
+      .sort((a, b) => (
+        (b.sort_score - a.sort_score)
+        || (b.sort_votes - a.sort_votes)
+        || (a.sort_index - b.sort_index)
+      ))) {
+      if (seen.has(option.backdrop_key)) {
+        continue;
+      }
+      seen.add(option.backdrop_key);
+      collectionBackdrops.push({
+        backdrop_path: option.backdrop_path,
+        backdrop_key: option.backdrop_key,
+        title: option.title,
+        subtitle: option.subtitle,
+      });
     }
-    seen.add(backdropKey);
-    backdropOptions.push({
-      backdrop_path: backdropPath,
-      backdrop_key: backdropKey,
-      title: movie?.title || 'Collection item',
-      year: movie?.year,
-      in_library: Boolean(movie?.in_library),
-    });
-  }
+
+    if (collectionBackdrops.length > 0) {
+      return collectionBackdrops;
+    }
+
+    const movieBackdrops = [];
+    for (const movie of item?.movies || []) {
+      const backdropPath = movie?.backdrop_path;
+      const backdropKey = normalizeBackdropKey(backdropPath);
+      if (!backdropPath || !backdropKey || seen.has(backdropKey)) {
+        continue;
+      }
+      seen.add(backdropKey);
+      movieBackdrops.push({
+        backdrop_path: backdropPath,
+        backdrop_key: backdropKey,
+        title: movie?.title || 'Collection item',
+        subtitle: movie?.in_library
+          ? (t('library.details.have') || 'Have')
+          : (t('library.details.missing') || 'Missing'),
+        year: movie?.year,
+      });
+    }
+    return movieBackdrops;
+  }, [item, t]);
 
   const currentBackdropPath = selectedBackdropPath || item?.backdrop_path || '';
   const currentBackdropKey = normalizeBackdropKey(currentBackdropPath);
@@ -382,11 +421,18 @@ function CollectionBackdropsPanel({ item, collectionId, t, toast, overrideBackdr
               )}
               <div className="backdrop-card__info-overlay">
                 <span>{label}</span>
-                <span>{option.in_library ? (t('library.details.have') || 'Have') : (t('library.details.missing') || 'Missing')}</span>
+                <span>{option.subtitle}</span>
               </div>
             </button>
           );
         })}
+        {backdropOptions.length === 0 && (
+          <EmptyState
+            icon={ImageOff}
+            title={t('library.details.noBackdropsAvailable') || 'No good backdrop options found for this title.'}
+            className="backdrops-panel__empty-state"
+          />
+        )}
       </div>
     </div>
   );
@@ -1836,17 +1882,22 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
       pageClassName={`entity-detail-page ${isPeople ? 'entity-detail-page--people' : 'entity-detail-page--collection'}`}
       topRightControls={
         isPeople
-          ? ((Number(item?.total_movie_credits) > 0 || Number(item?.total_series_credits) > 0 || (item?.known_for || []).length > 0) ? (
-            <button
-              type="button"
-              onClick={handleOpenPeopleBackdropModal}
-              className="media-detail-page__side-nav-toggle"
-              title={t('library.details.backdrops') || 'Choose Backdrop'}
-            >
-              <ImageIcon size={18} />
-            </button>
-          ) : null)
-          : (item?.movies?.some((movie) => movie?.backdrop_path) ? (
+          ? (
+            (Number(item?.total_movie_credits) > 0 || Number(item?.total_series_credits) > 0 || (item?.known_for || []).length > 0) ? (
+              <button
+                type="button"
+                onClick={handleOpenPeopleBackdropModal}
+                className="media-detail-page__side-nav-toggle"
+                title={t('library.details.backdrops') || 'Choose Backdrop'}
+              >
+                <ImageIcon size={18} />
+              </button>
+            ) : null
+          )
+          : (
+            (item?.collection_backdrops?.some((bd) => (!bd?.iso_639_1 || bd.iso_639_1 === '') && Number(bd?.width) >= 1280))
+            || item?.movies?.some((movie) => movie?.backdrop_path)
+          ) ? (
             <button
               type="button"
               onClick={handleOpenCollectionBackdropModal}
@@ -1855,7 +1906,7 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
             >
               <ImageIcon size={18} />
             </button>
-          ) : null)
+          ) : null
       }
     >
       {hasError && (

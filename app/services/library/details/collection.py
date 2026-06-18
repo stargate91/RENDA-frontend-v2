@@ -47,11 +47,15 @@ class CollectionDetailProvider(BaseDetailProvider):
 
             tmdb_details = {}
             try:
+                normalized_lang = str(ui_lang or "en").split("-", 1)[0].strip() or "en"
+                include_image_language = ",".join(dict.fromkeys([normalized_lang, "en", "null"]))
                 tmdb_details = tmdb_client._call_api(  # noqa: SLF001
                     f"/collection/{collection_tmdb_id_int}",
                     {
                         "api_key": getattr(tmdb_client, "_api_key", ""),
                         "language": ui_lang,
+                        "append_to_response": "images",
+                        "include_image_language": include_image_language,
                     },
                 ) or {}
             except Exception:
@@ -121,6 +125,19 @@ class CollectionDetailProvider(BaseDetailProvider):
                         db.commit()
 
             preferred_collection_backdrop = _pick_backdrop_path(tmdb_details, ui_lang) if tmdb_details else None
+            collection_backdrops = []
+            for backdrop in ((tmdb_details.get("images") or {}).get("backdrops") or []):
+                backdrop_path = backdrop.get("file_path")
+                if not backdrop_path:
+                    continue
+                collection_backdrops.append({
+                    "file_path": backdrop_path,
+                    "width": backdrop.get("width"),
+                    "height": backdrop.get("height"),
+                    "iso_639_1": backdrop.get("iso_639_1"),
+                    "vote_average": backdrop.get("vote_average"),
+                    "vote_count": backdrop.get("vote_count"),
+                })
 
             movies = []
             owned_tmdb_ids = set()
@@ -219,6 +236,7 @@ class CollectionDetailProvider(BaseDetailProvider):
                 "has_local_backdrop": bool(_public_image_path(getattr(collection, "manual_local_backdrop_path", None) or collection.local_backdrop_path, "backdrops")) if collection else False,
                 "owned_count": len([movie for movie in movies if movie.get("in_library")]),
                 "total_count": len(movies),
+                "collection_backdrops": collection_backdrops,
                 "movies": movies,
             }
             return JSONResponse(content=result, media_type="application/json; charset=utf-8")

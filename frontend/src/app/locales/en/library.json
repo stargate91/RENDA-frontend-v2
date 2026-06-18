@@ -346,6 +346,7 @@
     "seasonProgress": "Season Progress",
     "backdrops": "Choose Backdrop",
     "chooseBackdrop": "Choose Backdrop",
+    "collectionBackdrop": "Collection backdrop",
     "noBackdropsAvailable": "No good backdrop options found for this title.",
     "backdropUpdated": "Backdrop updated successfully!",
     "backdropUpdateFailed": "Failed to update backdrop",

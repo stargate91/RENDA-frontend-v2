@@ -88,15 +88,18 @@ class LibraryTabService:
                 normalized_tab, page, page_size, sort_by, search, selected_tags, selected_genre, selected_decade, selected_year, filter_favorite, filter_watched, filter_ownership, filter_status, filter_gender
             )
 
+        owned_counts = self.repository.get_library_owned_counts()
         counts = self.grouped_service.get_grouped_library(
             requested_tabs={"movies", "series", "adult", "adult_series", "people", "adult_people"}
         ).get("counts", {})
+        counts["series"] = owned_counts.get("series", 0)
+        counts["adult_series"] = owned_counts.get("adult_series", 0)
 
         return {
             "tab": normalized_tab,
             "items": items,
             "counts": counts,
-            "owned_counts": self.repository.get_library_owned_counts(),
+            "owned_counts": owned_counts,
             "total_items": total_items,
             "page": safe_page,
             "page_size": safe_page_size,

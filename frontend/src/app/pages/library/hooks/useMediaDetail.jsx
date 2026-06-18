@@ -18,7 +18,8 @@ import ReviewModalContent from '../components/detail/modals/ReviewModalContent';
 import Button from '@/ui/Button';
 
 export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
-  const cleanId = id?.startsWith('series_') ? id.replace('series_', '') : id;
+  const normalizedId = id == null ? '' : String(id);
+  const cleanId = normalizedId.startsWith('series_') ? normalizedId.replace('series_', '') : normalizedId;
   const isMovie = isMovieMediaType(type);
 
   const [hoveredRating, setHoveredRating] = useState(null);
@@ -65,7 +66,7 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
   }, [cleanId, isMovie, item]);
 
   useEffect(() => {
-    if (!isMovie || !cleanId || !item?.id?.startsWith('tmdb_')) return;
+    if (!isMovie || !cleanId || !String(item?.id || '').startsWith('tmdb_')) return;
     if (item?.people_complete) return;
     if (!item?.cast?.length) return;
     if (fullPeoplePrefetchRef.current.has(cleanId)) return;
