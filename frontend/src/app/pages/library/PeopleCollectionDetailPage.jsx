@@ -998,6 +998,17 @@ function PersonBackdropPickerModal({ personId, item, t, toast, overridePersonBac
 
   return (
     <div className="person-backdrop-picker">
+      {isBackdropBrowserOpen ? (
+        <div className="person-backdrop-picker__detail-toolbar">
+          <NavButton className="person-backdrop-picker__back-btn" onClick={handleBackToCredits} icon={ChevronLeft}>
+            {t('common.back') || 'Back'}
+          </NavButton>
+          <h4 className="details-panel__section-title person-backdrop-picker__detail-title">
+            {selectedBackdropMetadataQuery.data?.title || selectedCredit?.title}
+          </h4>
+        </div>
+      ) : null}
+
       {!isBackdropBrowserOpen && (
         <>
           <SegmentedControl
@@ -1013,18 +1024,14 @@ function PersonBackdropPickerModal({ personId, item, t, toast, overridePersonBac
         </>
       )}
 
-      <div ref={viewportRef} className="person-backdrop-picker__viewport" onScroll={handleViewportScroll}>
+      <div
+        ref={viewportRef}
+        className={`person-backdrop-picker__viewport${isBackdropBrowserOpen ? ' person-backdrop-picker__viewport--detail' : ''}`}
+        onScroll={handleViewportScroll}
+      >
         {isBackdropBrowserOpen ? (
-          <div className="backdrops-panel person-backdrop-picker__detail-view">
-            <div className="person-backdrop-picker__detail-toolbar">
-              <NavButton className="person-backdrop-picker__back-btn" onClick={handleBackToCredits} icon={ChevronLeft}>
-                {t('common.back') || 'Back'}
-              </NavButton>
-              <h4 className="details-panel__section-title person-backdrop-picker__detail-title">
-                {selectedBackdropMetadataQuery.data?.title || selectedCredit?.title}
-              </h4>
-            </div>
-
+          <>
+            <div className="backdrops-panel person-backdrop-picker__detail-view">
             <div className="backdrops-grid">
               {isBackdropBrowserLoading && Array.from({ length: 8 }).map((_, index) => (
                 <div key={`person-backdrop-detail-skeleton-${index}`} className="backdrop-card backdrop-card--disabled" />
@@ -1072,6 +1079,7 @@ function PersonBackdropPickerModal({ personId, item, t, toast, overridePersonBac
               )}
             </div>
           </div>
+          </>
         ) : (
           <div className="person-backdrop-picker__grid">
           {isLoading && visibleItems.length === 0 && Array.from({ length: initialTabPageSize }).map((_, index) => (
@@ -1982,6 +1990,7 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
     openModal({
       title: t('library.details.chooseBackdrop') || 'Choose Backdrop',
       variant: 'extra-wide',
+      className: 'person-backdrop-picker-modal',
       content: (
         <PersonBackdropPickerModal
           personId={item.id}

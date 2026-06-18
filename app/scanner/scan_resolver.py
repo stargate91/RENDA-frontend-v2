@@ -127,7 +127,7 @@ class ScanResolver:
                 increment_scan_status_current()
 
         # ThreadPool for network requests (limited to avoid rate limit)
-        max_workers = min(5, len(item_ids)) or 1
+        max_workers = 6
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             future_to_item = {}
             item_iter = iter(item_ids)

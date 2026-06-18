@@ -78,7 +78,13 @@ class ScannerManager:
         finally:
             self.db.close()
             update_scan_status({"active": False, "phase": "idle", "can_stop": False, "stop_requested": False, "message": None})
-            
+
+            try:
+                from app.services.background_tasks import trigger_image_worker_now
+                trigger_image_worker_now()
+            except Exception as e:
+                logger.error(f"Failed to trigger image worker after scan: {e}")
+
             try:
                 from .people_hydrator import people_hydrator
                 people_hydrator.start()

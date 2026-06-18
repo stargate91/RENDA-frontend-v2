@@ -1,6 +1,7 @@
 import threading
 import logging
 import time
+import concurrent.futures
 from typing import Dict, Any, List, Callable
 from app.db.base import Session
 from app.db.models import Person, UserSetting
@@ -47,6 +48,9 @@ hydrate_status_manager = HydrateStatusManager()
 
 
 class PeopleHydrator:
+    BATCH_SIZE = 200
+    MAX_WORKERS = 6
+
     def __init__(self):
         self._thread = None
         self._stop_event = threading.Event()
@@ -87,43 +91,61 @@ class PeopleHydrator:
     def stop(self):
         self._stop_event.set()
 
-    def _hydrate_loop(self):
-        from concurrent.futures import ThreadPoolExecutor, as_completed
-        persons = []
-        langs = ["en-US"]
-        
-        # 1. Fetch target persons and preferred languages using a short-lived DB session
+    def _scan_is_active(self) -> bool:
+        try:
+            from app.scanner.status import get_scan_status
+            return bool(get_scan_status().get("active"))
+        except Exception:
+            return False
+
+    def _wait_while_scan_active(self, current_count: int, total: int) -> bool:
+        paused = False
+        while not self._stop_event.is_set() and self._scan_is_active():
+            if not paused:
+                hydrate_status_manager.update({
+                    "active": True,
+                    "phase": "paused_for_scan",
+                    "current": current_count,
+                    "total": total,
+                    "message": "Waiting for scan to finish...",
+                })
+                paused = True
+            time.sleep(0.5)
+
+        if self._stop_event.is_set():
+            return False
+
+        if paused:
+            hydrate_status_manager.update({
+                "active": True,
+                "phase": "people_enriching",
+                "current": current_count,
+                "total": total,
+                "message": "",
+            })
+        return True
+
+    def _load_pending_people_batch(self) -> tuple[list[int], list[str], int]:
         db = Session()
         try:
-            persons = db.query(Person.id).filter(
+            query = db.query(Person.id).filter(
                 Person.is_active == False,
                 (Person.fetched_languages == None) | (Person.fetched_languages == "")
-            ).all()
+            )
+            total_pending = query.count()
+            batch_ids = [person_id for (person_id,) in query.limit(self.BATCH_SIZE).all()]
             langs = _preferred_person_languages(db)
-        except Exception as e:
-            logger.error(f"Error initializing people hydrator query: {e}")
+            return batch_ids, langs, total_pending
         finally:
             db.close()
             Session.remove()
 
-        total = len(persons)
-        if total == 0:
-            hydrate_status_manager.update({"active": False, "phase": "idle", "current": 0, "total": 0, "message": ""})
-            return
-
-        hydrate_status_manager.update({
-            "active": True,
-            "phase": "people_enriching",
-            "total": total,
-            "current": 0,
-            "message": "",
-        })
-
-        # 2. Iterate and enrich each person in parallel
+    def _hydrate_loop(self):
         try:
             current_count = 0
+            total = 0
             
-            def enrich_single(p_id):
+            def enrich_single(p_id, langs):
                 if self._stop_event.is_set():
                     return
                 temp_db = Session()
@@ -148,21 +170,72 @@ class PeopleHydrator:
                     temp_db.close()
                     Session.remove()
 
-            # Process up to 6 people concurrently to balance speed with API rate limits and DB locks
-            max_workers = min(6, total)
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                futures = {executor.submit(enrich_single, p_id): p_id for (p_id,) in persons}
-                for future in as_completed(futures):
-                    if self._stop_event.is_set():
-                        for f in futures:
-                            f.cancel()
-                        logger.info("People hydrator stopped by request.")
+            while not self._stop_event.is_set():
+                if not self._wait_while_scan_active(current_count, total):
+                    break
+
+                try:
+                    person_ids, langs, total_pending = self._load_pending_people_batch()
+                except Exception as e:
+                    logger.error(f"Error initializing people hydrator query: {e}")
+                    break
+
+                if not person_ids:
+                    if total_pending == 0:
                         break
-                    
-                    current_count += 1
-                    hydrate_status_manager.update({
-                        "current": current_count
-                    })
+                    time.sleep(0.5)
+                    continue
+
+                total = max(total, current_count + total_pending)
+                hydrate_status_manager.update({
+                    "active": True,
+                    "phase": "people_enriching",
+                    "total": total,
+                    "current": current_count,
+                    "message": "",
+                })
+
+                max_workers = min(self.MAX_WORKERS, len(person_ids))
+                person_iter = iter(person_ids)
+                with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+                    future_to_person = {}
+
+                    while not self._stop_event.is_set():
+                        if not self._wait_while_scan_active(current_count, total):
+                            break
+
+                        while len(future_to_person) < max_workers:
+                            try:
+                                person_id = next(person_iter)
+                            except StopIteration:
+                                break
+                            future = executor.submit(enrich_single, person_id, langs)
+                            future_to_person[future] = person_id
+
+                        if not future_to_person:
+                            break
+
+                        done, _pending = concurrent.futures.wait(
+                            set(future_to_person.keys()),
+                            return_when=concurrent.futures.FIRST_COMPLETED,
+                        )
+
+                        for future in done:
+                            future.result()
+                            future_to_person.pop(future, None)
+                            current_count += 1
+                            hydrate_status_manager.update({
+                                "active": True,
+                                "phase": "people_enriching",
+                                "current": current_count,
+                                "total": max(total, current_count),
+                                "message": "",
+                            })
+
+                    if self._stop_event.is_set():
+                        for future in future_to_person:
+                            future.cancel()
+                        logger.info("People hydrator stopped by request.")
 
         except Exception as e:
             logger.error(f"Error in people hydrator loop: {e}")

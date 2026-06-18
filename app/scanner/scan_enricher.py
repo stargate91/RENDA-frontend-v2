@@ -13,6 +13,12 @@ from ..utils.logger import logger
 from .status import update_scan_status, increment_scan_status_current, is_scan_stop_requested
 from .mappers import map_guessit_source, map_guessit_edition, map_guessit_audio_type
 
+
+def _cpu_heavy_worker_count() -> int:
+    logical_threads = os.cpu_count() or 4
+    return max(2, min(8, int(logical_threads * 0.5)))
+
+
 def sanitize_int(val):
     if isinstance(val, list):
         return val[0] if val else None
@@ -68,7 +74,7 @@ class ScanEnricher:
             logger.info(f"Phase 2: Technical Probing for {len(paths_to_probe)} items...")
             update_scan_status({"phase": "probing", "total": len(paths_to_probe), "current": 0})
             
-            max_workers_proc = min(os.cpu_count() or 4, 8)
+            max_workers_proc = _cpu_heavy_worker_count()
             with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers_proc) as executor:
                 future_to_path = {executor.submit(self.prober.probe, p): p for p in paths_to_probe}
                 for future in future_to_path:
@@ -230,7 +236,7 @@ class ScanEnricher:
 
         # Run in thread pool
         results = []
-        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=_cpu_heavy_worker_count()) as executor:
             futures = {executor.submit(parse_worker, data): data[0] for data in tasks_data}
             for future in concurrent.futures.as_completed(futures):
                 if self._stop_requested():

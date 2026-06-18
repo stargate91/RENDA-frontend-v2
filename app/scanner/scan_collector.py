@@ -14,6 +14,12 @@ from ..db.models import MediaItem, ExtraFile, ItemType, ItemStatus, ExtraCategor
 from ..utils.logger import logger
 from .status import update_scan_status, increment_scan_status_current, is_scan_stop_requested
 
+
+def _cpu_heavy_worker_count() -> int:
+    logical_threads = os.cpu_count() or 4
+    return max(2, min(8, int(logical_threads * 0.5)))
+
+
 class ScanCollector:
     def __init__(
         self,
@@ -114,7 +120,7 @@ class ScanCollector:
             logger.info(f"Probing {len(probe_targets)} potential media candidates...")
             update_scan_status({"phase": "probing", "total": len(probe_targets), "current": 0})
             
-            max_workers_proc = min(os.cpu_count() or 4, 8)
+            max_workers_proc = _cpu_heavy_worker_count()
             with ThreadPoolExecutor(max_workers=max_workers_proc) as executor:
                 future_to_path = {executor.submit(self.prober.probe, str(p)): p for p in probe_targets}
                 for future in future_to_path:

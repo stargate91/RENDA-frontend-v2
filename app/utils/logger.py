@@ -3,6 +3,21 @@ import sys
 from pathlib import Path
 from logging.handlers import RotatingFileHandler
 
+
+class SafeRotatingFileHandler(RotatingFileHandler):
+    def doRollover(self):
+        try:
+            super().doRollover()
+        except PermissionError:
+            # On Windows another process/thread may temporarily hold the file.
+            # Keep logging to the current file instead of spamming stderr.
+            try:
+                if self.stream:
+                    self.stream.flush()
+            except Exception:
+                pass
+
+
 def setup_logger(name="RENDA"):
     """
     Configures the central logger for file and console output.
@@ -34,7 +49,7 @@ def setup_logger(name="RENDA"):
     )
 
     # 1. Rotating File Handler
-    file_handler = RotatingFileHandler(
+    file_handler = SafeRotatingFileHandler(
         log_file, 
         maxBytes=5*1024*1024, 
         backupCount=5, 
@@ -55,6 +70,10 @@ def setup_logger(name="RENDA"):
     root_logger.addHandler(file_handler)
     root_logger.addHandler(console_handler)
     root_logger._renda_configured = True
+
+    # Keep third-party libraries from flooding DEBUG logs and triggering noisy rollovers.
+    for noisy_logger in ("urllib3", "requests", "rebulk", "guessit"):
+        logging.getLogger(noisy_logger).setLevel(logging.WARNING)
 
     app_logger.setLevel(logging.DEBUG)
 

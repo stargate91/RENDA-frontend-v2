@@ -9,6 +9,14 @@ from ...utils.library_utils.image_constants import BACKDROP_SIZE, LOGO_SIZE, PER
 
 class ImageBatchProcessorMixin:
     @staticmethod
+    def _scan_is_active() -> bool:
+        try:
+            from ..status import get_scan_status
+            return bool(get_scan_status().get("active"))
+        except Exception:
+            return False
+
+    @staticmethod
     def reset_stale_tasks(db: Session):
         """Resets any stuck 'DOWNLOADING' tasks back to 'PENDING' on startup."""
         try:
@@ -22,12 +30,18 @@ class ImageBatchProcessorMixin:
 
     def process_all(self, max_workers: int = 5):
         """Executes all pending downloads and processing in parallel."""
+        if self._scan_is_active():
+            return
+
         # Recover any stale DOWNLOADING rows before checking for new work.
         # Without this, a failed worker pass can leave the progress bar stuck active
         # while subsequent loops only look for PENDING items.
         self.reset_stale_tasks(self.db)
 
         for attempt in range(3):
+            if self._scan_is_active():
+                return
+
             # Check if there is any pending work before starting the heavy executors
             has_media = self.db.query(MediaMatch.id).filter(MediaMatch.image_status == ImageStatus.PENDING).first() is not None
             has_backdrops = self.db.query(MediaMatch.id).filter(MediaMatch.backdrop_status == ImageStatus.PENDING).first() is not None
@@ -91,6 +105,9 @@ class ImageBatchProcessorMixin:
     def process_pending_media(self, executor):
         """Processes pending movie/series images in batches."""
         while True:
+            if self._scan_is_active():
+                break
+
             matches = self.db.query(MediaMatch.id).filter(
                 MediaMatch.image_status == ImageStatus.PENDING
             ).limit(50).all()
@@ -321,6 +338,9 @@ class ImageBatchProcessorMixin:
     def process_pending_backdrops(self, executor):
         """Processes pending backdrops (large images) in batches."""
         while True:
+            if self._scan_is_active():
+                break
+
             matches = self.db.query(MediaMatch.id).filter(
                 MediaMatch.backdrop_status == ImageStatus.PENDING
             ).limit(50).all()
@@ -380,6 +400,9 @@ class ImageBatchProcessorMixin:
     def process_pending_persons(self, executor):
         """Processes pending person profiles in batches (Primary image)."""
         while True:
+            if self._scan_is_active():
+                break
+
             persons = self.db.query(Person.id).filter(
                 Person.image_status == ImageStatus.PENDING
             ).limit(100).all()
@@ -404,6 +427,9 @@ class ImageBatchProcessorMixin:
     def process_person_alternate_images(self, executor):
         """Processes alternate images for persons."""
         while True:
+            if self._scan_is_active():
+                break
+
             # Persons that have primary image processed, but alt images not fetched yet (images == None)
             persons = self.db.query(Person.id).filter(
                 Person.image_status.in_([ImageStatus.COMPLETED, ImageStatus.FAILED]),

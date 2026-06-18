@@ -57,7 +57,7 @@ export default function AddPeopleModalContent({ isAdult, t, onClose }) {
   const [roleFilter, setRoleFilter] = useState('all');
   const [genderFilter, setGenderFilter] = useState('all');
   const [sortBy, setSortBy] = useState('library_count');
-  const [sortDirection, setSortDirection] = useState('asc');
+  const [sortDirection, setSortDirection] = useState('desc');
 
   // TMDB Search States
   const [tmdbQuery, setTmdbQuery] = useState('');

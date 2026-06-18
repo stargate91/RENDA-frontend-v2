@@ -391,6 +391,17 @@
   overflow: hidden;
 }
 
+.person-backdrop-picker-modal .ui-modal__body {
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.person-backdrop-picker-modal .ui-modal__body > .person-backdrop-picker {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .person-backdrop-picker__tabs {
   width: 100%;
   flex: 0 0 auto;
@@ -451,14 +462,9 @@
   align-items: center;
   gap: var(--space-md);
   min-width: 0;
-  position: sticky;
-  top: 0;
-  z-index: 3;
+  flex: 0 0 auto;
   min-height: 40px;
-  padding-top: var(--space-2xs);
-  padding-bottom: var(--space-2xs);
-  transform: none;
-  background: linear-gradient(180deg, var(--modal-surface-base) 78%, transparent);
+  padding: var(--space-2xs) 0;
 }
 
 .person-backdrop-picker__detail-title {
@@ -477,6 +483,10 @@
   gap: 0.25rem;
   border-radius: 8px;
   font-size: 0.72rem;
+}
+
+.person-backdrop-picker__viewport--detail {
+  padding-top: 0;
 }
 
 .person-backdrop-picker__card {

@@ -135,6 +135,7 @@ class ImageStatusManager:
 
     def get_status(self, db) -> Dict[str, Any]:
         with self._lock:
+            scan_active = bool(get_scan_status().get("active"))
             from app.db.models import MediaMatch, Person, ImageStatus
 
             pending_media = db.query(MediaMatch).filter(MediaMatch.image_status.in_([ImageStatus.PENDING, ImageStatus.DOWNLOADING])).count()
@@ -146,7 +147,17 @@ class ImageStatusManager:
             ).count()
 
             current_pending = pending_media + pending_backdrops + pending_persons + pending_alts
-            
+
+            if scan_active:
+                return {
+                    "active": False,
+                    "pending": current_pending,
+                    "total": self.batch_total if self.is_active else current_pending,
+                    "completed": 0,
+                    "progress": 0,
+                    "deferred": current_pending > 0,
+                }
+
             if current_pending == 0:
                 self.is_active = False
                 self.batch_total = 0

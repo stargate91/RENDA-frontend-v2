@@ -27,7 +27,10 @@ engine = create_engine(
     connect_args={
         "check_same_thread": False,
         "timeout": 30
-    } # Required for multi-threaded SQLite usage
+    }, # Required for multi-threaded SQLite usage
+    pool_size=12,
+    max_overflow=24,
+    pool_timeout=60,
 )
 
 CACHE_DATABASE_URL = f"sqlite:///{DATA_DIR / 'cache.db'}"
@@ -36,7 +39,10 @@ cache_engine = create_engine(
     connect_args={
         "check_same_thread": False,
         "timeout": 30
-    }
+    },
+    pool_size=6,
+    max_overflow=12,
+    pool_timeout=60,
 )
 
 # SQLite Optimization: Enable WAL (Write-Ahead Logging) mode
