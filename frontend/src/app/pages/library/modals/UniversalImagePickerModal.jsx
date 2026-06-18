@@ -140,6 +140,7 @@ export default function UniversalImagePickerModal({
         <div style={{ flex: '1 1 auto', overflowY: 'auto', maxHeight: '60vh' }}>
           <TMDBImageGrid
             itemId={entityId}
+            tmdbId={tmdbId}
             mediaType={entityType}
             imageType={imageType === 'profile' ? 'poster' : imageType} // profile images are queried as posters/profiles
             currentPath={currentPath}

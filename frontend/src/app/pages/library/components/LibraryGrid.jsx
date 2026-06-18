@@ -11,7 +11,12 @@ import IconButton from '@/ui/IconButton';
 import NavButton from '@/ui/NavButton';
 import { useUi } from '@/providers/UiProvider';
 import UniversalImagePickerModal from '../modals/UniversalImagePickerModal';
-import { resolveMediaImageUrl } from '@/lib/imageUrls';
+import {
+  getPosterImagePath,
+  getProfileImagePath,
+  getSeriesPosterImagePath,
+  resolveMediaImageUrl,
+} from '@/lib/imageUrls';
 import {
   getLibraryTagBucketKeys,
   isLibraryMovieTab,
@@ -146,7 +151,11 @@ export default function LibraryGrid({
       ? 'collection'
       : (isLibrarySeriesTab(resolvedTab) ? 'series' : 'movie');
     const imageType = isPeopleCard ? 'profile' : 'poster';
-    const currentPath = isPeopleCard ? item.profile_path : item.poster_path;
+    const currentPath = isPeopleCard
+      ? getProfileImagePath(item)
+      : isLibrarySeriesTab(resolvedTab)
+        ? getSeriesPosterImagePath(item)
+        : getPosterImagePath(item);
     const tmdbId = isPeopleCard ? item.id : (item.tmdb_id || item.series_tmdb_id || item.id);
 
     openModal({
@@ -202,7 +211,7 @@ export default function LibraryGrid({
       return {
         title: item.name || item.title,
         subtitle: t('library.collections.partsCount', { owned: item.owned_count, total: item.total_count }),
-        imageUrl: resolvePosterUrl(item.displayPoster || item.poster_path),
+        imageUrl: resolvePosterUrl(getPosterImagePath(item)),
         icon: emptyIcon,
         ratingImdb: item.rating_imdb,
         ratingTmdb: item.rating,
@@ -213,7 +222,7 @@ export default function LibraryGrid({
       return {
         title: item.name || item.title,
         subtitle: item.people_role ? t(`library.people.roles.${item.people_role}`, { defaultValue: item.people_role }) : '',
-        imageUrl: resolvePosterUrl(item.displayPoster || item.poster_path),
+        imageUrl: resolvePosterUrl(getProfileImagePath(item)),
         icon: emptyIcon,
         className: 'library-person-card',
         badge: renderUserRatingBadge(item),
@@ -229,7 +238,9 @@ export default function LibraryGrid({
     return {
       title: item.title,
       subtitle: subtitleParts.join(' • '),
-      imageUrl: resolvePosterUrl(item.displayPoster || item.poster_path || item.local_poster_path),
+      imageUrl: resolvePosterUrl(
+        isLibrarySeriesTab(resolvedTab) ? getSeriesPosterImagePath(item) : getPosterImagePath(item)
+      ),
       icon: emptyIcon,
       backgroundColor: item.color,
       badge: renderUserRatingBadge(item),
@@ -429,7 +440,7 @@ function ExpandedTagPanel({ tag, t, resolvePosterUrl, emptyIcon, isFocusMode = f
         variant: isFocusMode ? 'overlay-title' : 'default',
         title: item.name || item.title,
         subtitle: item.people_role ? t(`library.people.roles.${item.people_role}`, { defaultValue: item.people_role }) : '',
-        imageUrl: resolvePosterUrl(item.displayPoster || item.poster_path),
+        imageUrl: resolvePosterUrl(getProfileImagePath(item)),
         icon: emptyIcon,
         className: 'library-person-card',
         badge: renderUserRatingBadge(item),
@@ -443,7 +454,9 @@ function ExpandedTagPanel({ tag, t, resolvePosterUrl, emptyIcon, isFocusMode = f
       variant: isFocusMode ? 'overlay-title' : 'default',
       title: item.title,
       subtitle: subtitleParts.join(' • '),
-      imageUrl: resolvePosterUrl(item.displayPoster || item.poster_path || item.local_poster_path),
+      imageUrl: resolvePosterUrl(
+        isTvLikeMediaType(item.type) ? getSeriesPosterImagePath(item) : getPosterImagePath(item)
+      ),
       icon: emptyIcon,
       backgroundColor: item.color,
       badge: renderUserRatingBadge(item),

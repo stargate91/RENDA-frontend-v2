@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useAllTagsQuery, useTagsQuery } from '@/queries/libraryQueries';
 import { getLibraryTagBucketKeys } from '@/lib/libraryTabs';
+import { getBackdropImagePath, getPosterImagePath } from '@/lib/imageUrls';
 
 export function useLibraryTags({ activeSessionMode }) {
   const isNsfw = activeSessionMode === 'nsfw';
@@ -51,8 +52,8 @@ export function useLibraryTags({ activeSessionMode }) {
               const list = [];
               const seenPosters = new Set();
               for (const item of modeItems) {
-                const poster = item.displayPoster || item.local_poster_path || item.poster_path;
-                const backdrop = item.local_backdrop_path || item.backdrop_path;
+                const poster = getPosterImagePath(item);
+                const backdrop = getBackdropImagePath(item);
                 if ((poster || backdrop) && !seenPosters.has(poster)) {
                   list.push({
                     poster,

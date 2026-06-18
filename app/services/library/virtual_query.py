@@ -6,6 +6,7 @@ from ...db.models.metadata import MediaMatch, OMDBCache
 from ...utils.library_utils import _preferred_metadata_languages, _split_genres, _pick_tmdb_cache
 from ...utils.library_utils.image_constants import POSTER_SIZE
 from ...utils.library_helpers import public_image_path as _public_image_path
+from .asset_resolver import resolve_asset_path
 from ..library_virtual_cache_service import LibraryVirtualCacheService
 from .formatter import LibraryFormatterService
 from .filter_sort import LibraryFilterSortService
@@ -109,6 +110,8 @@ class LibraryVirtualQueryService:
                 candidate_keys_sq.c.tmdb_id.label("tmdb_id"),
                 list_snapshot_sq.c.list_title.label("list_title"),
                 list_snapshot_sq.c.list_poster_path.label("list_poster_path"),
+                VirtualMediaState.manual_poster_path.label("manual_poster_path"),
+                VirtualMediaState.manual_local_poster_path.label("manual_local_poster_path"),
                 VirtualMediaState.user_rating.label("user_rating"),
                 VirtualMediaState.is_favorite.label("is_favorite"),
                 VirtualMediaState.is_watched.label("is_watched"),
@@ -293,8 +296,13 @@ class LibraryVirtualQueryService:
         items = []
         for row in rows:
             raw_data = resolved_raw_payloads.get(row.tmdb_id, {})
-            raw_poster_path = raw_data.get("poster_path") or row.list_poster_path
-            local_poster_path = _public_image_path(raw_poster_path, "posters")
+            raw_poster_path = row.manual_poster_path or raw_data.get("poster_path") or row.list_poster_path
+            local_poster_path = resolve_asset_path(
+                subfolder="posters",
+                manual_local_path=row.manual_local_poster_path,
+                manual_path=row.manual_poster_path,
+                remote_path=raw_data.get("poster_path") or row.list_poster_path,
+            )
             title = row.list_title or "Unknown TMDB Item"
             if media_type == "tv":
                 title = raw_data.get("name") or raw_data.get("title") or title

@@ -170,9 +170,25 @@ class CollectionDetailProvider(BaseDetailProvider):
                     "library_item_id": item.id,
                     "title": loc.title if loc and loc.title else (item.fn_title or item.fd_title or item.filename),
                     "year": year,
-                    "poster_path": (_public_image_path(loc.local_poster_path, "posters") or loc.poster_path) if loc else None,
-                    "backdrop_path": (_public_image_path(active_match.local_backdrop_path, "backdrops") or active_match.backdrop_path) if active_match else None,
-                    "has_local_poster": bool(_public_image_path(loc.local_poster_path, "posters")) if loc else False,
+                    "poster_path": self.formatter.resolve_entity_asset_path(
+                        subfolder="posters",
+                        manual_local_path=getattr(loc, "manual_local_poster_path", None) if loc else None,
+                        manual_path=getattr(loc, "manual_poster_path", None) if loc else None,
+                        local_path=loc.local_poster_path if loc else None,
+                        remote_path=loc.poster_path if loc else None,
+                    ) if loc else None,
+                    "backdrop_path": self.formatter.resolve_entity_asset_path(
+                        subfolder="backdrops",
+                        manual_local_path=getattr(active_match, "manual_local_backdrop_path", None) if active_match else None,
+                        manual_path=getattr(active_match, "manual_backdrop_path", None) if active_match else None,
+                        local_path=active_match.local_backdrop_path if active_match else None,
+                        remote_path=active_match.backdrop_path if active_match else None,
+                    ) if active_match else None,
+                    "has_local_poster": self.formatter.has_local_entity_asset(
+                        subfolder="posters",
+                        manual_local_path=getattr(loc, "manual_local_poster_path", None) if loc else None,
+                        local_path=loc.local_poster_path if loc else None,
+                    ) if loc else False,
                     "rating": active_match.rating_tmdb or 0,
                     "rating_tmdb": active_match.rating_tmdb or 0,
                     "rating_imdb": active_match.rating_imdb,
@@ -232,22 +248,30 @@ class CollectionDetailProvider(BaseDetailProvider):
                 "tmdb_id": collection_tmdb_id_int,
                 "title": (collection_loc.name if collection_loc and collection_loc.name else tmdb_details.get("name") or fallback_name or f"Collection {collection_tmdb_id_int}"),
                 "overview": (collection_loc.overview if collection_loc else None) or tmdb_details.get("overview"),
-                "poster_path": (
-                    _public_image_path(getattr(collection_loc, "manual_local_poster_path", None), "posters")
-                    or _public_image_path(getattr(collection_loc, "manual_poster_path", None), "posters")
-                    or getattr(collection_loc, "manual_poster_path", None)
-                    or _public_image_path(collection_loc.local_poster_path, "posters")
-                    or collection_loc.poster_path
-                ) if collection_loc else tmdb_details.get("poster_path"),
-                "backdrop_path": (
-                    _public_image_path(getattr(collection, "manual_local_backdrop_path", None), "backdrops")
-                    or _public_image_path(getattr(collection, "manual_backdrop_path", None), "backdrops")
-                    or getattr(collection, "manual_backdrop_path", None)
-                    or _public_image_path(collection.local_backdrop_path, "backdrops")
-                    or collection.backdrop_path
-                ) if collection else (preferred_collection_backdrop or tmdb_details.get("backdrop_path")),
-                "has_local_poster": bool(_public_image_path(getattr(collection_loc, "manual_local_poster_path", None) or collection_loc.local_poster_path, "posters")) if collection_loc else False,
-                "has_local_backdrop": bool(_public_image_path(getattr(collection, "manual_local_backdrop_path", None) or collection.local_backdrop_path, "backdrops")) if collection else False,
+                "poster_path": self.formatter.resolve_entity_asset_path(
+                    subfolder="posters",
+                    manual_local_path=getattr(collection_loc, "manual_local_poster_path", None) if collection_loc else None,
+                    manual_path=getattr(collection_loc, "manual_poster_path", None) if collection_loc else None,
+                    local_path=collection_loc.local_poster_path if collection_loc else None,
+                    remote_path=(collection_loc.poster_path if collection_loc else tmdb_details.get("poster_path")),
+                ),
+                "backdrop_path": self.formatter.resolve_entity_asset_path(
+                    subfolder="backdrops",
+                    manual_local_path=getattr(collection, "manual_local_backdrop_path", None) if collection else None,
+                    manual_path=getattr(collection, "manual_backdrop_path", None) if collection else None,
+                    local_path=collection.local_backdrop_path if collection else None,
+                    remote_path=(collection.backdrop_path if collection else (preferred_collection_backdrop or tmdb_details.get("backdrop_path"))),
+                ),
+                "has_local_poster": self.formatter.has_local_entity_asset(
+                    subfolder="posters",
+                    manual_local_path=getattr(collection_loc, "manual_local_poster_path", None) if collection_loc else None,
+                    local_path=collection_loc.local_poster_path if collection_loc else None,
+                ) if collection_loc else False,
+                "has_local_backdrop": self.formatter.has_local_entity_asset(
+                    subfolder="backdrops",
+                    manual_local_path=getattr(collection, "manual_local_backdrop_path", None) if collection else None,
+                    local_path=collection.local_backdrop_path if collection else None,
+                ) if collection else False,
                 "owned_count": len([movie for movie in movies if movie.get("in_library")]),
                 "total_count": len(movies),
                 "collection_backdrops": collection_backdrops,

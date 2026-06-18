@@ -7,6 +7,7 @@ from sqlalchemy import Float, Integer, String, and_, case, cast, func, inspect, 
 from sqlalchemy.orm import Session, joinedload
 
 from app.services.language_service import LanguageService
+from .library.asset_resolver import resolve_asset_path
 from ..db.models import CustomListItem, ItemStatus, ItemType, MediaItem, VirtualMediaState
 from ..db.models.metadata import MediaMatch, TMDBCache
 from ..repositories.media_repository import MediaRepository
@@ -194,11 +195,12 @@ class LibraryQueryService:
                 "original_series_title": loc.original_series_title if loc else None,
                 "year": _library_year(item, active_match),
                 "release_date": _library_release_date(active_match),
-                "poster_path": (
-                    _public_image_path(getattr(loc, "manual_local_poster_path", None), "posters")
-                    or _public_image_path(loc.local_poster_path, "posters")
-                    or getattr(loc, "manual_poster_path", None)
-                    or loc.poster_path
+                "poster_path": resolve_asset_path(
+                    subfolder="posters",
+                    manual_local_path=getattr(loc, "manual_local_poster_path", None) if loc else None,
+                    manual_path=getattr(loc, "manual_poster_path", None) if loc else None,
+                    local_path=loc.local_poster_path if loc else None,
+                    remote_path=loc.poster_path if loc else None,
                 ) if loc else None,
                 "backdrop_path": (
                     _public_image_path(getattr(active_match, "manual_local_backdrop_path", None), "backdrops")
@@ -206,15 +208,18 @@ class LibraryQueryService:
                     or getattr(active_match, "manual_backdrop_path", None)
                     or active_match.backdrop_path
                 ) if active_match else None,
-                "series_poster_path": (
-                    _public_image_path(getattr(loc, "manual_local_series_poster_path", None), "posters")
-                    or _public_image_path(getattr(loc, "manual_local_poster_path", None), "posters")
-                    or _public_image_path(loc.local_series_poster_path, "posters")
-                    or _public_image_path(loc.local_poster_path, "posters")
-                    or getattr(loc, "manual_series_poster_path", None)
-                    or getattr(loc, "manual_poster_path", None)
-                    or loc.series_poster_path
-                    or loc.poster_path
+                "series_poster_path": resolve_asset_path(
+                    subfolder="posters",
+                    manual_local_path=(
+                        getattr(loc, "manual_local_series_poster_path", None)
+                        or getattr(loc, "manual_local_poster_path", None)
+                    ) if loc else None,
+                    manual_path=(
+                        getattr(loc, "manual_series_poster_path", None)
+                        or getattr(loc, "manual_poster_path", None)
+                    ) if loc else None,
+                    local_path=(loc.local_series_poster_path or loc.local_poster_path) if loc else None,
+                    remote_path=(loc.series_poster_path or loc.poster_path) if loc else None,
                 ) if loc else None,
                 "rating": active_match.rating_tmdb if active_match else 0,
                 "rating_imdb": active_match.rating_imdb if active_match else None,
@@ -261,7 +266,12 @@ class LibraryQueryService:
             if is_virtual_adult != is_adult:
                 continue
             raw_poster_path = state.manual_poster_path or raw_data.get("poster_path")
-            local_poster_path = _public_image_path(state.manual_local_poster_path or raw_poster_path, "posters")
+            local_poster_path = resolve_asset_path(
+                subfolder="posters",
+                manual_local_path=state.manual_local_poster_path,
+                manual_path=state.manual_poster_path,
+                remote_path=raw_data.get("poster_path"),
+            )
             date_field = raw_data.get("first_air_date") if media_type == "tv" else raw_data.get("release_date")
             year_value = None
             if date_field:

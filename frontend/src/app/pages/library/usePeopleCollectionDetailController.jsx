@@ -12,6 +12,7 @@ import {
   buildEntityMetaPills,
   buildPersonExternalLinks,
 } from './peopleCollectionDetailUtils.jsx';
+import { getPosterImagePath, getProfileImagePath } from '@/lib/imageUrls';
 import PersonBackdropPickerModal from './components/entityDetail/PersonBackdropPickerModal';
 import {
   CollectionBackdropsPanel,
@@ -54,7 +55,7 @@ export default function usePeopleCollectionDetailController({
   );
   const backdropUrl = resolveDetailsImageUrl(item?.backdrop_path, API_BASE, 'backdrop');
   const mediaUrl = resolveDetailsImageUrl(
-    isPeople ? item?.profile_path : item?.poster_path,
+    isPeople ? getProfileImagePath(item) : getPosterImagePath(item),
     API_BASE,
     isPeople ? 'person' : 'poster'
   );

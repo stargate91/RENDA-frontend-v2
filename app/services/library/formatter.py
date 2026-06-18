@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 from ...db.models import VirtualMediaState, ItemType
 from ...utils.library_utils import _split_genres
 from ...utils.library_utils import _pick_tmdb_cache, _preferred_metadata_languages
-from ...utils.library_helpers import public_image_path as _public_image_path
 from ...utils.library_helpers import match_language_code as _match_language_code
+from .asset_resolver import resolve_asset_path
 
 class LibraryFormatterService:
     def __init__(self, db: Session):
@@ -149,22 +149,26 @@ class LibraryFormatterService:
         from app.services.language_service import LanguageService
         loc = LanguageService.pick_localization(active_match.localizations, [ui_lang] if ui_lang else []) if active_match else None
 
-        poster_path = (
-            _public_image_path(getattr(loc, "manual_local_poster_path", None), "posters")
-            or _public_image_path(loc.local_poster_path, "posters")
-            or getattr(loc, "manual_poster_path", None)
-            or loc.poster_path
+        poster_path = resolve_asset_path(
+            subfolder="posters",
+            manual_local_path=getattr(loc, "manual_local_poster_path", None) if loc else None,
+            manual_path=getattr(loc, "manual_poster_path", None) if loc else None,
+            local_path=loc.local_poster_path if loc else None,
+            remote_path=loc.poster_path if loc else None,
         ) if loc else None
 
-        series_poster_path = (
-            _public_image_path(getattr(loc, "manual_local_series_poster_path", None), "posters")
-            or _public_image_path(getattr(loc, "manual_local_poster_path", None), "posters")
-            or _public_image_path(loc.local_series_poster_path, "posters")
-            or _public_image_path(loc.local_poster_path, "posters")
-            or getattr(loc, "manual_series_poster_path", None)
-            or getattr(loc, "manual_poster_path", None)
-            or loc.series_poster_path
-            or loc.poster_path
+        series_poster_path = resolve_asset_path(
+            subfolder="posters",
+            manual_local_path=(
+                getattr(loc, "manual_local_series_poster_path", None)
+                or getattr(loc, "manual_local_poster_path", None)
+            ) if loc else None,
+            manual_path=(
+                getattr(loc, "manual_series_poster_path", None)
+                or getattr(loc, "manual_poster_path", None)
+            ) if loc else None,
+            local_path=(loc.local_series_poster_path or loc.local_poster_path) if loc else None,
+            remote_path=(loc.series_poster_path or loc.poster_path) if loc else None,
         ) if loc else None
 
         def _library_year():

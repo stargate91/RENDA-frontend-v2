@@ -7,6 +7,7 @@ import CreditCard from '@/ui/CreditCard';
 import BackdropCard from '@/ui/BackdropCard';
 import { API_BASE } from '@/lib/backend';
 import { isTvLikeMediaType } from '@/lib/mediaTypes';
+import { getPosterImagePath } from '@/lib/imageUrls';
 import { ChevronLeft, ChevronRight, Film, ImageOff, Star, Tv } from 'lucide-react';
 import { resolveDetailsImageUrl } from '../../utils/detailUtils';
 import { normalizeBackdropKey } from '../../peopleCollectionDetailUtils.jsx';
@@ -115,6 +116,7 @@ export function EntityCardGrid({ items, type, navigate, t }) {
     <PosterGrid>
       {items.map((item, index) => {
         const resolvedType = item.media_type || item.type || type;
+        const posterPath = getPosterImagePath(item);
         const subtitleParts = [];
         if (item.year) subtitleParts.push(String(item.year));
         if (item.job) subtitleParts.push(item.job);
@@ -133,7 +135,7 @@ export function EntityCardGrid({ items, type, navigate, t }) {
             key={`${type}-${item.tmdb_id || item.id}`}
             title={item.title}
             subtitle={subtitleParts.join(' - ')}
-            imageUrl={resolveDetailsImageUrl(item.poster_path, API_BASE, 'poster')}
+            imageUrl={resolveDetailsImageUrl(posterPath, API_BASE, 'poster')}
             ratingImdb={item.rating_imdb}
             ratingTmdb={item.rating_tmdb ?? item.rating}
             icon={isTvLikeMediaType(resolvedType) ? Tv : Film}
@@ -170,7 +172,8 @@ function HorizontalCollectionItemsList({ items, navigate, t }) {
         const tmdbRating = Number(item.rating_tmdb ?? item.rating);
         const hasImdbRating = Number.isFinite(imdbRating) && imdbRating > 0;
         const hasTmdbRating = Number.isFinite(tmdbRating) && tmdbRating > 0;
-        const posterUrl = item.poster_path ? resolveDetailsImageUrl(item.poster_path, API_BASE, 'poster') : null;
+        const posterPath = getPosterImagePath(item);
+        const posterUrl = posterPath ? resolveDetailsImageUrl(posterPath, API_BASE, 'poster') : null;
 
         return (
           <CreditCard
@@ -414,4 +417,3 @@ export function CollectionItemsSection({ items, navigate, t }) {
     </section>
   );
 }
-

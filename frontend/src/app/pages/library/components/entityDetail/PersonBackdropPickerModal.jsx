@@ -10,6 +10,7 @@ import TMDBImageGrid from './TMDBImageGrid';
 import { useUi } from '@/providers/UiProvider';
 import api from '@/lib/api';
 import { API_BASE } from '@/lib/backend';
+import { getPosterImagePath } from '@/lib/imageUrls';
 import { usePersonBackdropChooserStore, createPersonBackdropChooserSession } from '@/stores/usePersonBackdropChooserStore';
 import { usePersonCreditBackdropsQuery, usePersonCreditsQuery } from '@/queries/metadataQueries';
 import { isTvLikeMediaType } from '@/lib/mediaTypes';
@@ -415,7 +416,7 @@ export default function PersonBackdropPickerModal({ personId, item, t, toast, ov
               const isPending = overridePersonBackdropMutation.isPending && overridePersonBackdropMutation.variables?.backdropPath === credit.backdrop_path;
               const rating = Number(credit.rating_tmdb ?? credit.rating);
               const hasRating = Number.isFinite(rating) && rating > 0;
-              const posterPath = credit.local_poster_path || credit.poster_path;
+              const posterPath = getPosterImagePath(credit);
               const posterUrl = posterPath ? resolveDetailsImageUrl(posterPath, API_BASE, 'poster') : null;
 
               return (

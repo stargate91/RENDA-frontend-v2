@@ -35,6 +35,7 @@ export default function BackdropsPanel({ showTitle = true }) {
 
       <TMDBImageGrid
         itemId={id}
+        tmdbId={item?.tmdb_id || item?.series_tmdb_id}
         mediaType={type}
         imageType="backdrop"
         currentPath={item?.backdrop_path}

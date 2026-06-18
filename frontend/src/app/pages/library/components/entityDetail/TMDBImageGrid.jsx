@@ -11,6 +11,7 @@ import '../detail/panels/BackdropsPanel.css'; // Reuse existing backdrop panel g
 
 export default function TMDBImageGrid({
   itemId,
+  tmdbId,
   mediaType,
   imageType = 'backdrop', // 'backdrop' | 'poster' | 'logo'
   customImages,
@@ -28,6 +29,7 @@ export default function TMDBImageGrid({
   const [visibleCount, setVisibleCount] = useState(() => initialVisibleCount ?? Number.POSITIVE_INFINITY);
   const loadMoreRef = useRef(null);
   const metadataLanguage = locale === 'en' ? 'en-US' : locale;
+  const normalizedMediaType = mediaType === 'series' ? 'tv' : mediaType;
 
   // Extract clean ID if it starts with collection_
   const cleanItemId = useMemo(() => {
@@ -37,8 +39,15 @@ export default function TMDBImageGrid({
     return itemId;
   }, [itemId]);
 
-  const { data: fullMetadata, isLoading: isLoadingMetadata } = useFullMetadataQuery(cleanItemId, mediaType, {
-    enabled: !customImages && Boolean(cleanItemId) && !isPerson && !isCollection,
+  const metadataQueryId = useMemo(() => {
+    if (tmdbId !== undefined && tmdbId !== null && tmdbId !== '') {
+      return `tmdb_${tmdbId}`;
+    }
+    return cleanItemId;
+  }, [cleanItemId, tmdbId]);
+
+  const { data: fullMetadata, isLoading: isLoadingMetadata } = useFullMetadataQuery(metadataQueryId, normalizedMediaType, {
+    enabled: !customImages && Boolean(metadataQueryId) && !isPerson && !isCollection,
     language: metadataLanguage,
   });
 
@@ -84,10 +93,34 @@ export default function TMDBImageGrid({
     }
 
     const activeMatch = fullMetadata?.matches?.find((m) => m.is_active);
-    const apiResponse = activeMatch
-      ? Object.values(activeMatch.api_responses || {})[0] ||
-        Object.values(activeMatch.series_api_responses || {})[0]
-      : null;
+    const responseMap = normalizedMediaType === 'tv'
+      ? (activeMatch?.series_api_responses || activeMatch?.api_responses || {})
+      : (activeMatch?.api_responses || activeMatch?.series_api_responses || {});
+
+    const responseEntries = Object.entries(responseMap);
+    const localeShort = String(metadataLanguage || '').split('-', 1)[0].toLowerCase();
+    const imageKey = imageType === 'backdrop'
+      ? 'backdrops'
+      : imageType === 'logo'
+        ? 'logos'
+        : 'posters';
+
+    const scoreResponse = ([lang, response]) => {
+      const normalizedLang = String(lang || '').toLowerCase();
+      const images = response?.images?.[imageKey];
+      const hasImages = Array.isArray(images) && images.length > 0;
+      if (!hasImages) return -1;
+      if (normalizedLang === String(metadataLanguage || '').toLowerCase()) return 4;
+      if (localeShort && normalizedLang.split('-', 1)[0] === localeShort) return 3;
+      if (normalizedLang === 'en' || normalizedLang === 'en-us') return 2;
+      if (!normalizedLang) return 1;
+      return 0;
+    };
+
+    const apiResponse = responseEntries
+      .map((entry) => ({ entry, score: scoreResponse(entry) }))
+      .filter((entry) => entry.score >= 0)
+      .sort((a, b) => b.score - a.score)[0]?.entry?.[1] || null;
 
     if (!apiResponse?.images) return [];
 
@@ -107,7 +140,7 @@ export default function TMDBImageGrid({
       height: img.height,
       vote_average: img.vote_average,
     }));
-  }, [fullMetadata, personDetail, collectionDetail, imageType, customImages, isPerson, isCollection]);
+  }, [collectionDetail, customImages, fullMetadata, imageType, isCollection, isPerson, metadataLanguage, normalizedMediaType, personDetail]);
 
   const normalizedCurrent = useMemo(() => {
     if (!currentPath) return '';

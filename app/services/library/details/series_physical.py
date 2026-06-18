@@ -168,19 +168,27 @@ class SeriesPhysicalMixin(SeriesAssetsMixin):
                 logo_path=effective_logo_path,
                 local_logo_path=effective_local_logo_path,
             ),
-            "backdrop_path": (
-                _public_image_path(effective_local_backdrop_path, "backdrops") or effective_backdrop_path
+            "backdrop_path": self.formatter.resolve_entity_asset_path(
+                subfolder="backdrops",
+                manual_local_path=getattr(base_match, "manual_local_backdrop_path", None) if base_match else None,
+                manual_path=getattr(base_match, "manual_backdrop_path", None) if base_match else None,
+                local_path=base_match.local_backdrop_path if base_match else None,
+                remote_path=effective_backdrop_path,
             ) if (base_loc or effective_backdrop_path) else None,
-            "poster_path": (
-                _public_image_path(getattr(base_loc, "manual_local_series_poster_path", None), "posters")
-                or _public_image_path(getattr(base_loc, "manual_series_poster_path", None), "posters")
-                or getattr(base_loc, "manual_series_poster_path", None)
-                or _public_image_path(getattr(base_loc, "manual_local_poster_path", None), "posters")
-                or _public_image_path(getattr(base_loc, "manual_poster_path", None), "posters")
-                or getattr(base_loc, "manual_poster_path", None)
-                or _public_image_path(base_loc.local_series_poster_path, "posters")
-                or _public_image_path(base_loc.local_poster_path, "posters")
-                or (base_loc.series_poster_path if base_loc and base_loc.series_poster_path else (base_loc.poster_path if base_loc else None))
+            "poster_path": self.formatter.resolve_entity_asset_path(
+                subfolder="posters",
+                manual_local_path=(
+                    getattr(base_loc, "manual_local_series_poster_path", None)
+                    or getattr(base_loc, "manual_local_poster_path", None)
+                ) if base_loc else None,
+                manual_path=(
+                    getattr(base_loc, "manual_series_poster_path", None)
+                    or getattr(base_loc, "manual_poster_path", None)
+                ) if base_loc else None,
+                local_path=(base_loc.local_series_poster_path or base_loc.local_poster_path) if base_loc else None,
+                remote_path=(
+                    base_loc.series_poster_path if base_loc and base_loc.series_poster_path else (base_loc.poster_path if base_loc else None)
+                ),
             ) if base_loc else None,
             "year": base_item.fn_year,
             "first_air_date": base_match.first_air_date.strftime("%Y-%m-%d") if (base_match and base_match.first_air_date) else cached_series.get("first_air_date"),

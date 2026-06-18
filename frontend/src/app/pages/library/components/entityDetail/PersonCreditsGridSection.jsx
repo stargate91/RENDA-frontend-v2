@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import Pill from '@/ui/Pill';
 import CreditCard from '@/ui/CreditCard';
 import api from '@/lib/api';
+import { getPosterImagePath } from '@/lib/imageUrls';
 import { usePersonCreditsQuery } from '@/queries/metadataQueries';
 import { isTvLikeMediaType } from '@/lib/mediaTypes';
 import { API_BASE } from '@/lib/backend';
@@ -177,7 +178,8 @@ export default function PersonCreditsGridSection({ title, personId, mediaType, t
         ))}
         {visibleItems.map((item) => {
           const isTv = isTvLikeMediaType(item.media_type || item.type);
-          const posterUrl = item.poster_path ? resolveDetailsImageUrl(item.poster_path, API_BASE, 'poster') : null;
+          const posterPath = getPosterImagePath(item);
+          const posterUrl = posterPath ? resolveDetailsImageUrl(posterPath, API_BASE, 'poster') : null;
 
           return (
             <CreditCard

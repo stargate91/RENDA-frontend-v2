@@ -489,15 +489,19 @@ class ItemDetailProvider(BaseDetailProvider):
                 "networks": networks_fallback,
                 "collection": active_match.collection,
                 "collection_data": self.formatter.serialize_collection(active_match.collection_entity, active_match.collection, ui_lang),
-                "poster_path": (
-                    _public_image_path(getattr(loc, "manual_local_poster_path", None), "posters")
-                    or _public_image_path(getattr(loc, "manual_poster_path", None), "posters")
-                    or getattr(loc, "manual_poster_path", None)
-                    or _public_image_path(loc.local_poster_path, "posters")
-                    or loc.poster_path
+                "poster_path": self.formatter.resolve_entity_asset_path(
+                    subfolder="posters",
+                    manual_local_path=getattr(loc, "manual_local_poster_path", None) if loc else None,
+                    manual_path=getattr(loc, "manual_poster_path", None) if loc else None,
+                    local_path=loc.local_poster_path if loc else None,
+                    remote_path=loc.poster_path if loc else None,
                 ) if loc else None,
-                "backdrop_path": (
-                    _public_image_path(effective_local_backdrop_path, "backdrops") or effective_backdrop_path
+                "backdrop_path": self.formatter.resolve_entity_asset_path(
+                    subfolder="backdrops",
+                    manual_local_path=getattr(active_match, "manual_local_backdrop_path", None) if active_match else None,
+                    manual_path=getattr(active_match, "manual_backdrop_path", None) if active_match else None,
+                    local_path=active_match.local_backdrop_path if active_match else None,
+                    remote_path=effective_backdrop_path,
                 ) if (loc or effective_backdrop_path) else None,
                 "origin_country": loc.origin_country if loc else None,
                 "original_language": loc.original_language if loc else None,

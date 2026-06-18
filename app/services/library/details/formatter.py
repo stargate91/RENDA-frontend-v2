@@ -1,4 +1,5 @@
 import os
+from ..asset_resolver import has_local_asset, resolve_asset_path
 from app.utils.library_utils import _public_image_path, _tmdb_size_for_subfolder, _tmdb_image_url, _match_language_code
 
 class DetailFormatterService:
@@ -17,6 +18,36 @@ class DetailFormatterService:
 
     def resolve_logo_response_path(self, logo_path: str | None = None, local_logo_path: str | None = None):
         return self.resolve_image_response_path(logo_path, local_logo_path, "logos")
+
+    def resolve_entity_asset_path(
+        self,
+        *,
+        subfolder: str,
+        manual_local_path: str | None = None,
+        manual_path: str | None = None,
+        local_path: str | None = None,
+        remote_path: str | None = None,
+    ) -> str | None:
+        return resolve_asset_path(
+            subfolder=subfolder,
+            manual_local_path=manual_local_path,
+            manual_path=manual_path,
+            local_path=local_path,
+            remote_path=remote_path,
+        )
+
+    def has_local_entity_asset(
+        self,
+        *,
+        subfolder: str,
+        manual_local_path: str | None = None,
+        local_path: str | None = None,
+    ) -> bool:
+        return has_local_asset(
+            subfolder=subfolder,
+            manual_local_path=manual_local_path,
+            local_path=local_path,
+        )
 
     def serialize_extra_file(self, extra, parent_label: str | None = None):
         if not extra:
@@ -46,18 +77,18 @@ class DetailFormatterService:
             "tmdb_id": getattr(collection, "tmdb_id", None),
             "title": (loc.name if loc and loc.name else fallback_name),
             "overview": loc.overview if loc else None,
-            "poster_path": (
-                _public_image_path(getattr(loc, "manual_local_poster_path", None), "posters")
-                or _public_image_path(getattr(loc, "manual_poster_path", None), "posters")
-                or getattr(loc, "manual_poster_path", None)
-                or _public_image_path(loc.local_poster_path, "posters")
-                or loc.poster_path
+            "poster_path": self.resolve_entity_asset_path(
+                subfolder="posters",
+                manual_local_path=getattr(loc, "manual_local_poster_path", None) if loc else None,
+                manual_path=getattr(loc, "manual_poster_path", None) if loc else None,
+                local_path=loc.local_poster_path if loc else None,
+                remote_path=loc.poster_path if loc else None,
             ) if loc else None,
-            "backdrop_path": (
-                _public_image_path(getattr(collection, "manual_local_backdrop_path", None), "backdrops")
-                or _public_image_path(getattr(collection, "manual_backdrop_path", None), "backdrops")
-                or getattr(collection, "manual_backdrop_path", None)
-                or _public_image_path(collection.local_backdrop_path, "backdrops")
-                or collection.backdrop_path
+            "backdrop_path": self.resolve_entity_asset_path(
+                subfolder="backdrops",
+                manual_local_path=getattr(collection, "manual_local_backdrop_path", None) if collection else None,
+                manual_path=getattr(collection, "manual_backdrop_path", None) if collection else None,
+                local_path=collection.local_backdrop_path if collection else None,
+                remote_path=collection.backdrop_path if collection else None,
             ) if collection else None,
         }
