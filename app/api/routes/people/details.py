@@ -241,12 +241,13 @@ def _resolve_person_known_for_backdrop(
     preferred_languages: list[str],
     department: Optional[str] = None,
     adult_only: bool = False,
+    respect_credit_order: bool = False,
 ) -> Optional[str]:
     candidates: list[tuple[int, str]] = []
     seen_media: set[tuple[str, int]] = set()
     max_scan = 5 if adult_only else 3
 
-    ranked_credits = sorted(
+    ranked_credits = list(credits or []) if respect_credit_order else sorted(
         credits or [],
         key=lambda credit: (
             _known_for_score(credit, department, adult_only=adult_only),
@@ -524,15 +525,6 @@ def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str
         credits_data = tmdb_data.get("combined_credits", {})
         cast_list = credits_data.get("cast", [])
         crew_list = credits_data.get("crew", [])
-        person_backdrop = _resolve_person_known_for_backdrop(
-            db,
-            tmdb_client,
-            cast_list + crew_list,
-            [target_lang, "en"],
-            department=person.known_for_department,
-            adult_only=bool(getattr(person, "is_adult", False)),
-        )
-
         if cast_list or crew_list:
             preferred_languages = [target_lang, "en"]
 
@@ -692,6 +684,15 @@ def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str
                 person.known_for_department,
                 limit=8,
                 adult_only=bool(getattr(person, "is_adult", False)),
+            )
+            person_backdrop = _resolve_person_known_for_backdrop(
+                db,
+                tmdb_client,
+                known_for,
+                preferred_languages,
+                department=person.known_for_department,
+                adult_only=bool(getattr(person, "is_adult", False)),
+                respect_credit_order=True,
             )
             all_movies = parsed_movies
             all_series = parsed_series
