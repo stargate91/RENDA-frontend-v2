@@ -305,10 +305,15 @@
 }
 
 .episode-card__tmdb-pill {
-  align-self: flex-start;
   gap: calc(var(--space-md) / 2);
-  padding: 0.125rem 0.375rem;
+  padding: calc(var(--space-2xs) / 4) var(--space-xs);
+  min-height: 20px;
   font-size: 10px;
+  line-height: 1;
+  border-radius: 4px;
+  backdrop-filter: none;
+  font-weight: 500;
+  box-sizing: border-box;
 }
 
 .episode-card__still-wrapper .ui-icon-button--play-overlay {

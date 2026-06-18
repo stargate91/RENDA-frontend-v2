@@ -337,27 +337,27 @@ export default function SeasonsPanel() {
                     </IconButton>
                   )}
                 </div>
-                {(episodeTmdbRating !== undefined && episodeTmdbRating !== null && episodeTmdbRating !== '') && (
-                  <Pill variant="tmdb" className="episode-card__tmdb-pill">
-                    <Star size={10} fill="currentColor" strokeWidth={1.8} />
-                    {isNaN(parseFloat(episodeTmdbRating))
-                      ? episodeTmdbRating
-                      : parseFloat(episodeTmdbRating).toFixed(1)}
-                  </Pill>
-                )}
               </div>
 
               {/* Center: Info copy */}
               <div className="episode-card__details">
                 <h4 className="episode-card__title">{episodeText}</h4>
                 
-                {metaItems.length > 0 && (
+                {(metaItems.length > 0 || (episodeTmdbRating !== undefined && episodeTmdbRating !== null && episodeTmdbRating !== '')) && (
                   <div className="episode-card__meta">
                     {metaItems.map((meta, idx) => (
                       <span key={idx} className="episode-card__meta-item">
                         {meta}
                       </span>
                     ))}
+                    {(episodeTmdbRating !== undefined && episodeTmdbRating !== null && episodeTmdbRating !== '') && (
+                      <Pill variant="tmdb" className="episode-card__tmdb-pill">
+                        <Star size={10} fill="currentColor" strokeWidth={1.8} />
+                        {isNaN(parseFloat(episodeTmdbRating))
+                          ? episodeTmdbRating
+                          : parseFloat(episodeTmdbRating).toFixed(1)}
+                      </Pill>
+                    )}
                   </div>
                 )}
 

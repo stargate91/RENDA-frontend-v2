@@ -225,16 +225,22 @@ export default function TMDBImageGrid({
           // Determine sizes and urls based on imageType
           let thumbUrl = '';
           if (imageType === 'backdrop') {
-            thumbUrl = path.startsWith('/')
-              ? buildTmdbImageUrl(path, TMDB_IMAGE_SIZES.backdropThumb)
-              : resolveDetailsImageUrl(path, API_BASE, 'backdrop');
+            thumbUrl = path.startsWith('/media/')
+              ? resolveDetailsImageUrl(path, API_BASE, 'backdrop')
+              : path.startsWith('/')
+                ? buildTmdbImageUrl(path, TMDB_IMAGE_SIZES.backdropThumb)
+                : resolveDetailsImageUrl(path, API_BASE, 'backdrop');
           } else if (imageType === 'poster') {
-            thumbUrl = path.startsWith('/')
-              ? buildTmdbImageUrl(path, isPerson ? TMDB_IMAGE_SIZES.personThumb : TMDB_IMAGE_SIZES.posterThumb)
-              : resolveDetailsImageUrl(path, API_BASE, isPerson ? 'person' : 'poster');
+            thumbUrl = path.startsWith('/media/')
+              ? resolveDetailsImageUrl(path, API_BASE, isPerson ? 'person' : 'poster')
+              : path.startsWith('/')
+                ? buildTmdbImageUrl(path, isPerson ? TMDB_IMAGE_SIZES.personThumb : TMDB_IMAGE_SIZES.posterThumb)
+                : resolveDetailsImageUrl(path, API_BASE, isPerson ? 'person' : 'poster');
           } else {
             // Logo or generic
-            thumbUrl = buildTmdbImageUrl(path, TMDB_IMAGE_SIZES.posterThumb);
+            thumbUrl = path.startsWith('/media/')
+              ? resolveDetailsImageUrl(path, API_BASE, 'logo')
+              : buildTmdbImageUrl(path, TMDB_IMAGE_SIZES.posterThumb);
           }
 
           const normalizedPath = path.split('/').pop().toLowerCase();
@@ -275,3 +281,4 @@ export default function TMDBImageGrid({
     </div>
   );
 }
+

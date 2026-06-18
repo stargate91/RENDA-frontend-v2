@@ -1,6 +1,84 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 
+
+const syncPersonProfileCaches = (queryClient, personId, data) => {
+  const personKeys = [
+    ['person-detail', personId],
+    ['person-detail', String(personId)],
+    ['person-detail', Number(personId)],
+  ];
+
+  personKeys.forEach((key) => {
+    queryClient.setQueryData(key, (oldData) => {
+      if (!oldData) {
+        return oldData;
+      }
+      return {
+        ...oldData,
+        profile_path: data?.profile_path ?? oldData.profile_path,
+        local_profile_path: data?.local_profile_path ?? oldData.local_profile_path,
+        has_local_profile: data?.has_local_profile ?? oldData.has_local_profile,
+      };
+    });
+  });
+
+  queryClient.setQueriesData({ queryKey: ['people'] }, (oldData) => {
+    if (!oldData?.items) return oldData;
+    return {
+      ...oldData,
+      items: oldData.items.map((item) => (
+        item.id === personId || String(item.id) === String(personId)
+          ? {
+              ...item,
+              profile_path: data?.profile_path ?? item.profile_path,
+              poster_path: data?.profile_path ?? item.poster_path,
+              local_profile_path: data?.local_profile_path ?? item.local_profile_path,
+            }
+          : item
+      )),
+    };
+  });
+
+  queryClient.setQueriesData({ queryKey: ['people-infinite'] }, (oldData) => {
+    if (!oldData?.pages) return oldData;
+    return {
+      ...oldData,
+      pages: oldData.pages.map((page) => ({
+        ...page,
+        items: (page.items || []).map((item) => (
+          item.id === personId || String(item.id) === String(personId)
+            ? {
+                ...item,
+                profile_path: data?.profile_path ?? item.profile_path,
+                poster_path: data?.profile_path ?? item.poster_path,
+                local_profile_path: data?.local_profile_path ?? item.local_profile_path,
+              }
+            : item
+        )),
+      })),
+    };
+  });
+
+  queryClient.setQueriesData({ queryKey: ['library'] }, (oldData) => {
+    if (!oldData?.items) return oldData;
+    return {
+      ...oldData,
+      items: oldData.items.map((item) => (
+        item.id === personId || String(item.id) === String(personId)
+          ? {
+              ...item,
+              profile_path: data?.profile_path ?? item.profile_path,
+              poster_path: data?.profile_path ?? item.poster_path,
+              local_profile_path: data?.local_profile_path ?? item.local_profile_path,
+              displayPoster: data?.profile_path ?? item.displayPoster,
+            }
+          : item
+      )),
+    };
+  });
+};
+
 export const useStatsQuery = () => useQuery({
   queryKey: ['stats'],
   queryFn: () => api.library.getStats(),
@@ -312,6 +390,7 @@ export const useOverridePersonProfileMutation = () => {
   return useMutation({
     mutationFn: ({ personId, profilePath }) => api.people.overrideProfile(personId, profilePath),
     onSuccess: (data, variables) => {
+      syncPersonProfileCaches(queryClient, variables.personId, data);
       queryClient.invalidateQueries({ queryKey: ['person-detail', variables.personId] });
       queryClient.invalidateQueries({ queryKey: ['person-detail'] });
       queryClient.invalidateQueries({ queryKey: ['people'] });
@@ -326,6 +405,7 @@ export const useUploadPersonProfileMutation = () => {
   return useMutation({
     mutationFn: ({ personId, file }) => api.people.uploadProfile(personId, file),
     onSuccess: (data, variables) => {
+      syncPersonProfileCaches(queryClient, variables.personId, data);
       queryClient.invalidateQueries({ queryKey: ['person-detail', variables.personId] });
       queryClient.invalidateQueries({ queryKey: ['person-detail'] });
       queryClient.invalidateQueries({ queryKey: ['people'] });

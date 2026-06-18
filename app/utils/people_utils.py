@@ -354,7 +354,7 @@ def _is_remote_image_path(path: Optional[str]) -> bool:
 _IMAGE_EXISTENCE_CACHE = {}
 
 def _public_image_path(path: Optional[str], subfolder: str) -> Optional[str]:
-    """Returns the /filename form the frontend expects, if the local file exists."""
+    """Returns the public /media/images path if the local file exists."""
     if not path:
         return None
     if _is_remote_image_path(path):
@@ -375,7 +375,7 @@ def _public_image_path(path: Optional[str], subfolder: str) -> Optional[str]:
     
     res = None
     if local_file.exists() and local_file.stat().st_size > 100:
-        res = f"/{filename}"
+        res = f"/media/images/{subfolder}/{filename}"
         
     _IMAGE_EXISTENCE_CACHE[cache_key] = (res, now + 15)
     return res
@@ -492,4 +492,5 @@ def _download_person_detail_assets(profile_path: Optional[str], images: Optional
 
     with ThreadPoolExecutor(max_workers=8) as executor:
         list(executor.map(_download_task, unique_tasks))
+
 
