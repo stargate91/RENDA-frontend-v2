@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { ChevronDown, ChevronRight, ChevronLeft, Check, Eye, Play, Clapperboard, Calendar, Tv, Star } from 'lucide-react';
 import IconButton from '@/ui/IconButton';
 import Pill from '@/ui/Pill';
@@ -10,11 +10,11 @@ import './SeasonsPanel.css';
 const EPISODES_BATCH_SIZE = 20;
 
 export default function SeasonsPanel() {
-  const { state, actions, mutations, t } = useMediaDetailContext();
+  const { state, mutations, t } = useMediaDetailContext();
   const { item, cleanId, nextEpisodeInfo } = state;
   const { updateStatusMutation, playMutation, bulkUpdateWatchedMutation } = mutations;
 
-  const seasonsList = item.seasons || [];
+  const seasonsList = useMemo(() => item.seasons || [], [item.seasons]);
   const seasonsCount = seasonsList.length;
   const initialSeasonNumber = nextEpisodeInfo?.seasonNumber ?? seasonsList[0]?.season_number ?? 1;
   const initialExpandedEpisodes = nextEpisodeInfo?.episode?.id
@@ -31,17 +31,40 @@ export default function SeasonsPanel() {
   const [selectedSeasonNumber, setSelectedSeasonNumber] = useState(initialSeasonNumber);
   const [expandedEpisodes, setExpandedEpisodes] = useState(initialExpandedEpisodes);
   const [visibleEpisodesCount, setVisibleEpisodesCount] = useState(initialVisibleEpisodesCount);
+  const [prevInputs, setPrevInputs] = useState({ selectedSeasonNumber, nextEpisodeInfo });
 
   const scrollContainerRef = useRef(null);
   const loadMoreTriggerRef = useRef(null);
+
+  if (selectedSeasonNumber !== prevInputs.selectedSeasonNumber || nextEpisodeInfo !== prevInputs.nextEpisodeInfo) {
+    setPrevInputs({ selectedSeasonNumber, nextEpisodeInfo });
+
+    let currentSeasonNumber = selectedSeasonNumber;
+    if (nextEpisodeInfo !== prevInputs.nextEpisodeInfo && nextEpisodeInfo?.episode?.id) {
+      currentSeasonNumber = nextEpisodeInfo.seasonNumber;
+      setSelectedSeasonNumber(currentSeasonNumber);
+      setExpandedEpisodes((prev) => ({
+        ...prev,
+        [nextEpisodeInfo.episode.id]: true,
+      }));
+    }
+
+    const targetSeason = seasonsList.find((season) => season.season_number === currentSeasonNumber);
+    const targetEpisodeIndex = currentSeasonNumber === nextEpisodeInfo?.seasonNumber
+      ? targetSeason?.episodes?.findIndex((episode) => episode.id === nextEpisodeInfo?.episode?.id) ?? -1
+      : -1;
+    setVisibleEpisodesCount(
+      targetEpisodeIndex >= 0
+        ? Math.max(EPISODES_BATCH_SIZE, targetEpisodeIndex + 1)
+        : EPISODES_BATCH_SIZE
+    );
+  }
 
   // Automatically scroll the selected season card into view without affecting outer scroll containers
   useEffect(() => {
     const activeBtn = scrollContainerRef.current?.querySelector('.season-poster-card.is-active');
     const container = scrollContainerRef.current;
     if (activeBtn && container) {
-      const activeRect = activeBtn.getBoundingClientRect();
-      const containerRect = container.getBoundingClientRect();
       // Center the active card inside the carousel container
       const scrollLeftOffset = activeBtn.offsetLeft - (container.clientWidth / 2) + (activeBtn.clientWidth / 2);
       container.scrollTo({
@@ -50,29 +73,6 @@ export default function SeasonsPanel() {
       });
     }
   }, [selectedSeasonNumber]);
-
-  useEffect(() => {
-    const targetSeason = seasonsList.find((season) => season.season_number === selectedSeasonNumber);
-    const targetEpisodeIndex = selectedSeasonNumber === nextEpisodeInfo?.seasonNumber
-      ? targetSeason?.episodes?.findIndex((episode) => episode.id === nextEpisodeInfo?.episode?.id) ?? -1
-      : -1;
-
-    setVisibleEpisodesCount(
-      targetEpisodeIndex >= 0
-        ? Math.max(EPISODES_BATCH_SIZE, targetEpisodeIndex + 1)
-        : EPISODES_BATCH_SIZE
-    );
-  }, [nextEpisodeInfo, seasonsList, selectedSeasonNumber]);
-
-  useEffect(() => {
-    if (!nextEpisodeInfo?.episode?.id) return;
-
-    setSelectedSeasonNumber(nextEpisodeInfo.seasonNumber);
-    setExpandedEpisodes((prev) => ({
-      ...prev,
-      [nextEpisodeInfo.episode.id]: true,
-    }));
-  }, [nextEpisodeInfo, seasonsList]);
 
   const getPosterUrl = (path) => {
     if (!path) return '';
@@ -108,28 +108,20 @@ export default function SeasonsPanel() {
   // Find active season
   const activeSeason = seasonsList.find((s) => s.season_number === selectedSeasonNumber) || seasonsList[0];
 
-  if (!activeSeason) {
-    return (
-      <div className="seasons-panel__empty">
-        {t('library.details.noSeasonsFound') || 'No seasons found.'}
-      </div>
-    );
-  }
-
-  const totalEpisodesCount = activeSeason.episodes
+  const totalEpisodesCount = activeSeason?.episodes
     ? activeSeason.episodes.reduce((sum, ep) => sum + countEpisodesInNumber(ep.episode_number), 0)
     : 0;
 
-  const localEpisodesCount = activeSeason.episodes
+  const localEpisodesCount = activeSeason?.episodes
     ? activeSeason.episodes.filter(ep => ep.path && !ep.is_missing).reduce((sum, ep) => sum + countEpisodesInNumber(ep.episode_number), 0)
     : 0;
 
-  const isSeasonWatched = activeSeason.episodes
+  const isSeasonWatched = activeSeason?.episodes
     ? activeSeason.episodes.length > 0 && activeSeason.episodes.every((ep) => ep.is_watched)
     : false;
 
-  const visibleEpisodes = activeSeason.episodes?.slice(0, visibleEpisodesCount) || [];
-  const hasMoreEpisodes = visibleEpisodes.length < (activeSeason.episodes?.length || 0);
+  const visibleEpisodes = activeSeason?.episodes?.slice(0, visibleEpisodesCount) || [];
+  const hasMoreEpisodes = visibleEpisodes.length < (activeSeason?.episodes?.length || 0);
 
   useEffect(() => {
     const trigger = loadMoreTriggerRef.current;
@@ -142,7 +134,7 @@ export default function SeasonsPanel() {
         if (!firstEntry?.isIntersecting) return;
 
         setVisibleEpisodesCount((prev) => (
-          Math.min(prev + EPISODES_BATCH_SIZE, activeSeason.episodes?.length || prev)
+          Math.min(prev + EPISODES_BATCH_SIZE, activeSeason?.episodes?.length || prev)
         ));
       },
       {
@@ -154,11 +146,19 @@ export default function SeasonsPanel() {
 
     observer.observe(trigger);
     return () => observer.disconnect();
-  }, [activeSeason.episodes?.length, hasMoreEpisodes, visibleEpisodes.length]);
+  }, [activeSeason?.episodes?.length, hasMoreEpisodes, visibleEpisodes.length]);
+
+  if (!activeSeason) {
+    return (
+      <div className="seasons-panel__empty">
+        {t('library.details.noSeasonsFound') || 'No seasons found.'}
+      </div>
+    );
+  }
 
   const handleSeasonWatchedToggle = (e) => {
     e.stopPropagation();
-    if (!activeSeason.episodes || activeSeason.episodes.length === 0) return;
+    if (!activeSeason || !activeSeason.episodes || activeSeason.episodes.length === 0) return;
     const episodeIds = activeSeason.episodes.map((ep) => ep.id);
     bulkUpdateWatchedMutation.mutate({
       itemIds: episodeIds,
@@ -301,6 +301,7 @@ export default function SeasonsPanel() {
           ].filter(Boolean);
 
           return (
+            // eslint-disable-next-line jsx-a11y/no-static-element-interactions
             <div
               key={episode.id}
               className={`episode-card ${isExpanded ? 'is-expanded' : ''} ${
@@ -368,6 +369,7 @@ export default function SeasonsPanel() {
               </div>
 
               {/* Right Side: Actions */}
+              {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
               <div className="episode-card__actions" onClick={(e) => e.stopPropagation()}>
                 {isExpanded && (
                   <>

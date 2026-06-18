@@ -23,14 +23,12 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
   const isMovie = isMovieMediaType(type);
 
   const [hoveredRating, setHoveredRating] = useState(null);
-  const [activePanel, setActivePanel] = useState(null);
   const [expandedSeasons, setExpandedSeasons] = useState({ 1: true });
   const [isSideNavVisible, setIsSideNavVisible] = useState(true);
   const [isWatchLogsExpanded, setIsWatchLogsExpanded] = useState(false);
   const [isTruncated, setIsTruncated] = useState(false);
 
   const overviewRef = useRef(null);
-  const lastIdRef = useRef(null);
   const fullPeoplePrefetchRef = useRef(new Set());
   const queryClient = useQueryClient();
 
@@ -47,23 +45,25 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
   const effectiveId = item?.id ?? cleanId;
   const { data: settings } = useSettingsQuery();
 
-  useEffect(() => {
-    if (!item) return;
-    if (lastIdRef.current === cleanId) return;
-    lastIdRef.current = cleanId;
+  const [prevItem, setPrevItem] = useState(item);
+  const [prevCleanId, setPrevCleanId] = useState(cleanId);
+  const [activePanel, setActivePanel] = useState(() => {
+    if (isMovie) return 'details';
+    if (item?.seasons?.length) return 'seasons';
+    return item?.cast?.length ? 'cast' : 'details';
+  });
 
+  if (cleanId !== prevCleanId || item !== prevItem) {
+    setPrevCleanId(cleanId);
+    setPrevItem(item);
     if (isMovie) {
       setActivePanel('details');
-      return;
-    }
-
-    if (item?.seasons?.length) {
+    } else if (item?.seasons?.length) {
       setActivePanel('seasons');
-      return;
+    } else {
+      setActivePanel(item?.cast?.length ? 'cast' : 'details');
     }
-
-    setActivePanel(item?.cast?.length ? 'cast' : 'details');
-  }, [cleanId, isMovie, item]);
+  }
 
   useEffect(() => {
     if (!isMovie || !cleanId || !String(item?.id || '').startsWith('tmdb_')) return;

@@ -333,7 +333,7 @@
 .entity-detail-page__person-rating-actions {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: calc(var(--space-2xs) / 2);
   flex: 0 0 102px;
   min-width: 102px;
 }
@@ -351,7 +351,7 @@
   justify-content: center;
   width: 30px;
   height: 30px;
-  padding: 2px;
+  padding: calc(var(--space-2xs) / 2);
   margin-right: 0;
   border: none;
   border-radius: 4px;

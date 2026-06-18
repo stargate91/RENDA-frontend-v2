@@ -1,0 +1,551 @@
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import PosterGrid from '@/ui/PosterGrid';
+import PosterCard from '@/ui/PosterCard';
+import Pill from '@/ui/Pill';
+import EmptyState from '@/ui/EmptyState';
+import { API_BASE } from '@/lib/backend';
+import { isTvLikeMediaType } from '@/lib/mediaTypes';
+import { Check, ChevronLeft, ChevronRight, Film, ImageOff, Star, Tv } from 'lucide-react';
+import { resolveDetailsImageUrl } from '../../utils/detailUtils';
+import { normalizeBackdropKey } from '../../peopleCollectionDetailUtils.jsx';
+
+export function OverviewContent({ text, title, emptyText, t, openModal, className = '' }) {
+  const overviewRef = useRef(null);
+  const [isTruncated, setIsTruncated] = useState(false);
+
+  useLayoutEffect(() => {
+    const element = overviewRef.current;
+    if (!element) {
+      return undefined;
+    }
+
+    let frameId = null;
+    let resizeObserver = null;
+
+    const measure = () => {
+      setIsTruncated(element.scrollHeight > element.clientHeight + 1);
+    };
+
+    const scheduleMeasure = () => {
+      if (frameId !== null) {
+        cancelAnimationFrame(frameId);
+      }
+      frameId = requestAnimationFrame(measure);
+    };
+
+    scheduleMeasure();
+
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        scheduleMeasure();
+      });
+      resizeObserver.observe(element);
+    }
+
+    window.addEventListener('resize', scheduleMeasure);
+
+    return () => {
+      if (frameId !== null) {
+        cancelAnimationFrame(frameId);
+      }
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', scheduleMeasure);
+    };
+  }, [text]);
+
+  return (
+    <div className={`media-detail-page__overview entity-detail-page__overview ${className}`.trim()}>
+      {text ? (
+        <>
+          <div ref={overviewRef} className="media-detail-page__overview-text">
+            {text}
+          </div>
+          {isTruncated && (
+            <button
+              type="button"
+              className="media-detail-page__read-more-btn"
+              onClick={() => {
+                openModal({
+                  title,
+                  variant: 'wide',
+                  content: (
+                    <div className="read-more-overview">
+                      {text.split(/\n{2,}/).map((paragraph, index) => (
+                        <p key={index} className="read-more-paragraph">{paragraph}</p>
+                      ))}
+                    </div>
+                  ),
+                });
+              }}
+            >
+              {t('library.details.readMore') || 'Read More'}
+            </button>
+          )}
+        </>
+      ) : (
+        <p className="entity-detail-page__overview-text entity-detail-page__overview-text--muted">
+          {emptyText}
+        </p>
+      )}
+    </div>
+  );
+}
+
+export function EntityCardGrid({ items, type, navigate, t }) {
+  if (!items?.length) {
+    return null;
+  }
+
+  const openItem = (item) => {
+    const resolvedType = item.media_type || item.type || type;
+    if (isTvLikeMediaType(resolvedType)) {
+      const seriesId = item.library_series_tmdb_id || item.series_tmdb_id || item.tmdb_id || item.id;
+      navigate(`/library/series/${seriesId}`);
+      return;
+    }
+
+    const movieId = item.in_library ? (item.library_item_id || item.id) : `tmdb_${item.tmdb_id || item.id}`;
+    navigate(`/library/movie/${movieId}`);
+  };
+
+  return (
+    <PosterGrid>
+      {items.map((item, index) => {
+        const resolvedType = item.media_type || item.type || type;
+        const subtitleParts = [];
+        if (item.year) subtitleParts.push(String(item.year));
+        if (item.job) subtitleParts.push(item.job);
+        if (item.character) subtitleParts.push(item.character);
+        if (item.episode_count) {
+          subtitleParts.push(
+            t('library.details.episodePlural', {
+              count: item.episode_count,
+              defaultValue: `${item.episode_count} Episodes`,
+            })
+          );
+        }
+
+        return (
+          <PosterCard
+            key={`${type}-${item.tmdb_id || item.id}`}
+            title={item.title}
+            subtitle={subtitleParts.join(' - ')}
+            imageUrl={resolveDetailsImageUrl(item.poster_path, API_BASE, 'poster')}
+            ratingImdb={item.rating_imdb}
+            ratingTmdb={item.rating_tmdb ?? item.rating}
+            icon={isTvLikeMediaType(resolvedType) ? Tv : Film}
+            customStyle={{ '--item-index': index }}
+            onClick={() => openItem(item)}
+          />
+        );
+      })}
+    </PosterGrid>
+  );
+}
+
+function HorizontalCollectionItemsList({ items, navigate, t }) {
+  if (!items?.length) {
+    return null;
+  }
+
+  const openItem = (item) => {
+    if (isTvLikeMediaType(item.media_type || item.type)) {
+      const seriesId = item.library_series_tmdb_id || item.series_tmdb_id || item.tmdb_id || item.id;
+      navigate(`/library/series/${seriesId}`);
+      return;
+    }
+
+    const movieId = item.in_library ? (item.library_item_id || item.id) : `tmdb_${item.tmdb_id || item.id}`;
+    navigate(`/library/movie/${movieId}`);
+  };
+
+  return (
+    <div className="entity-detail-page__credits-list entity-detail-page__credits-list--collection-items">
+      {items.map((item) => {
+        const isTv = isTvLikeMediaType(item.media_type || item.type);
+        const imdbRating = Number(item.rating_imdb);
+        const tmdbRating = Number(item.rating_tmdb ?? item.rating);
+        const hasImdbRating = Number.isFinite(imdbRating) && imdbRating > 0;
+        const hasTmdbRating = Number.isFinite(tmdbRating) && tmdbRating > 0;
+
+        return (
+          <button
+            key={`collection-item-${item.media_type || item.type || 'movie'}-${item.tmdb_id || item.id}`}
+            type="button"
+            className={`entity-detail-page__credit-card entity-detail-page__credit-card--collection-item ${
+              item.in_library ? 'entity-detail-page__credit-card--owned' : 'entity-detail-page__credit-card--missing'
+            }`}
+            onClick={() => openItem(item)}
+          >
+            <div className="entity-detail-page__credit-poster-wrap">
+              {item.poster_path ? (
+                <img
+                  src={resolveDetailsImageUrl(item.poster_path, API_BASE, 'poster')}
+                  alt={item.title || 'Collection item poster'}
+                  className="entity-detail-page__credit-poster"
+                />
+              ) : (
+                <div className="entity-detail-page__credit-poster entity-detail-page__credit-poster--placeholder">
+                  {isTv ? <Tv size={18} /> : <Film size={18} />}
+                </div>
+              )}
+            </div>
+
+            <div className="entity-detail-page__credit-body">
+              <div className="entity-detail-page__credit-topline">
+                <div className="entity-detail-page__credit-title">{item.title}</div>
+              </div>
+              <div className="entity-detail-page__credit-meta">
+                {item.year && <span>{item.year}</span>}
+                {(hasImdbRating || hasTmdbRating) && (
+                  <Pill
+                    variant={hasImdbRating ? 'imdb' : 'tmdb'}
+                    className="entity-detail-page__credit-rating-pill"
+                  >
+                    <Star size={10} fill="currentColor" strokeWidth={1.8} />
+                    {(hasImdbRating ? imdbRating : tmdbRating).toFixed(1)}
+                  </Pill>
+                )}
+                <Pill
+                  variant={item.in_library ? 'success' : 'default'}
+                  className={`entity-detail-page__credit-status-pill${
+                    item.in_library ? '' : ' entity-detail-page__credit-status-pill--missing'
+                  }`}
+                >
+                  {item.in_library
+                    ? (t('library.details.have') || 'Have')
+                    : (t('library.details.missing') || 'Missing')}
+                </Pill>
+              </div>
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+export function CollectionBackdropsPanel({ item, collectionId, t, toast, overrideBackdropMutation }) {
+  const [selectedBackdropPath, setSelectedBackdropPath] = useState(item?.backdrop_path || '');
+  const backdropOptions = useMemo(() => {
+    const seen = new Set();
+    const collectionBackdrops = [];
+
+    for (const option of (item?.collection_backdrops || [])
+      .filter((bd) => (!bd?.iso_639_1 || bd.iso_639_1 === '') && Number(bd?.width) >= 1280)
+      .map((bd, index) => ({
+        backdrop_path: bd.file_path,
+        backdrop_key: normalizeBackdropKey(bd.file_path),
+        title: item?.title || 'Collection',
+        subtitle: t('library.details.collectionBackdrop') || 'Collection backdrop',
+        sort_score: Number(bd.vote_average) || 0,
+        sort_votes: Number(bd.vote_count) || 0,
+        sort_index: index,
+      }))
+      .filter((option) => option.backdrop_path && option.backdrop_key)
+      .sort((a, b) => (
+        (b.sort_score - a.sort_score)
+        || (b.sort_votes - a.sort_votes)
+        || (a.sort_index - b.sort_index)
+      ))) {
+      if (seen.has(option.backdrop_key)) {
+        continue;
+      }
+      seen.add(option.backdrop_key);
+      collectionBackdrops.push({
+        backdrop_path: option.backdrop_path,
+        backdrop_key: option.backdrop_key,
+        title: option.title,
+        subtitle: option.subtitle,
+      });
+    }
+
+    if (collectionBackdrops.length > 0) {
+      return collectionBackdrops;
+    }
+
+    const movieBackdrops = [];
+    for (const movie of item?.movies || []) {
+      const backdropPath = movie?.backdrop_path;
+      const backdropKey = normalizeBackdropKey(backdropPath);
+      if (!backdropPath || !backdropKey || seen.has(backdropKey)) {
+        continue;
+      }
+      seen.add(backdropKey);
+      movieBackdrops.push({
+        backdrop_path: backdropPath,
+        backdrop_key: backdropKey,
+        title: movie?.title || 'Collection item',
+        subtitle: movie?.in_library
+          ? (t('library.details.have') || 'Have')
+          : (t('library.details.missing') || 'Missing'),
+        year: movie?.year,
+      });
+    }
+    return movieBackdrops;
+  }, [item, t]);
+
+  const currentBackdropPath = selectedBackdropPath || item?.backdrop_path || '';
+  const currentBackdropKey = normalizeBackdropKey(currentBackdropPath);
+
+  const handleSelectBackdrop = async (backdropPath) => {
+    try {
+      await overrideBackdropMutation.mutateAsync({
+        itemId: `collection_${collectionId}`,
+        backdropPath,
+      });
+      setSelectedBackdropPath(backdropPath);
+      toast(t('library.details.backdropUpdated') || 'Backdrop updated successfully!', 'success');
+    } catch (err) {
+      toast(err.message || t('library.details.backdropUpdateFailed') || 'Failed to update backdrop', 'danger');
+    }
+  };
+
+  return (
+    <div className="backdrops-panel">
+      <div className="backdrops-grid">
+        {backdropOptions.map((option, idx) => {
+          const backdropUrl = resolveDetailsImageUrl(option.backdrop_path, API_BASE, 'backdrop');
+          const isSelected = currentBackdropKey !== '' && currentBackdropKey === option.backdrop_key;
+          const isPending = overrideBackdropMutation.isPending && overrideBackdropMutation.variables?.backdropPath === option.backdrop_path;
+          const label = option.year ? `${option.title} (${option.year})` : option.title;
+
+          return (
+            <button
+              key={`${option.backdrop_path}-${idx}`}
+              type="button"
+              onClick={() => !overrideBackdropMutation.isPending && handleSelectBackdrop(option.backdrop_path)}
+              className={`backdrop-card ${isSelected ? 'backdrop-card--selected' : ''} ${overrideBackdropMutation.isPending ? 'backdrop-card--disabled' : ''}`}
+              disabled={overrideBackdropMutation.isPending}
+              title={label}
+            >
+              <img
+                src={backdropUrl}
+                alt={label}
+                className="backdrop-card__img"
+              />
+              {isPending && (
+                <div className="backdrop-card__spinner-overlay">
+                  <div className="backdrop-card__spinner" />
+                </div>
+              )}
+              {isSelected && !isPending && (
+                <div className="backdrop-card__selected-overlay">
+                  <Check size={18} />
+                </div>
+              )}
+              <div className="backdrop-card__info-overlay">
+                <span>{label}</span>
+                <span>{option.subtitle}</span>
+              </div>
+            </button>
+          );
+        })}
+        {backdropOptions.length === 0 && (
+          <EmptyState
+            icon={ImageOff}
+            title={t('library.details.noBackdropsAvailable') || 'No good backdrop options found for this title.'}
+            className="backdrops-panel__empty-state"
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function CollectionItemsSection({ items, navigate, t }) {
+  const containerRef = useRef(null);
+  const [columns, setColumns] = useState(1);
+  const [page, setPage] = useState(0);
+
+  useLayoutEffect(() => {
+    const element = containerRef.current;
+    if (!element) {
+      return undefined;
+    }
+
+    let frameId = null;
+    let resizeObserver = null;
+
+    const measure = () => {
+      const styles = window.getComputedStyle(element);
+      const gap = Number.parseFloat(styles.columnGap || styles.gap || '16') || 16;
+      const minCardWidth = 224;
+      const width = element.clientWidth || 0;
+      const nextColumns = Math.max(1, Math.floor((width + gap) / (minCardWidth + gap)));
+      setColumns((current) => (current === nextColumns ? current : nextColumns));
+    };
+
+    const scheduleMeasure = () => {
+      if (frameId !== null) {
+        cancelAnimationFrame(frameId);
+      }
+      frameId = requestAnimationFrame(measure);
+    };
+
+    scheduleMeasure();
+
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        scheduleMeasure();
+      });
+      resizeObserver.observe(element);
+    }
+
+    window.addEventListener('resize', scheduleMeasure);
+
+    return () => {
+      if (frameId !== null) {
+        cancelAnimationFrame(frameId);
+      }
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', scheduleMeasure);
+    };
+  }, []);
+
+  const itemsPerPage = Math.max(1, columns * 3);
+  const totalPages = Math.max(1, Math.ceil((items?.length || 0) / itemsPerPage));
+
+  if (page > totalPages - 1) {
+    setPage(totalPages - 1);
+  }
+
+  const safePage = Math.min(page, totalPages - 1);
+  const visibleItems = (items || []).slice(safePage * itemsPerPage, (safePage + 1) * itemsPerPage);
+
+  return (
+    <section className="entity-detail-page__content-section">
+      <div className="entity-detail-page__section-header">
+        <h2>{t('library.details.collectionItemsTitle') || 'Collection Items'}</h2>
+        {totalPages > 1 && (
+          <div className="entity-detail-page__section-pager">
+            <button
+              type="button"
+              className="entity-detail-page__section-pager-btn"
+              onClick={() => setPage((current) => Math.max(0, current - 1))}
+              disabled={safePage === 0}
+              aria-label={t('common.previous') || 'Previous'}
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              type="button"
+              className="entity-detail-page__section-pager-btn"
+              onClick={() => setPage((current) => Math.min(totalPages - 1, current + 1))}
+              disabled={safePage >= totalPages - 1}
+              aria-label={t('common.next') || 'Next'}
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
+      </div>
+      <div ref={containerRef}>
+        <HorizontalCollectionItemsList items={visibleItems} navigate={navigate} t={t} />
+      </div>
+    </section>
+  );
+}
+
+export function HorizontalCreditsList({ items, navigate, t }) {
+  if (!items?.length) {
+    return null;
+  }
+
+  const openItem = (item) => {
+    if (isTvLikeMediaType(item.media_type || item.type)) {
+      const seriesId = item.library_series_tmdb_id || item.series_tmdb_id || item.tmdb_id || item.id;
+      navigate(`/library/series/${seriesId}`);
+      return;
+    }
+
+    const movieId = item.in_library ? (item.library_item_id || item.id) : `tmdb_${item.tmdb_id || item.id}`;
+    navigate(`/library/movie/${movieId}`);
+  };
+
+  return (
+    <div className="entity-detail-page__credits-list">
+      {items.map((item) => {
+        const isTv = isTvLikeMediaType(item.media_type || item.type);
+        const imdbRating = Number(item.rating_imdb);
+        const tmdbRating = Number(item.rating_tmdb ?? item.rating);
+        const hasImdbRating = Number.isFinite(imdbRating) && imdbRating > 0;
+        const hasTmdbRating = Number.isFinite(tmdbRating) && tmdbRating > 0;
+        const metaParts = [];
+        const roleText = String(item.job || '').trim();
+        const characterText = String(item.character || '').trim();
+        const normalizedRole = roleText.toLowerCase();
+        const normalizedCharacter = characterText.toLowerCase();
+        const roleContainsCharacter = normalizedCharacter
+          ? normalizedRole
+            .split(',')
+            .map((part) => part.trim())
+            .some((part) => part === normalizedCharacter || part === `as ${normalizedCharacter}`)
+          : false;
+
+        if (item.year) metaParts.push(String(item.year));
+        if (roleText) metaParts.push(roleText);
+        if (
+          characterText
+          && normalizedCharacter !== normalizedRole
+          && normalizedRole !== `as ${normalizedCharacter}`
+          && !roleContainsCharacter
+        ) {
+          metaParts.push(characterText);
+        }
+        if (item.episode_count) {
+          metaParts.push(
+            t('library.details.episodePlural', {
+              count: item.episode_count,
+              defaultValue: `${item.episode_count} Episodes`,
+            })
+          );
+        }
+        const metaText = metaParts.length > 1
+          ? `${metaParts[0]} - ${metaParts.slice(1).join(' • ')}`
+          : (metaParts[0] || '');
+
+        return (
+          <button
+            key={`credit-${item.media_type || item.type}-${item.tmdb_id || item.id}`}
+            type="button"
+            className="entity-detail-page__credit-card"
+            onClick={() => openItem(item)}
+          >
+            <div className="entity-detail-page__credit-poster-wrap">
+              {item.poster_path ? (
+                <img
+                  src={resolveDetailsImageUrl(item.poster_path, API_BASE, 'poster')}
+                  alt={item.title || 'Credit poster'}
+                  className="entity-detail-page__credit-poster"
+                />
+              ) : (
+                <div className="entity-detail-page__credit-poster entity-detail-page__credit-poster--placeholder">
+                  {isTv ? <Tv size={18} /> : <Film size={18} />}
+                </div>
+              )}
+            </div>
+
+            <div className="entity-detail-page__credit-body">
+              <div className="entity-detail-page__credit-topline">
+                <div className="entity-detail-page__credit-title">{item.title}</div>
+                {(hasImdbRating || hasTmdbRating) && (
+                  <Pill
+                    variant={hasImdbRating ? 'imdb' : 'tmdb'}
+                    className="entity-detail-page__credit-rating-pill"
+                  >
+                    <Star size={10} fill="currentColor" strokeWidth={1.8} />
+                    {(hasImdbRating ? imdbRating : tmdbRating).toFixed(1)}
+                  </Pill>
+                )}
+              </div>
+              <div className="entity-detail-page__credit-meta">
+                {metaText && <span>{metaText}</span>}
+              </div>
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}

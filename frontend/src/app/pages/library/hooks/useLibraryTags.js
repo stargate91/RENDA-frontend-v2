@@ -10,7 +10,6 @@ export function useLibraryTags({ activeSessionMode }) {
   const processedTags = useMemo(() => {
     const usageTags = Array.isArray(tagsData) ? tagsData : [];
     const allDefinedTags = Array.isArray(allTags) ? allTags : [];
-    const isNsfw = activeSessionMode === 'nsfw';
     const bucketKeys = getLibraryTagBucketKeys(activeSessionMode);
     const usageByName = new Map(
       usageTags.map((tag) => [tag.name?.toLowerCase?.() || '', tag])

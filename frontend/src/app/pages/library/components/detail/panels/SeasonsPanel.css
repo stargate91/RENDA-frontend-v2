@@ -50,8 +50,8 @@
   position: relative;
   display: flex;
   align-items: center;
-  margin: 0 -8px;
-  padding: 0 8px;
+  margin: 0 calc(var(--space-sm) * -1);
+  padding: 0 var(--space-sm);
 }
 
 .seasons-carousel {
@@ -170,14 +170,14 @@
   color: var(--color-text-muted);
   display: flex;
   align-items: center;
-  gap: var(--space-xl, 14px);
-  margin-top: 2px;
+  gap: var(--space-xl);
+  margin-top: calc(var(--space-2xs) / 2);
 }
 
 .active-season-info__meta-date {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: calc(var(--space-md) / 2);
   min-width: 90px;
   flex-shrink: 0;
 }
@@ -185,7 +185,7 @@
 .active-season-info__meta-episodes {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: calc(var(--space-md) / 2);
 }
 
 .active-season-info__meta-date svg,
@@ -206,7 +206,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
-  padding: 6px 12px;
+  padding: var(--space-xs) var(--space-lg);
   border-radius: var(--radius-sm, 6px);
   font-size: var(--font-size-xs, 12px);
   font-weight: 600;
@@ -267,15 +267,15 @@
 }
 
 .episode-card.is-virtual {
-  border-color: color-mix(in srgb, var(--color-accent-yellow, #ffc107) 12%, var(--media-detail-panel-card-border, rgba(255, 255, 255, 0.06)));
+  border-color: color-mix(in srgb, var(--color-accent-yellow) 12%, var(--media-detail-panel-card-border, rgba(255, 255, 255, 0.06)));
 }
 
 .episode-card.is-virtual:hover {
-  border-color: color-mix(in srgb, var(--color-accent-yellow, #ffc107) 22%, var(--media-detail-panel-card-border-hover, rgba(255, 255, 255, 0.12)));
+  border-color: color-mix(in srgb, var(--color-accent-yellow) 22%, var(--media-detail-panel-card-border-hover, rgba(255, 255, 255, 0.12)));
 }
 
 .episode-card.is-virtual.is-expanded {
-  border-color: color-mix(in srgb, var(--color-accent-yellow, #ffc107) 28%, rgba(255, 255, 255, 0.14));
+  border-color: color-mix(in srgb, var(--color-accent-yellow) 28%, rgba(255, 255, 255, 0.14));
 }
 
 .episode-card.is-expanded {
@@ -287,7 +287,7 @@
   width: 130px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-sm);
   flex-shrink: 0;
 }
 
@@ -306,7 +306,7 @@
 
 .episode-card__tmdb-pill {
   align-self: flex-start;
-  gap: 5px;
+  gap: calc(var(--space-md) / 2);
   padding: 0.125rem 0.375rem;
   font-size: 10px;
 }
@@ -349,7 +349,7 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  gap: 3px;
+  gap: calc(var(--space-xs) / 2);
 }
 
 .episode-card__title {
@@ -371,12 +371,12 @@
   font-size: 10px;
   font-weight: 500;
   color: var(--color-text-muted);
-  margin-top: 1px;
+  margin-top: calc(var(--space-2xs) / 4);
 }
 
 .episode-card__meta-item {
   background: rgba(255, 255, 255, 0.05);
-  padding: 1px 6px;
+  padding: calc(var(--space-2xs) / 4) var(--space-xs);
   border-radius: 4px;
   border: 1px solid rgba(255, 255, 255, 0.04);
 }

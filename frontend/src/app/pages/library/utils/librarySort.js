@@ -1,8 +1,6 @@
 import {
   isLibraryCollectionTab,
-  isLibraryMovieTab,
   isLibraryPeopleTab,
-  isLibrarySeriesTab,
   isLibraryTagsTab,
   isLibraryVideoTab,
 } from '@/lib/libraryTabs';

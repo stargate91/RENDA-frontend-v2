@@ -1,0 +1,250 @@
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { ChevronLeft, ChevronRight, Film, Star, Tv } from 'lucide-react';
+import Pill from '@/ui/Pill';
+import api from '@/lib/api';
+import { usePersonCreditsQuery } from '@/queries/metadataQueries';
+import { isTvLikeMediaType } from '@/lib/mediaTypes';
+import { API_BASE } from '@/lib/backend';
+import { resolveDetailsImageUrl } from '../../utils/detailUtils';
+
+const PERSON_INITIAL_CREDITS_PAGE_SIZE = 12;
+
+export default function PersonCreditsGridSection({ title, personId, mediaType, totalCount, initialPageData, navigate, t }) {
+  const shouldLoad = Boolean(personId) && Number(totalCount) > 0;
+  const queryClient = useQueryClient();
+  const containerRef = useRef(null);
+  const [columns, setColumns] = useState(Math.max(1, Math.floor(PERSON_INITIAL_CREDITS_PAGE_SIZE / 2)));
+  const [page, setPage] = useState(1);
+
+  useLayoutEffect(() => {
+    const element = containerRef.current;
+    if (!element) {
+      return undefined;
+    }
+
+    let frameId = null;
+    let resizeObserver = null;
+
+    const measure = () => {
+      const styles = window.getComputedStyle(element);
+      const gap = Number.parseFloat(styles.columnGap || styles.gap || '16') || 16;
+      const minCardWidth = 224;
+      const width = element.clientWidth || 0;
+      const nextColumns = Math.max(1, Math.floor((width + gap) / (minCardWidth + gap)));
+      setColumns((current) => (current === nextColumns ? current : nextColumns));
+    };
+
+    const scheduleMeasure = () => {
+      if (frameId !== null) {
+        cancelAnimationFrame(frameId);
+      }
+      frameId = requestAnimationFrame(measure);
+    };
+
+    scheduleMeasure();
+
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        scheduleMeasure();
+      });
+      resizeObserver.observe(element);
+    }
+
+    window.addEventListener('resize', scheduleMeasure);
+
+    return () => {
+      if (frameId !== null) {
+        cancelAnimationFrame(frameId);
+      }
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', scheduleMeasure);
+    };
+  }, []);
+
+  const itemsPerPage = Math.max(1, columns * 2);
+  const creditsQuery = usePersonCreditsQuery(personId, mediaType, page, itemsPerPage, {
+    enabled: shouldLoad,
+    initialData: page === 1 && itemsPerPage === PERSON_INITIAL_CREDITS_PAGE_SIZE ? initialPageData : undefined,
+  });
+  const totalPages = Math.max(1, Number(creditsQuery.data?.total_pages) || Math.ceil(Number(totalCount) / itemsPerPage) || 1);
+
+  if (page > totalPages) {
+    setPage(totalPages);
+  } else if (page < 1) {
+    setPage(1);
+  }
+
+  const safePage = Math.min(page, totalPages);
+  const visibleItems = creditsQuery.data?.items || [];
+  const fillerCount = Math.max(0, itemsPerPage - visibleItems.length);
+  const isInitialPageLoading = creditsQuery.isLoading && visibleItems.length === 0;
+  const resolvedPage = Number(creditsQuery.data?.page) || 1;
+  const resolvedPageSize = Number(creditsQuery.data?.page_size) || itemsPerPage;
+  const isPageFetching = creditsQuery.isFetching && (
+    resolvedPage !== page || resolvedPageSize !== itemsPerPage
+  );
+
+  useEffect(() => {
+    if (!shouldLoad || page !== 1 || !creditsQuery.data?.items?.length || totalPages <= 1) {
+      return;
+    }
+
+    const nextPage = page + 1;
+    if (nextPage > totalPages) {
+      return;
+    }
+
+    queryClient.prefetchQuery({
+      queryKey: ['person-credits', personId, mediaType, nextPage, itemsPerPage, false],
+      queryFn: () => api.people.getCredits(personId, mediaType, { page: nextPage, pageSize: itemsPerPage }),
+    });
+  }, [
+    creditsQuery.data?.items,
+    itemsPerPage,
+    mediaType,
+    page,
+    personId,
+    queryClient,
+    shouldLoad,
+    totalPages,
+  ]);
+
+  if (!shouldLoad) {
+    return null;
+  }
+
+  const openItem = (item) => {
+    if (isTvLikeMediaType(item.media_type || item.type)) {
+      const seriesId = item.library_series_tmdb_id || item.series_tmdb_id || item.tmdb_id || item.id;
+      navigate(`/library/series/${seriesId}`);
+      return;
+    }
+
+    const movieId = item.in_library ? (item.library_item_id || item.id) : `tmdb_${item.tmdb_id || item.id}`;
+    navigate(`/library/movie/${movieId}`);
+  };
+
+  return (
+    <section className="entity-detail-page__content-section">
+      <div className="entity-detail-page__section-header">
+        <h2>{title}</h2>
+        {totalPages > 1 && (
+          <div className="entity-detail-page__section-pager">
+            <button
+              type="button"
+              className="entity-detail-page__section-pager-btn"
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              disabled={safePage <= 1}
+              aria-label={t('common.previous') || 'Previous'}
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              type="button"
+              className="entity-detail-page__section-pager-btn"
+              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+              disabled={safePage >= totalPages}
+              aria-label={t('common.next') || 'Next'}
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
+      </div>
+      <div
+        ref={containerRef}
+        className={`entity-detail-page__credits-list entity-detail-page__credits-list--people-grid${
+          isPageFetching ? ' entity-detail-page__credits-list--fetching' : ''
+        }`}
+      >
+        {isInitialPageLoading && Array.from({ length: itemsPerPage }).map((_, index) => (
+          <div key={`credit-grid-skeleton-${mediaType}-${index}`} className="entity-detail-page__credit-card entity-detail-page__credit-card--people-grid entity-detail-page__skeleton-card">
+            <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-poster" />
+            <div className="entity-detail-page__credit-body">
+              <div className="entity-detail-page__credit-topline">
+                <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-title" />
+              </div>
+              <div className="entity-detail-page__credit-meta">
+                <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-meta" />
+                <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-pill" />
+                <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-pill" />
+              </div>
+            </div>
+          </div>
+        ))}
+        {visibleItems.map((item) => (
+          <button
+            key={`credit-grid-${item.media_type || item.type || 'movie'}-${item.tmdb_id || item.id}`}
+            type="button"
+            className={`entity-detail-page__credit-card entity-detail-page__credit-card--collection-item entity-detail-page__credit-card--people-grid ${
+              item.is_known_for ? ' entity-detail-page__credit-card--known-for' : ''
+            }${
+              item.in_library ? ' entity-detail-page__credit-card--owned' : ' entity-detail-page__credit-card--missing'
+            }`}
+            onClick={() => openItem(item)}
+          >
+            <div className="entity-detail-page__credit-poster-wrap">
+              {item.poster_path ? (
+                <img
+                  src={resolveDetailsImageUrl(item.poster_path, API_BASE, 'poster')}
+                  alt={item.title || 'Credit poster'}
+                  className="entity-detail-page__credit-poster"
+                />
+              ) : (
+                <div className="entity-detail-page__credit-poster entity-detail-page__credit-poster--placeholder">
+                  {isTvLikeMediaType(item.media_type || item.type) ? <Tv size={18} /> : <Film size={18} />}
+                </div>
+              )}
+            </div>
+            <div className="entity-detail-page__credit-body">
+              <div className="entity-detail-page__credit-topline">
+                <div className="entity-detail-page__credit-title">{item.title}</div>
+              </div>
+              <div className="entity-detail-page__credit-meta">
+                {item.year && <span>{item.year}</span>}
+                {(() => {
+                  const imdbRating = Number(item.rating_imdb);
+                  const tmdbRating = Number(item.rating_tmdb ?? item.rating);
+                  const hasImdbRating = Number.isFinite(imdbRating) && imdbRating > 0;
+                  const hasTmdbRating = Number.isFinite(tmdbRating) && tmdbRating > 0;
+
+                  if (!hasImdbRating && !hasTmdbRating) {
+                    return null;
+                  }
+
+                  return (
+                    <Pill
+                      variant={hasImdbRating ? 'imdb' : 'tmdb'}
+                      className="entity-detail-page__credit-rating-pill"
+                    >
+                      <Star size={10} fill="currentColor" strokeWidth={1.8} />
+                      {hasImdbRating ? imdbRating.toFixed(1) : tmdbRating.toFixed(1)}
+                    </Pill>
+                  );
+                })()}
+                <Pill
+                  variant={item.in_library ? 'success' : 'default'}
+                  className={`entity-detail-page__credit-status-pill${
+                    item.in_library ? '' : ' entity-detail-page__credit-status-pill--missing'
+                  }`}
+                >
+                  {item.in_library
+                    ? (t('library.details.have') || 'Have')
+                    : (t('library.details.missing') || 'Missing')}
+                </Pill>
+              </div>
+            </div>
+          </button>
+        ))}
+        {Array.from({ length: fillerCount }).map((_, index) => (
+          <div
+            key={`credit-grid-filler-${mediaType}-${safePage}-${index}`}
+            className="entity-detail-page__credit-card entity-detail-page__credit-card--collection-item entity-detail-page__credit-card--people-grid entity-detail-page__credit-card--placeholder"
+            aria-hidden="true"
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
