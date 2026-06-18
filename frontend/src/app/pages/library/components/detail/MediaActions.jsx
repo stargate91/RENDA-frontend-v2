@@ -1,4 +1,4 @@
-import { FolderOpen, Video, Check, Eye, Play, BookmarkPlus, BookmarkCheck } from 'lucide-react';
+import { FolderOpen, Video, Check, Eye, Play, BellPlus } from 'lucide-react';
 import Button from '@/ui/Button';
 import { formatEpisodeNumber } from '../../utils/detailUtils';
 import { useMediaDetailContext } from './MediaDetailContext';
@@ -74,7 +74,7 @@ export default function MediaActions() {
           onClick={handleToggleTracked}
           disabled={toggleVirtualTrackedMutation.isPending}
         >
-          {isTracked ? <BookmarkCheck size={16} /> : <BookmarkPlus size={16} />}
+          {isTracked ? <Check size={16} /> : <BellPlus size={16} />}
           {isTracked ? 'Tracked' : 'Track'}
         </Button>
       )}

@@ -83,6 +83,7 @@ def _ensure_sqlite_columns():
             "target_type": "VARCHAR DEFAULT 'media'",
             "is_adult": "BOOLEAN DEFAULT 0",
             "custom_images": "TEXT",
+            "manual_preview_images": "TEXT",
         },
     }
     with engine.begin() as conn:

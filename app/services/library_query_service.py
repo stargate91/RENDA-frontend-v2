@@ -136,7 +136,7 @@ class LibraryQueryService:
                 "id": t.id,
                 "name": t.name,
                 "color": t.color,
-                "custom_images": t.custom_images,
+                "custom_images": t.manual_preview_images,
                 "movies": [],
                 "series": [],
                 "adult": [],

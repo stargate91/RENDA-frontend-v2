@@ -179,6 +179,8 @@ export const useUpdatePersonStatusMutation = () => {
               ...(effectiveIsActive !== undefined ? { is_active: effectiveIsActive } : {}),
               ...(payload.is_favorite !== undefined ? { is_favorite: payload.is_favorite } : {}),
               ...('user_rating' in payload ? { user_rating: payload.user_rating } : {}),
+              ...('user_comment' in payload ? { user_comment: payload.user_comment } : {}),
+              ...('custom_tags' in payload ? { custom_tags: payload.custom_tags } : {}),
             } : p)
           }))
         };
@@ -194,6 +196,8 @@ export const useUpdatePersonStatusMutation = () => {
             ...(effectiveIsActive !== undefined ? { is_active: effectiveIsActive } : {}),
             ...(payload.is_favorite !== undefined ? { is_favorite: payload.is_favorite } : {}),
             ...('user_rating' in payload ? { user_rating: payload.user_rating } : {}),
+            ...('user_comment' in payload ? { user_comment: payload.user_comment } : {}),
+            ...('custom_tags' in payload ? { custom_tags: payload.custom_tags } : {}),
           } : p)
         };
       });
@@ -206,6 +210,7 @@ export const useUpdatePersonStatusMutation = () => {
           ...(payload.is_favorite !== undefined ? { is_favorite: payload.is_favorite } : {}),
           ...('user_rating' in payload ? { user_rating: payload.user_rating } : {}),
           ...('user_comment' in payload ? { user_comment: payload.user_comment } : {}),
+          ...('custom_tags' in payload ? { custom_tags: payload.custom_tags } : {}),
         };
       });
 

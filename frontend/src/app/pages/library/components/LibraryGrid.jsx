@@ -301,7 +301,6 @@ export default function LibraryGrid({
                       <Trash2 size={12} />
                     </IconButton>
                   </div>
-                  <div className="library-tag-card__color-badge" />
                   <div className="library-tag-card__content">
                     <span className="library-tag-card__name">{item.name}</span>
                     <span className="library-tag-card__count">

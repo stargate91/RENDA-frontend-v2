@@ -92,7 +92,9 @@ class LibraryTabService:
         counts = self.grouped_service.get_grouped_library(
             requested_tabs={"movies", "series", "adult", "adult_series", "people", "adult_people"}
         ).get("counts", {})
+        counts["movies"] = owned_counts.get("movies", 0)
         counts["series"] = owned_counts.get("series", 0)
+        counts["adult"] = owned_counts.get("adult", 0)
         counts["adult_series"] = owned_counts.get("adult_series", 0)
 
         return {

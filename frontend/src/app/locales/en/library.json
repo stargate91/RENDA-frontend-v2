@@ -27,7 +27,9 @@
       "actor": "Actor",
       "director": "Director",
       "writer": "Writer",
-      "creator": "Creator"
+      "creator": "Creator",
+      "story": "Story",
+      "screenplay": "Screenplay"
     }
   },
   "addPeople": {

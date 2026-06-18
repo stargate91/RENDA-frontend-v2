@@ -109,7 +109,7 @@ def get_all_tags(target_type: str = None, is_adult: bool = False):
         if target_type:
             query = query.filter(Tag.target_type == target_type)
         tags = query.all()
-        return [{"id": t.id, "name": t.name, "color": t.color, "target_type": t.target_type, "is_adult": t.is_adult, "custom_images": _normalize_custom_images(t.custom_images)} for t in tags]
+        return [{"id": t.id, "name": t.name, "color": t.color, "target_type": t.target_type, "is_adult": t.is_adult, "custom_images": _normalize_custom_images(t.manual_preview_images)} for t in tags]
     except Exception as e:
         logger.error(f"Error fetching tags: {e}")
         return JSONResponse(status_code=500, content={"error": str(e)})
@@ -141,10 +141,10 @@ def create_tag(payload: dict):
         logger.info(f"Creating tag {name} with custom_images: {custom_images}")
         saved_images = _process_custom_images(custom_images)
         logger.info(f"Processed custom_images: {saved_images}")
-        tag = Tag(name=name, color=color, target_type=target_type, is_adult=is_adult, custom_images=saved_images)
+        tag = Tag(name=name, color=color, target_type=target_type, is_adult=is_adult, manual_preview_images=saved_images)
         db.add(tag)
         db.commit()
-        return {"id": tag.id, "name": tag.name, "color": tag.color, "target_type": tag.target_type, "is_adult": tag.is_adult, "custom_images": _normalize_custom_images(tag.custom_images)}
+        return {"id": tag.id, "name": tag.name, "color": tag.color, "target_type": tag.target_type, "is_adult": tag.is_adult, "custom_images": _normalize_custom_images(tag.manual_preview_images)}
     except Exception as e:
         logger.exception(f"Error creating tag: {e}")
         db.rollback()
@@ -194,12 +194,12 @@ def update_tag(tag_id: int, payload: dict):
             
         if "custom_images" in payload:
             logger.info(f"Updating tag {tag_id} custom_images: {payload['custom_images']}")
-            tag.custom_images = _process_custom_images(payload["custom_images"])
-            flag_modified(tag, "custom_images")
-            logger.info(f"Processed custom_images for tag {tag_id}: {tag.custom_images}")
+            tag.manual_preview_images = _process_custom_images(payload["custom_images"])
+            flag_modified(tag, "manual_preview_images")
+            logger.info(f"Processed custom_images for tag {tag_id}: {tag.manual_preview_images}")
 
         db.commit()
-        return {"id": tag.id, "name": tag.name, "color": tag.color, "target_type": tag.target_type, "is_adult": tag.is_adult, "custom_images": _normalize_custom_images(tag.custom_images)}
+        return {"id": tag.id, "name": tag.name, "color": tag.color, "target_type": tag.target_type, "is_adult": tag.is_adult, "custom_images": _normalize_custom_images(tag.manual_preview_images)}
     except Exception as e:
         logger.exception(f"Error updating tag: {e}")
         db.rollback()
