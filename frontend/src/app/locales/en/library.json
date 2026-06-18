@@ -355,7 +355,21 @@
     "backdropFilterRunning": "Checking title backdrops ({{checked}}/{{total}}). You can keep browsing.",
     "backdropFilterFinishing": "Finalizing backdrop availability. You can keep browsing.",
     "keywords": "Keywords",
-    "virtual": "Virtual"
+    "virtual": "Virtual",
+    "choosePoster": "Choose Poster",
+    "chooseLogo": "Choose Logo",
+    "changeProfile": "Change Profile Picture",
+    "changePoster": "Change Poster",
+    "posters": "Choose Poster",
+    "logo": "Choose Logo",
+    "imageUpdated": "Image updated successfully!",
+    "imageUpdateFailed": "Failed to update image",
+    "imageUploaded": "Image uploaded and updated successfully!",
+    "imageUploadFailed": "Failed to upload image",
+    "tmdbOptions": "TMDB Options",
+    "uploadCustom": "Upload Custom",
+    "clickToUpload": "Click or drag file to upload",
+    "noImagesAvailable": "No images found."
   }
 }
 

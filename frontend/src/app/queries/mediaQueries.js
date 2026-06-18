@@ -200,6 +200,87 @@ export const useOverrideBackdropMutation = () => {
   });
 };
 
+export const useOverridePosterMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ itemId, posterPath }) => api.media.overridePoster(itemId, posterPath),
+    onSuccess: (data, variables) => {
+      const cleanId = String(variables.itemId).replace('series_', '');
+      const isCollection = String(variables.itemId).startsWith('collection_');
+      queryClient.invalidateQueries({ queryKey: ['full-metadata', variables.itemId] });
+      queryClient.invalidateQueries({ queryKey: ['full-metadata', cleanId] });
+      queryClient.invalidateQueries({ queryKey: ['library-item-detail', variables.itemId] });
+      queryClient.invalidateQueries({ queryKey: ['library-item-detail', cleanId] });
+      queryClient.invalidateQueries({ queryKey: ['library-series-detail', variables.itemId] });
+      queryClient.invalidateQueries({ queryKey: ['library-series-detail', cleanId] });
+      if (isCollection) {
+        const collectionId = String(variables.itemId).replace('collection_', '');
+        queryClient.invalidateQueries({ queryKey: ['library-collection-detail', collectionId] });
+        queryClient.invalidateQueries({ queryKey: ['library-collection-detail', variables.itemId] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['library'] });
+    },
+  });
+};
+
+export const useUploadPosterMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ itemId, file }) => api.media.uploadPoster(itemId, file),
+    onSuccess: (data, variables) => {
+      const cleanId = String(variables.itemId).replace('series_', '');
+      const isCollection = String(variables.itemId).startsWith('collection_');
+      queryClient.invalidateQueries({ queryKey: ['full-metadata', variables.itemId] });
+      queryClient.invalidateQueries({ queryKey: ['full-metadata', cleanId] });
+      queryClient.invalidateQueries({ queryKey: ['library-item-detail', variables.itemId] });
+      queryClient.invalidateQueries({ queryKey: ['library-item-detail', cleanId] });
+      queryClient.invalidateQueries({ queryKey: ['library-series-detail', variables.itemId] });
+      queryClient.invalidateQueries({ queryKey: ['library-series-detail', cleanId] });
+      if (isCollection) {
+        const collectionId = String(variables.itemId).replace('collection_', '');
+        queryClient.invalidateQueries({ queryKey: ['library-collection-detail', collectionId] });
+        queryClient.invalidateQueries({ queryKey: ['library-collection-detail', variables.itemId] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['library'] });
+    },
+  });
+};
+
+export const useOverrideLogoMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ itemId, logoPath }) => api.media.overrideLogo(itemId, logoPath),
+    onSuccess: (data, variables) => {
+      const cleanId = String(variables.itemId).replace('series_', '');
+      queryClient.invalidateQueries({ queryKey: ['full-metadata', variables.itemId] });
+      queryClient.invalidateQueries({ queryKey: ['full-metadata', cleanId] });
+      queryClient.invalidateQueries({ queryKey: ['library-item-detail', variables.itemId] });
+      queryClient.invalidateQueries({ queryKey: ['library-item-detail', cleanId] });
+      queryClient.invalidateQueries({ queryKey: ['library-series-detail', variables.itemId] });
+      queryClient.invalidateQueries({ queryKey: ['library-series-detail', cleanId] });
+      queryClient.invalidateQueries({ queryKey: ['library'] });
+    },
+  });
+};
+
+export const useUploadLogoMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ itemId, file }) => api.media.uploadLogo(itemId, file),
+    onSuccess: (data, variables) => {
+      const cleanId = String(variables.itemId).replace('series_', '');
+      queryClient.invalidateQueries({ queryKey: ['full-metadata', variables.itemId] });
+      queryClient.invalidateQueries({ queryKey: ['full-metadata', cleanId] });
+      queryClient.invalidateQueries({ queryKey: ['library-item-detail', variables.itemId] });
+      queryClient.invalidateQueries({ queryKey: ['library-item-detail', cleanId] });
+      queryClient.invalidateQueries({ queryKey: ['library-series-detail', variables.itemId] });
+      queryClient.invalidateQueries({ queryKey: ['library-series-detail', cleanId] });
+      queryClient.invalidateQueries({ queryKey: ['library'] });
+    },
+  });
+};
+
+
 export const useToggleVirtualTrackedMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({

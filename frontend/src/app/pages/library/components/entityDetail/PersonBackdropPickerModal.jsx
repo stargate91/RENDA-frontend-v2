@@ -6,6 +6,7 @@ import Pill from '@/ui/Pill';
 import SegmentedControl from '@/ui/SegmentedControl';
 import CreditCard from '@/ui/CreditCard';
 import BackdropCard from '@/ui/BackdropCard';
+import TMDBImageGrid from './TMDBImageGrid';
 import { useUi } from '@/providers/UiProvider';
 import api from '@/lib/api';
 import { API_BASE } from '@/lib/backend';
@@ -18,7 +19,7 @@ import {
   normalizeBackdropKey,
   prioritizePersonCredits,
   sortBackdropCredits,
-} from '../../peopleCollectionDetailUtils.jsx';
+  } from '../../peopleCollectionDetailUtils.jsx';
 import './PersonBackdropPickerModal.css';
 
 const PERSON_BACKDROP_INITIAL_ROWS = 2;
@@ -371,41 +372,16 @@ export default function PersonBackdropPickerModal({ personId, item, t, toast, ov
         onScroll={handleViewportScroll}
       >
         {isBackdropBrowserOpen ? (
-          <div className="backdrops-panel person-backdrop-picker__detail-view">
-            <div className="backdrops-grid">
-              {isBackdropBrowserLoading && Array.from({ length: 8 }).map((_, index) => (
-                <BackdropCard key={`person-backdrop-detail-skeleton-${index}`} disabled={true} />
-              ))}
-
-              {!isBackdropBrowserLoading && selectedBackdrops.map((bd, idx) => {
-                const backdropPath = bd.file_path;
-                const tmdbThumbUrl = resolveDetailsImageUrl(backdropPath, API_BASE, 'backdrop');
-                const isSelected = currentBackdropKey !== '' && currentBackdropKey === normalizeBackdropKey(backdropPath);
-                const isPending = overridePersonBackdropMutation.isPending && overridePersonBackdropMutation.variables?.backdropPath === backdropPath;
-
-                return (
-                  <BackdropCard
-                    key={`${backdropPath}-${idx}`}
-                    imageUrl={tmdbThumbUrl}
-                    alt={`Backdrop ${idx + 1}`}
-                    isSelected={isSelected}
-                    isPending={isPending}
-                    infoLeft={`${bd.width}${String.fromCharCode(0x00D7)}${bd.height}`}
-                    infoRight={`${String.fromCharCode(0x2605)} ${bd.vote_average?.toFixed(1)}`}
-                    onClick={() => handleSelectDetailedBackdrop(backdropPath)}
-                  />
-                );
-              })}
-
-              {!isBackdropBrowserLoading && selectedBackdrops.length === 0 && (
-                <EmptyState
-                  variant="detail-panel"
-                  icon={ImageOff}
-                  className="backdrops-panel__empty-state person-backdrop-picker__empty"
-                  title={t('library.details.noBackdropsAvailable') || 'No good backdrop options found for this title.'}
-                />
-              )}
-            </div>
+          <div className="person-backdrop-picker__detail-view">
+            <TMDBImageGrid
+              customImages={selectedBackdrops}
+              imageType="backdrop"
+              currentPath={item?.backdrop_path}
+              onSelect={handleSelectDetailedBackdrop}
+              isPending={overridePersonBackdropMutation.isPending}
+              pendingPath={overridePersonBackdropMutation.variables?.backdropPath}
+              t={t}
+            />
           </div>
         ) : (
           <div className="person-backdrop-picker__grid">

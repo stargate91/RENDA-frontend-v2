@@ -5,7 +5,7 @@ import './MediaHeaderInfo.css';
 
 
 export default function MediaHeaderInfo() {
-  const { state } = useMediaDetailContext();
+  const { state, handleOpenLogoModal } = useMediaDetailContext();
   const {
     title,
     logoUrl,
@@ -28,7 +28,11 @@ export default function MediaHeaderInfo() {
 
   return (
     <>
-      <div className="media-detail-page__logo-container">
+      <div
+        className="media-detail-page__logo-container clickable"
+        onClick={handleOpenLogoModal}
+        title={logoUrl ? 'Change Logo' : 'Add Logo'}
+      >
         {logoUrl ? (
           <img src={logoUrl} alt={title} className="media-detail-page__logo" />
         ) : (

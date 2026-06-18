@@ -306,3 +306,32 @@ export const useOverridePersonBackdropMutation = () => {
     },
   });
 };
+
+export const useOverridePersonProfileMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ personId, profilePath }) => api.people.overrideProfile(personId, profilePath),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['person-detail', variables.personId] });
+      queryClient.invalidateQueries({ queryKey: ['person-detail'] });
+      queryClient.invalidateQueries({ queryKey: ['people'] });
+      queryClient.invalidateQueries({ queryKey: ['people-infinite'] });
+      queryClient.invalidateQueries({ queryKey: ['library'] });
+    },
+  });
+};
+
+export const useUploadPersonProfileMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ personId, file }) => api.people.uploadProfile(personId, file),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['person-detail', variables.personId] });
+      queryClient.invalidateQueries({ queryKey: ['person-detail'] });
+      queryClient.invalidateQueries({ queryKey: ['people'] });
+      queryClient.invalidateQueries({ queryKey: ['people-infinite'] });
+      queryClient.invalidateQueries({ queryKey: ['library'] });
+    },
+  });
+};
+

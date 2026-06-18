@@ -1,5 +1,5 @@
 import Pill from '@/ui/Pill';
-import { Layers, User } from 'lucide-react';
+import { Layers, User, Camera } from 'lucide-react';
 import { OverviewContent } from './EntityDetailSections';
 import PersonRatingControls from './PersonRatingControls';
 import './EntityDetailHeroSection.css';
@@ -25,11 +25,18 @@ export default function EntityDetailHeroSection({
   handlePeopleRatingMouseMove,
   handlePeopleRatingMouseLeave,
   handlePeopleRatingClick,
+  onMediaCardClick,
 }) {
   return (
     <section className="entity-detail-page__hero-grid">
       <div className="entity-detail-page__media-column">
-        <div className={`entity-detail-page__media-card ${isPeople ? 'entity-detail-page__media-card--profile' : ''}`}>
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+        <div
+          className={`entity-detail-page__media-card ${isPeople ? 'entity-detail-page__media-card--profile' : ''} entity-detail-page__media-card--editable`}
+          onClick={onMediaCardClick}
+          style={{ cursor: 'pointer' }}
+          title={isPeople ? (t('library.details.changeProfile') || 'Change Profile Picture') : (t('library.details.changePoster') || 'Change Poster')}
+        >
           {mediaUrl ? (
             <img
               src={mediaUrl}
@@ -41,7 +48,11 @@ export default function EntityDetailHeroSection({
               {isPeople ? <User size={44} /> : <Layers size={44} />}
             </div>
           )}
+          <div className="entity-detail-page__media-edit-overlay">
+            <Camera size={24} />
+          </div>
         </div>
+
 
         {isPeople && profileLinks.length > 0 && (
           <div className="entity-detail-page__profile-links">

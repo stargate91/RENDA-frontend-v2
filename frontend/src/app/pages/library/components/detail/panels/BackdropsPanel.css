@@ -36,3 +36,24 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+.backdrops-grid--logo {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.ui-backdrop-card--logo {
+  padding-bottom: 40% !important;
+}
+
+.ui-backdrop-card--logo .ui-backdrop-card__img {
+  object-fit: contain !important;
+  background: rgba(255, 255, 255, 0.04);
+  padding: var(--space-md);
+  box-sizing: border-box;
+}
+
+.ui-backdrop-card--poster {
+  padding-bottom: 150% !important; /* 2:3 aspect ratio */
+}
+
+

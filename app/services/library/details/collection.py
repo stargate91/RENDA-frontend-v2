@@ -139,6 +139,20 @@ class CollectionDetailProvider(BaseDetailProvider):
                     "vote_count": backdrop.get("vote_count"),
                 })
 
+            collection_posters = []
+            for poster in ((tmdb_details.get("images") or {}).get("posters") or []):
+                poster_path = poster.get("file_path")
+                if not poster_path:
+                    continue
+                collection_posters.append({
+                    "file_path": poster_path,
+                    "width": poster.get("width"),
+                    "height": poster.get("height"),
+                    "iso_639_1": poster.get("iso_639_1"),
+                    "vote_average": poster.get("vote_average"),
+                    "vote_count": poster.get("vote_count"),
+                })
+
             movies = []
             owned_tmdb_ids = set()
             for item in items:
@@ -237,6 +251,7 @@ class CollectionDetailProvider(BaseDetailProvider):
                 "owned_count": len([movie for movie in movies if movie.get("in_library")]),
                 "total_count": len(movies),
                 "collection_backdrops": collection_backdrops,
+                "collection_posters": collection_posters,
                 "movies": movies,
             }
             return JSONResponse(content=result, media_type="application/json; charset=utf-8")

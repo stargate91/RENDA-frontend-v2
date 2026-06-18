@@ -8,6 +8,7 @@ import EntityDetailHeroSection from './components/entityDetail/EntityDetailHeroS
 import PersonCreditsSections from './components/entityDetail/PersonCreditsSections';
 import CollectionDetailSections from './components/entityDetail/CollectionDetailSections';
 import usePeopleCollectionDetailController from './usePeopleCollectionDetailController.jsx';
+import UniversalImagePickerModal from './modals/UniversalImagePickerModal';
 import './PeopleCollectionDetailPage.css';
 import './components/detail/UserRatingSection.css';
 import './components/detail/panels/BackdropsPanel.css';
@@ -52,6 +53,27 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
     closeModal,
     toast,
   });
+
+  const handleOpenImagePickerModal = () => {
+    const idToUse = isPeople ? item?.id : `collection_${item?.tmdb_id}`;
+    if (!idToUse) return;
+    openModal({
+      title: isPeople ? (t('library.details.changeProfile') || 'Change Profile Picture') : (t('library.details.changePoster') || 'Change Poster'),
+      variant: 'wide',
+      content: (
+        <UniversalImagePickerModal
+          entityId={idToUse}
+          tmdbId={isPeople ? item.id : item.tmdb_id}
+          imageType={isPeople ? 'profile' : 'poster'}
+          entityType={isPeople ? 'person' : 'collection'}
+          currentPath={isPeople ? item.profile_path : item.poster_path}
+          t={t}
+          toast={toast}
+          onClose={closeModal}
+        />
+      ),
+    });
+  };
 
   return (
     <DetailPageShell
@@ -108,6 +130,7 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
           handlePeopleRatingMouseMove={handlePeopleRatingMouseMove}
           handlePeopleRatingMouseLeave={handlePeopleRatingMouseLeave}
           handlePeopleRatingClick={handlePeopleRatingClick}
+          onMediaCardClick={handleOpenImagePickerModal}
         />
       )}
 

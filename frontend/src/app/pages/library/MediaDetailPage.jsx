@@ -1,11 +1,12 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Users, BadgeInfo, Layers3, Tags, Clapperboard,
-  SlidersHorizontal, CheckCheck, Image as ImageIcon
+  SlidersHorizontal, CheckCheck, Image as ImageIcon, Camera, FileImage
 } from 'lucide-react';
 import { useTranslation } from '@/providers/LanguageContext';
 import { useUi } from '@/providers/UiProvider';
 import { isMovieMediaType, normalizeMediaType } from '@/lib/mediaTypes';
+import UniversalImagePickerModal from './modals/UniversalImagePickerModal';
 
 // Context
 import { MediaDetailProvider } from './components/detail/MediaDetailContext';
@@ -73,6 +74,44 @@ export default function MediaDetailPage({ type = 'movie' }) {
     });
   };
 
+  const handleOpenPosterModal = () => {
+    openModal({
+      title: t('library.details.choosePoster') || 'Choose Poster',
+      variant: 'wide',
+      content: (
+        <UniversalImagePickerModal
+          entityId={id}
+          tmdbId={item?.tmdb_id || item?.series_tmdb_id}
+          imageType="poster"
+          entityType={normalizedType}
+          currentPath={item?.poster_path}
+          t={t}
+          toast={toast}
+          onClose={closeModal}
+        />
+      ),
+    });
+  };
+
+  const handleOpenLogoModal = () => {
+    openModal({
+      title: t('library.details.chooseLogo') || 'Choose Logo',
+      variant: 'wide',
+      content: (
+        <UniversalImagePickerModal
+          entityId={id}
+          tmdbId={item?.tmdb_id || item?.series_tmdb_id}
+          imageType="logo"
+          entityType={normalizedType}
+          currentPath={item?.logo_path}
+          t={t}
+          toast={toast}
+          onClose={closeModal}
+        />
+      ),
+    });
+  };
+
   const renderPanelContent = () => {
     if (!item) return null;
 
@@ -101,7 +140,7 @@ export default function MediaDetailPage({ type = 'movie' }) {
   }
 
   return (
-    <MediaDetailProvider value={{ ...detailState, t, navigate, toast, type: normalizedType, id }}>
+    <MediaDetailProvider value={{ ...detailState, t, navigate, toast, type: normalizedType, id, handleOpenLogoModal }}>
       <DetailPageShell
         backdropUrl={backdropUrl}
         backLabel={t('common.back') || 'Back'}
@@ -109,14 +148,24 @@ export default function MediaDetailPage({ type = 'movie' }) {
         isSideNavVisible={isSideNavVisible}
         onToggleSideNav={handleToggleSideNav}
         topRightControls={(
-          <button
-            type="button"
-            onClick={handleOpenBackdropModal}
-            className="media-detail-page__side-nav-toggle"
-            title={t('library.details.backdrops') || 'Choose Backdrop'}
-          >
-            <ImageIcon size={18} />
-          </button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              type="button"
+              onClick={handleOpenPosterModal}
+              className="media-detail-page__side-nav-toggle"
+              title={t('library.details.posters') || 'Choose Poster'}
+            >
+              <FileImage size={18} />
+            </button>
+            <button
+              type="button"
+              onClick={handleOpenBackdropModal}
+              className="media-detail-page__side-nav-toggle"
+              title={t('library.details.backdrops') || 'Choose Backdrop'}
+            >
+              <ImageIcon size={18} />
+            </button>
+          </div>
         )}
         renderPanelContent={renderPanelContent}
         sideNav={(

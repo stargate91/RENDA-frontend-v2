@@ -342,3 +342,33 @@
     max-width: 120px;
   }
 }
+
+.entity-detail-page__media-card--editable {
+  position: relative;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.entity-detail-page__media-card--editable:hover {
+  transform: scale(1.02);
+  border-color: var(--color-accent-blue);
+}
+
+.entity-detail-page__media-edit-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  transition: opacity 0.2s ease;
+}
+
+.entity-detail-page__media-card--editable:hover .entity-detail-page__media-edit-overlay {
+  opacity: 1;
+}
+
