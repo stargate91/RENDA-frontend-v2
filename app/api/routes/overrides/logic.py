@@ -67,6 +67,9 @@ def _parse_virtual_episode_item_id(item_id: str):
 
 
 def _get_or_create_virtual_media_state(db, tmdb_id: int, media_type: str):
+    for pending in db.new:
+        if isinstance(pending, VirtualMediaState) and pending.tmdb_id == tmdb_id and pending.media_type == media_type:
+            return pending
     state = db.query(VirtualMediaState).filter(
         VirtualMediaState.tmdb_id == tmdb_id,
         VirtualMediaState.media_type == media_type,
@@ -78,6 +81,14 @@ def _get_or_create_virtual_media_state(db, tmdb_id: int, media_type: str):
 
 
 def _get_or_create_virtual_episode_state(db, series_tmdb_id: int, season_number: int, episode_number: int):
+    for pending in db.new:
+        if (
+            isinstance(pending, VirtualEpisodeState)
+            and pending.series_tmdb_id == series_tmdb_id
+            and pending.season_number == season_number
+            and pending.episode_number == episode_number
+        ):
+            return pending
     state = db.query(VirtualEpisodeState).filter(
         VirtualEpisodeState.series_tmdb_id == series_tmdb_id,
         VirtualEpisodeState.season_number == season_number,

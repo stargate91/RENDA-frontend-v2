@@ -44,7 +44,7 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
   const { data: seriesDetail, isLoading: isSeriesLoading } = useLibrarySeriesDetailQuery(cleanId, { enabled: !isMovie });
   const item = isMovie ? movieDetail : seriesDetail;
   const isLoading = isMovie ? isMovieLoading : isSeriesLoading;
-  const effectiveId = (item && item.in_library !== false) ? item.id : cleanId;
+  const effectiveId = item?.id ?? cleanId;
   const { data: settings } = useSettingsQuery();
 
   useEffect(() => {

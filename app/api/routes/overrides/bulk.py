@@ -259,8 +259,7 @@ def bulk_update_item_watched(payload: dict):
                     v_state = _get_or_create_virtual_media_state(db, v_tmdb_id, v_media_type)
                     if v_media_type == "tv":
                         # For series, only track — don't overwrite aggregate is_watched
-                        if watched:
-                            v_state.is_tracked = True
+                        v_state.is_tracked = True
                     else:
                         v_state.is_watched = watched
                         if watched:
@@ -275,13 +274,12 @@ def bulk_update_item_watched(payload: dict):
                 episode_key["episode_number"],
             )
             state.is_watched = watched
-            if watched:
-                parent_state = _get_or_create_virtual_media_state(
-                    db,
-                    episode_key["series_tmdb_id"],
-                    "tv",
-                )
-                parent_state.is_tracked = True
+            parent_state = _get_or_create_virtual_media_state(
+                db,
+                episode_key["series_tmdb_id"],
+                "tv",
+            )
+            parent_state.is_tracked = True
             updated_ids.append(raw_id)
 
         db.commit()

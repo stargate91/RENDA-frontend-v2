@@ -117,13 +117,12 @@ def update_item_status(item_id: str, payload: dict):
                 )
                 if "is_watched" in payload:
                     state.is_watched = bool(payload["is_watched"])
-                    if state.is_watched:
-                        parent_state = _get_or_create_virtual_media_state(
-                            db,
-                            virtual_episode_key["series_tmdb_id"],
-                            "tv",
-                        )
-                        parent_state.is_tracked = True
+                    parent_state = _get_or_create_virtual_media_state(
+                        db,
+                        virtual_episode_key["series_tmdb_id"],
+                        "tv",
+                    )
+                    parent_state.is_tracked = True
                 db.commit()
                 return JSONResponse(content={
                     "id": item_id,
@@ -134,6 +133,9 @@ def update_item_status(item_id: str, payload: dict):
                     "playback_logs": [],
                 })
 
+            if media_type == "series":
+                media_type = "tv"
+
             if media_type not in ("movie", "tv"):
                 return JSONResponse(status_code=400, content={"error": "Invalid media_type"})
 
@@ -143,22 +145,20 @@ def update_item_status(item_id: str, payload: dict):
                 return JSONResponse(status_code=400, content={"error": "Invalid virtual item id"})
 
             state = _get_or_create_virtual_media_state(db, tmdb_id, media_type)
+            cache = db.query(TMDBCache).filter(TMDBCache.tmdb_id == tmdb_id).first()
+            is_item_adult = bool(cache.raw_data.get("adult", False)) if (cache and cache.raw_data) else False
 
             if "is_watched" in payload:
                 state.is_watched = bool(payload["is_watched"])
-                if state.is_watched:
-                    state.is_tracked = True
+                state.is_tracked = True
             if "user_rating" in payload:
                 state.user_rating = _normalize_user_rating(payload["user_rating"])
                 state.user_rating_at = datetime.utcnow() if state.user_rating is not None else None
-                if state.user_rating is not None:
-                    state.is_tracked = True
+                state.is_tracked = True
             if "user_comment" in payload:
                 state.user_comment = payload["user_comment"] if payload["user_comment"] else None
+                state.is_tracked = True
             if "custom_tags" in payload:
-                cache = db.query(TMDBCache).filter(TMDBCache.tmdb_id == tmdb_id).first()
-                is_item_adult = bool(cache.raw_data.get("adult", False)) if (cache and cache.raw_data) else False
-
                 new_tag_names = [str(t).strip() for t in payload["custom_tags"] if str(t).strip()]
                 for name in new_tag_names:
                     existing = db.query(Tag).filter(Tag.name == name, Tag.is_adult == is_item_adult).first()
@@ -166,8 +166,7 @@ def update_item_status(item_id: str, payload: dict):
                         db.add(Tag(name=name, is_adult=is_item_adult))
                 db.commit()
                 state.custom_tags = new_tag_names
-                if new_tag_names:
-                    state.is_tracked = True
+                state.is_tracked = True
 
             db.commit()
             if state.is_tracked:
@@ -186,11 +185,52 @@ def update_item_status(item_id: str, payload: dict):
                 "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in tag_entities],
             })
 
+        media_type = str(payload.get("media_type") or "").lower()
         item = db.query(MediaItem).filter(MediaItem.id == int(item_id)).first()
         if not item:
+            if media_type in ("tv", "series"):
+                tmdb_id = int(item_id)
+                state = _get_or_create_virtual_media_state(db, tmdb_id, "tv")
+                is_item_adult = False
+                if "is_watched" in payload:
+                    state.is_watched = bool(payload["is_watched"])
+                    state.is_tracked = True
+                if "user_rating" in payload:
+                    state.user_rating = _normalize_user_rating(payload["user_rating"])
+                    state.user_rating_at = datetime.utcnow() if state.user_rating is not None else None
+                    state.is_tracked = True
+                if "user_comment" in payload:
+                    state.user_comment = payload["user_comment"] if payload["user_comment"] else None
+                    state.is_tracked = True
+                if "custom_tags" in payload:
+                    cache = db.query(TMDBCache).filter(TMDBCache.tmdb_id == tmdb_id).first()
+                    is_item_adult = bool(cache.raw_data.get("adult", False)) if (cache and cache.raw_data) else False
+                    new_tag_names = [str(t).strip() for t in payload["custom_tags"] if str(t).strip()]
+                    for name in new_tag_names:
+                        existing = db.query(Tag).filter(Tag.name == name, Tag.is_adult == is_item_adult).first()
+                        if not existing:
+                            db.add(Tag(name=name, is_adult=is_item_adult))
+                    db.commit()
+                    state.custom_tags = new_tag_names
+                    state.is_tracked = True
+                db.commit()
+                if state.is_tracked:
+                    _hydrate_virtual_metadata(db, tmdb_id, "tv")
+                tag_entities = db.query(Tag).filter(Tag.name.in_(state.custom_tags or []), Tag.is_adult == is_item_adult).all() if state.custom_tags else []
+                return JSONResponse(content={
+                    "id": f"tmdb_{tmdb_id}",
+                    "user_rating": state.user_rating,
+                    "user_comment": state.user_comment,
+                    "is_watched": state.is_watched,
+                    "watch_count": 1 if state.is_watched else 0,
+                    "resume_position": 0,
+                    "last_watched_at": None,
+                    "playback_logs": [],
+                    "custom_tags": state.custom_tags or [],
+                    "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in tag_entities],
+                })
             return JSONResponse(status_code=404, content={"error": "Item not found"})
 
-        media_type = str(payload.get("media_type") or "").lower()
         if media_type in ("tv", "series"):
             active_match = next((m for m in item.matches if m.is_active), None)
             series_tmdb_id = None
@@ -243,8 +283,7 @@ def update_item_status(item_id: str, payload: dict):
                     v_state = _get_or_create_virtual_media_state(db, v_tmdb_id, v_media_type)
                     if v_media_type == "tv":
                         # For series, only track — don't overwrite aggregate is_watched
-                        if item.is_watched:
-                            v_state.is_tracked = True
+                        v_state.is_tracked = True
                     else:
                         v_state.is_watched = item.is_watched
                         if item.is_watched:

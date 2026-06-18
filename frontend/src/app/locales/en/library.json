@@ -225,7 +225,7 @@
   "filter": {
     "label": "Collection:",
     "have": "My Files",
-    "missing": "Wishlist",
+    "missing": "Tracked",
     "statusLabel": "Status:",
     "all": "All",
     "watched": "Watched",
