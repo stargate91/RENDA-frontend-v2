@@ -15,6 +15,28 @@ from pathlib import Path
 
 TAG_IMAGES_DIR = Path("data/media/tags")
 
+
+def _summarize_custom_images(custom_images) -> str:
+    if not isinstance(custom_images, list):
+        return "count=0"
+
+    local_count = 0
+    remote_count = 0
+    base64_count = 0
+
+    for entry in custom_images:
+        path_value = entry.get("path", "") if isinstance(entry, dict) else str(entry or "")
+        if not path_value:
+            continue
+        if path_value.startswith("data:image/"):
+            base64_count += 1
+        elif path_value.startswith("/media/tags/"):
+            local_count += 1
+        else:
+            remote_count += 1
+
+    return f"count={len(custom_images)} local={local_count} remote={remote_count} base64={base64_count}"
+
 def _normalize_custom_images(custom_images) -> list[dict]:
     if not custom_images or not isinstance(custom_images, list):
         return []
@@ -138,9 +160,9 @@ def create_tag(payload: dict):
         if existing:
             return JSONResponse(status_code=400, content={"error": "Tag already exists"})
             
-        logger.info(f"Creating tag {name} with custom_images: {custom_images}")
+        logger.info(f"Creating tag {name} with custom_images: {_summarize_custom_images(custom_images)}")
         saved_images = _process_custom_images(custom_images)
-        logger.info(f"Processed custom_images: {saved_images}")
+        logger.info(f"Processed custom_images for tag {name}: {_summarize_custom_images(saved_images)}")
         tag = Tag(name=name, color=color, target_type=target_type, is_adult=is_adult, manual_preview_images=saved_images)
         db.add(tag)
         db.commit()
@@ -193,10 +215,10 @@ def update_tag(tag_id: int, payload: dict):
             tag.color = payload["color"]
             
         if "custom_images" in payload:
-            logger.info(f"Updating tag {tag_id} custom_images: {payload['custom_images']}")
+            logger.info(f"Updating tag {tag_id} custom_images: {_summarize_custom_images(payload['custom_images'])}")
             tag.manual_preview_images = _process_custom_images(payload["custom_images"])
             flag_modified(tag, "manual_preview_images")
-            logger.info(f"Processed custom_images for tag {tag_id}: {tag.manual_preview_images}")
+            logger.info(f"Processed custom_images for tag {tag_id}: {_summarize_custom_images(tag.manual_preview_images)}")
 
         db.commit()
         return {"id": tag.id, "name": tag.name, "color": tag.color, "target_type": tag.target_type, "is_adult": tag.is_adult, "custom_images": _normalize_custom_images(tag.manual_preview_images)}

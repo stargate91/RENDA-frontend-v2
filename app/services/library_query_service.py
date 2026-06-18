@@ -300,7 +300,10 @@ class LibraryQueryService:
                 "duration": 0,
             }
 
-            target_group = "series" if media_type == "tv" else "movies"
+            if is_virtual_adult:
+                target_group = "adult_series" if media_type == "tv" else "adult"
+            else:
+                target_group = "series" if media_type == "tv" else "movies"
             for tag in serialized_item["custom_tags"]:
                 tag_clean = str(tag).strip()
                 if not tag_clean:
