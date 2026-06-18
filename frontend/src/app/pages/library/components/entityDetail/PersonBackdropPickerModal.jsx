@@ -5,7 +5,6 @@ import NavButton from '@/ui/NavButton';
 import Pill from '@/ui/Pill';
 import SegmentedControl from '@/ui/SegmentedControl';
 import CreditCard from '@/ui/CreditCard';
-import BackdropCard from '@/ui/BackdropCard';
 import TMDBImageGrid from './TMDBImageGrid';
 import { useUi } from '@/providers/UiProvider';
 import api from '@/lib/api';
@@ -309,14 +308,14 @@ export default function PersonBackdropPickerModal({ personId, item, t, toast, ov
     if (!backdropPath || overridePersonBackdropMutation.isPending) {
       return;
     }
+    patchSession(personId, {
+      selectedBackdropPath: backdropPath,
+      currentSourceCreditKey: String(selectedCredit?.tmdb_id || selectedCredit?.id || ''),
+    });
     try {
       await overridePersonBackdropMutation.mutateAsync({
         personId,
         backdropPath,
-      });
-      patchSession(personId, {
-        selectedBackdropPath: backdropPath,
-        currentSourceCreditKey: String(selectedCredit?.tmdb_id || selectedCredit?.id || ''),
       });
       toast(t('library.details.backdropUpdated') || 'Backdrop updated successfully!', 'success');
     } catch (err) {
@@ -325,7 +324,6 @@ export default function PersonBackdropPickerModal({ personId, item, t, toast, ov
   };
 
   const isBackdropBrowserOpen = Boolean(selectedCredit);
-  const isBackdropBrowserLoading = selectedBackdropMetadataQuery.isLoading && !selectedBackdropMetadataQuery.data;
   const headerDescription = !isBackdropBrowserOpen && (validationPendingCount > 0 || hasMore || isLoading)
     ? t('library.details.backdropFilterRunning', {
       checked: validatedCount,
@@ -377,7 +375,7 @@ export default function PersonBackdropPickerModal({ personId, item, t, toast, ov
             <TMDBImageGrid
               customImages={selectedBackdrops}
               imageType="backdrop"
-              currentPath={item?.backdrop_path}
+              currentPath={selectedBackdropPath || item?.backdrop_path}
               onSelect={handleSelectDetailedBackdrop}
               isPending={overridePersonBackdropMutation.isPending}
               pendingPath={overridePersonBackdropMutation.variables?.backdropPath}
@@ -428,6 +426,8 @@ export default function PersonBackdropPickerModal({ personId, item, t, toast, ov
                   isPeopleGrid={true}
                   isCollectionItem={true}
                   isKnownFor={credit.is_known_for}
+                  isOwned={credit.in_library}
+                  isMissing={!credit.in_library}
                   className={`${isSelected ? 'person-backdrop-picker__card--selected' : ''} ${isPending ? 'backdrop-card--disabled' : ''}`}
                   onClick={() => handleOpenBackdropBrowser(credit)}
                   disabled={overridePersonBackdropMutation.isPending}
@@ -440,9 +440,18 @@ export default function PersonBackdropPickerModal({ personId, item, t, toast, ov
                         {rating.toFixed(1)}
                       </Pill>
                     )}
-                    {isSelected && (
+                    {isSelected ? (
                       <Pill variant="success" className="ui-credit-card__status-pill">
                         {t('common.current') || 'Current'}
+                      </Pill>
+                    ) : (
+                      <Pill
+                        variant={credit.in_library ? 'success' : 'missing'}
+                        className="ui-credit-card__status-pill"
+                      >
+                        {credit.in_library
+                          ? (t('library.details.have') || 'Have')
+                          : (t('library.details.missing') || 'Missing')}
                       </Pill>
                     )}
                   </div>

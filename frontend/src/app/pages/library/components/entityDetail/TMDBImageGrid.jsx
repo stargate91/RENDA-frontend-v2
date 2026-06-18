@@ -223,7 +223,7 @@ export default function TMDBImageGrid({
           if (!path) return null;
 
           // Determine sizes and urls based on imageType
-          let thumbUrl = '';
+          let thumbUrl;
           if (imageType === 'backdrop') {
             thumbUrl = path.startsWith('/media/')
               ? resolveDetailsImageUrl(path, API_BASE, 'backdrop')
@@ -244,8 +244,8 @@ export default function TMDBImageGrid({
           }
 
           const normalizedPath = path.split('/').pop().toLowerCase();
-          const isSelected = normalizedCurrent !== '' && normalizedCurrent === normalizedPath;
           const isImagePending = isPending && pendingPath === path;
+          const isSelected = (normalizedCurrent !== '' && normalizedCurrent === normalizedPath) || isImagePending;
 
           const infoLeft = img.width && img.height ? `${img.width}×${img.height}` : '';
           const infoRight = img.vote_average ? `★ ${img.vote_average.toFixed(1)}` : '';

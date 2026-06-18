@@ -277,12 +277,12 @@ export function CollectionBackdropsPanel({ item, collectionId, t, toast, overrid
   const currentBackdropKey = normalizeBackdropKey(currentBackdropPath);
 
   const handleSelectBackdrop = async (backdropPath) => {
+    setSelectedBackdropPath(backdropPath);
     try {
       await overrideBackdropMutation.mutateAsync({
         itemId: `collection_${collectionId}`,
         backdropPath,
       });
-      setSelectedBackdropPath(backdropPath);
       toast(t('library.details.backdropUpdated') || 'Backdrop updated successfully!', 'success');
     } catch (err) {
       toast(err.message || t('library.details.backdropUpdateFailed') || 'Failed to update backdrop', 'danger');
@@ -294,8 +294,8 @@ export function CollectionBackdropsPanel({ item, collectionId, t, toast, overrid
       <div className="backdrops-grid">
         {backdropOptions.map((option, idx) => {
           const backdropUrl = resolveDetailsImageUrl(option.backdrop_path, API_BASE, 'backdrop');
-          const isSelected = currentBackdropKey !== '' && currentBackdropKey === option.backdrop_key;
           const isPending = overrideBackdropMutation.isPending && overrideBackdropMutation.variables?.backdropPath === option.backdrop_path;
+          const isSelected = (currentBackdropKey !== '' && currentBackdropKey === option.backdrop_key) || isPending;
           const label = option.year ? `${option.title} (${option.year})` : option.title;
 
           return (

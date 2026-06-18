@@ -296,13 +296,31 @@ export const useUpdatePersonStatusMutation = () => {
       queryClient.setQueriesData({ queryKey: ['library'] }, (oldData) => {
         if (!oldData?.items) return oldData;
 
+        const updatedItems = oldData.items.map(p => {
+          if (p.id === personId || String(p.id) === String(personId)) {
+            return {
+              ...p,
+              ...(effectiveIsActive !== undefined ? { is_active: effectiveIsActive } : {}),
+              ...(payload.is_favorite !== undefined ? { is_favorite: payload.is_favorite } : {}),
+              ...('user_rating' in payload ? { user_rating: payload.user_rating } : {}),
+              ...('user_comment' in payload ? { user_comment: payload.user_comment } : {}),
+            };
+          }
+          return p;
+        });
+
         if (effectiveIsActive === false) {
           return {
             ...oldData,
-            items: oldData.items.filter(p => p.id !== personId)
+            items: updatedItems.filter(p => p.id !== personId)
           };
         } else if (effectiveIsActive === true && foundPerson) {
-          if (oldData.items.some(p => p.id === personId)) return oldData;
+          if (updatedItems.some(p => p.id === personId)) {
+            return {
+              ...oldData,
+              items: updatedItems
+            };
+          }
 
           const libraryPerson = {
             id: foundPerson.id,
@@ -310,15 +328,20 @@ export const useUpdatePersonStatusMutation = () => {
             poster_path: foundPerson.profile_path,
             people_role: foundPerson.known_for || foundPerson.people_role || 'Actor',
             gender: foundPerson.gender,
-            is_active: true
+            is_active: true,
+            is_favorite: payload.is_favorite,
+            user_rating: payload.user_rating,
           };
 
           return {
             ...oldData,
-            items: [...oldData.items, libraryPerson]
+            items: [...updatedItems, libraryPerson]
           };
         }
-        return oldData;
+        return {
+          ...oldData,
+          items: updatedItems
+        };
       });
 
       return { previousLibraryQueries, previousPeopleQueries, previousPeopleInfiniteQueries, previousPersonDetail, personId };

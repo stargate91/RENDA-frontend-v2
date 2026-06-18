@@ -157,7 +157,7 @@ export default function LibraryPage({ initialTab = 'movies', lockTab = false, sh
         />
 
         <LibraryGrid
-          key={`${state.resolvedTab}:${state.currentPage}:${state.pageSize}:${state.sortKey}:${state.sortDirection}`}
+          key={state.resolvedTab}
           t={state.t}
           isDataLoading={state.isDataLoading}
           paginatedItems={state.paginatedItems}

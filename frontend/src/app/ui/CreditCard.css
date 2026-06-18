@@ -78,6 +78,21 @@
     color-mix(in srgb, var(--color-brand-imdb) 22%, transparent);
 }
 
+.ui-credit-card--people-grid.ui-credit-card--known-for.ui-credit-card--missing {
+  border-color: color-mix(in srgb, var(--color-brand-imdb) 38%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-brand-imdb) 3.5%, transparent), transparent),
+    color-mix(in srgb, var(--color-text-inverse) 42%, transparent);
+  box-shadow: none;
+}
+
+.ui-credit-card--people-grid.ui-credit-card--known-for.ui-credit-card--missing:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--color-brand-imdb) 54%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-brand-imdb) 5.5%, transparent), transparent),
+    color-mix(in srgb, var(--color-text-inverse) 48%, transparent);
+}
+
 .ui-credit-card--unframed {
   border: 1px solid transparent;
   background: transparent;

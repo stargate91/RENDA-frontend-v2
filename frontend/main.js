@@ -276,6 +276,7 @@ ipcMain.on('app-close-response', (_event, payload) => {
   }
 });
 
+
 function getWindowIconPath() {
   return path.join(
     __dirname,

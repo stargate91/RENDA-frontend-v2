@@ -248,29 +248,29 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
 
   const isServerPaged = !isCollections && !isTags;
 
-  const allItems = isCollections
-    ? (collectionsData?.items || [])
-    : isTags
-      ? processedTags
-      : (libraryData?.items || []);
+  const allItems = useMemo(() => {
+    return isCollections
+      ? (collectionsData?.items || [])
+      : isTags
+        ? processedTags
+        : (libraryData?.items || []);
+  }, [isCollections, collectionsData?.items, isTags, processedTags, libraryData?.items]);
 
   const localFilteredItems = useLocalListSearch(allItems, searchQuery);
 
-  let filteredItems;
-  let sortedItems;
-  let paginatedItems;
-  let totalItems;
-  let totalPages;
+  const { sortedItems, paginatedItems, totalItems, totalPages } = useMemo(() => {
+    if (isServerPaged) {
+      return {
+        sortedItems: allItems,
+        paginatedItems: allItems,
+        totalItems: libraryData?.total_items || 0,
+        totalPages: libraryData?.total_pages || 1,
+      };
+    }
 
-  if (isServerPaged) {
-    sortedItems = allItems;
-    paginatedItems = allItems;
-    totalItems = libraryData?.total_items || 0;
-    totalPages = libraryData?.total_pages || 1;
-  } else {
-    filteredItems = localFilteredItems;
+    let filtered = localFilteredItems;
     if (isCollections) {
-      filteredItems = filteredItems.filter(item => {
+      filtered = filtered.filter(item => {
         const owned = Number(item.owned_count) || 0;
         const total = Number(item.total_count) || 0;
         if (collectionStatusFilter === 'complete') return owned === total;
@@ -278,11 +278,32 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
         return true;
       });
     }
-    sortedItems = sortLibraryItems(filteredItems, resolvedTab, sortKey, sortDirection);
-    totalItems = sortedItems.length;
-    totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-    paginatedItems = sortedItems.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-  }
+
+    const sorted = sortLibraryItems(filtered, resolvedTab, sortKey, sortDirection);
+    const total = sorted.length;
+    const pages = Math.max(1, Math.ceil(total / pageSize));
+    const paginated = sorted.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+    return {
+      sortedItems: sorted,
+      paginatedItems: paginated,
+      totalItems: total,
+      totalPages: pages,
+    };
+  }, [
+    isServerPaged,
+    allItems,
+    libraryData?.total_items,
+    libraryData?.total_pages,
+    localFilteredItems,
+    isCollections,
+    collectionStatusFilter,
+    resolvedTab,
+    sortKey,
+    sortDirection,
+    currentPage,
+    pageSize,
+  ]);
 
   // Background Prefetch next/prev pages
   useEffect(() => {

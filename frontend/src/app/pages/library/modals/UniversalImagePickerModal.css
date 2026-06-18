@@ -127,3 +127,47 @@
     justify-content: center;
   }
 }
+
+/* Selected state matching settings mode selection (using main accent color) */
+.universal-image-picker .ui-backdrop-card--selected,
+.person-backdrop-picker .ui-backdrop-card--selected,
+.backdrops-panel .ui-backdrop-card--selected {
+  border-color: var(--color-accent) !important;
+  box-shadow: 0 0 0 2px var(--color-accent) !important;
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent) !important;
+}
+
+/* Hide checkmark inside selected overlay, but keep overlay for tinting */
+.universal-image-picker .ui-backdrop-card__selected-overlay svg,
+.person-backdrop-picker .ui-backdrop-card__selected-overlay svg,
+.backdrops-panel .ui-backdrop-card__selected-overlay svg {
+  display: none !important;
+}
+
+.universal-image-picker .ui-backdrop-card__selected-overlay,
+.person-backdrop-picker .ui-backdrop-card__selected-overlay,
+.backdrops-panel .ui-backdrop-card__selected-overlay {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent) !important;
+}
+
+/* No hover translation or shadow effects in the picker */
+.universal-image-picker .ui-backdrop-card:hover:not(.ui-backdrop-card--disabled),
+.person-backdrop-picker .ui-backdrop-card:hover:not(.ui-backdrop-card--disabled),
+.backdrops-panel .ui-backdrop-card:hover:not(.ui-backdrop-card--disabled) {
+  transform: none !important;
+}
+
+.universal-image-picker .ui-backdrop-card:hover:not(.ui-backdrop-card--disabled):not(.ui-backdrop-card--selected),
+.person-backdrop-picker .ui-backdrop-card:hover:not(.ui-backdrop-card--disabled):not(.ui-backdrop-card--selected),
+.backdrops-panel .ui-backdrop-card:hover:not(.ui-backdrop-card--disabled):not(.ui-backdrop-card--selected) {
+  border-color: var(--color-accent) !important;
+  box-shadow: 0 0 0 2px var(--color-accent) !important;
+}
+
+.universal-image-picker .ui-backdrop-card--selected:hover:not(.ui-backdrop-card--disabled),
+.person-backdrop-picker .ui-backdrop-card--selected:hover:not(.ui-backdrop-card--disabled),
+.backdrops-panel .ui-backdrop-card--selected:hover:not(.ui-backdrop-card--disabled) {
+  border-color: var(--color-accent) !important;
+  box-shadow: 0 0 0 2px var(--color-accent) !important;
+}
+

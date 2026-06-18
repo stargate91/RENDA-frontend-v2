@@ -30,11 +30,10 @@ export default function EntityDetailHeroSection({
   return (
     <section className="entity-detail-page__hero-grid">
       <div className="entity-detail-page__media-column">
-        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+        {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
         <div
           className={`entity-detail-page__media-card ${isPeople ? 'entity-detail-page__media-card--profile' : ''} entity-detail-page__media-card--editable`}
           onClick={onMediaCardClick}
-          style={{ cursor: 'pointer' }}
           title={isPeople ? (t('library.details.changeProfile') || 'Change Profile Picture') : (t('library.details.changePoster') || 'Change Poster')}
         >
           {mediaUrl ? (

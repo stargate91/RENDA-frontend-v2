@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import TMDBImageGrid from '../components/entityDetail/TMDBImageGrid';
 import Input from '@/ui/Input';
 import {
@@ -38,7 +38,14 @@ export default function UniversalImagePickerModal({
   const overridePersonProfileMutation = useOverridePersonProfileMutation();
   const uploadPersonProfileMutation = useUploadPersonProfileMutation();
 
+  const [selectedPath, setSelectedPath] = useState(currentPath);
+
+  useEffect(() => {
+    setSelectedPath(currentPath);
+  }, [currentPath]);
+
   const handleSelectTmdbImage = async (path) => {
+    setSelectedPath(path);
     try {
       if (imageType === 'backdrop') {
         await overrideBackdropMutation.mutateAsync({
@@ -211,7 +218,7 @@ export default function UniversalImagePickerModal({
           tmdbId={tmdbId}
           mediaType={entityType}
           imageType={imageType === 'profile' ? 'poster' : imageType}
-          currentPath={currentPath}
+          currentPath={selectedPath}
           onSelect={handleSelectTmdbImage}
           isPending={isPending}
           t={t}

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useMediaDetailContext } from '../MediaDetailContext';
 import TMDBImageGrid from '../../entityDetail/TMDBImageGrid';
 import './BackdropsPanel.css';
@@ -12,7 +13,16 @@ export default function BackdropsPanel({ showTitle = true }) {
     overrideBackdropMutation
   } = mutations;
 
+  const [selectedBackdropPath, setSelectedBackdropPath] = useState(item?.backdrop_path || '');
+
+  useEffect(() => {
+    if (item?.backdrop_path) {
+      setSelectedBackdropPath(item.backdrop_path);
+    }
+  }, [item?.backdrop_path]);
+
   const handleSelectBackdrop = async (backdropPath) => {
+    setSelectedBackdropPath(backdropPath);
     try {
       await overrideBackdropMutation.mutateAsync({
         itemId: id,
@@ -38,7 +48,7 @@ export default function BackdropsPanel({ showTitle = true }) {
         tmdbId={item?.tmdb_id || item?.series_tmdb_id}
         mediaType={type}
         imageType="backdrop"
-        currentPath={item?.backdrop_path}
+        currentPath={selectedBackdropPath}
         onSelect={handleSelectBackdrop}
         isPending={overrideBackdropMutation.isPending}
         pendingPath={overrideBackdropMutation.variables?.backdropPath}
