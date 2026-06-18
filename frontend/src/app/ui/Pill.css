@@ -207,3 +207,13 @@
       color-mix(in srgb, var(--color-bg-elevated) 92%, var(--pill-tag-color, var(--color-accent-blue)) 8%),
       color-mix(in srgb, var(--color-bg-canvas) 82%, var(--pill-tag-color, var(--color-accent-blue)) 6%));
 }
+
+.ui-pill--missing {
+  background-color: color-mix(in srgb, var(--color-text-muted) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-text-muted) 24%, transparent);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.125rem 0.3125rem;
+  border-radius: 2px;
+}

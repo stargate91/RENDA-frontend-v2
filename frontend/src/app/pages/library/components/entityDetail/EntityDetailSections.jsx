@@ -3,11 +3,14 @@ import PosterGrid from '@/ui/PosterGrid';
 import PosterCard from '@/ui/PosterCard';
 import Pill from '@/ui/Pill';
 import EmptyState from '@/ui/EmptyState';
+import CreditCard from '@/ui/CreditCard';
+import BackdropCard from '@/ui/BackdropCard';
 import { API_BASE } from '@/lib/backend';
 import { isTvLikeMediaType } from '@/lib/mediaTypes';
-import { Check, ChevronLeft, ChevronRight, Film, ImageOff, Star, Tv } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Film, ImageOff, Star, Tv } from 'lucide-react';
 import { resolveDetailsImageUrl } from '../../utils/detailUtils';
 import { normalizeBackdropKey } from '../../peopleCollectionDetailUtils.jsx';
+import './PersonCreditsShared.css';
 
 export function OverviewContent({ text, title, emptyText, t, openModal, className = '' }) {
   const overviewRef = useRef(null);
@@ -167,58 +170,40 @@ function HorizontalCollectionItemsList({ items, navigate, t }) {
         const tmdbRating = Number(item.rating_tmdb ?? item.rating);
         const hasImdbRating = Number.isFinite(imdbRating) && imdbRating > 0;
         const hasTmdbRating = Number.isFinite(tmdbRating) && tmdbRating > 0;
+        const posterUrl = item.poster_path ? resolveDetailsImageUrl(item.poster_path, API_BASE, 'poster') : null;
 
         return (
-          <button
+          <CreditCard
             key={`collection-item-${item.media_type || item.type || 'movie'}-${item.tmdb_id || item.id}`}
-            type="button"
-            className={`entity-detail-page__credit-card entity-detail-page__credit-card--collection-item ${
-              item.in_library ? 'entity-detail-page__credit-card--owned' : 'entity-detail-page__credit-card--missing'
-            }`}
+            title={item.title}
+            imageUrl={posterUrl}
+            isTv={isTv}
+            isCollectionItem={true}
+            isOwned={item.in_library}
+            isMissing={!item.in_library}
             onClick={() => openItem(item)}
           >
-            <div className="entity-detail-page__credit-poster-wrap">
-              {item.poster_path ? (
-                <img
-                  src={resolveDetailsImageUrl(item.poster_path, API_BASE, 'poster')}
-                  alt={item.title || 'Collection item poster'}
-                  className="entity-detail-page__credit-poster"
-                />
-              ) : (
-                <div className="entity-detail-page__credit-poster entity-detail-page__credit-poster--placeholder">
-                  {isTv ? <Tv size={18} /> : <Film size={18} />}
-                </div>
-              )}
-            </div>
-
-            <div className="entity-detail-page__credit-body">
-              <div className="entity-detail-page__credit-topline">
-                <div className="entity-detail-page__credit-title">{item.title}</div>
-              </div>
-              <div className="entity-detail-page__credit-meta">
-                {item.year && <span>{item.year}</span>}
-                {(hasImdbRating || hasTmdbRating) && (
-                  <Pill
-                    variant={hasImdbRating ? 'imdb' : 'tmdb'}
-                    className="entity-detail-page__credit-rating-pill"
-                  >
-                    <Star size={10} fill="currentColor" strokeWidth={1.8} />
-                    {(hasImdbRating ? imdbRating : tmdbRating).toFixed(1)}
-                  </Pill>
-                )}
+            <div className="ui-credit-card__meta">
+              {item.year && <span>{item.year}</span>}
+              {(hasImdbRating || hasTmdbRating) && (
                 <Pill
-                  variant={item.in_library ? 'success' : 'default'}
-                  className={`entity-detail-page__credit-status-pill${
-                    item.in_library ? '' : ' entity-detail-page__credit-status-pill--missing'
-                  }`}
+                  variant={hasImdbRating ? 'imdb' : 'tmdb'}
+                  className="ui-credit-card__rating-pill"
                 >
-                  {item.in_library
-                    ? (t('library.details.have') || 'Have')
-                    : (t('library.details.missing') || 'Missing')}
+                  <Star size={10} fill="currentColor" strokeWidth={1.8} />
+                  {(hasImdbRating ? imdbRating : tmdbRating).toFixed(1)}
                 </Pill>
-              </div>
+              )}
+              <Pill
+                variant={item.in_library ? 'success' : 'missing'}
+                className="ui-credit-card__status-pill"
+              >
+                {item.in_library
+                  ? (t('library.details.have') || 'Have')
+                  : (t('library.details.missing') || 'Missing')}
+              </Pill>
             </div>
-          </button>
+          </CreditCard>
         );
       })}
     </div>
@@ -311,34 +296,17 @@ export function CollectionBackdropsPanel({ item, collectionId, t, toast, overrid
           const label = option.year ? `${option.title} (${option.year})` : option.title;
 
           return (
-            <button
+            <BackdropCard
               key={`${option.backdrop_path}-${idx}`}
-              type="button"
-              onClick={() => !overrideBackdropMutation.isPending && handleSelectBackdrop(option.backdrop_path)}
-              className={`backdrop-card ${isSelected ? 'backdrop-card--selected' : ''} ${overrideBackdropMutation.isPending ? 'backdrop-card--disabled' : ''}`}
-              disabled={overrideBackdropMutation.isPending}
+              imageUrl={backdropUrl}
+              alt={label}
+              isSelected={isSelected}
+              isPending={isPending}
+              infoLeft={label}
+              infoRight={option.subtitle}
+              onClick={() => handleSelectBackdrop(option.backdrop_path)}
               title={label}
-            >
-              <img
-                src={backdropUrl}
-                alt={label}
-                className="backdrop-card__img"
-              />
-              {isPending && (
-                <div className="backdrop-card__spinner-overlay">
-                  <div className="backdrop-card__spinner" />
-                </div>
-              )}
-              {isSelected && !isPending && (
-                <div className="backdrop-card__selected-overlay">
-                  <Check size={18} />
-                </div>
-              )}
-              <div className="backdrop-card__info-overlay">
-                <span>{label}</span>
-                <span>{option.subtitle}</span>
-              </div>
-            </button>
+            />
           );
         })}
         {backdropOptions.length === 0 && (
@@ -447,105 +415,3 @@ export function CollectionItemsSection({ items, navigate, t }) {
   );
 }
 
-export function HorizontalCreditsList({ items, navigate, t }) {
-  if (!items?.length) {
-    return null;
-  }
-
-  const openItem = (item) => {
-    if (isTvLikeMediaType(item.media_type || item.type)) {
-      const seriesId = item.library_series_tmdb_id || item.series_tmdb_id || item.tmdb_id || item.id;
-      navigate(`/library/series/${seriesId}`);
-      return;
-    }
-
-    const movieId = item.in_library ? (item.library_item_id || item.id) : `tmdb_${item.tmdb_id || item.id}`;
-    navigate(`/library/movie/${movieId}`);
-  };
-
-  return (
-    <div className="entity-detail-page__credits-list">
-      {items.map((item) => {
-        const isTv = isTvLikeMediaType(item.media_type || item.type);
-        const imdbRating = Number(item.rating_imdb);
-        const tmdbRating = Number(item.rating_tmdb ?? item.rating);
-        const hasImdbRating = Number.isFinite(imdbRating) && imdbRating > 0;
-        const hasTmdbRating = Number.isFinite(tmdbRating) && tmdbRating > 0;
-        const metaParts = [];
-        const roleText = String(item.job || '').trim();
-        const characterText = String(item.character || '').trim();
-        const normalizedRole = roleText.toLowerCase();
-        const normalizedCharacter = characterText.toLowerCase();
-        const roleContainsCharacter = normalizedCharacter
-          ? normalizedRole
-            .split(',')
-            .map((part) => part.trim())
-            .some((part) => part === normalizedCharacter || part === `as ${normalizedCharacter}`)
-          : false;
-
-        if (item.year) metaParts.push(String(item.year));
-        if (roleText) metaParts.push(roleText);
-        if (
-          characterText
-          && normalizedCharacter !== normalizedRole
-          && normalizedRole !== `as ${normalizedCharacter}`
-          && !roleContainsCharacter
-        ) {
-          metaParts.push(characterText);
-        }
-        if (item.episode_count) {
-          metaParts.push(
-            t('library.details.episodePlural', {
-              count: item.episode_count,
-              defaultValue: `${item.episode_count} Episodes`,
-            })
-          );
-        }
-        const metaText = metaParts.length > 1
-          ? `${metaParts[0]} - ${metaParts.slice(1).join(' • ')}`
-          : (metaParts[0] || '');
-
-        return (
-          <button
-            key={`credit-${item.media_type || item.type}-${item.tmdb_id || item.id}`}
-            type="button"
-            className="entity-detail-page__credit-card"
-            onClick={() => openItem(item)}
-          >
-            <div className="entity-detail-page__credit-poster-wrap">
-              {item.poster_path ? (
-                <img
-                  src={resolveDetailsImageUrl(item.poster_path, API_BASE, 'poster')}
-                  alt={item.title || 'Credit poster'}
-                  className="entity-detail-page__credit-poster"
-                />
-              ) : (
-                <div className="entity-detail-page__credit-poster entity-detail-page__credit-poster--placeholder">
-                  {isTv ? <Tv size={18} /> : <Film size={18} />}
-                </div>
-              )}
-            </div>
-
-            <div className="entity-detail-page__credit-body">
-              <div className="entity-detail-page__credit-topline">
-                <div className="entity-detail-page__credit-title">{item.title}</div>
-                {(hasImdbRating || hasTmdbRating) && (
-                  <Pill
-                    variant={hasImdbRating ? 'imdb' : 'tmdb'}
-                    className="entity-detail-page__credit-rating-pill"
-                  >
-                    <Star size={10} fill="currentColor" strokeWidth={1.8} />
-                    {(hasImdbRating ? imdbRating : tmdbRating).toFixed(1)}
-                  </Pill>
-                )}
-              </div>
-              <div className="entity-detail-page__credit-meta">
-                {metaText && <span>{metaText}</span>}
-              </div>
-            </div>
-          </button>
-        );
-      })}
-    </div>
-  );
-}

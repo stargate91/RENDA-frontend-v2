@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Plus, Tag } from 'lucide-react';
 import Pill from '@/ui/Pill';
 import { useAllTagsQuery, useCreateTagMutation } from '@/queries/libraryQueries';
+import './PeopleTagPopover.css';
 
 const PREDEFINED_COLORS = [
   '#3b82f6', '#10b981', '#ef4444', '#8b5cf6',

@@ -1,0 +1,140 @@
+.person-backdrop-picker {
+  --person-backdrop-row-height: 78px;
+  --person-backdrop-row-gap: var(--space-md);
+  --person-backdrop-viewport-height: min(calc((var(--person-backdrop-row-height) * 5) + (var(--person-backdrop-row-gap) * 4)), 84vh);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.person-backdrop-picker-modal .ui-modal__body {
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.person-backdrop-picker-modal .ui-modal__body > .person-backdrop-picker {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.person-backdrop-picker__tabs {
+  width: 100%;
+  flex: 0 0 auto;
+  min-height: 48px;
+  box-sizing: border-box;
+}
+
+.person-backdrop-picker__tabs.ui-segmented-control {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  width: 100% !important;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.person-backdrop-picker__tabs .ui-segmented-control__option {
+  width: 100%;
+  min-width: 0;
+  padding-inline: var(--space-lg);
+  box-sizing: border-box;
+}
+
+.person-backdrop-picker__viewport {
+  flex: 1 1 auto;
+  height: var(--person-backdrop-viewport-height);
+  min-height: var(--person-backdrop-viewport-height);
+  max-height: var(--person-backdrop-viewport-height);
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.person-backdrop-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-md);
+  padding-top: var(--space-2xs);
+  padding-bottom: var(--space-2xs);
+  align-content: start;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.person-backdrop-picker__detail-view {
+  gap: var(--space-lg);
+}
+
+.person-backdrop-picker__detail-view .backdrops-grid {
+  padding-top: var(--space-2xs);
+  padding-bottom: var(--space-2xs);
+}
+
+.person-backdrop-picker__detail-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  min-width: 0;
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: var(--space-2xs) 0;
+}
+
+.person-backdrop-picker__detail-title {
+  min-width: 0;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.person-backdrop-picker__back-btn {
+  flex: 0 0 auto;
+  min-width: auto;
+  min-height: 28px;
+  padding: 0 0.625rem;
+  gap: 0.25rem;
+  border-radius: 8px;
+  font-size: 0.72rem;
+}
+
+.person-backdrop-picker__viewport--detail {
+  padding-top: 0;
+}
+
+.person-backdrop-picker__card {
+  overflow: hidden;
+}
+
+.person-backdrop-picker__card--selected {
+  border-color: var(--color-accent-blue);
+  box-shadow: 0 0 0 2px var(--color-accent-blue);
+}
+
+.person-backdrop-picker__backdrop-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 76%, transparent);
+  background: color-mix(in srgb, var(--color-surface-glass-strong) 64%, transparent);
+}
+
+.person-backdrop-picker__backdrop {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.person-backdrop-picker__empty {
+  grid-column: 1 / -1;
+}

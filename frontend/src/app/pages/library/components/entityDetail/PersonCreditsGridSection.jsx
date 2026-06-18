@@ -1,12 +1,14 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, Film, Star, Tv } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import Pill from '@/ui/Pill';
+import CreditCard from '@/ui/CreditCard';
 import api from '@/lib/api';
 import { usePersonCreditsQuery } from '@/queries/metadataQueries';
 import { isTvLikeMediaType } from '@/lib/mediaTypes';
 import { API_BASE } from '@/lib/backend';
 import { resolveDetailsImageUrl } from '../../utils/detailUtils';
+import './PersonCreditsShared.css';
 
 const PERSON_INITIAL_CREDITS_PAGE_SIZE = 12;
 
@@ -159,13 +161,13 @@ export default function PersonCreditsGridSection({ title, personId, mediaType, t
         }`}
       >
         {isInitialPageLoading && Array.from({ length: itemsPerPage }).map((_, index) => (
-          <div key={`credit-grid-skeleton-${mediaType}-${index}`} className="entity-detail-page__credit-card entity-detail-page__credit-card--people-grid entity-detail-page__skeleton-card">
+          <div key={`credit-grid-skeleton-${mediaType}-${index}`} className="ui-credit-card ui-credit-card--people-grid entity-detail-page__skeleton-card">
             <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-poster" />
-            <div className="entity-detail-page__credit-body">
-              <div className="entity-detail-page__credit-topline">
+            <div className="ui-credit-card__body">
+              <div className="ui-credit-card__topline">
                 <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-title" />
               </div>
-              <div className="entity-detail-page__credit-meta">
+              <div className="ui-credit-card__meta">
                 <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-meta" />
                 <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-pill" />
                 <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-pill" />
@@ -173,35 +175,24 @@ export default function PersonCreditsGridSection({ title, personId, mediaType, t
             </div>
           </div>
         ))}
-        {visibleItems.map((item) => (
-          <button
-            key={`credit-grid-${item.media_type || item.type || 'movie'}-${item.tmdb_id || item.id}`}
-            type="button"
-            className={`entity-detail-page__credit-card entity-detail-page__credit-card--collection-item entity-detail-page__credit-card--people-grid ${
-              item.is_known_for ? ' entity-detail-page__credit-card--known-for' : ''
-            }${
-              item.in_library ? ' entity-detail-page__credit-card--owned' : ' entity-detail-page__credit-card--missing'
-            }`}
-            onClick={() => openItem(item)}
-          >
-            <div className="entity-detail-page__credit-poster-wrap">
-              {item.poster_path ? (
-                <img
-                  src={resolveDetailsImageUrl(item.poster_path, API_BASE, 'poster')}
-                  alt={item.title || 'Credit poster'}
-                  className="entity-detail-page__credit-poster"
-                />
-              ) : (
-                <div className="entity-detail-page__credit-poster entity-detail-page__credit-poster--placeholder">
-                  {isTvLikeMediaType(item.media_type || item.type) ? <Tv size={18} /> : <Film size={18} />}
-                </div>
-              )}
-            </div>
-            <div className="entity-detail-page__credit-body">
-              <div className="entity-detail-page__credit-topline">
-                <div className="entity-detail-page__credit-title">{item.title}</div>
-              </div>
-              <div className="entity-detail-page__credit-meta">
+        {visibleItems.map((item) => {
+          const isTv = isTvLikeMediaType(item.media_type || item.type);
+          const posterUrl = item.poster_path ? resolveDetailsImageUrl(item.poster_path, API_BASE, 'poster') : null;
+
+          return (
+            <CreditCard
+              key={`credit-grid-${item.media_type || item.type || 'movie'}-${item.tmdb_id || item.id}`}
+              title={item.title}
+              imageUrl={posterUrl}
+              isTv={isTv}
+              isPeopleGrid={true}
+              isCollectionItem={true}
+              isKnownFor={item.is_known_for}
+              isOwned={item.in_library}
+              isMissing={!item.in_library}
+              onClick={() => openItem(item)}
+            >
+              <div className="ui-credit-card__meta">
                 {item.year && <span>{item.year}</span>}
                 {(() => {
                   const imdbRating = Number(item.rating_imdb);
@@ -216,7 +207,7 @@ export default function PersonCreditsGridSection({ title, personId, mediaType, t
                   return (
                     <Pill
                       variant={hasImdbRating ? 'imdb' : 'tmdb'}
-                      className="entity-detail-page__credit-rating-pill"
+                      className="ui-credit-card__rating-pill"
                     >
                       <Star size={10} fill="currentColor" strokeWidth={1.8} />
                       {hasImdbRating ? imdbRating.toFixed(1) : tmdbRating.toFixed(1)}
@@ -224,24 +215,23 @@ export default function PersonCreditsGridSection({ title, personId, mediaType, t
                   );
                 })()}
                 <Pill
-                  variant={item.in_library ? 'success' : 'default'}
-                  className={`entity-detail-page__credit-status-pill${
-                    item.in_library ? '' : ' entity-detail-page__credit-status-pill--missing'
-                  }`}
+                  variant={item.in_library ? 'success' : 'missing'}
+                  className="ui-credit-card__status-pill"
                 >
                   {item.in_library
                     ? (t('library.details.have') || 'Have')
                     : (t('library.details.missing') || 'Missing')}
                 </Pill>
               </div>
-            </div>
-          </button>
-        ))}
+            </CreditCard>
+          );
+        })}
         {Array.from({ length: fillerCount }).map((_, index) => (
-          <div
+          <CreditCard
             key={`credit-grid-filler-${mediaType}-${safePage}-${index}`}
-            className="entity-detail-page__credit-card entity-detail-page__credit-card--collection-item entity-detail-page__credit-card--people-grid entity-detail-page__credit-card--placeholder"
-            aria-hidden="true"
+            isPlaceholder={true}
+            isPeopleGrid={true}
+            isCollectionItem={true}
           />
         ))}
       </div>

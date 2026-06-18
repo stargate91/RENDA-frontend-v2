@@ -2,6 +2,7 @@ import Pill from '@/ui/Pill';
 import { Layers, User } from 'lucide-react';
 import { OverviewContent } from './EntityDetailSections';
 import PersonRatingControls from './PersonRatingControls';
+import './EntityDetailHeroSection.css';
 
 export default function EntityDetailHeroSection({
   isPeople,

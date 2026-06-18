@@ -1,0 +1,63 @@
+.entity-detail-page__person-rating-pill {
+  width: 100%;
+  max-width: 420px;
+  min-width: 356px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+}
+
+.entity-detail-page__person-rating-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--space-2xs) / 2);
+  flex: 0 0 102px;
+  min-width: 102px;
+}
+
+.entity-detail-page__person-rating-value {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.entity-detail-page__person-rating-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: calc(var(--space-2xs) / 2);
+  margin-right: 0;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: color-mix(in srgb, var(--color-text-primary) 58%, var(--color-text-muted));
+  cursor: pointer;
+}
+
+.entity-detail-page__person-rating-action--favorite.is-active {
+  color: var(--color-state-danger);
+  background: none;
+}
+
+.entity-detail-page__person-rating-action:hover {
+  color: var(--color-text-primary);
+}
+
+.entity-detail-page__person-rating-action--activate.is-active {
+  color: var(--color-state-success);
+}
+
+.entity-detail-page__person-rating-action--activate.is-active:hover {
+  color: var(--color-state-danger);
+}
+
+@media (max-width: 720px) {
+  .entity-detail-page__person-rating-pill {
+    min-width: 0;
+    width: 100%;
+  }
+}

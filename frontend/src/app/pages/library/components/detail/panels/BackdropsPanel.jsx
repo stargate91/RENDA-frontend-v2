@@ -1,8 +1,9 @@
-import { Check, ImageOff } from 'lucide-react';
+import { ImageOff } from 'lucide-react';
 import { useFullMetadataQuery } from '@/queries/metadataQueries';
 import { useMediaDetailContext } from '../MediaDetailContext';
 import { buildTmdbImageUrl, TMDB_IMAGE_SIZES } from '@/lib/imageUrls';
 import EmptyState from '@/ui/EmptyState';
+import BackdropCard from '@/ui/BackdropCard';
 import './BackdropsPanel.css';
 
 
@@ -56,33 +57,16 @@ export default function BackdropsPanel({ showTitle = true }) {
           const isPending = overrideBackdropMutation.isPending && overrideBackdropMutation.variables?.backdropPath === bd.file_path;
 
           return (
-            <button
+            <BackdropCard
               key={idx}
-              type="button"
-              onClick={() => !overrideBackdropMutation.isPending && handleSelectBackdrop(bd.file_path)}
-              className={`backdrop-card ${isSelected ? 'backdrop-card--selected' : ''} ${overrideBackdropMutation.isPending ? 'backdrop-card--disabled' : ''}`}
-              disabled={overrideBackdropMutation.isPending}
-            >
-              <img
-                src={tmdbThumbUrl}
-                alt={`Backdrop ${idx + 1}`}
-                className="backdrop-card__img"
-              />
-              {isPending && (
-                <div className="backdrop-card__spinner-overlay">
-                  <div className="backdrop-card__spinner" />
-                </div>
-              )}
-              {isSelected && !isPending && (
-                <div className="backdrop-card__selected-overlay">
-                  <Check size={18} />
-                </div>
-              )}
-              <div className="backdrop-card__info-overlay">
-                <span>{bd.width}{String.fromCharCode(0x00D7)}{bd.height}</span>
-                <span>{String.fromCharCode(0x2605)} {bd.vote_average?.toFixed(1)}</span>
-              </div>
-            </button>
+              imageUrl={tmdbThumbUrl}
+              alt={`Backdrop ${idx + 1}`}
+              isSelected={isSelected}
+              isPending={isPending}
+              infoLeft={`${bd.width}${String.fromCharCode(0x00D7)}${bd.height}`}
+              infoRight={`${String.fromCharCode(0x2605)} ${bd.vote_average?.toFixed(1)}`}
+              onClick={() => handleSelectBackdrop(bd.file_path)}
+            />
           );
         })}
 

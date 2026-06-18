@@ -1,0 +1,76 @@
+
+.entity-detail-page__credits-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+.entity-detail-page__credits-list--collection-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(224px, 1fr));
+  gap: var(--space-md);
+}
+
+.entity-detail-page__credits-list--people-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(224px, 1fr));
+  gap: var(--space-md);
+}
+
+.entity-detail-page__credits-list--fetching {
+  opacity: 0.82;
+}
+
+.entity-detail-page__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  color: var(--color-text-secondary);
+}
+
+.entity-detail-page__section-header h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.entity-detail-page--collection .entity-detail-page__section-header h2,
+.entity-detail-page--people .entity-detail-page__section-header h2 {
+  color: var(--color-text-primary);
+}
+
+.entity-detail-page__section-pager {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: auto;
+}
+
+.entity-detail-page__section-pager-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 86%, transparent);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-surface-glass-strong) 72%, transparent);
+  color: color-mix(in srgb, var(--color-text-primary) 82%, transparent);
+  cursor: pointer;
+  transition: background var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast), transform var(--motion-fast);
+}
+
+.entity-detail-page__section-pager-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-border-strong, rgba(255, 255, 255, 0.18)) 88%, transparent);
+  background: color-mix(in srgb, var(--color-surface-glass-heavy) 76%, transparent);
+  color: var(--color-text-primary);
+}
+
+.entity-detail-page__section-pager-btn:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
