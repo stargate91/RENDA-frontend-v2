@@ -28,7 +28,7 @@
   border: 1px solid var(--color-border-heavy);
   background: var(--color-surface-glass);
   position: relative;
-  transition: all 140ms ease;
+  transition: all var(--motion-fast);
 }
 
 .ui-checkbox-wrap:hover .ui-checkbox {

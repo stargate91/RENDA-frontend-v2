@@ -584,6 +584,12 @@
   --motion-duration-slow: 0.45s;
   --motion-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
   --motion-ease-expressive: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --motion-ease-linear: linear;
+  --motion-duration-spinner: 0.6s;
+  --motion-duration-spinner-slow: 0.8s;
+  --motion-duration-pulse: 1.6s;
+  --motion-duration-pulse-slow: 2s;
+  --motion-delay-step: 15ms;
   --motion-fast: var(--motion-duration-fast) var(--motion-ease-standard);
   --motion-base: var(--motion-duration-base) var(--motion-ease-standard);
   --motion-expressive: var(--motion-duration-base) var(--motion-ease-expressive);

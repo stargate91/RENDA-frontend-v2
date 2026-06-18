@@ -3,7 +3,7 @@
   align-items: stretch;
   height: var(--ui-control-height-md, 36px);
   padding: 0.1875rem;
-  border: 1px solid var(--ui-control-border, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--ui-control-border, var(--color-border-default));
   border-radius: var(--ui-control-radius, 8px);
   background: var(--ui-control-bg, var(--ui-surface-ghost));
   gap: 0.125rem;
@@ -39,8 +39,8 @@
   background: var(--ui-surface-soft-strong);
   color: var(--color-text-primary);
   box-shadow: 
-    0 1px 3px rgba(0, 0, 0, 0.2), 
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 1px 3px color-mix(in srgb, black 20%, transparent), 
+    inset 0 1px 0 var(--color-border-subtle);
 }
 
 .ui-segmented-control__option:focus-visible {

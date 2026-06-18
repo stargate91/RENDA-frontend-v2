@@ -1,8 +1,16 @@
 {
   "rules": {
     "declaration-property-value-disallowed-list": {
-      "/^(?!--).*(?:color|background|border|outline|box-shadow|text-shadow)/": ["/#[0-9a-fA-F]{3,8}/"],
-      "/^(?!--).*(?:padding|margin|gap)/": ["/\\d+px/"]
+      "/^(?!--).*(?:color|background|border|outline|box-shadow|text-shadow)/": [
+        "/#[0-9a-fA-F]{3,8}/",
+        "/rgba?\\(/"
+      ],
+      "/^(?!--).*(?:padding|margin|gap)/": ["/\\d+px/"],
+      "/^(?!--).*(?:transition|animation)/": [
+        "/\\b\\d+(?:\\.\\d+)?m?s\\b/",
+        "/cubic-bezier/",
+        "/(?<![\\w-])(?:ease|ease-in|ease-out|ease-in-out|linear)(?![\\w-])/"
+      ]
     }
   }
 }

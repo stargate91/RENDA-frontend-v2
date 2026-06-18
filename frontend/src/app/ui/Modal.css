@@ -119,7 +119,7 @@
 }
 
 .ui-modal__close:focus-visible {
-  border-color: color-mix(in srgb, var(--color-accent) 42%, rgba(255, 255, 255, 0.16));
+  border-color: color-mix(in srgb, var(--color-accent) 42%, var(--color-border-heavy));
   box-shadow: var(--focus-ring);
 }
 
@@ -164,22 +164,22 @@
       color-mix(in srgb, var(--color-state-danger) 10%, var(--color-bg-elevated)),
       var(--color-bg-canvas)
     );
-  border-color: color-mix(in srgb, var(--color-state-danger) 42%, rgba(255, 255, 255, 0.08));
+  border-color: color-mix(in srgb, var(--color-state-danger) 42%, var(--color-border-default));
   box-shadow:
-    0 28px 72px rgba(0, 0, 0, 0.66),
+    0 28px 72px color-mix(in srgb, black 66%, transparent),
     0 0 0 1px color-mix(in srgb, var(--color-state-danger) 28%, transparent),
     0 0 32px color-mix(in srgb, var(--color-state-danger) 16%, transparent),
-    0 10px 24px rgba(0, 0, 0, 0.28),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+    0 10px 24px color-mix(in srgb, black 28%, transparent),
+    inset 0 0 0 1px var(--color-surface-card);
 }
 
 .ui-modal--danger .ui-modal__header {
   background:
     linear-gradient(180deg,
-      color-mix(in srgb, var(--color-state-danger) 22%, rgba(255, 255, 255, 0.02)),
-      color-mix(in srgb, var(--color-state-danger) 10%, rgba(255, 255, 255, 0.005))),
+      color-mix(in srgb, var(--color-state-danger) 22%, var(--color-surface-card)),
+      color-mix(in srgb, var(--color-state-danger) 10%, color-mix(in srgb, var(--color-text-primary) 0.5%, transparent))),
     transparent;
-  border-bottom: 1px solid color-mix(in srgb, var(--color-state-danger) 32%, rgba(255, 255, 255, 0.06));
+  border-bottom: 1px solid color-mix(in srgb, var(--color-state-danger) 32%, var(--color-border-default));
 }
 
 .ui-modal--danger .ui-modal__title {
@@ -196,19 +196,19 @@
 }
 
 .ui-modal--danger .ui-modal__close {
-  border-color: color-mix(in srgb, var(--color-state-danger) 30%, rgba(255, 255, 255, 0.12));
-  background: color-mix(in srgb, var(--color-state-danger) 10%, rgba(255, 255, 255, 0.03));
+  border-color: color-mix(in srgb, var(--color-state-danger) 30%, var(--color-border-heavy));
+  background: color-mix(in srgb, var(--color-state-danger) 10%, var(--color-surface-glass));
   color: color-mix(in srgb, var(--color-state-danger) 40%, white 60%);
 }
 
 .ui-modal--danger .ui-modal__close:hover {
-  background: color-mix(in srgb, var(--color-state-danger) 24%, rgba(255, 255, 255, 0.04));
-  border-color: color-mix(in srgb, var(--color-state-danger) 46%, rgba(255, 255, 255, 0.14));
+  background: color-mix(in srgb, var(--color-state-danger) 24%, var(--color-surface-glass));
+  border-color: color-mix(in srgb, var(--color-state-danger) 46%, var(--color-border-heavy));
   color: white;
 }
 
 .ui-modal--danger .ui-modal__close:focus-visible {
-  border-color: color-mix(in srgb, var(--color-state-danger) 62%, rgba(255, 255, 255, 0.14));
+  border-color: color-mix(in srgb, var(--color-state-danger) 62%, var(--color-border-heavy));
   box-shadow: var(--focus-ring-danger);
 }
 
@@ -249,18 +249,18 @@
 }
 
 .ui-modal__action-card--danger {
-  border-color: color-mix(in srgb, var(--color-state-danger) 28%, rgba(255, 255, 255, 0.08));
-  background: color-mix(in srgb, var(--color-state-danger) 14%, rgba(255, 255, 255, 0.015));
+  border-color: color-mix(in srgb, var(--color-state-danger) 28%, var(--color-border-default));
+  background: color-mix(in srgb, var(--color-state-danger) 14%, var(--color-panel-soft));
 }
 
 .ui-modal__action-card--danger:hover {
-  border-color: color-mix(in srgb, var(--color-state-danger) 44%, rgba(255, 255, 255, 0.1));
-  background: color-mix(in srgb, var(--color-state-danger) 20%, rgba(255, 255, 255, 0.026));
+  border-color: color-mix(in srgb, var(--color-state-danger) 44%, color-mix(in srgb, var(--color-text-primary) 10%, transparent));
+  background: color-mix(in srgb, var(--color-state-danger) 20%, color-mix(in srgb, var(--color-text-primary) 2.6%, transparent));
   box-shadow: 0 10px 24px color-mix(in srgb, var(--color-state-danger) 12%, transparent);
 }
 
 .ui-modal__action-card--danger:focus-visible {
-  border-color: color-mix(in srgb, var(--color-state-danger) 62%, rgba(255, 255, 255, 0.12));
+  border-color: color-mix(in srgb, var(--color-state-danger) 62%, var(--color-border-heavy));
   box-shadow: var(--focus-ring-danger);
 }
 
@@ -287,7 +287,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: color-mix(in srgb, black 75%, transparent);
   backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
@@ -301,13 +301,13 @@
   width: 100%;
   max-width: 440px;
   background: var(--ui-surface-card-gradient);
-  border: 1px solid color-mix(in srgb, var(--color-accent) 24%, rgba(255, 255, 255, 0.06));
+  border: 1px solid color-mix(in srgb, var(--color-accent) 24%, var(--color-border-default));
   border-radius: var(--radius-lg);
   padding: var(--space-4xl);
   box-shadow:
-    0 28px 72px rgba(0, 0, 0, 0.76),
-    0 10px 24px rgba(0, 0, 0, 0.38),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+    0 28px 72px color-mix(in srgb, black 76%, transparent),
+    0 10px 24px color-mix(in srgb, black 38%, transparent),
+    inset 0 0 0 1px var(--color-surface-glass);
   display: grid;
   gap: var(--space-2xl);
   animation: ui-confirm-scale-up var(--motion-duration-slow) var(--motion-ease-emphasized);

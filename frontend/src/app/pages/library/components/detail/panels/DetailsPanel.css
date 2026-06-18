@@ -68,7 +68,7 @@
   max-width: 60px;
   object-fit: contain;
   filter: invert(1) opacity(0.82);
-  transition: all 0.2s ease;
+  transition: all var(--motion-base);
 }
 
 .specs-card__company-logo:hover {
@@ -95,26 +95,26 @@
   flex: 1;
   height: 38px;
   border-radius: var(--radius-md, 12px);
-  background: var(--button-secondary-neutral-bg, rgba(255, 255, 255, 0.03));
-  border: 1px solid var(--button-secondary-neutral-border, rgba(255, 255, 255, 0.14));
+  background: var(--button-secondary-neutral-bg, var(--color-surface-glass));
+  border: 1px solid var(--button-secondary-neutral-border, var(--color-border-heavy));
   color: var(--button-secondary-neutral-color, var(--color-text-primary));
   font-size: var(--font-size-sm, 14px);
   font-weight: 600;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: all var(--motion-base);
   cursor: pointer;
 }
 
 .external-link-btn--imdb:hover {
   color: var(--color-brand-imdb);
   border-color: var(--color-brand-imdb);
-  background: rgba(245, 197, 24, 0.05);
+  background: color-mix(in srgb, var(--color-accent-yellow) 5%, transparent);
 }
 
 .external-link-btn--tmdb:hover {
   color: var(--color-brand-tmdb);
   border-color: var(--color-brand-tmdb);
-  background: rgba(1, 180, 228, 0.05);
+  background: color-mix(in srgb, var(--color-accent-blue) 5%, transparent);
 }
 
 @media (max-width: 920px) {
@@ -131,8 +131,8 @@
 
 .details-panel__keyword-pill {
   --kw-pad: 4px 10px;
-  background: rgba(255, 255, 255, 0.04) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: var(--color-surface-glass) !important;
+  border: 1px solid var(--color-border-default) !important;
   color: var(--color-text-secondary) !important;
   font-size: var(--font-size-xs, 12px) !important;
   padding: var(--kw-pad) !important;

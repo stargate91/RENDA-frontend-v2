@@ -10,7 +10,7 @@
   padding: 1rem;
   border-radius: 1.25rem;
   border: 1px solid color-mix(in srgb, var(--color-border-default) 74%, transparent);
-  background: linear-gradient(180deg, rgba(22, 24, 31, 0.92), rgba(10, 12, 18, 0.9));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-text-inverse) 92%, transparent), color-mix(in srgb, var(--color-text-inverse) 90%, transparent));
   box-shadow: var(--shadow-xl);
   backdrop-filter: var(--ui-floating-surface-blur);
   -webkit-backdrop-filter: var(--ui-floating-surface-blur);
@@ -136,8 +136,8 @@
 }
 
 .entity-detail-page__tag-color-btn.is-selected {
-  border-color: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18);
+  border-color: color-mix(in srgb, white 90%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-text-primary) 18%, transparent);
 }
 
 .entity-detail-page__tag-create-submit {

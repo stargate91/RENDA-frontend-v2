@@ -1,4 +1,5 @@
 .window-titlebar {
+  --titlebar-shadow: 0 1px 0 color-mix(in srgb, var(--color-text-primary) 3%, transparent);
   position: fixed;
   top: 0;
   left: 0;
@@ -8,11 +9,11 @@
   justify-content: space-between;
   align-items: stretch;
   height: 46px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--color-border-subtle);
   background:
     linear-gradient(180deg, var(--color-panel), var(--color-panel-strong));
   backdrop-filter: blur(18px) saturate(120%);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03);
+  box-shadow: var(--titlebar-shadow);
 }
 
 .window-titlebar__drag-region {
@@ -70,7 +71,7 @@
   grid-template-columns: 236px minmax(0, 1fr);
   height: 100vh;
   padding-top: var(--layout-window-titlebar-height);
-  transition: grid-template-columns 160ms ease;
+  transition: grid-template-columns var(--motion-fast);
 }
 
 .shell.is-sidebar-collapsed {
@@ -87,7 +88,7 @@
   min-height: 0;
   background:
     linear-gradient(180deg, var(--color-panel-strong), var(--color-panel)),
-    var(--app-shell-color-panel-soft, rgba(255, 255, 255, 0.018));
+    var(--app-shell-color-panel-soft);
   border-right: 1px solid var(--color-line);
   backdrop-filter: blur(22px) saturate(120%);
   overflow: visible;
@@ -142,7 +143,7 @@
   width: 100%;
   height: 1px;
   margin-bottom: var(--space-2);
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--color-border-subtle);
   flex-shrink: 0;
 }
 
@@ -154,7 +155,7 @@
   border-radius: var(--radius-md);
   text-decoration: none;
   color: var(--color-muted);
-  transition: 160ms ease;
+  transition: var(--motion-fast);
 }
 
 .shell__nav-link-label {
@@ -163,8 +164,8 @@
   opacity: 1;
   max-width: 160px;
   transition:
-    opacity 120ms ease,
-    max-width 160ms ease;
+    opacity var(--motion-fast),
+    max-width var(--motion-fast);
 }
 
 .shell__nav-link--footer {
@@ -179,14 +180,14 @@
 .shell__nav-link:hover,
 .shell__nav-link.is-active {
   color: var(--color-ink);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.03));
+  background: var(--ui-surface-card-media);
   box-shadow: inset 0 0 0 1px var(--color-line-strong);
 }
 
 .shell__nav-link:focus-visible {
   outline: none;
   color: var(--color-ink);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.03));
+  background: var(--ui-surface-card-media);
   box-shadow: inset 0 0 0 2px var(--color-accent);
 }
 
@@ -282,11 +283,12 @@
 }
 
 .shell__utility-bar .shell__stat-pill {
+  --stat-pill-bg: linear-gradient(180deg, color-mix(in srgb, var(--color-panel) 82%, transparent), color-mix(in srgb, var(--color-panel-strong) 72%, transparent));
   gap: var(--space-xs);
   padding: 0 var(--space-xl);
   height: 100%;
   justify-content: center;
-  background: linear-gradient(180deg, rgba(18, 21, 26, 0.82), rgba(10, 12, 16, 0.72));
+  background: var(--stat-pill-bg);
   backdrop-filter: blur(14px) saturate(110%);
 }
 

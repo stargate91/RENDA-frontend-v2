@@ -34,7 +34,7 @@
   margin-left: var(--space-sm);
   font-size: var(--font-size-sm);
   font-weight: 500;
-  transition: color 150ms ease, font-weight 150ms ease;
+  transition: color var(--motion-fast), font-weight var(--motion-fast);
   color: color-mix(in srgb, var(--color-text-primary) 58%, var(--color-text-muted));
   min-width: 7.5ch;
   width: 7.5ch;
@@ -53,7 +53,7 @@
   justify-content: flex-start;
   flex-wrap: nowrap;
   color: color-mix(in srgb, var(--color-text-primary) 64%, var(--color-text-muted));
-  border-color: color-mix(in srgb, var(--color-border-subtle, rgba(255, 255, 255, 0.05)) 78%, transparent);
+  border-color: color-mix(in srgb, var(--color-border-subtle, var(--color-border-subtle)) 78%, transparent);
 }
 
 .review-trigger-btn {
@@ -67,7 +67,7 @@
   padding: var(--btn-padding);
   margin-right: var(--btn-padding);
   border-radius: 4px;
-  transition: all 0.2s ease;
+  transition: all var(--motion-base);
 }
 
 .review-trigger-btn:hover {
@@ -76,6 +76,6 @@
 
 .pill-vertical-separator {
   margin: 0 var(--space-sm) 0 var(--space-xs);
-  color: rgba(255, 255, 255, 0.1);
+  color: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
   user-select: none;
 }

@@ -42,14 +42,14 @@
   position: absolute;
   inset: auto var(--space-xl) 0 var(--space-xl);
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  background: linear-gradient(90deg, transparent, var(--color-border-default), transparent);
 }
 
 .specs-card__label {
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
-  color: var(--color-text-muted, rgba(255, 255, 255, 0.4));
+  color: var(--color-text-muted, color-mix(in srgb, var(--color-text-primary) 40%, transparent));
   letter-spacing: 0.5px;
 }
 

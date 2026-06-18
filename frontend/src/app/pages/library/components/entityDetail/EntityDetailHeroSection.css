@@ -49,9 +49,9 @@
 .entity-detail-page__media-card {
   border-radius: 28px;
   overflow: hidden;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0.28) 100%);
+  background: linear-gradient(180deg, var(--color-border-default) 0%, color-mix(in srgb, black 28%, transparent) 100%);
   border: 1px solid color-mix(in srgb, var(--color-border-default) 76%, transparent);
-  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.34);
+  box-shadow: 0 22px 48px color-mix(in srgb, black 34%, transparent);
   aspect-ratio: 2 / 3;
 }
 
@@ -75,8 +75,8 @@
   place-items: center;
   color: var(--color-text-muted);
   background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 58%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(0, 0, 0, 0.22));
+    radial-gradient(circle at top, var(--color-border-default), transparent 58%),
+    linear-gradient(180deg, var(--color-surface-glass), color-mix(in srgb, black 22%, transparent));
 }
 
 .entity-detail-page__summary {
@@ -98,9 +98,9 @@
   bottom: -24px;
   width: min(calc(100% + 56px), 820px);
   background:
-    radial-gradient(ellipse at 18% 18%, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.18) 26%, transparent 60%),
-    radial-gradient(ellipse at 24% 56%, rgba(0, 0, 0, 0.18) 0%, rgba(0, 0, 0, 0.1) 24%, transparent 56%),
-    radial-gradient(ellipse at 64% 34%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.015) 18%, transparent 42%);
+    radial-gradient(ellipse at 18% 18%, color-mix(in srgb, black 30%, transparent) 0%, color-mix(in srgb, black 18%, transparent) 26%, transparent 60%),
+    radial-gradient(ellipse at 24% 56%, color-mix(in srgb, black 18%, transparent) 0%, color-mix(in srgb, black 10%, transparent) 24%, transparent 56%),
+    radial-gradient(ellipse at 64% 34%, var(--color-surface-glass) 0%, var(--color-panel-soft) 18%, transparent 42%);
   border-radius: 34px;
   filter: blur(18px);
   pointer-events: none;
@@ -185,7 +185,7 @@
 .entity-detail-page__inline-link:hover {
   transform: translateY(-1px);
   background: color-mix(in srgb, var(--color-surface-glass-strong) 52%, transparent);
-  border-color: color-mix(in srgb, var(--color-border-strong, rgba(255, 255, 255, 0.18)) 54%, transparent);
+  border-color: color-mix(in srgb, var(--color-border-strong, color-mix(in srgb, var(--color-text-primary) 18%, transparent)) 54%, transparent);
   color: var(--color-text-primary);
 }
 
@@ -227,7 +227,7 @@
   margin-top: 0;
   max-width: 560px;
   padding: 0;
-  text-shadow: 0 6px 24px rgba(0, 0, 0, 0.32);
+  text-shadow: 0 6px 24px color-mix(in srgb, black 32%, transparent);
 }
 
 .entity-detail-page__panel-overview {
@@ -256,7 +256,7 @@
   margin-top: var(--space-xs);
   text-decoration: none;
   opacity: 0.8;
-  transition: opacity 0.2s ease;
+  transition: opacity var(--motion-base);
   outline: none;
 }
 
@@ -345,13 +345,13 @@
 
 .entity-detail-page__media-card--editable {
   position: relative;
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: transform var(--motion-base), border-color var(--motion-base), box-shadow var(--motion-base);
 }
 
 .entity-detail-page__media-card--editable:hover {
   transform: translateY(-2px);
   border-color: var(--color-accent-blue);
-  box-shadow: 0 28px 54px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 28px 54px color-mix(in srgb, black 40%, transparent);
 }
 
 .entity-detail-page__media-edit-badge {
@@ -364,14 +364,14 @@
   border: 1px solid color-mix(in srgb, var(--color-accent-blue) 48%, var(--button-secondary-border));
   background-color: color-mix(in srgb, var(--app-shell-color-panel) 82%, transparent);
   background-image: var(--button-secondary-bg);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 4px 10px color-mix(in srgb, black 22%, transparent);
   backdrop-filter: blur(10px);
   opacity: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--button-secondary-color);
-  transition: opacity 0.2s ease, transform 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  transition: opacity var(--motion-base), transform var(--motion-base), color var(--motion-base), border-color var(--motion-base);
   transform: translateY(-4px);
   z-index: 5;
   cursor: pointer;

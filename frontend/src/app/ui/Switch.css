@@ -38,7 +38,7 @@
   border-radius: var(--radius-full);
   background: var(--color-surface-glass-strong);
   border: 1px solid var(--color-line);
-  transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background-color var(--motion-emphasized), border-color var(--motion-emphasized);
 }
 
 .ui-switch__thumb {
@@ -49,8 +49,8 @@
   height: 18px;
   border-radius: 50%;
   background: var(--color-text-secondary);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 4px color-mix(in srgb, black 25%, transparent);
+  transition: transform var(--motion-emphasized), background-color var(--motion-emphasized);
 }
 
 .ui-switch__input:checked + .ui-switch__track {

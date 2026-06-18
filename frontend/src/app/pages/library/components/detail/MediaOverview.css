@@ -6,7 +6,7 @@
   margin-top: var(--space-sm);
   max-width: 800px;
   padding: 0;
-  text-shadow: 0 6px 24px rgba(0, 0, 0, 0.32);
+  text-shadow: 0 6px 24px color-mix(in srgb, black 32%, transparent);
 }
 
 .media-detail-page__overview-text {
@@ -27,7 +27,7 @@
   margin-top: var(--space-xs);
   text-decoration: none;
   opacity: 0.8;
-  transition: opacity 0.2s ease;
+  transition: opacity var(--motion-base);
   outline: none;
 }
 

@@ -8,7 +8,7 @@
   margin-right: var(--space-2);
   opacity: 0.6;
   flex-shrink: 0;
-  transition: opacity 0.12s ease;
+  transition: opacity var(--motion-fast);
 }
 
 .is-active > .ui-tab-icon,
@@ -31,7 +31,7 @@
   font-size: var(--font-size-xs, 13px);
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: all var(--motion-fast);
   outline: none;
 }
 
@@ -106,7 +106,7 @@
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--motion-fast);
   outline: none;
 }
 

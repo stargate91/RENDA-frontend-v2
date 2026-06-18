@@ -31,7 +31,7 @@
   align-items: center;
   gap: var(--space-md);
   cursor: pointer;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  transition: transform var(--motion-emphasized), border-color var(--motion-base), box-shadow var(--motion-base), background var(--motion-base);
   overflow: hidden;
   box-shadow: var(--media-detail-panel-card-shadow);
 }
@@ -48,7 +48,7 @@
   height: 40px;
   border-radius: 50%;
   object-fit: cover;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid color-mix(in srgb, var(--color-text-primary) 10%, transparent);
 }
 
 .person-card__avatar--actor {
@@ -60,7 +60,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-border-subtle);
   display: grid;
   place-items: center;
 }

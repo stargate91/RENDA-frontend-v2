@@ -146,7 +146,7 @@
 }
 
 .settings-instructions-box {
-  background: var(--app-shell-color-panel-soft, rgba(255, 255, 255, 0.018));
+  background: var(--app-shell-color-panel-soft, color-mix(in srgb, var(--color-text-primary) 1.8%, transparent));
   border: 1px solid var(--color-line);
   border-radius: 8px;
   padding: var(--space-2xl);
@@ -260,16 +260,16 @@
 }
 
 .settings-danger-zone-card.ui-card {
-  border-color: color-mix(in srgb, var(--color-state-danger) 46%, rgba(255, 255, 255, 0.08)) !important;
+  border-color: color-mix(in srgb, var(--color-state-danger) 46%, var(--color-border-default)) !important;
   background:
     radial-gradient(circle at top right, color-mix(in srgb, var(--color-state-danger) 20%, transparent), transparent 34%),
     linear-gradient(180deg,
-      color-mix(in srgb, var(--color-state-danger) 12%, rgba(255, 255, 255, 0.028)) 0%,
-      color-mix(in srgb, var(--color-state-danger) 8%, rgba(255, 255, 255, 0.014)) 26%,
+      color-mix(in srgb, var(--color-state-danger) 12%, color-mix(in srgb, var(--color-text-primary) 2.8%, transparent)) 0%,
+      color-mix(in srgb, var(--color-state-danger) 8%, color-mix(in srgb, var(--color-text-primary) 1.4%, transparent)) 26%,
       transparent 100%),
-    linear-gradient(180deg, rgba(20, 14, 18, 0.88), rgba(12, 10, 13, 0.82)) !important;
+    linear-gradient(180deg, color-mix(in srgb, var(--color-text-inverse) 88%, transparent), color-mix(in srgb, var(--color-text-inverse) 82%, transparent)) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 1px 0 var(--color-border-default),
     0 0 0 1px color-mix(in srgb, var(--color-state-danger) 26%, transparent),
     var(--shadow-md) !important;
   backdrop-filter: blur(20px) saturate(118%);

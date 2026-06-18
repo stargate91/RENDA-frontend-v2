@@ -47,7 +47,6 @@ const renderProposedFilename = (value, row, activeMainTab, onOpenMatch, onOpenOv
     }
     return (
       <span className="organizer-target-proposed">
-        <ArrowRight size={14} className="organizer-target-arrow" />
         {value}
       </span>
     );
@@ -146,6 +145,28 @@ export function buildOrganizerColumns({
   const columns = [
     renderSelectColumn(paginatedRows, selectedRowIds, handleToggleAll, handleToggleRow),
     { key: 'source', label: renderSortableLabel(t('organizer.table.originalFilename'), 'source') },
+    {
+      key: 'arrow',
+      label: '',
+      width: '32px',
+      align: 'center',
+      render: (value, row) => {
+        const isManualReview = activeMainTab === 'manual';
+        if (isManualReview && row.rawType !== 'extra') {
+          return <></>;
+        }
+        if (row.rawType === 'extra') {
+          const unmatchedParentStatuses = ['new', 'uncertain', 'no_match', 'multiple', 'error'];
+          if (row.parentStatus && unmatchedParentStatuses.includes(row.parentStatus.toLowerCase())) {
+            return <></>;
+          }
+          if (row.rawAction === 'skip' || row.rawAction === 'delete') {
+            return <></>;
+          }
+        }
+        return <ArrowRight size={14} className="organizer-target-arrow" />;
+      },
+    },
     {
       key: 'target',
       label: activeMainTab === 'manual'

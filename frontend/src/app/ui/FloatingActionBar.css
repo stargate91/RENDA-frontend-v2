@@ -26,7 +26,7 @@
   opacity: 0;
   pointer-events: none;
   transform: translateY(34px) scale(0.96);
-  transition: opacity 180ms ease, transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity var(--motion-fast), transform var(--motion-duration-base) var(--motion-ease-emphasized);
   overflow: hidden;
 }
 
@@ -98,7 +98,7 @@
   color: var(--color-ink);
   box-shadow: var(--ui-floating-action-shadow);
   cursor: pointer;
-  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease, color 160ms ease;
+  transition: background var(--motion-fast), border-color var(--motion-fast), transform var(--motion-fast), color var(--motion-fast);
 }
 
 .ui-floating-bar__action:hover:not(:disabled) {
@@ -132,7 +132,7 @@
     linear-gradient(180deg,
       color-mix(in srgb, var(--color-accent-red-soft) 10%, transparent),
       color-mix(in srgb, var(--color-state-danger) 8%, transparent)),
-    color-mix(in srgb, var(--color-state-danger) 10%, rgba(20, 8, 11, 0.62));
+    color-mix(in srgb, var(--color-state-danger) 10%, color-mix(in srgb, var(--color-text-inverse) 62%, transparent));
   border-color: color-mix(in srgb, var(--color-state-danger) 26%, transparent);
   color: color-mix(in srgb, var(--color-accent-red-soft) 88%, white 12%);
 }
@@ -143,7 +143,7 @@
     linear-gradient(180deg,
       color-mix(in srgb, var(--color-accent-red-soft) 12%, transparent),
       color-mix(in srgb, var(--color-state-danger) 12%, transparent)),
-    color-mix(in srgb, var(--color-state-danger) 14%, rgba(22, 8, 12, 0.72));
+    color-mix(in srgb, var(--color-state-danger) 14%, color-mix(in srgb, var(--color-text-inverse) 72%, transparent));
   border-color: color-mix(in srgb, var(--color-state-danger) 34%, transparent);
 }
 
@@ -188,7 +188,7 @@
 }
 
 .ui-floating-bar-shell.is-shaking .ui-floating-bar {
-  animation: ui-bar-shake 0.3s ease-in-out;
+  animation: ui-bar-shake var(--motion-base);
   border-color: var(--color-state-danger) !important;
   box-shadow: 0 0 20px color-mix(in srgb, var(--color-state-danger) 40%, transparent), var(--ui-floating-surface-shadow) !important;
 }

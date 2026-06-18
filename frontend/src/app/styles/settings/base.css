@@ -8,7 +8,7 @@
   display: flex;
   background: var(--settings-overlay-bg);
   color: var(--color-text-primary);
-  animation: settingsFadeIn 0.2s ease-out;
+  animation: settingsFadeIn var(--motion-base);
 }
 
 .settings-overlay--centered {
@@ -90,7 +90,7 @@
 }
 
 .settings-close-btn svg {
-  transition: transform 0.15s ease !important;
+  transition: transform var(--motion-fast) !important;
 }
 
 .settings-close-btn:hover {

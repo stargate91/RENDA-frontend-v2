@@ -8,12 +8,12 @@
   backdrop-filter: var(--context-menu-backdrop-filter, blur(12px) saturate(140%));
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-overlay-context, 0 10px 30px rgba(0, 0, 0, 0.4)), 0 1px 3px var(--color-border-subtle);
+  box-shadow: var(--shadow-overlay-context, 0 10px 30px color-mix(in srgb, black 40%, transparent)), 0 1px 3px var(--color-border-subtle);
   padding: var(--space-1);
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
-  animation: contextMenuScaleIn 0.12s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: contextMenuScaleIn var(--motion-duration-fast) var(--motion-ease-emphasized) forwards;
   transform-origin: top left;
   pointer-events: auto;
 }
@@ -43,7 +43,7 @@
   font-weight: var(--font-weight-medium);
   text-align: left;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--motion-fast);
   user-select: none;
 }
 
@@ -73,7 +73,7 @@
 .ui-context-menu__icon {
   flex-shrink: 0;
   opacity: 0.7;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--motion-fast);
 }
 
 .ui-context-menu__item:hover:not(:disabled) .ui-context-menu__icon {

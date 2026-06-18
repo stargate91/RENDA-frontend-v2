@@ -11,7 +11,7 @@
   font: var(--text-caption);
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: color 140ms ease, background 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+  transition: color var(--motion-fast), background var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast);
   outline: none;
 }
 
@@ -23,7 +23,7 @@
   background: var(--color-surface-glass-strong);
   border-color: var(--color-border-heavy);
   color: var(--color-ink);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px color-mix(in srgb, black 15%, transparent);
 }
 
 .ui-nav-button:disabled {
@@ -39,7 +39,7 @@
 .ui-nav-button__icon {
   flex-shrink: 0;
   color: var(--color-muted);
-  transition: transform 140ms ease, color 140ms ease;
+  transition: transform var(--motion-fast), color var(--motion-fast);
 }
 
 .ui-nav-button:hover:not(:disabled) .ui-nav-button__icon {
@@ -55,27 +55,27 @@
   min-height: 46px;
   padding: 0 var(--space-3xl);
   border-radius: 16px;
-  border-color: color-mix(in srgb, var(--button-secondary-border) 42%, rgba(255, 255, 255, 0.08));
+  border-color: color-mix(in srgb, var(--button-secondary-border) 42%, var(--color-border-default));
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.008)),
-    linear-gradient(180deg, rgba(11, 18, 28, 0.92), rgba(7, 12, 20, 0.98));
+    linear-gradient(180deg, color-mix(in srgb, var(--color-text-primary) 2.5%, transparent), color-mix(in srgb, var(--color-text-primary) 0.8%, transparent)),
+    linear-gradient(180deg, color-mix(in srgb, var(--color-text-inverse) 92%, transparent), color-mix(in srgb, var(--color-text-inverse) 98%, transparent));
   color: color-mix(in srgb, var(--button-secondary-color) 52%, var(--color-text-secondary) 48%);
   box-shadow:
-    0 10px 24px rgba(0, 0, 0, 0.18),
-    0 0 0 1px rgba(255, 255, 255, 0.012),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    0 10px 24px color-mix(in srgb, black 18%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--color-text-primary) 1.2%, transparent),
+    inset 0 1px 0 var(--color-surface-glass);
 }
 
 .ui-nav-button--onboarding-back:hover:not(:disabled) {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012)),
-    linear-gradient(180deg, rgba(14, 24, 37, 0.96), rgba(9, 15, 24, 1));
-  border-color: color-mix(in srgb, var(--button-secondary-color) 18%, rgba(255, 255, 255, 0.08));
+    linear-gradient(180deg, color-mix(in srgb, var(--color-text-primary) 3.5%, transparent), color-mix(in srgb, var(--color-text-primary) 1.2%, transparent)),
+    linear-gradient(180deg, color-mix(in srgb, var(--color-text-inverse) 96%, transparent), var(--color-text-inverse));
+  border-color: color-mix(in srgb, var(--button-secondary-color) 18%, var(--color-border-default));
   color: color-mix(in srgb, var(--button-secondary-color) 68%, white 8%);
   box-shadow:
-    0 12px 28px rgba(0, 0, 0, 0.22),
-    0 0 0 1px rgba(255, 255, 255, 0.018),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 12px 28px color-mix(in srgb, black 22%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--color-text-primary) 1.8%, transparent),
+    inset 0 1px 0 var(--color-border-default);
 }
 
 .ui-nav-button--onboarding-back .ui-nav-button__icon {
@@ -101,29 +101,29 @@
   min-height: 46px;
   padding: 0 var(--space-3xl);
   border-radius: 16px;
-  border-color: color-mix(in srgb, var(--button-secondary-color) 22%, rgba(255, 255, 255, 0.08));
+  border-color: color-mix(in srgb, var(--button-secondary-color) 22%, var(--color-border-default));
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.018)),
-    linear-gradient(180deg, rgba(15, 74, 122, 0.28), rgba(10, 40, 69, 0.34));
+    linear-gradient(180deg, color-mix(in srgb, var(--color-text-primary) 7%, transparent), color-mix(in srgb, var(--color-text-primary) 1.8%, transparent)),
+    linear-gradient(180deg, color-mix(in srgb, var(--button-secondary-border) 82%, transparent), color-mix(in srgb, var(--button-secondary-border) 98%, transparent));
   color: color-mix(in srgb, var(--button-secondary-color) 78%, white 22%);
   box-shadow:
-    0 14px 30px rgba(0, 0, 0, 0.24),
-    0 0 0 1px rgba(255, 255, 255, 0.02),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    0 14px 30px color-mix(in srgb, black 24%, transparent),
+    0 0 0 1px var(--color-surface-card),
+    inset 0 1px 0 var(--color-border-default);
   font-size: var(--font-size-sm);
   letter-spacing: 0.01em;
 }
 
 .ui-nav-button--onboarding-continue:hover:not(:disabled) {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.024)),
-    linear-gradient(180deg, rgba(18, 86, 143, 0.34), rgba(11, 47, 80, 0.4));
-  border-color: color-mix(in srgb, var(--button-secondary-color) 36%, rgba(255, 255, 255, 0.08));
+    linear-gradient(180deg, color-mix(in srgb, var(--color-text-primary) 9%, transparent), color-mix(in srgb, var(--color-text-primary) 2.4%, transparent)),
+    linear-gradient(180deg, color-mix(in srgb, var(--button-secondary-border) 98%, transparent), color-mix(in srgb, var(--button-secondary-border) 98%, transparent));
+  border-color: color-mix(in srgb, var(--button-secondary-color) 36%, var(--color-border-default));
   color: color-mix(in srgb, var(--button-secondary-color) 84%, white 16%);
   box-shadow:
-    0 16px 34px rgba(0, 0, 0, 0.28),
-    0 0 0 1px rgba(255, 255, 255, 0.028),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 16px 34px color-mix(in srgb, black 28%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--color-text-primary) 2.8%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--color-text-primary) 10%, transparent);
 }
 
 .ui-nav-button--onboarding-continue .ui-nav-button__icon {

@@ -2,21 +2,21 @@
   padding: 0.1875rem var(--space-sm);
   border-radius: 4px;
   border: 1px solid var(--color-line);
-  background: var(--color-tag-button-bg, rgba(255, 255, 255, 0.04));
+  background: var(--color-tag-button-bg, var(--color-surface-glass));
   color: var(--color-text-secondary);
   font-size: 11px;
   font-family: var(--font-family-mono, monospace);
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition: background var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast);
 }
 
 .ui-tag-button:hover:not(:disabled) {
-  background: var(--color-tag-button-bg-hover, rgba(0, 136, 255, 0.08));
-  border-color: var(--color-tag-button-border-hover, rgba(0, 136, 255, 0.4));
+  background: var(--color-tag-button-bg-hover, color-mix(in srgb, var(--color-accent-blue) 8%, transparent));
+  border-color: var(--color-tag-button-border-hover, color-mix(in srgb, var(--color-accent-blue) 40%, transparent));
   color: var(--color-accent);
 }
 
 .ui-tag-button:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--color-accent-glow, rgba(0, 136, 255, 0.18));
+  box-shadow: 0 0 0 2px var(--color-accent-glow, color-mix(in srgb, var(--color-accent-blue) 18%, transparent));
 }

@@ -23,21 +23,21 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-border-default);
+  background: var(--color-surface-glass);
   color: var(--color-text-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--motion-fast);
   outline: none;
 }
 
 .seasons-panel__nav-arrow-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-border-default);
   color: var(--color-text-primary);
-  border-color: rgba(255, 255, 255, 0.14);
+  border-color: var(--color-border-heavy);
 }
 
 .seasons-panel__nav-arrow-btn:disabled {
@@ -84,22 +84,22 @@
   aspect-ratio: 2 / 3;
   border-radius: var(--radius-md, 8px);
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--color-surface-glass);
+  border: 1px solid var(--color-border-default);
   position: relative;
-  transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  transition: all var(--motion-slow);
+  box-shadow: 0 4px 10px color-mix(in srgb, black 25%, transparent);
 }
 
 .season-poster-card:hover .season-poster-card__image-wrapper {
   transform: translateY(-3px);
-  border-color: rgba(255, 255, 255, 0.18);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
+  border-color: color-mix(in srgb, var(--color-text-primary) 18%, transparent);
+  box-shadow: 0 8px 18px color-mix(in srgb, black 40%, transparent);
 }
 
 .season-poster-card.is-active .season-poster-card__image-wrapper {
   border-color: var(--color-accent-blue);
-  box-shadow: 0 0 12px rgba(0, 168, 255, 0.32), 0 4px 12px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--color-accent-blue) 32%, transparent), 0 4px 12px color-mix(in srgb, black 35%, transparent);
   transform: translateY(-2px);
 }
 
@@ -127,7 +127,7 @@
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
-  transition: color 0.2s ease;
+  transition: color var(--motion-base);
 }
 
 .season-poster-card:hover .season-poster-card__title {
@@ -141,8 +141,8 @@
 
 /* Active Season Info */
 .active-season-info {
-  background: var(--media-detail-panel-section-bg, rgba(255, 255, 255, 0.015));
-  border: 1px solid var(--media-detail-panel-section-border, rgba(255, 255, 255, 0.04));
+  background: var(--media-detail-panel-section-bg, var(--color-panel-soft));
+  border: 1px solid var(--media-detail-panel-section-border, var(--color-surface-glass));
   border-radius: var(--radius-lg, 16px);
   padding: var(--space-lg) var(--space-xl);
   display: flex;
@@ -211,15 +211,15 @@
   font-size: var(--font-size-xs, 12px);
   font-weight: 600;
   cursor: pointer;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface-glass);
+  border: 1px solid var(--color-border-default);
   color: var(--color-text-secondary);
-  transition: all 0.2s ease;
+  transition: all var(--motion-base);
 }
 
 .season-watch-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.16);
+  background: var(--color-border-default);
+  border-color: var(--color-border-heavy);
   color: var(--color-text-primary);
 }
 
@@ -253,34 +253,34 @@
   display: flex;
   gap: var(--space-md);
   padding: var(--space-md);
-  background: var(--media-detail-panel-card-bg, rgba(255, 255, 255, 0.02));
-  border: 1px solid var(--media-detail-panel-card-border, rgba(255, 255, 255, 0.06));
+  background: var(--media-detail-panel-card-bg, var(--color-surface-card));
+  border: 1px solid var(--media-detail-panel-card-border, var(--color-border-default));
   border-radius: var(--radius-lg, 12px);
   cursor: pointer;
   position: relative;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all var(--motion-emphasized);
 }
 
 .episode-card:hover {
-  background: var(--media-detail-panel-card-bg-hover, rgba(255, 255, 255, 0.04));
-  border-color: var(--media-detail-panel-card-border-hover, rgba(255, 255, 255, 0.12));
+  background: var(--media-detail-panel-card-bg-hover, var(--color-surface-glass));
+  border-color: var(--media-detail-panel-card-border-hover, var(--color-border-heavy));
 }
 
 .episode-card.is-virtual {
-  border-color: color-mix(in srgb, var(--color-accent-yellow) 12%, var(--media-detail-panel-card-border, rgba(255, 255, 255, 0.06)));
+  border-color: color-mix(in srgb, var(--color-accent-yellow) 12%, var(--media-detail-panel-card-border, var(--color-border-default)));
 }
 
 .episode-card.is-virtual:hover {
-  border-color: color-mix(in srgb, var(--color-accent-yellow) 22%, var(--media-detail-panel-card-border-hover, rgba(255, 255, 255, 0.12)));
+  border-color: color-mix(in srgb, var(--color-accent-yellow) 22%, var(--media-detail-panel-card-border-hover, var(--color-border-heavy)));
 }
 
 .episode-card.is-virtual.is-expanded {
-  border-color: color-mix(in srgb, var(--color-accent-yellow) 28%, rgba(255, 255, 255, 0.14));
+  border-color: color-mix(in srgb, var(--color-accent-yellow) 28%, var(--color-border-heavy));
 }
 
 .episode-card.is-expanded {
-  background: rgba(255, 255, 255, 0.035);
-  border-color: rgba(255, 255, 255, 0.14);
+  background: color-mix(in srgb, var(--color-text-primary) 3.5%, transparent);
+  border-color: var(--color-border-heavy);
 }
 
 .episode-card__media-column {
@@ -298,8 +298,8 @@
   aspect-ratio: 16 / 9;
   border-radius: var(--radius-sm, 6px);
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--color-surface-glass);
+  border: 1px solid var(--color-border-default);
   flex-shrink: 0;
   position: relative;
 }
@@ -339,7 +339,7 @@
 .episode-card__still-watched-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: color-mix(in srgb, black 40%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -380,10 +380,10 @@
 }
 
 .episode-card__meta-item {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-border-subtle);
   padding: calc(var(--space-2xs) / 4) var(--space-xs);
   border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-surface-glass);
 }
 
 .episode-card__overview {
@@ -414,18 +414,18 @@
   height: 28px;
   border-radius: 50%;
   border: none;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--color-surface-glass);
   color: var(--color-text-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--motion-base);
   outline: none;
 }
 
 .episode-card__action-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-border-default);
   color: var(--color-text-primary);
 }
 
@@ -441,7 +441,7 @@
 
 
 .episode-card__action-btn--chevron {
-  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform var(--motion-slow);
 }
 
 .episode-card__action-btn--chevron.is-expanded {

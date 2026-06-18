@@ -64,7 +64,7 @@
 
 .ui-backdrop-card--logo .ui-backdrop-card__img {
   object-fit: contain !important;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-surface-glass);
   padding: var(--space-md);
   box-sizing: border-box;
 }

@@ -72,7 +72,7 @@
 .ui-pill--favorite {
   padding: var(--space-xs) var(--space-md);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--motion-base);
   background-color: var(--color-surface-glass);
   border: 1px solid var(--color-border-default);
   color: var(--color-text-muted);
@@ -88,7 +88,7 @@
 .ui-pill--favorite-active {
   padding: var(--space-xs) var(--space-md);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--motion-base);
   background-color: var(--color-state-danger-bg);
   border: 1px solid var(--color-state-danger-bg-strong);
   color: var(--color-state-danger);
@@ -108,7 +108,7 @@
   font-weight: 500;
   padding: 0.3125rem var(--space-lg);
   border-radius: 6px;
-  border: 1px solid var(--color-border-subtle, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--color-border-subtle, var(--color-border-subtle));
   backdrop-filter: blur(4px);
   gap: var(--space-xs);
 }
@@ -121,7 +121,7 @@
   font-weight: 500;
   padding: var(--space-sm) var(--space-2xl);
   border-radius: 8px;
-  border: 1px solid var(--color-border-subtle, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--color-border-subtle, var(--color-border-subtle));
   backdrop-filter: blur(4px);
   gap: var(--space-sm);
   display: inline-flex;
@@ -153,7 +153,7 @@
   box-shadow: var(--media-detail-tag-pill-shadow);
   backdrop-filter: blur(10px) saturate(118%);
   -webkit-backdrop-filter: blur(10px) saturate(118%);
-  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+  transition: border-color var(--motion-fast), background var(--motion-fast), transform var(--motion-fast), box-shadow var(--motion-fast), filter var(--motion-fast);
 }
 
 .ui-pill--tag::before {

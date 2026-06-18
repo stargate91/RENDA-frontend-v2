@@ -37,8 +37,8 @@
   align-self: flex-start;
   padding: var(--space-md) var(--space-xl);
   border-radius: var(--radius-md, 10px);
-  border: 1px solid color-mix(in srgb, var(--color-border-subtle, rgba(255, 255, 255, 0.08)) 85%, transparent);
-  background: color-mix(in srgb, var(--color-surface-glass-strong, rgba(255, 255, 255, 0.06)) 82%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle, var(--color-border-default)) 85%, transparent);
+  background: color-mix(in srgb, var(--color-surface-glass-strong, var(--color-border-default)) 82%, transparent);
   color: var(--color-text-primary);
   flex-shrink: 0;
 }
@@ -60,7 +60,7 @@
   border-radius: 999px;
   color: var(--color-text-secondary);
   background: color-mix(in srgb, var(--color-bg-elevated) 88%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-border-subtle, rgba(255, 255, 255, 0.05)) 78%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle, var(--color-border-subtle)) 78%, transparent);
 }
 
 .library-bulk-banner__text {
@@ -88,11 +88,11 @@
   background: transparent;
   color: var(--color-text-muted);
   cursor: pointer;
-  transition: 160ms ease;
+  transition: var(--motion-fast);
 }
 
 .library-bulk-banner__dismiss:hover {
-  background: color-mix(in srgb, var(--color-surface-glass-strong, rgba(255, 255, 255, 0.06)) 92%, transparent);
+  background: color-mix(in srgb, var(--color-surface-glass-strong, var(--color-border-default)) 92%, transparent);
   color: var(--color-text-primary);
 }
 
@@ -185,10 +185,10 @@
 .library-spinner {
   width: 32px;
   height: 32px;
-  border: 2px solid var(--color-border-subtle, rgba(255, 255, 255, 0.05));
+  border: 2px solid var(--color-border-subtle, var(--color-border-subtle));
   border-top-color: var(--color-accent-blue);
   border-radius: 50%;
-  animation: librarySpin 0.8s linear infinite;
+  animation: librarySpin var(--motion-duration-spinner-slow) var(--motion-ease-linear) infinite;
 }
 
 @keyframes librarySpin {
@@ -570,7 +570,7 @@
   border: 0;
   background: transparent;
   cursor: pointer;
-  transition: color 160ms ease;
+  transition: color var(--motion-fast);
 }
 
 .bulk-people-match-row__status-button.is-rematch {
@@ -647,13 +647,13 @@
   background: linear-gradient(135deg,
       color-mix(in srgb, var(--current-tag-color, var(--color-accent)) 16%, transparent),
       transparent);
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  transition: background-color var(--motion-base), border-color var(--motion-base);
 }
 
 .ui-modal:has(#create-tag-form) .ui-modal__title-icon {
   color: var(--current-tag-color, var(--color-accent));
   filter: drop-shadow(0 0 8px color-mix(in srgb, var(--current-tag-color, var(--color-accent)) 25%, transparent));
-  transition: color 0.3s ease, filter 0.3s ease;
+  transition: color var(--motion-base), filter var(--motion-base);
 }
 
 /* Custom Tag Grid */
@@ -674,9 +674,9 @@
   padding: var(--space-2xl);
   border-radius: var(--radius-lg, 12px);
   background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border-subtle, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--color-border-subtle, var(--color-border-subtle));
   box-shadow: var(--shadow-md);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all var(--motion-slow);
   cursor: pointer;
   overflow: hidden;
   appearance: none;
@@ -693,7 +693,7 @@
   z-index: 3;
   opacity: 0;
   transform: translateY(2px);
-  transition: opacity 0.16s ease, transform 0.16s ease;
+  transition: opacity var(--motion-fast), transform var(--motion-fast);
 }
 
 .library-tag-card:hover .library-tag-card__actions,
@@ -723,7 +723,7 @@
   inset: 0;
   background: linear-gradient(135deg, color-mix(in srgb, var(--tag-color) 10%, transparent), transparent);
   opacity: 0.5;
-  transition: opacity 0.2s ease;
+  transition: opacity var(--motion-base);
 }
 
 .library-tag-card__preview {
@@ -735,7 +735,7 @@
   padding: 0;
   opacity: 0.45;
   pointer-events: none;
-  transition: opacity 0.2s ease;
+  transition: opacity var(--motion-base);
 }
 
 .library-tag-card:hover .library-tag-card__preview {
@@ -855,7 +855,7 @@
   flex-direction: column;
   gap: var(--space-3xl);
   margin-bottom: var(--space-sm);
-  animation: slideDownFade 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slideDownFade var(--motion-slow);
 }
 
 .library-tag-expanded-panel__tabs {
@@ -865,7 +865,7 @@
 .library-tag-expanded-panel.is-focus-mode {
   background: var(--ui-library-tag-focus-bg);
   border-style: solid;
-  border-color: var(--color-border-subtle, rgba(255, 255, 255, 0.05));
+  border-color: var(--color-border-subtle, var(--color-border-subtle));
   box-shadow:
     var(--shadow-lg),
     0 0 0 1px var(--color-border-subtle),
@@ -948,7 +948,7 @@
   left: 10px;
   right: 10px;
   font-size: 11px;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.34);
+  text-shadow: 0 2px 10px color-mix(in srgb, black 34%, transparent);
 }
 
 @keyframes slideDownFade {
@@ -978,7 +978,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-5xl);
-  animation: slideDownFade 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slideDownFade var(--motion-duration-slow) var(--motion-ease-emphasized);
 }
 
 .library-chooser-header {
@@ -1014,14 +1014,14 @@
   width: 80px;
   height: 80px;
   border-radius: var(--radius-lg, 16px);
-  background: var(--color-surface-glass, rgba(255, 255, 255, 0.04));
-  box-shadow: inset 0 0 0 1px var(--color-border-subtle, rgba(255, 255, 255, 0.05));
+  background: var(--color-surface-glass, var(--color-surface-glass));
+  box-shadow: inset 0 0 0 1px var(--color-border-subtle, var(--color-border-subtle));
   color: var(--color-text-secondary);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all var(--motion-slow);
 }
 
 .library-chooser-card__icon {
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform var(--motion-slow);
 }
 
 .library-chooser-card__content {
@@ -1061,8 +1061,8 @@
 .ui-poster-card,
 .library-tag-card {
   opacity: 0;
-  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: calc(var(--item-index, 0) * 15ms);
+  animation: fadeInUp var(--motion-duration-slow) var(--motion-ease-emphasized) both;
+  animation-delay: calc(var(--item-index, 0) * var(--motion-delay-step));
 }
 
 .library-modal-footer {
@@ -1112,7 +1112,7 @@
   border-radius: 50%;
   outline: none;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--motion-fast);
 }
 
 .create-tag-form__color-list > .create-tag-form__custom-color-label {
@@ -1146,7 +1146,7 @@
   font-weight: 700;
   font-family: var(--font-family-mono, monospace);
   color: var(--color-text-secondary);
-  transition: all 0.15s ease;
+  transition: all var(--motion-fast);
   outline: none;
 }
 
@@ -1220,7 +1220,7 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: color-mix(in srgb, black 60%, transparent);
   color: var(--color-text-primary);
   border: none;
   cursor: pointer;

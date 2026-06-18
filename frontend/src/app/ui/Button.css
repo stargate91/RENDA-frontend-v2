@@ -314,7 +314,7 @@
   background-image: var(--button-secondary-bg);
   color: var(--button-secondary-color);
   border: 1px solid var(--button-secondary-border);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 10px color-mix(in srgb, black 30%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -353,7 +353,7 @@
   background-color: var(--app-shell-color-panel-strong);
   background-image: var(--button-secondary-hover-bg);
   border-color: var(--button-secondary-border);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 12px color-mix(in srgb, black 40%, transparent);
 }
 
 .ui-poster-card__media-shell > .ui-icon-button--play-overlay:hover {

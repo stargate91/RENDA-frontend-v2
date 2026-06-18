@@ -10,7 +10,7 @@
   display: grid;
   gap: var(--space-3);
   padding-bottom: var(--space-2);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--color-border-default);
 }
 
 .organizer-match-modal__search-layout {
@@ -152,7 +152,7 @@
 }
 
 .organizer-match-modal .ui-status-badge--overlay {
-  background: rgba(0, 136, 255, 0.60);
+  background: color-mix(in srgb, var(--color-accent-blue) 60%, transparent);
 }
 
 .organizer-match-modal .ui-status-badge--overlay.ui-status-badge--warning {
@@ -196,7 +196,7 @@
   color: inherit;
   text-align: left;
   cursor: pointer;
-  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+  transition: border-color var(--motion-fast), background var(--motion-fast), transform var(--motion-fast), box-shadow var(--motion-fast);
 }
 
 .organizer-match-modal__result-card:hover:not(:disabled) {
@@ -246,7 +246,7 @@
 
 .organizer-match-modal__poster-placeholder {
   color: var(--color-muted);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+  background: var(--ui-surface-card-gradient-soft);
 }
 
 .organizer-match-modal__result-copy {
@@ -429,8 +429,8 @@
   border-radius: 50%;
   background: var(--color-accent);
   color: var(--color-text-inverse);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-  animation: scale-up 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 8px color-mix(in srgb, black 40%, transparent);
+  animation: scale-up var(--motion-duration-fast) var(--motion-ease-expressive);
   z-index: 2;
 }
 
@@ -505,7 +505,7 @@
   background: var(--color-surface-glass-strong);
   color: var(--color-ink);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--motion-fast);
 }
 
 .organizer-match-modal__bucket-chip:hover {
@@ -641,7 +641,7 @@
 }
 
 .organizer-override-field__input {
-  transition: opacity 0.15s ease;
+  transition: opacity var(--motion-fast);
 }
 
 .organizer-override-field__input.is-disabled {
@@ -668,7 +668,7 @@
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-3);
-  background: var(--color-panel-subtle, rgba(255, 255, 255, 0.02));
+  background: var(--color-panel-subtle, var(--color-surface-card));
   border: 1px solid var(--color-line);
   border-radius: var(--radius-md);
 }
@@ -709,7 +709,7 @@
   border-radius: var(--radius-sm);
   cursor: grab;
   user-select: none;
-  transition: background 0.12s ease, border-color 0.12s ease;
+  transition: background var(--motion-fast), border-color var(--motion-fast);
 }
 
 .organizer-override-bulk-episodes__item:hover {
@@ -772,7 +772,7 @@
 /* Bulk Overrides Side Panel Expansion */
 .ui-modal--bulk-override {
   width: min(580px, 100%);
-  transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: width var(--motion-slow);
 }
 
 .ui-modal.has-side-panel {
@@ -796,7 +796,7 @@
   flex-shrink: 0;
   border-left: 1px solid var(--color-line);
   padding-left: var(--space-6);
-  animation: slideInRight 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: slideInRight var(--motion-slow) forwards;
 }
 
 @keyframes slideInRight {
@@ -827,7 +827,7 @@
   flex-shrink: 0;
   border-right: 1px solid var(--color-line);
   padding-right: var(--space-6);
-  animation: slideInLeft 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: slideInLeft var(--motion-slow) forwards;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);

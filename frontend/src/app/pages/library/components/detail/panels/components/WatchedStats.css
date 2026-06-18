@@ -13,7 +13,7 @@
 }
 
 .watched-panel .specs-card__value.status-unwatched {
-  color: var(--color-text-muted, rgba(255, 255, 255, 0.4));
+  color: var(--color-text-muted, color-mix(in srgb, var(--color-text-primary) 40%, transparent));
 }
 
 .specs-card--progress {
@@ -35,12 +35,12 @@
   margin-top: var(--space-xs);
   border-radius: 3px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-border-default);
   border: none;
 }
 
 .specs-card__progress::-webkit-progress-bar {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-border-default);
   border-radius: 3px;
 }
 
@@ -65,7 +65,7 @@
   border-radius: var(--radius-md);
   background: var(--color-surface-glass);
   border: 1px solid var(--media-detail-panel-card-border);
-  transition: all 160ms ease;
+  transition: all var(--motion-fast);
   user-select: none;
 }
 
@@ -76,7 +76,7 @@
 
 .watched-panel__activity-header svg {
   color: var(--color-text-secondary);
-  transition: transform 160ms ease;
+  transition: transform var(--motion-fast);
   display: block;
   flex-shrink: 0;
 }
@@ -102,7 +102,7 @@
   padding: var(--space-xs) var(--space-md);
   border: 1px solid var(--media-detail-panel-card-border);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.015);
+  background: var(--color-panel-soft);
   box-shadow: var(--shadow-sm);
   margin-top: var(--space-sm);
 }
@@ -115,7 +115,7 @@
 }
 
 .activity-item+.activity-item {
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  border-top: 1px solid var(--color-surface-glass);
 }
 
 .activity-item__dot {
@@ -156,7 +156,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  transition: transform var(--motion-emphasized), border-color var(--motion-base), box-shadow var(--motion-base), background var(--motion-base);
 }
 
 .watched-panel .season-progress-card:hover {
@@ -189,12 +189,12 @@
   height: 4px;
   border-radius: 2px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--color-border-default);
   border: none;
 }
 
 .season-progress-card__progress::-webkit-progress-bar {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--color-border-default);
   border-radius: 2px;
 }
 

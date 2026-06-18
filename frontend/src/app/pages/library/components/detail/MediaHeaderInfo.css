@@ -4,9 +4,10 @@
 }
 
 .media-detail-page__header-copy {
+  --media-header-gap: 60px;
   display: flex;
   flex-direction: column;
-  gap: 60px;
+  gap: var(--media-header-gap);
   min-width: 0;
 }
 
@@ -28,7 +29,7 @@
   height: auto;
   object-fit: contain;
   filter:
-    drop-shadow(0 10px 34px rgba(0, 0, 0, 0.56)) drop-shadow(0 0 24px rgba(255, 255, 255, 0.06));
+    drop-shadow(0 10px 34px rgba(0, 0, 0, 0.56)) drop-shadow(0 0 24px var(--color-border-default));
 }
 
 .media-detail-page__fallback-title {
@@ -37,8 +38,8 @@
   margin: 0;
   line-height: 1.15;
   text-shadow:
-    0 10px 30px rgba(0, 0, 0, 0.62),
-    0 0 18px rgba(255, 255, 255, 0.04);
+    0 10px 30px color-mix(in srgb, black 62%, transparent),
+    0 0 18px var(--color-surface-glass);
 }
 
 .media-detail-page__details-group {
@@ -55,9 +56,9 @@
   position: absolute;
   inset: -10px -20px -18px -28px;
   background:
-    radial-gradient(ellipse at 16% 22%, rgba(0, 0, 0, 0.22) 0%, rgba(0, 0, 0, 0.14) 22%, transparent 56%),
-    radial-gradient(ellipse at 28% 56%, rgba(0, 0, 0, 0.16) 0%, rgba(0, 0, 0, 0.1) 24%, transparent 58%),
-    radial-gradient(ellipse at 58% 42%, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.06) 18%, transparent 48%);
+    radial-gradient(ellipse at 16% 22%, color-mix(in srgb, black 22%, transparent) 0%, color-mix(in srgb, black 14%, transparent) 22%, transparent 56%),
+    radial-gradient(ellipse at 28% 56%, color-mix(in srgb, black 16%, transparent) 0%, color-mix(in srgb, black 10%, transparent) 24%, transparent 58%),
+    radial-gradient(ellipse at 58% 42%, color-mix(in srgb, black 10%, transparent) 0%, color-mix(in srgb, black 6%, transparent) 18%, transparent 48%);
   border-radius: 32px;
   pointer-events: none;
   z-index: 0;
@@ -85,7 +86,7 @@
   font-style: italic;
   color: color-mix(in srgb, var(--app-shell-color-accent) 88%, var(--color-text-primary));
   margin: 0;
-  text-shadow: 0 8px 22px rgba(0, 0, 0, 0.32);
+  text-shadow: 0 8px 22px color-mix(in srgb, black 32%, transparent);
 }
 
 .media-detail-page__meta-row {
@@ -110,11 +111,11 @@
 }
 
 .media-detail-page__logo {
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), filter 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform var(--motion-base), filter var(--motion-base);
 }
 
 .media-detail-page__fallback-title {
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform var(--motion-base), color var(--motion-base);
 }
 
 .media-detail-page__logo-container.clickable:hover .media-detail-page__logo {
