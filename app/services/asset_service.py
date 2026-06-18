@@ -74,9 +74,8 @@ class AssetService:
                     return None
 
                 content_type = response.headers.get("Content-Type", "")
-                if "image" not in content_type.lower():
-                    logger.error(f"Invalid content type for {url}: {content_type}")
-                    return None
+                if content_type and "image" not in content_type.lower():
+                    logger.warning(f"Suspicious content type for {url}: {content_type}. Trying to verify image payload anyway.")
 
                 saved_path = self.processor.write_chunks(local_file_path, response.iter_content(8192))
                 if not saved_path:

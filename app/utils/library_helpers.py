@@ -19,5 +19,5 @@ def public_image_path(path: Optional[str], subfolder: str) -> Optional[str]:
     filename = clean_path.split(marker, 1)[1] if marker in clean_path else clean_path.lstrip("/")
     local_file = MEDIA_IMAGE_ROOT / subfolder / filename
     if local_file.exists() and local_file.stat().st_size > 100:
-        return f"/{filename}"
+        return f"/media/images/{subfolder}/{filename}"
     return None

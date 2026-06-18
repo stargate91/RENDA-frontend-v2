@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import SegmentedControl from '@/ui/SegmentedControl';
+import { useRef, useState } from 'react';
 import TMDBImageGrid from '../components/entityDetail/TMDBImageGrid';
 import Input from '@/ui/Input';
 import {
@@ -13,24 +12,24 @@ import {
   useOverridePersonProfileMutation,
   useUploadPersonProfileMutation,
 } from '@/queries/libraryQueries';
-import { Upload, Check } from 'lucide-react';
+import { Upload, Link2 } from 'lucide-react';
+import './UniversalImagePickerModal.css';
 
 export default function UniversalImagePickerModal({
   entityId,
   tmdbId,
-  imageType = 'backdrop', // 'backdrop' | 'poster' | 'profile' | 'logo'
-  entityType = 'movie', // 'movie' | 'tv' | 'person' | 'collection'
+  imageType = 'backdrop',
+  entityType = 'movie',
   currentPath,
   t,
   toast,
   onClose,
 }) {
-  const [activeTab, setActiveTab] = useState('tmdb');
+  const fileInputRef = useRef(null);
   const [uploadFile, setUploadFile] = useState(null);
   const [uploadPreview, setUploadPreview] = useState(null);
   const [urlInput, setUrlInput] = useState('');
 
-  // Load appropriate mutations
   const overrideBackdropMutation = useOverrideBackdropMutation();
   const overridePosterMutation = useOverridePosterMutation();
   const uploadPosterMutation = useUploadPosterMutation();
@@ -77,17 +76,17 @@ export default function UniversalImagePickerModal({
       if (imageType === 'poster') {
         await uploadPosterMutation.mutateAsync({
           itemId: entityId,
-          file: file,
+          file,
         });
       } else if (imageType === 'logo') {
         await uploadLogoMutation.mutateAsync({
           itemId: entityId,
-          file: file,
+          file,
         });
       } else if (imageType === 'profile' && entityType === 'person') {
         await uploadPersonProfileMutation.mutateAsync({
           personId: entityId,
-          file: file,
+          file,
         });
       }
       toast(t?.('library.details.imageUploaded') || 'Image uploaded and updated successfully!', 'success');
@@ -97,9 +96,10 @@ export default function UniversalImagePickerModal({
     }
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
+  const handleFileChange = (event) => {
+    const file = event.target.files?.[0];
     if (!file) return;
+
     setUploadFile(file);
 
     const reader = new FileReader();
@@ -120,129 +120,103 @@ export default function UniversalImagePickerModal({
     overridePersonProfileMutation.isPending ||
     uploadPersonProfileMutation.isPending;
 
-  const showUploadTab = imageType !== 'backdrop'; // Backdrops typically are not custom uploaded
+  const showUploadPanel = imageType !== 'backdrop';
+  const hasUploadPreview = Boolean(uploadPreview);
 
   return (
-    <div className="person-backdrop-picker" style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
-      {showUploadTab && (
-        <SegmentedControl
-          ariaLabel="Image Source"
-          options={[
-            { value: 'tmdb', label: t?.('library.details.tmdbOptions') || 'TMDB Options' },
-            { value: 'upload', label: t?.('library.details.uploadCustom') || 'Upload Custom' },
-          ]}
-          value={activeTab}
-          onChange={setActiveTab}
-        />
-      )}
-
-      {activeTab === 'tmdb' ? (
-        <div style={{ flex: '1 1 auto', overflowY: 'auto', maxHeight: '60vh' }}>
-          <TMDBImageGrid
-            itemId={entityId}
-            tmdbId={tmdbId}
-            mediaType={entityType}
-            imageType={imageType === 'profile' ? 'poster' : imageType} // profile images are queried as posters/profiles
-            currentPath={currentPath}
-            onSelect={handleSelectTmdbImage}
-            isPending={isPending}
-            t={t}
+    <div className="universal-image-picker">
+      {showUploadPanel ? (
+        <section className="universal-image-picker__upload-panel">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            disabled={isPending}
+            className="universal-image-picker__file-input"
           />
-        </div>
-      ) : (
-        <div className="create-tag-form" style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'stretch', width: '100%', padding: '16px 0' }}>
-          {uploadPreview ? (
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <div style={{ position: 'relative', width: '180px', height: imageType === 'logo' ? '90px' : '270px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--color-border-subtle)' }}>
-                <img
-                  src={uploadPreview}
-                  alt="Upload preview"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-                {isPending && (
-                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'grid', placeItems: 'center', color: '#fff' }}>
-                    <span>{t?.('common.uploading') || 'Uploading...'}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : (
-            <label
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '100%',
-                height: '180px',
-                border: '2px dashed var(--color-border-subtle)',
-                borderRadius: '8px',
-                cursor: isPending ? 'not-allowed' : 'pointer',
-                gap: '8px',
-                color: 'var(--color-text-muted)',
-              }}
-            >
-              <Upload size={32} />
-              <span>{t?.('library.details.clickToUpload') || 'Click or drag file to upload'}</span>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                disabled={isPending}
-                style={{ display: 'none' }}
-              />
-            </label>
-          )}
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
-            <span style={{ fontSize: '10px', color: 'var(--color-text-muted)', fontWeight: 700, letterSpacing: '0.05em' }}>
-              {t?.('library.tags.imageUrlPlaceholder') || 'OR PASTE IMAGE URL'}
-            </span>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', width: '100%' }}>
+          <div className="universal-image-picker__url-row">
+            <div className="universal-image-picker__url-input-shell">
+              <Link2 size={15} />
               <Input
                 placeholder="https://example.com/image.jpg"
                 value={urlInput}
-                onChange={(e) => setUrlInput(e.target.value)}
+                onChange={(event) => setUrlInput(event.target.value)}
                 disabled={isPending}
-                style={{ flex: 1 }}
-                className="image-picker-url-input"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
+                className="universal-image-picker__url-input"
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault();
                     if (urlInput.trim()) {
                       void handleSelectTmdbImage(urlInput.trim());
                     }
                   }
                 }}
               />
-              <button
-                type="button"
-                onClick={() => {
-                  if (urlInput.trim()) {
-                    void handleSelectTmdbImage(urlInput.trim());
-                  }
-                }}
-                disabled={!urlInput.trim() || isPending}
-                style={{
-                  padding: '12px 16px',
-                  borderRadius: '12px',
-                  background: 'var(--color-accent-blue)',
-                  color: '#fff',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: 'var(--font-size-sm)',
-                  fontWeight: 600,
-                  height: '48px', // Match Renda's Input height
-                  boxSizing: 'border-box',
-                  opacity: (!urlInput.trim() || isPending) ? 0.6 : 1,
-                }}
-              >
-                {t?.('common.save') || 'Save'}
-              </button>
             </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (urlInput.trim()) {
+                  void handleSelectTmdbImage(urlInput.trim());
+                }
+              }}
+              disabled={!urlInput.trim() || isPending}
+              className="ui-button ui-button--secondary-neutral ui-button--md universal-image-picker__save-button"
+            >
+              {t?.('common.save') || 'Save'}
+            </button>
+
+            <button
+              type="button"
+              className="ui-button ui-button--secondary-neutral ui-button--md universal-image-picker__upload-button"
+              disabled={isPending}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload size={16} />
+              <span>{t?.('library.details.uploadCustom') || 'Upload Custom'}</span>
+            </button>
           </div>
-        </div>
-      )}
+
+          {hasUploadPreview || uploadFile || isPending ? (
+            <div className="universal-image-picker__upload-status">
+              {hasUploadPreview ? (
+                <div className={`universal-image-picker__preview${imageType === 'logo' ? ' is-logo' : ''}`}>
+                  <img
+                    src={uploadPreview}
+                    alt="Upload preview"
+                    className="universal-image-picker__preview-image"
+                  />
+                </div>
+              ) : null}
+
+              <div className="universal-image-picker__status-copy">
+                <strong>{uploadFile?.name || (t?.('common.uploading') || 'Uploading...')}</strong>
+                <span>
+                  {isPending
+                    ? (t?.('common.uploading') || 'Uploading...')
+                    : (t?.('library.details.imageUploaded') || 'Image uploaded and updated successfully!')}
+                </span>
+              </div>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
+      <div className="universal-image-picker__grid">
+        <TMDBImageGrid
+          itemId={entityId}
+          tmdbId={tmdbId}
+          mediaType={entityType}
+          imageType={imageType === 'profile' ? 'poster' : imageType}
+          currentPath={currentPath}
+          onSelect={handleSelectTmdbImage}
+          isPending={isPending}
+          t={t}
+        />
+      </div>
     </div>
   );
 }

@@ -8,7 +8,8 @@
     "remove": "Remove",
     "save": "Save",
     "search": "Search",
-    "noData": "No data available"
+    "noData": "No data available",
+    "uploading": "Uploading..."
   },
   "dropzone": {
     "label": "Drop files or folders here",

@@ -1,7 +1,9 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, File, UploadFile
 from fastapi.responses import JSONResponse
 from datetime import datetime
+import uuid
 from copy import deepcopy
+from pathlib import Path
 
 from app.db.base import Session
 from app.db.models import (
@@ -29,6 +31,7 @@ from app.api.routes.overrides.logic import (
 )
 from app.utils.library_utils import _match_language_code
 from app.utils.library_utils.image_constants import BACKDROP_SIZE, LOGO_SIZE, POSTER_SIZE
+from app.services.image_processing_service import ImageProcessingService
 
 import logging
 logger = logging.getLogger(__name__)
@@ -44,6 +47,25 @@ def _pick_active_localization_for_override(match, db):
     return LanguageService.pick_localization(match.localizations, [ui_lang] if ui_lang else []) or (
         match.localizations[0] if getattr(match, "localizations", None) else None
     )
+
+
+def _serialize_asset_response(path: str | None, local_path: str | None, subfolder: str, field_name: str) -> dict:
+    return {
+        "status": "success",
+        field_name: path,
+        f"local_{field_name}": local_path,
+    }
+
+
+def _store_uploaded_asset(file: UploadFile, subfolder: str) -> tuple[str | None, str | None]:
+    processor = ImageProcessingService("data/media/images")
+    processor.ensure_folders()
+
+    extension = Path(file.filename or "upload.jpg").suffix or ".jpg"
+    filename = f"/{uuid.uuid4().hex}{extension.lower()}"
+    target_path = processor.build_local_path(subfolder, filename)
+    saved_path = processor.write_upload(target_path, file.file)
+    return filename, saved_path
 
 @router.post("/media/update")
 def update_media_item(payload: dict):
@@ -548,7 +570,7 @@ def update_item_poster(item_id: str, payload: dict):
             loc.manual_poster_path = poster_path
             loc.manual_local_poster_path = local_p
             db.commit()
-            return {"status": "success", "poster_path": poster_path, "local_poster_path": local_p}
+            return _serialize_asset_response(poster_path, local_p, "posters", "poster_path")
 
         if isinstance(item_id, str) and item_id.startswith("tmdb_"):
             try:
@@ -560,7 +582,7 @@ def update_item_poster(item_id: str, payload: dict):
             state.manual_poster_path = poster_path
             state.manual_local_poster_path = local_p
             db.commit()
-            return {"status": "success", "poster_path": poster_path, "local_poster_path": local_p}
+            return _serialize_asset_response(poster_path, local_p, "posters", "poster_path")
 
         if isinstance(item_id, str) and item_id.startswith("series_"):
             try:
@@ -581,7 +603,7 @@ def update_item_poster(item_id: str, payload: dict):
             loc.manual_poster_path = poster_path
             loc.manual_local_poster_path = local_p
             db.commit()
-            return {"status": "success", "poster_path": poster_path, "local_poster_path": local_p}
+            return _serialize_asset_response(poster_path, local_p, "posters", "poster_path")
 
         try:
             target_item_id = int(item_id)
@@ -601,7 +623,7 @@ def update_item_poster(item_id: str, payload: dict):
         loc.manual_poster_path = poster_path
         loc.manual_local_poster_path = local_p
         db.commit()
-        return {"status": "success", "poster_path": poster_path, "local_poster_path": local_p}
+        return _serialize_asset_response(poster_path, local_p, "posters", "poster_path")
     except Exception as e:
         db.rollback()
         logger.error(f"Error overriding poster: {e}")
@@ -609,6 +631,165 @@ def update_item_poster(item_id: str, payload: dict):
     finally:
         db.close()
 
+
+
+@router.post("/item/{item_id}/upload-poster")
+def upload_item_poster(item_id: str, file: UploadFile = File(...)):
+    db = Session()
+    try:
+        filename, saved_path = _store_uploaded_asset(file, "posters")
+        if not saved_path or not filename:
+            return JSONResponse(status_code=400, content={"error": "Invalid poster upload"})
+
+        if isinstance(item_id, str) and item_id.startswith("collection_"):
+            try:
+                collection_tmdb_id = int(item_id.split("_")[1])
+            except (ValueError, IndexError):
+                return JSONResponse(status_code=400, content={"error": "Invalid collection TMDB ID format"})
+
+            collection = db.query(MediaCollection).filter(MediaCollection.tmdb_id == collection_tmdb_id).first()
+            if not collection:
+                collection = MediaCollection(tmdb_id=collection_tmdb_id)
+                db.add(collection)
+                db.flush()
+
+            ui_lang = _preferred_metadata_language(db) or "en"
+            loc = next((entry for entry in collection.localizations if _match_language_code(entry.locale, ui_lang)), None)
+            if not loc:
+                loc = next(iter(collection.localizations), None)
+            if not loc:
+                from app.db.models import MediaCollectionLocalization
+                loc = MediaCollectionLocalization(collection_tmdb_id=collection.tmdb_id, locale=ui_lang, name=f"Collection {collection.tmdb_id}")
+                db.add(loc)
+
+            loc.manual_poster_path = filename
+            loc.manual_local_poster_path = filename
+            db.commit()
+            return _serialize_asset_response(filename, saved_path, "posters", "poster_path")
+
+        if isinstance(item_id, str) and item_id.startswith("tmdb_"):
+            try:
+                tmdb_id = int(item_id.split("_")[1])
+            except (ValueError, IndexError):
+                return JSONResponse(status_code=400, content={"error": "Invalid TMDB ID format"})
+            media_type = "movie"
+            state = _get_or_create_virtual_media_state(db, tmdb_id, media_type)
+            state.manual_poster_path = filename
+            state.manual_local_poster_path = filename
+            db.commit()
+            return _serialize_asset_response(filename, saved_path, "posters", "poster_path")
+
+        if isinstance(item_id, str) and item_id.startswith("series_"):
+            try:
+                series_tmdb_id = int(item_id.split("_")[1])
+            except (ValueError, IndexError):
+                return JSONResponse(status_code=400, content={"error": "Invalid series ID format"})
+            active_match = db.query(MediaMatch).filter(
+                ((MediaMatch.series_tmdb_id == series_tmdb_id) | (MediaMatch.tmdb_id == series_tmdb_id)),
+                MediaMatch.is_active == True,
+            ).first()
+            if not active_match:
+                return JSONResponse(status_code=404, content={"error": "Series not found"})
+            loc = _pick_active_localization_for_override(active_match, db)
+            if not loc:
+                return JSONResponse(status_code=404, content={"error": "No localization found for this series"})
+            loc.manual_series_poster_path = filename
+            loc.manual_local_series_poster_path = filename
+            loc.manual_poster_path = filename
+            loc.manual_local_poster_path = filename
+            db.commit()
+            return _serialize_asset_response(filename, saved_path, "posters", "poster_path")
+
+        try:
+            target_item_id = int(item_id)
+        except ValueError:
+            return JSONResponse(status_code=400, content={"error": "Invalid item ID format"})
+
+        item = db.query(MediaItem).filter(MediaItem.id == target_item_id).first()
+        if not item:
+            return JSONResponse(status_code=404, content={"error": "Item not found"})
+        active_match = next((m for m in item.matches if m.is_active), None)
+        if not active_match:
+            return JSONResponse(status_code=404, content={"error": "No active match found for this item"})
+        loc = _pick_active_localization_for_override(active_match, db)
+        if not loc:
+            return JSONResponse(status_code=404, content={"error": "No localization found for this item"})
+
+        loc.manual_poster_path = filename
+        loc.manual_local_poster_path = filename
+        db.commit()
+        return _serialize_asset_response(filename, saved_path, "posters", "poster_path")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error uploading poster: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    finally:
+        db.close()
+
+
+@router.post("/item/{item_id}/upload-logo")
+def upload_item_logo(item_id: str, file: UploadFile = File(...)):
+    db = Session()
+    try:
+        filename, saved_path = _store_uploaded_asset(file, "logos")
+        if not saved_path or not filename:
+            return JSONResponse(status_code=400, content={"error": "Invalid logo upload"})
+
+        if isinstance(item_id, str) and item_id.startswith("tmdb_"):
+            try:
+                tmdb_id = int(item_id.split("_")[1])
+            except (ValueError, IndexError):
+                return JSONResponse(status_code=400, content={"error": "Invalid TMDB ID format"})
+            state = _get_or_create_virtual_media_state(db, tmdb_id, "movie")
+            state.manual_logo_path = filename
+            state.manual_local_logo_path = filename
+            db.commit()
+            return _serialize_asset_response(filename, saved_path, "logos", "logo_path")
+
+        if isinstance(item_id, str) and item_id.startswith("series_"):
+            try:
+                series_tmdb_id = int(item_id.split("_")[1])
+            except (ValueError, IndexError):
+                return JSONResponse(status_code=400, content={"error": "Invalid series ID format"})
+            active_match = db.query(MediaMatch).filter(
+                ((MediaMatch.series_tmdb_id == series_tmdb_id) | (MediaMatch.tmdb_id == series_tmdb_id)),
+                MediaMatch.is_active == True,
+            ).first()
+            if not active_match:
+                return JSONResponse(status_code=404, content={"error": "Series not found"})
+            loc = _pick_active_localization_for_override(active_match, db)
+            if not loc:
+                return JSONResponse(status_code=404, content={"error": "No localization found for this series"})
+            loc.manual_logo_path = filename
+            loc.manual_local_logo_path = filename
+            db.commit()
+            return _serialize_asset_response(filename, saved_path, "logos", "logo_path")
+
+        try:
+            target_item_id = int(item_id)
+        except ValueError:
+            return JSONResponse(status_code=400, content={"error": "Invalid item ID format"})
+
+        item = db.query(MediaItem).filter(MediaItem.id == target_item_id).first()
+        if not item:
+            return JSONResponse(status_code=404, content={"error": "Item not found"})
+        active_match = next((m for m in item.matches if m.is_active), None)
+        if not active_match:
+            return JSONResponse(status_code=404, content={"error": "No active match found for this item"})
+        loc = _pick_active_localization_for_override(active_match, db)
+        if not loc:
+            return JSONResponse(status_code=404, content={"error": "No localization found for this item"})
+
+        loc.manual_logo_path = filename
+        loc.manual_local_logo_path = filename
+        db.commit()
+        return _serialize_asset_response(filename, saved_path, "logos", "logo_path")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error uploading logo: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    finally:
+        db.close()
 
 @router.post("/item/{item_id}/logo")
 def update_item_logo(item_id: str, payload: dict):
@@ -634,7 +815,7 @@ def update_item_logo(item_id: str, payload: dict):
             state.manual_logo_path = logo_path
             state.manual_local_logo_path = local_logo
             db.commit()
-            return {"status": "success", "logo_path": logo_path, "local_logo_path": local_logo}
+            return _serialize_asset_response(logo_path, local_logo, "logos", "logo_path")
 
         if isinstance(item_id, str) and item_id.startswith("series_"):
             try:
@@ -653,7 +834,7 @@ def update_item_logo(item_id: str, payload: dict):
             loc.manual_logo_path = logo_path
             loc.manual_local_logo_path = local_logo
             db.commit()
-            return {"status": "success", "logo_path": logo_path, "local_logo_path": local_logo}
+            return _serialize_asset_response(logo_path, local_logo, "logos", "logo_path")
 
         try:
             target_item_id = int(item_id)
@@ -673,7 +854,7 @@ def update_item_logo(item_id: str, payload: dict):
         loc.manual_logo_path = logo_path
         loc.manual_local_logo_path = local_logo
         db.commit()
-        return {"status": "success", "logo_path": logo_path, "local_logo_path": local_logo}
+        return _serialize_asset_response(logo_path, local_logo, "logos", "logo_path")
     except Exception as e:
         db.rollback()
         logger.error(f"Error overriding logo: {e}")
