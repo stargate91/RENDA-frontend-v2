@@ -180,11 +180,12 @@ export function buildPersonExternalLinks(item, t) {
   const externalIds = item.external_ids || {};
   const links = [];
 
-  if (!item.is_adult) {
+  const tmdbId = externalIds.tmdb_id || (Number(item.id) < 100000000 ? item.id : null);
+  if (tmdbId) {
     links.push({
       key: 'tmdb',
       label: t('library.details.tmdb') || 'TMDb',
-      href: `https://www.themoviedb.org/person/${item.id}`,
+      href: `https://www.themoviedb.org/person/${tmdbId}`,
       iconSrc: '/links/tmdb.svg',
       brandColor: 'var(--color-brand-tmdb)',
     });
@@ -437,6 +438,36 @@ export function buildEntityExtraMetaPills({ isPeople, item, t }) {
   const tattooText = formatListAttribute(attrs.tattoos);
   const piercingText = formatListAttribute(attrs.piercings);
 
+  // For tattoos
+  let tattooPillText = null;
+  let tattooTooltip = null;
+  if (tattooText) {
+    if (Array.isArray(attrs.tattoos)) {
+      tattooPillText = `Tattoos: ${attrs.tattoos.length}`;
+      tattooTooltip = tattooText;
+    } else if (tattooText.length <= 16) {
+      tattooPillText = `Tattoos: ${tattooText}`;
+    } else {
+      tattooPillText = 'Tattoos: Yes';
+      tattooTooltip = tattooText;
+    }
+  }
+
+  // For piercings
+  let piercingPillText = null;
+  let piercingTooltip = null;
+  if (piercingText) {
+    if (Array.isArray(attrs.piercings)) {
+      piercingPillText = `Piercings: ${attrs.piercings.length}`;
+      piercingTooltip = piercingText;
+    } else if (piercingText.length <= 16) {
+      piercingPillText = `Piercings: ${piercingText}`;
+    } else {
+      piercingPillText = 'Piercings: Yes';
+      piercingTooltip = piercingText;
+    }
+  }
+
   return [
     attrs.height ? {
       key: 'height',
@@ -483,21 +514,23 @@ export function buildEntityExtraMetaPills({ isPeople, item, t }) {
         </span>
       ),
     } : null,
-    tattooText ? {
+    tattooPillText ? {
       key: 'tattoos',
+      tooltip: tattooTooltip,
       content: (
         <span className="entity-detail-page__meta-pill-content">
           <Brush size={14} />
-          <span>Tattoos: {tattooText}</span>
+          <span>{tattooPillText}</span>
         </span>
       ),
     } : null,
-    piercingText ? {
+    piercingPillText ? {
       key: 'piercings',
+      tooltip: piercingTooltip,
       content: (
         <span className="entity-detail-page__meta-pill-content">
           <Gem size={14} />
-          <span>Piercings: {piercingText}</span>
+          <span>{piercingPillText}</span>
         </span>
       ),
     } : null,

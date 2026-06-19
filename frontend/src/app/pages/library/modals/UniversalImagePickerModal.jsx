@@ -48,6 +48,16 @@ export default function UniversalImagePickerModal({
     if (hasStash) sources.push({ value: 'stashdb', label: 'StashDB' });
     if (hasFans) sources.push({ value: 'fansdb', label: 'FansDB' });
     if (hasPornDb) sources.push({ value: 'theporndb', label: 'THEPornDB' });
+    
+    console.log('UniversalImagePickerModal: Performer sources computed:', {
+      externalIds,
+      tmdbId,
+      hasStash,
+      hasFans,
+      hasPornDb,
+      hasTMDb,
+      sources
+    });
   }
 
   const [selectedPath, setSelectedPath] = useState(currentPath);

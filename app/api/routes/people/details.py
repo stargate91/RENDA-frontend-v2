@@ -855,12 +855,22 @@ def get_person_detail(person_id: int):
             person.image_status = ImageStatus.COMPLETED
 
         local_images = []
+        seen_images = set()
         for image_path in person.images or []:
-            local_image = _public_image_path(image_path, "persons")
-            if local_image:
-                local_images.append(local_image)
-            elif image_path:
-                local_images.append(f"https://image.tmdb.org/t/p/{PERSON_SIZE}{image_path}")
+            if not image_path:
+                continue
+            if image_path.startswith("http://") or image_path.startswith("https://"):
+                resolved = image_path
+            else:
+                local_image = _public_image_path(image_path, "persons")
+                if local_image:
+                    resolved = local_image
+                else:
+                    resolved = f"https://image.tmdb.org/t/p/{PERSON_SIZE}{image_path}"
+            
+            if resolved not in seen_images:
+                seen_images.add(resolved)
+                local_images.append(resolved)
 
         db.commit()
         
@@ -889,7 +899,11 @@ def get_person_detail(person_id: int):
             "user_comment": person.user_comment,
             "custom_tags": person.custom_tags or [],
             "homepage": tmdb_data.get("homepage") or None,
-            "external_ids": tmdb_data.get("external_ids") or person.external_ids or {},
+            "external_ids": {
+                **(person.external_ids or {}),
+                **(tmdb_data.get("external_ids") or {}),
+                **({"tmdb_id": tmdb_data["id"]} if tmdb_data and tmdb_data.get("id") else {})
+            },
             "images": local_images,
             "known_for": known_for,
             "total_movie_credits": len(all_movies),

@@ -2,6 +2,7 @@ import Pill from '@/ui/Pill';
 import { Layers, User, PenLine } from 'lucide-react';
 import { OverviewContent } from './EntityDetailSections';
 import PersonRatingControls from './PersonRatingControls';
+import Tooltip from '@/ui/Tooltip';
 import './EntityDetailHeroSection.css';
 
 export default function EntityDetailHeroSection({
@@ -101,9 +102,17 @@ export default function EntityDetailHeroSection({
 
           {isPeople && extraMetaPills?.length > 0 && (
             <div className="entity-detail-page__meta-row entity-detail-page__meta-row--extra" style={{ marginTop: 'calc(-1 * var(--space-sm) + 2px)' }}>
-              {extraMetaPills.map((metaItem) => (
-                <Pill key={metaItem.key} variant="meta">{metaItem.content}</Pill>
-              ))}
+              {extraMetaPills.map((metaItem) => {
+                const pill = <Pill variant="meta">{metaItem.content}</Pill>;
+                if (metaItem.tooltip) {
+                  return (
+                    <Tooltip key={metaItem.key} content={metaItem.tooltip} side="top">
+                      {pill}
+                    </Tooltip>
+                  );
+                }
+                return <span key={metaItem.key}>{pill}</span>;
+              })}
             </div>
           )}
         </div>

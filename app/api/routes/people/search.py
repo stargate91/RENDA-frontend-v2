@@ -203,14 +203,14 @@ def search_people_tmdb(query: str, language: str = None, adult_only: bool = Fals
             include_adult = value.lower() == "true" if isinstance(value, str) else bool(value)
         page = max(1, int(page or 1))
 
+        adult_results = []
+
         if adult_only and source != "tmdb":
             from app.api.graphql_clients import AdultGraphQLClient
             
             def get_stable_integer_id(src: str, u_str: str) -> int:
                 h = hashlib.sha256(f"{src}:{u_str}".encode()).hexdigest()
                 return int(h[:7], 16)
-
-            adult_results = []
             
             # Select sources to search
             sources_to_search = ["stashdb", "fansdb", "theporndb"] if source == "all" else [source]

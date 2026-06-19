@@ -86,9 +86,7 @@ export default function usePeopleCollectionDetailController({
   const displayRating = hoveredRating !== null ? hoveredRating : currentRating;
   const starsFillPercent = displayRating ? (displayRating / 10) * 100 : 0;
   const starsStyleSheetText = `.rating-stars-overlay-dynamic { width: ${starsFillPercent}% !important; }`;
-  const canChoosePeopleBackdrop = Number(item?.total_movie_credits) > 0
-    || Number(item?.total_series_credits) > 0
-    || (item?.known_for || []).length > 0;
+  const canChoosePeopleBackdrop = isPeople;
   const canChooseCollectionBackdrop = Boolean(
     item?.collection_backdrops?.some((bd) => (!bd?.iso_639_1 || bd.iso_639_1 === '') && Number(bd?.width) >= 1280)
     || item?.movies?.some((movie) => movie?.backdrop_path)

@@ -8,7 +8,7 @@
   left: var(--tooltip-left, 0);
   top: var(--tooltip-top, 0);
   z-index: 3000;
-  max-width: var(--tooltip-max-width);
+  max-width: var(--tooltip-max-width, 260px);
   padding: var(--tooltip-padding);
   border-radius: var(--tooltip-radius);
   background: var(--tooltip-bg);
@@ -18,7 +18,8 @@
   line-height: 1.35;
   box-shadow: var(--tooltip-shadow);
   backdrop-filter: var(--tooltip-blur);
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
   pointer-events: none;
   transform: translate3d(-50%, -100%, 0);
 }

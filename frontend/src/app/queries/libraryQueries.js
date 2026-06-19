@@ -227,15 +227,22 @@ export const useUpdatePersonStatusMutation = () => {
   return useMutation({
     mutationFn: ({ personId, payload }) => api.people.updateStatus(personId, payload),
     onMutate: async ({ personId, payload }) => {
+      const idStr = String(personId);
+      const idNum = Number(personId);
+      const isNumValid = !isNaN(idNum);
+
       await queryClient.cancelQueries({ queryKey: ['people'] });
       await queryClient.cancelQueries({ queryKey: ['people-infinite'] });
       await queryClient.cancelQueries({ queryKey: ['library'] });
-      await queryClient.cancelQueries({ queryKey: ['person-detail', personId] });
+      await queryClient.cancelQueries({ queryKey: ['person-detail', idStr] });
+      if (isNumValid) {
+        await queryClient.cancelQueries({ queryKey: ['person-detail', idNum] });
+      }
 
       const previousLibraryQueries = queryClient.getQueriesData({ queryKey: ['library'] });
       const previousPeopleQueries = queryClient.getQueriesData({ queryKey: ['people'] });
       const previousPeopleInfiniteQueries = queryClient.getQueriesData({ queryKey: ['people-infinite'] });
-      const previousPersonDetail = queryClient.getQueryData(['person-detail', personId]);
+      const previousPersonDetail = queryClient.getQueryData(['person-detail', idStr]) || queryClient.getQueryData(['person-detail', idNum]);
       const shouldAutoActivate =
         payload?.is_favorite === true
         || ('user_rating' in payload && payload.user_rating !== null && payload.user_rating !== undefined)
@@ -247,7 +254,7 @@ export const useUpdatePersonStatusMutation = () => {
       for (const [, cacheData] of previousPeopleInfiniteQueries) {
         if (cacheData?.pages) {
           for (const page of cacheData.pages) {
-            const item = page.items?.find(p => p.id === personId);
+            const item = page.items?.find(p => p.id === personId || String(p.id) === idStr);
             if (item) {
               foundPerson = { ...item, ...(effectiveIsActive !== undefined ? { is_active: effectiveIsActive } : {}) };
               break;
@@ -259,7 +266,7 @@ export const useUpdatePersonStatusMutation = () => {
 
       if (!foundPerson) {
         for (const [, cacheData] of previousPeopleQueries) {
-          const item = cacheData?.items?.find(p => p.id === personId);
+          const item = cacheData?.items?.find(p => p.id === personId || String(p.id) === idStr);
           if (item) {
             foundPerson = { ...item, ...(effectiveIsActive !== undefined ? { is_active: effectiveIsActive } : {}) };
             break;
@@ -274,7 +281,7 @@ export const useUpdatePersonStatusMutation = () => {
           ...oldData,
           pages: oldData.pages.map(page => ({
             ...page,
-            items: page.items.map(p => p.id === personId ? {
+            items: page.items.map(p => (p.id === personId || String(p.id) === idStr) ? {
               ...p,
               ...(effectiveIsActive !== undefined ? { is_active: effectiveIsActive } : {}),
               ...(payload.is_favorite !== undefined ? { is_favorite: payload.is_favorite } : {}),
@@ -291,7 +298,7 @@ export const useUpdatePersonStatusMutation = () => {
         if (!oldData?.items) return oldData;
         return {
           ...oldData,
-          items: oldData.items.map(p => p.id === personId ? {
+          items: oldData.items.map(p => (p.id === personId || String(p.id) === idStr) ? {
             ...p,
             ...(effectiveIsActive !== undefined ? { is_active: effectiveIsActive } : {}),
             ...(payload.is_favorite !== undefined ? { is_favorite: payload.is_favorite } : {}),
@@ -302,24 +309,30 @@ export const useUpdatePersonStatusMutation = () => {
         };
       });
 
-      queryClient.setQueryData(['person-detail', personId], (oldData) => {
-        if (!oldData) return oldData;
-        return {
-          ...oldData,
-          ...(effectiveIsActive !== undefined ? { is_active: effectiveIsActive } : {}),
-          ...(payload.is_favorite !== undefined ? { is_favorite: payload.is_favorite } : {}),
-          ...('user_rating' in payload ? { user_rating: payload.user_rating } : {}),
-          ...('user_comment' in payload ? { user_comment: payload.user_comment } : {}),
-          ...('custom_tags' in payload ? { custom_tags: payload.custom_tags } : {}),
-        };
-      });
+      const updatePersonDetailData = (pId) => {
+        queryClient.setQueryData(['person-detail', pId], (oldData) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            ...(effectiveIsActive !== undefined ? { is_active: effectiveIsActive } : {}),
+            ...(payload.is_favorite !== undefined ? { is_favorite: payload.is_favorite } : {}),
+            ...('user_rating' in payload ? { user_rating: payload.user_rating } : {}),
+            ...('user_comment' in payload ? { user_comment: payload.user_comment } : {}),
+            ...('custom_tags' in payload ? { custom_tags: payload.custom_tags } : {}),
+          };
+        });
+      };
+      updatePersonDetailData(idStr);
+      if (isNumValid) {
+        updatePersonDetailData(idNum);
+      }
 
       // 3. Update library queries (which renders the active people grid)
       queryClient.setQueriesData({ queryKey: ['library'] }, (oldData) => {
         if (!oldData?.items) return oldData;
 
         const updatedItems = oldData.items.map(p => {
-          if (p.id === personId || String(p.id) === String(personId)) {
+          if (p.id === personId || String(p.id) === idStr) {
             return {
               ...p,
               ...(effectiveIsActive !== undefined ? { is_active: effectiveIsActive } : {}),
@@ -334,10 +347,10 @@ export const useUpdatePersonStatusMutation = () => {
         if (effectiveIsActive === false) {
           return {
             ...oldData,
-            items: updatedItems.filter(p => p.id !== personId)
+            items: updatedItems.filter(p => p.id !== personId && String(p.id) !== idStr)
           };
         } else if (effectiveIsActive === true && foundPerson) {
-          if (updatedItems.some(p => p.id === personId)) {
+          if (updatedItems.some(p => p.id === personId || String(p.id) === idStr)) {
             return {
               ...oldData,
               items: updatedItems
@@ -369,6 +382,10 @@ export const useUpdatePersonStatusMutation = () => {
       return { previousLibraryQueries, previousPeopleQueries, previousPeopleInfiniteQueries, previousPersonDetail, personId };
     },
     onError: (err, variables, context) => {
+      const idStr = String(context.personId);
+      const idNum = Number(context.personId);
+      const isNumValid = !isNaN(idNum);
+
       if (context?.previousLibraryQueries) {
         context.previousLibraryQueries.forEach(([key, value]) => {
           queryClient.setQueryData(key, value);
@@ -385,31 +402,50 @@ export const useUpdatePersonStatusMutation = () => {
         });
       }
       if (context && 'previousPersonDetail' in context) {
-        queryClient.setQueryData(['person-detail', context.personId], context.previousPersonDetail);
+        queryClient.setQueryData(['person-detail', idStr], context.previousPersonDetail);
+        if (isNumValid) {
+          queryClient.setQueryData(['person-detail', idNum], context.previousPersonDetail);
+        }
       }
     },
     onSuccess: (data, variables) => {
-      queryClient.setQueryData(['person-detail', variables.personId], (oldData) => {
-        if (!oldData) return oldData;
-        return {
-          ...oldData,
-          is_active: data.is_active !== undefined ? data.is_active : oldData.is_active,
-          is_favorite: data.is_favorite !== undefined ? data.is_favorite : oldData.is_favorite,
-          user_rating: data.user_rating !== undefined ? data.user_rating : oldData.user_rating,
-          user_comment: data.user_comment !== undefined ? data.user_comment : oldData.user_comment,
-          custom_tags: data.custom_tags !== undefined ? data.custom_tags : oldData.custom_tags,
-          tags: data.tags !== undefined ? data.tags : oldData.tags,
-        };
-      });
+      const idStr = String(variables.personId);
+      const idNum = Number(variables.personId);
+      const isNumValid = !isNaN(idNum);
+
+      const updateSuccessData = (pId) => {
+        queryClient.setQueryData(['person-detail', pId], (oldData) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            is_active: data.is_active !== undefined ? data.is_active : oldData.is_active,
+            is_favorite: data.is_favorite !== undefined ? data.is_favorite : oldData.is_favorite,
+            user_rating: data.user_rating !== undefined ? data.user_rating : oldData.user_rating,
+            user_comment: data.user_comment !== undefined ? data.user_comment : oldData.user_comment,
+            custom_tags: data.custom_tags !== undefined ? data.custom_tags : oldData.custom_tags,
+            tags: data.tags !== undefined ? data.tags : oldData.tags,
+          };
+        });
+      };
+      updateSuccessData(idStr);
+      if (isNumValid) {
+        updateSuccessData(idNum);
+      }
     },
     onSettled: (data, error, variables) => {
+      const idStr = String(variables.personId);
+      const idNum = Number(variables.personId);
+      const isNumValid = !isNaN(idNum);
       const payload = variables?.payload || {};
       
       if (error) {
         queryClient.invalidateQueries({ queryKey: ['people'] });
         queryClient.invalidateQueries({ queryKey: ['people-infinite'] });
         queryClient.invalidateQueries({ queryKey: ['library'] });
-        queryClient.invalidateQueries({ queryKey: ['person-detail', variables.personId] });
+        queryClient.invalidateQueries({ queryKey: ['person-detail', idStr] });
+        if (isNumValid) {
+          queryClient.invalidateQueries({ queryKey: ['person-detail', idNum] });
+        }
         queryClient.invalidateQueries({ queryKey: ['stats'] });
         return;
       }
@@ -511,11 +547,13 @@ export const useUploadPersonProfileMutation = () => {
 export const useLinkPersonSourceMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ personId, source, externalId }) => api.people.linkSource(personId, source, externalId),
+    mutationFn: ({ personId, source, externalId, overrides }) => api.people.linkSource(personId, source, externalId, overrides),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['person-detail', variables.personId] });
       queryClient.invalidateQueries({ queryKey: ['person-detail', String(variables.personId)] });
       queryClient.invalidateQueries({ queryKey: ['person-detail'] });
+      queryClient.invalidateQueries({ queryKey: ['person-credits', variables.personId] });
+      queryClient.invalidateQueries({ queryKey: ['person-credits', String(variables.personId)] });
       queryClient.invalidateQueries({ queryKey: ['people'] });
       queryClient.invalidateQueries({ queryKey: ['people-infinite'] });
     },

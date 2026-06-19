@@ -368,11 +368,128 @@ def upload_person_backdrop(person_id: int, file: UploadFile = File(...)):
         db.close()
 
 
+@router.get("/people/{person_id:int}/link/preview")
+def link_person_source_preview(person_id: int, source: str, external_id: str):
+    """Returns a side-by-side comparison of local metadata and the external source's metadata."""
+    if not source or not external_id:
+        return JSONResponse(status_code=400, content={"error": "source and external_id are required"})
+        
+    db = Session()
+    try:
+        from app.db.models import Person, PersonLocalization
+        from app.api.graphql_clients import AdultGraphQLClient
+        from app.api.tmdb_client import TMDBClient
+        
+        person = db.query(Person).filter(Person.id == person_id).first()
+        if not person:
+            return JSONResponse(status_code=404, content={"error": "Person not found"})
+            
+        loc = db.query(PersonLocalization).filter(
+            PersonLocalization.person_id == person_id,
+            PersonLocalization.locale == "en"
+        ).first()
+        
+        local_attrs = (person.external_ids or {}).get("attributes") or {}
+        local_data = {
+            "name": loc.name if loc else "Unknown",
+            "biography": loc.biography if loc else None,
+            "birthday": person.birthday,
+            "place_of_birth": person.place_of_birth,
+            "gender": person.gender,
+            "height": local_attrs.get("height"),
+            "measurements": local_attrs.get("measurements"),
+            "ethnicity": local_attrs.get("ethnicity"),
+            "eye_color": local_attrs.get("eye_color"),
+            "hair_color": local_attrs.get("hair_color")
+        }
+        
+        external_data = {}
+        if source in ["stashdb", "fansdb", "theporndb"]:
+            client = AdultGraphQLClient(db, source)
+            ext_perf = client.get_performer_details(external_id)
+            if ext_perf:
+                gender_str = str(ext_perf.get("gender") or "").upper()
+                if "FEMALE" in gender_str:
+                    mapped_gender = 1
+                elif "MALE" in gender_str:
+                    mapped_gender = 2
+                elif gender_str:
+                    mapped_gender = 3
+                else:
+                    mapped_gender = 0
+                    
+                external_data = {
+                    "name": ext_perf.get("name"),
+                    "biography": ext_perf.get("disambiguation"),
+                    "birthday": ext_perf.get("birthdate"),
+                    "place_of_birth": ext_perf.get("country"),
+                    "gender": mapped_gender,
+                    "height": ext_perf.get("height"),
+                    "measurements": ext_perf.get("measurements"),
+                    "ethnicity": ext_perf.get("ethnicity"),
+                    "eye_color": ext_perf.get("eye_color"),
+                    "hair_color": ext_perf.get("hair_color"),
+                    "aliases": ext_perf.get("aliases") or [],
+                    "images_count": len(ext_perf.get("images") or [])
+                }
+        elif source == "tmdb":
+            tmdb_client = TMDBClient(db)
+            ext_perf = tmdb_client.get_person_details(int(external_id), language="en-US")
+            if ext_perf:
+                external_data = {
+                    "name": ext_perf.get("name"),
+                    "biography": ext_perf.get("biography"),
+                    "birthday": ext_perf.get("birthday"),
+                    "place_of_birth": ext_perf.get("place_of_birth"),
+                    "gender": ext_perf.get("gender") if ext_perf.get("gender") is not None else 0,
+                    "height": None,
+                    "measurements": None,
+                    "ethnicity": None,
+                    "eye_color": None,
+                    "hair_color": None,
+                    "aliases": ext_perf.get("also_known_as") or [],
+                    "images_count": len(ext_perf.get("images", {}).get("profiles") or [])
+                }
+                
+        # Check if a duplicate person exists to merge their user fields
+        duplicate_person = None
+        if source == "tmdb":
+            target_id = int(external_id)
+            duplicate_person = db.query(Person).filter(Person.id == target_id).first()
+        elif source in ["stashdb", "fansdb", "theporndb"]:
+            import hashlib
+            h = hashlib.sha256(f"{source}:{external_id}".encode()).hexdigest()
+            target_id = int(h[:7], 16)
+            duplicate_person = db.query(Person).filter(Person.id == target_id).first()
+
+        if duplicate_person and duplicate_person.id != person.id:
+            local_data["user_rating"] = person.user_rating
+            local_data["user_comment"] = person.user_comment
+            local_data["is_favorite"] = person.is_favorite
+            local_data["custom_tags"] = person.custom_tags or []
+
+            external_data["user_rating"] = duplicate_person.user_rating
+            external_data["user_comment"] = duplicate_person.user_comment
+            external_data["is_favorite"] = duplicate_person.is_favorite
+            external_data["custom_tags"] = duplicate_person.custom_tags or []
+
+        return JSONResponse(content={
+            "local": local_data,
+            "external": external_data
+        })
+    except Exception as e:
+        logger.error(f"Error previewing link source: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    finally:
+        db.close()
+
+
 @router.post("/people/{person_id:int}/link")
 def link_person_source(person_id: int, payload: dict):
     """Links an external source (TMDb, StashDB, FansDB, THEPornDB) to an existing person, merging metadata."""
     source = payload.get("source")
     external_id = payload.get("external_id")
+    overrides = payload.get("overrides")
     if not source or not external_id:
         return JSONResponse(status_code=400, content={"error": "source and external_id are required"})
         
@@ -387,10 +504,17 @@ def link_person_source(person_id: int, payload: dict):
             
         ext_ids = dict(person.external_ids or {})
         
+        duplicate_person = None
         if source == "tmdb":
-            ext_ids["tmdb_id"] = int(external_id)
+            target_id = int(external_id)
+            ext_ids["tmdb_id"] = target_id
+            duplicate_person = db.query(Person).filter(Person.id == target_id).first()
         elif source in ["stashdb", "fansdb", "theporndb"]:
             ext_ids[f"{source}_id"] = str(external_id)
+            import hashlib
+            h = hashlib.sha256(f"{source}:{external_id}".encode()).hexdigest()
+            target_id = int(h[:7], 16)
+            duplicate_person = db.query(Person).filter(Person.id == target_id).first()
         else:
             return JSONResponse(status_code=400, content={"error": f"Unsupported source: {source}"})
             
@@ -399,11 +523,70 @@ def link_person_source(person_id: int, payload: dict):
             ext_ids["source"] = source
             
         person.external_ids = ext_ids
+
+        # Extract user fields from overrides
+        if overrides:
+            if "is_favorite" in overrides:
+                person.is_favorite = bool(overrides.pop("is_favorite"))
+            if "user_rating" in overrides:
+                person.user_rating = overrides.pop("user_rating")
+                import datetime
+                person.user_rating_at = datetime.datetime.utcnow()
+            if "user_comment" in overrides:
+                person.user_comment = overrides.pop("user_comment")
+            if "custom_tags" in overrides:
+                person.custom_tags = overrides.pop("custom_tags")
+
+        # Merge duplicate person if it exists and is distinct
+        if duplicate_person and duplicate_person.id != person.id:
+            from app.db.models import MediaPersonLink
+            # Move media links to the current person
+            db.query(MediaPersonLink).filter(MediaPersonLink.person_id == duplicate_person.id).update(
+                {"person_id": person.id}, synchronize_session=False
+            )
+            # Merge favorite status, ratings, comments, and popularity if not overridden
+            if not person.is_favorite and duplicate_person.is_favorite:
+                person.is_favorite = True
+            if person.user_rating is None and duplicate_person.user_rating is not None:
+                person.user_rating = duplicate_person.user_rating
+                person.user_rating_at = duplicate_person.user_rating_at
+            if not person.user_comment and duplicate_person.user_comment:
+                person.user_comment = duplicate_person.user_comment
+            if (person.popularity or 0.0) < (duplicate_person.popularity or 0.0):
+                person.popularity = duplicate_person.popularity
+
+            # Merge custom tags if not overridden
+            if not person.custom_tags and duplicate_person.custom_tags:
+                person.custom_tags = duplicate_person.custom_tags
+            elif person.custom_tags and duplicate_person.custom_tags:
+                keep_tags = list(person.custom_tags or [])
+                del_tags = list(duplicate_person.custom_tags or [])
+                person.custom_tags = list(set(keep_tags + del_tags))
+
+            # Merge other external IDs from the duplicate person
+            keep_ext = dict(person.external_ids or {})
+            del_ext = dict(duplicate_person.external_ids or {})
+            for k, v in del_ext.items():
+                if v and not keep_ext.get(k):
+                    keep_ext[k] = v
+                elif isinstance(v, list) and isinstance(keep_ext.get(k), list):
+                    keep_ext[k] = list(set(keep_ext[k] + v))
+                elif isinstance(v, dict) and isinstance(keep_ext.get(k), dict):
+                    merged_dict = dict(keep_ext[k])
+                    for dk, dv in v.items():
+                        if dv and not merged_dict.get(dk):
+                            merged_dict[dk] = dv
+                    keep_ext[k] = merged_dict
+            person.external_ids = keep_ext
+
+            # Delete the duplicate person
+            db.delete(duplicate_person)
+
         db.commit()
         
-        # Enrich metadata from all linked sources
+        # Enrich metadata from all linked sources, applying explicit user overrides
         person_service = PersonService(db)
-        person_service.enrich_person_metadata(person_id, ["en"])
+        person_service.enrich_person_metadata(person_id, ["en"], overrides)
         
         # Reload and serialize
         db.refresh(person)

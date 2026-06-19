@@ -176,7 +176,7 @@ export default function Dropdown({
             <span className="ui-dropdown__trigger-text">
               {selectedOption ? selectedOption.label : displayPlaceholder}
             </span>
-            {!isSorter && <span className={`ui-dropdown__chevron ${isOpen ? 'is-open' : ''}`}>{CHEVRON_TEXT}</span>}
+            {!isSorter && <span className={`ui-dropdown__chevron ${isOpen ? 'is-open' : ''}`}><ChevronDown size={12} /></span>}
           </button>
 
           {isSorter && onSortDirectionToggle && (

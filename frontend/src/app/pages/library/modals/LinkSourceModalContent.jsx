@@ -9,8 +9,10 @@ import Button from '@/ui/Button';
 import IconButton from '@/ui/IconButton';
 import Tooltip from '@/ui/Tooltip';
 import EmptyState from '@/ui/EmptyState';
+import { resolveMediaImageUrl } from '@/lib/imageUrls';
 import { Search, Link as LinkIcon, User } from 'lucide-react';
 import './LinkSourceModalContent.css';
+import MergeComparisonModalContent from './MergeComparisonModalContent';
 
 export default function LinkSourceModalContent({ personId, onClose }) {
   const { t } = useTranslation();
@@ -21,6 +23,7 @@ export default function LinkSourceModalContent({ personId, onClose }) {
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
+  const [selectedLinkTarget, setSelectedLinkTarget] = useState(null);
 
   const linkMutation = useLinkPersonSourceMutation();
 
@@ -41,25 +44,26 @@ export default function LinkSourceModalContent({ personId, onClose }) {
     }
   };
 
-  const handleLink = async (externalId) => {
-    try {
-      // Strip source prefix if it exists in the result ID (e.g. stashdb:uuid -> uuid)
-      let cleanId = externalId;
-      if (typeof externalId === 'string' && externalId.includes(':')) {
-        cleanId = externalId.split(':', 1)[1] || externalId;
-      }
-      
-      await linkMutation.mutateAsync({
-        personId,
-        source,
-        externalId: cleanId,
-      });
-      toast(t('library.details.sourceLinked') || 'Source linked successfully!', 'success');
-      onClose();
-    } catch (err) {
-      toast(err.message || 'Failed to link source', 'danger');
+  const handleLink = (externalId) => {
+    // Strip source prefix if it exists in the result ID (e.g. stashdb:uuid -> uuid)
+    let cleanId = externalId;
+    if (typeof externalId === 'string' && externalId.includes(':')) {
+      cleanId = externalId.split(':')[1] || externalId;
     }
+    setSelectedLinkTarget(cleanId);
   };
+
+  if (selectedLinkTarget) {
+    return (
+      <MergeComparisonModalContent
+        personId={personId}
+        source={source}
+        externalId={selectedLinkTarget}
+        onClose={onClose}
+        onBack={() => setSelectedLinkTarget(null)}
+      />
+    );
+  }
 
   return (
     <div className="link-source-modal">
@@ -106,7 +110,8 @@ export default function LinkSourceModalContent({ personId, onClose }) {
         ) : results.length > 0 ? (
           <div className="link-source-modal__results-list">
             {results.map((item) => {
-              const profileUrl = item.profile_path || item.poster_path;
+              const rawProfileUrl = item.profile_path || item.poster_path;
+              const profileUrl = rawProfileUrl ? resolveMediaImageUrl(rawProfileUrl, 'personThumb') : null;
               return (
                 <div key={item.id} className="link-source-modal__result-item">
                   <div className="link-source-modal__result-avatar">

@@ -20,7 +20,7 @@ import {
   normalizeBackdropKey,
   prioritizePersonCredits,
   sortBackdropCredits,
-  } from '../../peopleCollectionDetailUtils.jsx';
+} from '../../peopleCollectionDetailUtils.jsx';
 import './PersonBackdropPickerModal.css';
 
 const PERSON_BACKDROP_INITIAL_ROWS = 2;
@@ -48,10 +48,13 @@ export default function PersonBackdropPickerModal({ personId, item, t, toast, ov
     seriesLoadingMore,
     creditValidationByKey,
   } = resolvedSession;
+
+  const isTmdbPerformer = !!item?.external_ids?.tmdb_id || (!item?.external_ids?.stashdb_id && !item?.external_ids?.fansdb_id && !item?.external_ids?.theporndb_id);
+
   const selectedBackdropTmdbId = Number(selectedCredit?.series_tmdb_id || selectedCredit?.tmdb_id || selectedCredit?.id || 0);
   const selectedBackdropMediaType = isTvLikeMediaType(selectedCredit?.media_type || selectedCredit?.type) ? 'tv' : 'movie';
   const selectedBackdropMetadataQuery = usePersonCreditBackdropsQuery(personId, selectedBackdropTmdbId, selectedBackdropMediaType, {
-    enabled: Boolean(personId) && Number.isFinite(selectedBackdropTmdbId) && selectedBackdropTmdbId > 0,
+    enabled: Boolean(personId) && Number.isFinite(selectedBackdropTmdbId) && selectedBackdropTmdbId > 0 && isTmdbPerformer,
   });
 
   useEffect(() => {
@@ -67,27 +70,27 @@ export default function PersonBackdropPickerModal({ personId, item, t, toast, ov
 
   const initialTabPageSize = PERSON_BACKDROP_COLUMNS * PERSON_BACKDROP_INITIAL_ROWS;
   const moviesQuery = usePersonCreditsQuery(personId, 'movies', 1, PERSON_BACKDROP_PAGE_SIZE, {
-    enabled: Boolean(personId) && activeTab === 'movies',
+    enabled: Boolean(personId) && activeTab === 'movies' && isTmdbPerformer,
     excludeKnownFor: false,
   });
   const seriesQuery = usePersonCreditsQuery(personId, 'series', 1, PERSON_BACKDROP_PAGE_SIZE, {
-    enabled: Boolean(personId) && activeTab === 'series',
+    enabled: Boolean(personId) && activeTab === 'series' && isTmdbPerformer,
     excludeKnownFor: false,
   });
 
   useEffect(() => {
-    if (moviesQuery.data?.items && (!moviePages || moviePages.length === 0)) {
+    if (isTmdbPerformer && moviesQuery.data?.items && (!moviePages || moviePages.length === 0)) {
       patchSession(personId, { moviePages: [moviesQuery.data], movieNextPage: 2 });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [moviesQuery.data, patchSession, personId]);
+  }, [moviesQuery.data, patchSession, personId, isTmdbPerformer]);
 
   useEffect(() => {
-    if (seriesQuery.data?.items && (!seriesPages || seriesPages.length === 0)) {
+    if (isTmdbPerformer && seriesQuery.data?.items && (!seriesPages || seriesPages.length === 0)) {
       patchSession(personId, { seriesPages: [seriesQuery.data], seriesNextPage: 2 });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [patchSession, personId, seriesQuery.data]);
+  }, [patchSession, personId, seriesQuery.data, isTmdbPerformer]);
 
   const currentBackdropKey = normalizeBackdropKey(selectedBackdropPath || item?.backdrop_path);
   const movieItems = useMemo(
@@ -140,14 +143,14 @@ export default function PersonBackdropPickerModal({ personId, item, t, toast, ov
   );
   const validationPendingCount = Math.max(0, activeItems.length - validatedCount);
   const hasMore = activeItems.length < totalAvailableItems;
-  const isLoading = activeTab === 'movies'
+  const isLoading = isTmdbPerformer && (activeTab === 'movies'
     ? (moviesQuery.isLoading || movieLoadingMore)
     : activeTab === 'series'
       ? (seriesQuery.isLoading || seriesLoadingMore)
-      : false;
+      : false);
 
   const loadMore = async () => {
-    if (!personId || overridePersonBackdropMutation.isPending) {
+    if (!personId || overridePersonBackdropMutation.isPending || !isTmdbPerformer) {
       return;
     }
 
@@ -196,16 +199,16 @@ export default function PersonBackdropPickerModal({ personId, item, t, toast, ov
   };
 
   useEffect(() => {
-    if (selectedCredit || !hasMore || isLoading) {
+    if (selectedCredit || !hasMore || isLoading || !isTmdbPerformer) {
       return;
     }
     void loadMore();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, hasMore, isLoading, selectedCredit, totalAvailableItems]);
+  }, [activeTab, hasMore, isLoading, selectedCredit, totalAvailableItems, isTmdbPerformer]);
 
   useEffect(() => {
     const viewport = viewportRef.current;
-    if (!viewport || selectedCredit || !hasMore || isLoading) {
+    if (!viewport || selectedCredit || !hasMore || isLoading || !isTmdbPerformer) {
       return undefined;
     }
 
@@ -218,10 +221,10 @@ export default function PersonBackdropPickerModal({ personId, item, t, toast, ov
 
     return () => window.cancelAnimationFrame(frameId);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, hasMore, isLoading, selectedCredit, visibleItems.length]);
+  }, [activeTab, hasMore, isLoading, selectedCredit, visibleItems.length, isTmdbPerformer]);
 
   useEffect(() => {
-    if (!personId || selectedCredit || activeItems.length === 0) {
+    if (!personId || selectedCredit || activeItems.length === 0 || !isTmdbPerformer) {
       return undefined;
     }
 
@@ -271,10 +274,10 @@ export default function PersonBackdropPickerModal({ personId, item, t, toast, ov
     return () => {
       cancelled = true;
     };
-  }, [activeItems, creditValidationByKey, patchSession, personId, selectedCredit]);
+  }, [activeItems, creditValidationByKey, patchSession, personId, selectedCredit, isTmdbPerformer]);
 
   const handleViewportScroll = (event) => {
-    if (selectedCredit || !hasMore || isLoading) {
+    if (selectedCredit || !hasMore || isLoading || !isTmdbPerformer) {
       return;
     }
     const viewport = event.currentTarget;
@@ -360,7 +363,7 @@ export default function PersonBackdropPickerModal({ personId, item, t, toast, ov
 
   const isBackdropBrowserOpen = Boolean(selectedCredit);
   const isUploadPending = Boolean(uploadPersonBackdropMutation?.isPending);
-  const headerDescription = !isBackdropBrowserOpen && (validationPendingCount > 0 || hasMore || isLoading)
+  const headerDescription = isTmdbPerformer && !isBackdropBrowserOpen && (validationPendingCount > 0 || hasMore || isLoading)
     ? t('library.details.backdropFilterRunning', {
       checked: validatedCount,
       total: progressTotal || 0,
@@ -398,7 +401,7 @@ export default function PersonBackdropPickerModal({ personId, item, t, toast, ov
         />
       )}
 
-      {!isBackdropBrowserOpen && (
+      {isTmdbPerformer && !isBackdropBrowserOpen && (
         <SegmentedControl
           ariaLabel={t('library.details.chooseBackdrop') || 'Choose backdrop source'}
           className="person-backdrop-picker__tabs"
@@ -411,102 +414,104 @@ export default function PersonBackdropPickerModal({ personId, item, t, toast, ov
         />
       )}
 
-      <div
-        ref={viewportRef}
-        className={`person-backdrop-picker__viewport${isBackdropBrowserOpen ? ' person-backdrop-picker__viewport--detail' : ''}`}
-        onScroll={handleViewportScroll}
-      >
-        {isBackdropBrowserOpen ? (
-          <div className="person-backdrop-picker__detail-view">
-            <TMDBImageGrid
-              customImages={selectedBackdrops}
-              imageType="backdrop"
-              currentPath={selectedBackdropPath || item?.backdrop_path}
-              onSelect={handleSelectDetailedBackdrop}
-              isPending={overridePersonBackdropMutation.isPending || isUploadPending}
-              pendingPath={overridePersonBackdropMutation.variables?.backdropPath}
-              t={t}
-            />
-          </div>
-        ) : (
-          <div className="person-backdrop-picker__grid">
-            {isLoading && visibleItems.length === 0 && Array.from({ length: initialTabPageSize }).map((_, index) => (
-              <div key={`person-backdrop-skeleton-${activeTab}-${index}`} className="ui-credit-card ui-credit-card--people-grid entity-detail-page__skeleton-card">
-                <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-poster" />
-                <div className="ui-credit-card__body">
-                  <div className="ui-credit-card__topline">
-                    <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-title" />
-                  </div>
-                  <div className="ui-credit-card__meta">
-                    <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-meta" />
-                    <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-pill" />
+      {isTmdbPerformer && (
+        <div
+          ref={viewportRef}
+          className={`person-backdrop-picker__viewport${isBackdropBrowserOpen ? ' person-backdrop-picker__viewport--detail' : ''}`}
+          onScroll={handleViewportScroll}
+        >
+          {isBackdropBrowserOpen ? (
+            <div className="person-backdrop-picker__detail-view">
+              <TMDBImageGrid
+                customImages={selectedBackdrops}
+                imageType="backdrop"
+                currentPath={selectedBackdropPath || item?.backdrop_path}
+                onSelect={handleSelectDetailedBackdrop}
+                isPending={overridePersonBackdropMutation.isPending || isUploadPending}
+                pendingPath={overridePersonBackdropMutation.variables?.backdropPath}
+                t={t}
+              />
+            </div>
+          ) : (
+            <div className="person-backdrop-picker__grid">
+              {isLoading && visibleItems.length === 0 && Array.from({ length: initialTabPageSize }).map((_, index) => (
+                <div key={`person-backdrop-skeleton-${activeTab}-${index}`} className="ui-credit-card ui-credit-card--people-grid entity-detail-page__skeleton-card">
+                  <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-poster" />
+                  <div className="ui-credit-card__body">
+                    <div className="ui-credit-card__topline">
+                      <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-title" />
+                    </div>
+                    <div className="ui-credit-card__meta">
+                      <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-meta" />
+                      <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-pill" />
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
 
-            {!isLoading && visibleItems.length === 0 && (
-              <EmptyState
-                variant="detail-panel"
-                icon={ImageOff}
-                className="backdrops-panel__empty-state person-backdrop-picker__empty"
-                title={t('library.details.noBackdropsAvailable') || 'No good backdrop options found for this title.'}
-              />
-            )}
+              {!isLoading && visibleItems.length === 0 && (
+                <EmptyState
+                  variant="detail-panel"
+                  icon={ImageOff}
+                  className="backdrops-panel__empty-state person-backdrop-picker__empty"
+                  title={t('library.details.noBackdropsAvailable') || 'No good backdrop options found for this title.'}
+                />
+              )}
 
-            {visibleItems.map((credit) => {
-              const creditKey = String(credit.tmdb_id || credit.id || '');
-              const isSelected = selectedCreditKey !== '' && selectedCreditKey === creditKey;
-              const isPending = overridePersonBackdropMutation.isPending && overridePersonBackdropMutation.variables?.backdropPath === credit.backdrop_path;
-              const rating = Number(credit.rating_tmdb ?? credit.rating);
-              const hasRating = Number.isFinite(rating) && rating > 0;
-              const posterPath = getPosterImagePath(credit);
-              const posterUrl = posterPath ? resolveDetailsImageUrl(posterPath, API_BASE, 'poster') : null;
+              {visibleItems.map((credit) => {
+                const creditKey = String(credit.tmdb_id || credit.id || '');
+                const isSelected = selectedCreditKey !== '' && selectedCreditKey === creditKey;
+                const isPending = overridePersonBackdropMutation.isPending && overridePersonBackdropMutation.variables?.backdropPath === credit.backdrop_path;
+                const rating = Number(credit.rating_tmdb ?? credit.rating);
+                const hasRating = Number.isFinite(rating) && rating > 0;
+                const posterPath = getPosterImagePath(credit);
+                const posterUrl = posterPath ? resolveDetailsImageUrl(posterPath, API_BASE, 'poster') : null;
 
-              return (
-                <CreditCard
-                  key={`person-backdrop-${activeTab}-${credit.tmdb_id || credit.id}`}
-                  title={credit.title}
-                  imageUrl={posterUrl}
-                  isTv={isTvLikeMediaType(credit.media_type || credit.type)}
-                  isPeopleGrid={true}
-                  isCollectionItem={true}
-                  isKnownFor={credit.is_known_for}
-                  isOwned={credit.in_library}
-                  isMissing={!credit.in_library}
-                  className={`${isSelected ? 'person-backdrop-picker__card--selected' : ''} ${isPending ? 'backdrop-card--disabled' : ''}`}
-                  onClick={() => handleOpenBackdropBrowser(credit)}
-                  disabled={overridePersonBackdropMutation.isPending || isUploadPending}
-                >
-                  <div className="ui-credit-card__meta">
-                    {credit.year && <span>{credit.year}</span>}
-                    {hasRating && (
-                      <Pill variant="tmdb" className="ui-credit-card__rating-pill">
-                        <Star size={10} fill="currentColor" strokeWidth={1.8} />
-                        {rating.toFixed(1)}
-                      </Pill>
-                    )}
-                    {isSelected ? (
-                      <Pill variant="success" className="ui-credit-card__status-pill">
-                        {t('common.current') || 'Current'}
-                      </Pill>
-                    ) : (
-                      <Pill
-                        variant={credit.in_library ? 'success' : 'missing'}
-                        className="ui-credit-card__status-pill"
-                      >
-                        {credit.in_library
-                          ? (t('library.details.have') || 'Have')
-                          : (t('library.details.missing') || 'Missing')}
-                      </Pill>
-                    )}
-                  </div>
-                </CreditCard>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                return (
+                  <CreditCard
+                    key={`person-backdrop-${activeTab}-${credit.tmdb_id || credit.id}`}
+                    title={credit.title}
+                    imageUrl={posterUrl}
+                    isTv={isTvLikeMediaType(credit.media_type || credit.type)}
+                    isPeopleGrid={true}
+                    isCollectionItem={true}
+                    isKnownFor={credit.is_known_for}
+                    isOwned={credit.in_library}
+                    isMissing={!credit.in_library}
+                    className={`${isSelected ? 'person-backdrop-picker__card--selected' : ''} ${isPending ? 'backdrop-card--disabled' : ''}`}
+                    onClick={() => handleOpenBackdropBrowser(credit)}
+                    disabled={overridePersonBackdropMutation.isPending || isUploadPending}
+                  >
+                    <div className="ui-credit-card__meta">
+                      {credit.year && <span>{credit.year}</span>}
+                      {hasRating && (
+                        <Pill variant="tmdb" className="ui-credit-card__rating-pill">
+                          <Star size={10} fill="currentColor" strokeWidth={1.8} />
+                          {rating.toFixed(1)}
+                        </Pill>
+                      )}
+                      {isSelected ? (
+                        <Pill variant="success" className="ui-credit-card__status-pill">
+                          {t('common.current') || 'Current'}
+                        </Pill>
+                      ) : (
+                        <Pill
+                          variant={credit.in_library ? 'success' : 'missing'}
+                          className="ui-credit-card__status-pill"
+                        >
+                          {credit.in_library
+                            ? (t('library.details.have') || 'Have')
+                            : (t('library.details.missing') || 'Missing')}
+                        </Pill>
+                      )}
+                    </div>
+                  </CreditCard>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

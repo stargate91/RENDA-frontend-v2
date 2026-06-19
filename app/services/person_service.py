@@ -108,7 +108,7 @@ class PersonService:
             "popularity": person.popularity
         }
 
-    def enrich_person_metadata(self, person_id: int, languages: List[str]) -> Optional[Person]:
+    def enrich_person_metadata(self, person_id: int, languages: List[str], overrides: dict = None) -> Optional[Person]:
         """Fetches full person details from TMDB or adult databases and populates the database with rich details and localizations."""
         person = self.repository.get_by_id(person_id)
         if not person:
@@ -271,6 +271,27 @@ class PersonService:
                             fetched_langs.add(lang_code)
                     
             person.fetched_languages = ",".join(filter(None, fetched_langs))
+            
+            if overrides:
+                for k, v in overrides.items():
+                    if k in ["birthday", "deathday", "place_of_birth", "gender"]:
+                        setattr(person, k, v)
+                    elif k in ["name", "biography"]:
+                        loc = self.db.query(PersonLocalization).filter(
+                            PersonLocalization.person_id == person_id,
+                            PersonLocalization.locale == "en"
+                        ).first()
+                        if not loc:
+                            loc = PersonLocalization(person_id=person_id, locale="en")
+                            self.db.add(loc)
+                        setattr(loc, k, v)
+                    else:
+                        ext_ids = dict(person.external_ids or {})
+                        attrs = dict(ext_ids.get("attributes") or {})
+                        attrs[k] = v
+                        ext_ids["attributes"] = attrs
+                        person.external_ids = ext_ids
+                self.db.flush()
             
             try:
                 self.db.commit()
