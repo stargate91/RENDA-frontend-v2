@@ -9,7 +9,9 @@
     "save": "Save",
     "search": "Search",
     "noData": "No data available",
-    "uploading": "Uploading..."
+    "uploading": "Uploading...",
+    "showDetails": "Show Details",
+    "hideDetails": "Hide Details"
   },
   "dropzone": {
     "label": "Drop files or folders here",
@@ -33,9 +35,8 @@
     "dashboard": "Dashboard",
     "organizer": "Organizer",
     "library": "Library",
-    "undoHistory": "Undo",
+    "history": "History",
     "myRatings": "My Ratings",
-    "watchedHistory": "Watched History",
     "lists": "Lists",
     "settings": "Settings",
     "about": "About",

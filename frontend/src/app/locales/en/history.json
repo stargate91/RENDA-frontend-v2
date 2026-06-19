@@ -18,7 +18,16 @@
   "badgeExtras": "Extras",
   "revertButton": "Revert Batch",
   "alreadyRevertedTooltip": "This batch has already been reverted.",
-  "undoActiveProgress": "Reverting batch organization files in the background...",
   "batchLabel": "Batch:",
-  "filesLabel": "Files:"
+  "filesLabel": "Files:",
+  "renamedFilesTitle": "Renamed Files:",
+  "watchedPageTitle": "Watched History",
+  "watchedPageDesc": "See recently watched items and playback activity.",
+  "watchedEmptyTitle": "No playback history",
+  "watchedEmptyDesc": "Your recently watched movies and series will be listed here.",
+  "watchedStatus": "Watched",
+  "watchedContinue": "Continue",
+  "watchedRewatch": "Rewatch",
+  "tabRename": "Rename Logs",
+  "tabWatched": "Playback Logs"
 }

@@ -174,6 +174,17 @@ def get_history():
             is_undone = (success_count == 0) and (undone_count > 0 or failed_count == 0)
             status = "undone" if is_undone else "completed" if failed_count == 0 else "partial"
 
+            logs_query = db.query(ActionLog).filter(ActionLog.batch_id == b.id).all()
+            logs_list = []
+            for log in logs_query:
+                logs_list.append({
+                    "id": log.id,
+                    "old_value": log.old_value,
+                    "new_value": log.new_value,
+                    "status": log.status.value,
+                    "error_message": log.error_message
+                })
+
             result.append({
                 "id": b.id,
                 "name": b.name or f"Batch #{b.id}",
@@ -185,7 +196,8 @@ def get_history():
                 "extra_count": extra_count,
                 "remaining_count": success_count,
                 "undone_count": undone_count,
-                "status": status
+                "status": status,
+                "logs": logs_list
             })
             
         return result

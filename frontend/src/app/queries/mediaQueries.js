@@ -257,6 +257,7 @@ export const usePlayMediaMutation = () => {
     onSuccess: (data, itemId) => {
       queryClient.invalidateQueries({ queryKey: ['library-item-detail', itemId] });
       queryClient.invalidateQueries({ queryKey: ['library-series-detail', itemId] });
+      queryClient.invalidateQueries({ queryKey: ['watched-history'] });
     },
   });
 };

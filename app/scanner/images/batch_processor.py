@@ -306,6 +306,7 @@ class ImageBatchProcessorMixin:
 
             from sqlalchemy.exc import OperationalError
             import time
+            import random
             for attempt in range(5):
                 try:
                     local_db.commit()
@@ -314,12 +315,13 @@ class ImageBatchProcessorMixin:
                     local_db.rollback()
                     if attempt == 4:
                         raise oe
-                    time.sleep(0.25 * (attempt + 1))
+                    time.sleep(0.25 * (attempt + 1) + random.uniform(0, 0.1))
         except Exception as e:
             logger.error(f"Error downloading images for match ID {match_id}: {e}")
             local_db.rollback()
             from sqlalchemy.exc import OperationalError
             import time
+            import random
             for attempt in range(5):
                 try:
                     match = local_db.query(MediaMatch).filter(MediaMatch.id == match_id).first()
@@ -329,7 +331,7 @@ class ImageBatchProcessorMixin:
                         break
                 except OperationalError:
                     local_db.rollback()
-                    time.sleep(0.25 * (attempt + 1))
+                    time.sleep(0.25 * (attempt + 1) + random.uniform(0, 0.1))
                 except:
                     break
         finally:

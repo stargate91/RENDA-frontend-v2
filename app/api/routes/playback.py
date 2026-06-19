@@ -617,3 +617,88 @@ def reset_item_progress(item_id: int):
         return JSONResponse(status_code=500, content={"error": str(e)})
     finally:
         db.close()
+
+@router.get("/library/watched-history")
+def get_watched_history(limit: int = 50):
+    db = Session()
+    try:
+        from app.db.models import PlaybackLog, MediaItem, ItemStatus
+        from app.db.models.metadata import MediaMatch
+        from app.services.language_service import LanguageService
+        from app.services.library.asset_resolver import resolve_asset_path
+        from app.utils.library_utils import _preferred_metadata_language
+
+        ui_lang = _preferred_metadata_language(db)
+        
+        logs = db.query(PlaybackLog).join(MediaItem).options(
+            joinedload(PlaybackLog.media_item).options(
+                joinedload(MediaItem.matches).joinedload(MediaMatch.localizations)
+            )
+        ).order_by(PlaybackLog.watched_at.desc()).limit(limit).all()
+
+        results = []
+        for log in logs:
+            item = log.media_item
+            if not item:
+                continue
+
+            active_match = next((match for match in item.matches if match.is_active), None)
+            loc = LanguageService.pick_localization(active_match.localizations, [ui_lang] if ui_lang else []) if active_match else None
+
+            title = loc.title if loc else (item.fn_title or item.fd_title or item.filename)
+            series_title = loc.series_title if loc else None
+            episode_title = loc.episode_title if loc else None
+
+            poster_path = resolve_asset_path(
+                subfolder="posters",
+                manual_local_path=getattr(loc, "manual_local_poster_path", None) if loc else None,
+                manual_path=getattr(loc, "manual_poster_path", None) if loc else None,
+                local_path=loc.local_poster_path if loc else None,
+                remote_path=loc.poster_path if loc else None,
+            ) if loc else None
+
+            series_poster_path = resolve_asset_path(
+                subfolder="posters",
+                manual_local_path=(
+                    getattr(loc, "manual_local_series_poster_path", None)
+                    or getattr(loc, "manual_local_poster_path", None)
+                ) if loc else None,
+                manual_path=(
+                    getattr(loc, "manual_series_poster_path", None)
+                    or getattr(loc, "manual_poster_path", None)
+                ) if loc else None,
+                local_path=(loc.local_series_poster_path or loc.local_poster_path) if loc else None,
+                remote_path=(loc.series_poster_path or loc.poster_path) if loc else None,
+            ) if loc else None
+
+            year = None
+            if active_match:
+                if active_match.release_date:
+                    year = active_match.release_date.year
+                elif active_match.first_air_date:
+                    year = active_match.first_air_date.year
+            if not year:
+                year = item.fn_year or item.fd_year
+
+            results.append({
+                "id": log.id,
+                "media_item_id": item.id,
+                "watched_at": log.watched_at.isoformat(),
+                "title": title,
+                "series_title": series_title,
+                "episode_title": episode_title,
+                "type": item.item_type.value,
+                "year": year,
+                "season_number": active_match.season_number if active_match else None,
+                "episode_number": active_match.episode_number if active_match else None,
+                "poster_path": poster_path,
+                "series_poster_path": series_poster_path,
+                "resume_position": item.resume_position or 0,
+                "duration": item.duration or 0,
+                "is_watched": item.is_watched or False,
+            })
+
+        return results
+    finally:
+        db.close()
+

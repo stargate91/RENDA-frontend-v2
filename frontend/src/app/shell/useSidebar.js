@@ -1,4 +1,4 @@
-import { LayoutDashboard, FolderSearch2, Library, Star, Clapperboard, Settings, ListTodo, RotateCcw } from 'lucide-react';
+import { LayoutDashboard, FolderSearch2, Library, Star, Clapperboard, Settings, ListTodo, History } from 'lucide-react';
 import { useTranslation } from '../providers/LanguageContext';
 import { sendWindowEvent } from '../lib/ipc';
 
@@ -7,9 +7,8 @@ export const navItems = [
   { to: '/organizer', translationKey: 'sidebar.organizer', icon: FolderSearch2 },
   { to: '/library', translationKey: 'sidebar.library', icon: Library },
   { to: '/lists', translationKey: 'sidebar.lists', icon: ListTodo },
-  { to: '/watched-history', translationKey: 'sidebar.watchedHistory', icon: Clapperboard },
   { to: '/my-ratings', translationKey: 'sidebar.myRatings', icon: Star },
-  { to: '/undo', translationKey: 'sidebar.undoHistory', icon: RotateCcw },
+  { to: '/history', translationKey: 'sidebar.history', icon: History },
   { to: '/settings', translationKey: 'sidebar.settings', icon: Settings },
 ];
 

@@ -125,6 +125,7 @@ export default function AppShell() {
         <main className="shell__content">
           <header className="shell__utility-bar">
             <div className="shell__utility-bar-left" aria-label="Context actions placeholder" />
+            <div className="shell__utility-bar-center" id="shell-utility-bar-center" />
           </header>
           <Suspense fallback={
             <div className="shell__suspense-fallback">

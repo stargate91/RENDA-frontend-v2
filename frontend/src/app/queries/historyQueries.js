@@ -6,6 +6,11 @@ export const useHistoryQuery = () => useQuery({
   queryFn: () => api.history.get(),
 });
 
+export const useWatchedHistoryQuery = () => useQuery({
+  queryKey: ['watched-history'],
+  queryFn: () => api.history.getWatched(),
+});
+
 export const useUndoMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({

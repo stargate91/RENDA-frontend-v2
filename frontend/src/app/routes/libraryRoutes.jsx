@@ -7,7 +7,6 @@ const MediaDetailPage = lazy(() => import('../pages/library/MediaDetailPage'));
 const PeopleCollectionDetailPage = lazy(() => import('../pages/library/PeopleCollectionDetailPage'));
 const HistoryPage = lazy(() => import('../pages/history/HistoryPage'));
 const RatingsPage = lazy(() => import('../pages/RatingsPage'));
-const WatchedHistoryPage = lazy(() => import('../pages/WatchedHistoryPage'));
 
 export const libraryRoutes = [
   { path: 'library', element: <LibraryPage /> },
@@ -28,7 +27,6 @@ export const libraryRoutes = [
     path: 'library/collection/:id',
     element: <PeopleCollectionDetailPage type="collection" />,
   },
-  { path: 'undo', element: <HistoryPage /> },
+  { path: 'history', element: <HistoryPage /> },
   { path: 'my-ratings', element: <RatingsPage /> },
-  { path: 'watched-history', element: <WatchedHistoryPage /> },
 ];

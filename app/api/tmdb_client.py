@@ -102,7 +102,8 @@ class TMDBClient:
                         cache_db.rollback()
                 except OperationalError:
                     cache_db.rollback()
-                    sleep(0.15 * (attempt + 1))
+                    import random
+                    sleep(0.15 * (attempt + 1) + random.uniform(0, 0.05))
                 except Exception:
                     cache_db.rollback()
                     # We don't want cache failures to break the app.
@@ -149,7 +150,8 @@ class TMDBClient:
                 if attempt == max_retries - 1:
                     logger.error(f"TMDB API Error ({endpoint}): {e}")
                     raise e
-                time.sleep(2 ** attempt)
+                import random
+                time.sleep(2 ** attempt + random.uniform(0, 0.5))
         
         raise RuntimeError(f"TMDB API request failed for {endpoint}")
 
