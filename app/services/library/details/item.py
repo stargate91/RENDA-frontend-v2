@@ -68,6 +68,120 @@ class ItemDetailProvider(BaseDetailProvider):
         try:
             from app.db.models import MediaItem, MediaMatch, UserSetting, Person, MediaPersonLink, PersonLocalization, TMDBCache
 
+            # Check if item_id is virtual StashDB scene (starts with stash_)
+            if isinstance(item_id, str) and item_id.startswith("stash_"):
+                try:
+                    scene_uuid = item_id.split("_")[1]
+                except IndexError:
+                    return JSONResponse(status_code=400, content={"error": "Invalid stash ID format"})
+
+                from app.api.graphql_clients import AdultGraphQLClient
+                
+                # Check stashdb, then fansdb
+                scene_data = None
+                used_source = None
+                for src in ["stashdb", "fansdb"]:
+                    client = AdultGraphQLClient(db, src)
+                    scene_data = client.get_scene_details(scene_uuid)
+                    if scene_data:
+                        used_source = src
+                        break
+                        
+                if not scene_data:
+                    return JSONResponse(status_code=404, content={"error": "Scene not found on StashDB/FansDB"})
+                
+                title = scene_data.get("title") or "Unknown Scene"
+                images = scene_data.get("images") or []
+                poster_url = images[0].get("url") if images else None
+                
+                date_str = scene_data.get("date")
+                year = None
+                if date_str:
+                    try:
+                        year = int(date_str.split("-")[0])
+                    except:
+                        pass
+                        
+                duration_sec = scene_data.get("duration")
+                duration_str = None
+                if duration_sec:
+                    try:
+                        duration_min = int(float(duration_sec) / 60)
+                        if duration_min > 0:
+                            duration_str = f"{duration_min} min"
+                    except:
+                        pass
+                        
+                studio_data = scene_data.get("studio") or {}
+                studio_name = studio_data.get("name")
+                studio_images = studio_data.get("images") or []
+                studio_logo = studio_images[0].get("url") if studio_images else None
+                
+                parent_data = studio_data.get("parent") or {}
+                parent_name = parent_data.get("name")
+                parent_images = parent_data.get("images") or []
+                parent_logo = parent_images[0].get("url") if parent_images else None
+                
+                cast = []
+                for p_entry in scene_data.get("performers") or []:
+                    perf = p_entry.get("performer") or {}
+                    p_images = perf.get("images") or []
+                    p_img = p_images[0].get("url") if p_images else None
+                    cast.append({
+                        "id": perf.get("id"),
+                        "name": perf.get("name"),
+                        "character": None,
+                        "job": "Actor",
+                        "profile_path": p_img,
+                        "popularity": 0,
+                        "gender": perf.get("gender")
+                    })
+                    
+                genres = []
+                
+                result = {
+                    "id": f"stash_{scene_uuid}",
+                    "title": title,
+                    "logo_path": studio_logo or parent_logo,
+                    "original_title": None,
+                    "tagline": None,
+                    "overview": f"Studio: {studio_name}" if studio_name else None,
+                    "genres": genres,
+                    "year": year,
+                    "release_date": date_str,
+                    "runtime": duration_sec,
+                    "formatted_duration": duration_str,
+                    "rating_tmdb": 0.0,
+                    "vote_count_tmdb": 0,
+                    "companies": [{"name": studio_name, "logo_path": studio_logo}] if studio_name else [],
+                    "networks": [{"name": parent_name, "logo_path": parent_logo}] if parent_name else [],
+                    "poster_path": poster_url,
+                    "backdrop_path": None,
+                    "original_language": None,
+                    "type": "scene",
+                    "cast": cast,
+                    "cast_total": len(cast),
+                    "people_complete": True,
+                    "directors": [],
+                    "writers": [],
+                    "is_adult": True,
+                    "is_favorite": False,
+                    "user_rating": None,
+                    "user_comment": None,
+                    "custom_tags": [],
+                    "tags": [],
+                    "is_tracked": False,
+                    "watch_count": 0,
+                    "is_watched": False,
+                    "resume_position": 0,
+                    "last_watched_at": None,
+                    "playback_logs": [],
+                    "peaks_count": 0,
+                    "peaks_history": [],
+                    "in_library": False,
+                }
+                return JSONResponse(content=result, media_type="application/json; charset=utf-8")
+
             # Check if item_id is virtual (starts with tmdb_)
             if isinstance(item_id, str) and item_id.startswith("tmdb_"):
                 try:
@@ -234,8 +348,8 @@ class ItemDetailProvider(BaseDetailProvider):
                     "vote_count_tmdb": tmdb_data.get("vote_count"),
                     "budget": tmdb_data.get("budget"),
                     "revenue": tmdb_data.get("revenue"),
-                    "companies": [{"name": c.get("name"), "logo_path": c.get("logo_path")} for c in tmdb_data.get("production_companies", [])] if tmdb_data.get("production_companies") else [],
-                    "networks": [{"name": n.get("name"), "logo_path": n.get("logo_path")} for n in tmdb_data.get("networks", [])] if tmdb_data.get("networks") else [],
+                    "companies": [{"name": c.get("name"), "logo_path": self.formatter.resolve_company_logo(c)} for c in tmdb_data.get("production_companies", [])] if tmdb_data.get("production_companies") else [],
+                    "networks": [{"name": n.get("name"), "logo_path": self.formatter.resolve_company_logo(n)} for n in tmdb_data.get("networks", [])] if tmdb_data.get("networks") else [],
                     "collection": (tmdb_data.get("belongs_to_collection") or {}).get("name"),
                     "collection_data": {
                         "tmdb_id": (tmdb_data.get("belongs_to_collection") or {}).get("id"),
@@ -287,6 +401,7 @@ class ItemDetailProvider(BaseDetailProvider):
                 joinedload(MediaItem.matches).joinedload(MediaMatch.collection_entity).joinedload(MediaCollection.localizations),
                 joinedload(MediaItem.matches).joinedload(MediaMatch.people).joinedload(MediaPersonLink.person).joinedload(Person.localizations),
                 joinedload(MediaItem.extras),
+                joinedload(MediaItem.peak_logs),
             ).filter(MediaItem.id == item_id_int).first()
         
             if not item:
@@ -427,10 +542,15 @@ class ItemDetailProvider(BaseDetailProvider):
 
             companies_fallback = active_match.companies
             if not companies_fallback and movie_cache and movie_cache.raw_data:
-                companies_fallback = [{"name": c.get("name"), "logo_path": c.get("logo_path")} for c in movie_cache.raw_data.get("production_companies", [])]
+                companies_fallback = [{"name": c.get("name"), "logo_path": self.formatter.resolve_company_logo(c)} for c in movie_cache.raw_data.get("production_companies", [])]
+            elif companies_fallback:
+                companies_fallback = [{"name": c.get("name"), "logo_path": self.formatter.resolve_company_logo(c)} for c in companies_fallback]
+
             networks_fallback = active_match.networks
             if not networks_fallback and movie_cache and movie_cache.raw_data:
-                networks_fallback = [{"name": n.get("name"), "logo_path": n.get("logo_path")} for n in movie_cache.raw_data.get("networks", [])]
+                networks_fallback = [{"name": n.get("name"), "logo_path": self.formatter.resolve_company_logo(n)} for n in movie_cache.raw_data.get("networks", [])]
+            elif networks_fallback:
+                networks_fallback = [{"name": n.get("name"), "logo_path": self.formatter.resolve_company_logo(n)} for n in networks_fallback]
 
             preferred_logo_path = _pick_logo_path(movie_cache.raw_data if movie_cache else None, ui_lang) if movie_cache else None
             effective_logo_path = (
@@ -526,6 +646,15 @@ class ItemDetailProvider(BaseDetailProvider):
                 "resume_position": getattr(item, "resume_position", 0),
                 "last_watched_at": getattr(item, "last_watched_at").isoformat() if getattr(item, "last_watched_at", None) else None,
                 "playback_logs": _serialize_playback_logs(item),
+                "peaks_count": len(item.peak_logs) if item.peak_logs else 0,
+                "peaks_history": [
+                     {
+                         "id": log.id,
+                         "watched_at": log.watched_at.isoformat(),
+                         "video_position": log.video_position,
+                     }
+                     for log in sorted(item.peak_logs or [], key=lambda x: x.watched_at, reverse=True)
+                 ] if item.peak_logs else [],
                 "trailer_key": trailer_key,
                 "extras": [self.formatter.serialize_extra_file(extra) for extra in (item.extras or [])],
             }

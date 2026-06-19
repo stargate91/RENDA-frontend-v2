@@ -8,18 +8,19 @@ import './DetailsPanel.css';
 
 
 export default function DetailsPanel() {
-  const { state, t } = useMediaDetailContext();
+  const { state, mutations, t } = useMediaDetailContext();
   const {
     item,
     isMovie
   } = state;
 
+  const isSceneType = item?.type === 'scene';
   const tmdbId = item?.tmdb_id || item?.series_tmdb_id;
   const imdbId = item?.imdb_id;
-  const hasImdb = item?.rating_imdb != null;
-  const hasTmdb = item?.rating_tmdb != null;
-  const hasRotten = item?.rating_rotten != null && item?.rating_rotten !== '';
-  const hasMeta = item?.rating_meta != null;
+  const hasImdb = !isSceneType && item?.rating_imdb != null;
+  const hasTmdb = !isSceneType && item?.rating_tmdb != null;
+  const hasRotten = !isSceneType && item?.rating_rotten != null && item?.rating_rotten !== '';
+  const hasMeta = !isSceneType && item?.rating_meta != null;
 
   const ratings = [];
   if (hasImdb) {
@@ -68,8 +69,6 @@ export default function DetailsPanel() {
 
   const companies = item.companies || [];
   const networks = item.networks || [];
-  const itemsToShow = networks.length > 0 ? networks : companies;
-  const blockTitle = networks.length > 0 ? 'Platforms & Networks' : 'Production Companies';
 
   const nonSpecialSeasons = !isMovie && Array.isArray(item?.seasons)
     ? item.seasons.filter(s => s.season_number !== 0)
@@ -87,35 +86,37 @@ export default function DetailsPanel() {
 
   return (
     <div className="details-panel details-panel--custom">
-      {ratings.length > 0 ? (
-        <div>
-          <h4 className="details-panel__ratings-title">
-            {t('library.details.ratingsSection') || 'Ratings'}
-          </h4>
-          <div className="ratings-container">
-            {ratings.map((rating, idx) => {
-              const isLast = idx === ratings.length - 1;
-              const isOddTotal = ratings.length % 2 !== 0;
-              const isSpan2 = (isLast && isOddTotal);
+      {!isSceneType && (
+        ratings.length > 0 ? (
+          <div>
+            <h4 className="details-panel__ratings-title">
+              {t('library.details.ratingsSection') || 'Ratings'}
+            </h4>
+            <div className="ratings-container">
+              {ratings.map((rating, idx) => {
+                const isLast = idx === ratings.length - 1;
+                const isOddTotal = ratings.length % 2 !== 0;
+                const isSpan2 = (isLast && isOddTotal);
 
-              return (
-                <div
-                  key={rating.id}
-                  className={`rating-card${isSpan2 ? ' rating-card--span-2' : ''}`}
-                >
-                  <img src={rating.logo} alt={rating.alt} className="rating-card__logo" />
-                  <span className="rating-card__value">
-                    {rating.value}
-                  </span>
-                </div>
-              );
-            })}
+                return (
+                  <div
+                    key={rating.id}
+                    className={`rating-card${isSpan2 ? ' rating-card--span-2' : ''}`}
+                  >
+                    <img src={rating.logo} alt={rating.alt} className="rating-card__logo" />
+                    <span className="rating-card__value">
+                      {rating.value}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ) : (
-        <div className="details-panel__no-ratings">
-          {t('library.details.noRatingsAvailable') || 'No ratings available.'}
-        </div>
+        ) : (
+          <div className="details-panel__no-ratings">
+            {t('library.details.noRatingsAvailable') || 'No ratings available.'}
+          </div>
+        )
       )}
 
       {!isMovie && (
@@ -179,13 +180,13 @@ export default function DetailsPanel() {
         </div>
       )}
 
-      {itemsToShow.length > 0 && (
-        <div>
+      {companies.length > 0 && (
+        <div className="details-panel__section">
           <h4 className="details-panel__section-title">
-            {blockTitle}
+            {t('library.details.productionCompanies') || 'Production Companies'}
           </h4>
           <div className="companies-networks-container">
-            {itemsToShow.map((it, idx) => {
+            {companies.map((it, idx) => {
               const logoUrl = it.logo_path
                 ? (it.logo_path.startsWith('http') || it.logo_path.startsWith('/media/') || it.logo_path.startsWith('data/'))
                   ? resolveMediaImageUrl(it.logo_path, 'logo')
@@ -212,6 +213,144 @@ export default function DetailsPanel() {
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {networks.length > 0 && (
+        <div className="details-panel__section">
+          <h4 className="details-panel__section-title">
+            {t('library.details.platformsNetworks') || 'Platforms & Networks'}
+          </h4>
+          <div className="companies-networks-container">
+            {networks.map((it, idx) => {
+              const logoUrl = it.logo_path
+                ? (it.logo_path.startsWith('http') || it.logo_path.startsWith('/media/') || it.logo_path.startsWith('data/'))
+                  ? resolveMediaImageUrl(it.logo_path, 'logo')
+                  : buildTmdbImageUrl(it.logo_path, TMDB_IMAGE_SIZES.posterThumb)
+                : null;
+              return (
+                <div
+                  key={idx}
+                  className="specs-card specs-card--company"
+                  title={it.name}
+                >
+                  {logoUrl && (
+                    <img
+                      src={logoUrl}
+                      alt={it.name}
+                      className="specs-card__company-logo"
+                    />
+                  )}
+                  {!logoUrl && (
+                    <span className="specs-card__company-text">
+                      {it.name}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {(item?.type === 'scene' || item?.is_adult) && (
+        <div className="details-panel__section">
+          <h4 className="details-panel__section-title">
+            Peaks
+          </h4>
+          <div className="peaks-container" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div className="specs-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px' }}>
+              <div>
+                <span className="specs-card__label" style={{ display: 'block', fontSize: '11px', opacity: 0.7 }}>Total Peaks</span>
+                <span className="specs-card__value" style={{ fontSize: '18px', fontWeight: 'bold' }}>{item.peaks_count || 0}</span>
+              </div>
+              <button
+                type="button"
+                className="peak-add-btn"
+                onClick={() => mutations.addPeakMutation.mutate(item.id)}
+                style={{
+                  background: 'var(--color-primary, #3b82f6)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '28px',
+                  height: '28px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontSize: '16px',
+                  transition: 'transform 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                +
+              </button>
+            </div>
+
+            {item.peaks_history && item.peaks_history.length > 0 && (
+              <div className="peaks-history-list" style={{ maxHeight: '150px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', paddingRight: '4px' }}>
+                {item.peaks_history.map((log) => {
+                  const date = new Date(log.watched_at);
+                  const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                  const positionText = log.video_position != null
+                    ? `${Math.floor(log.video_position / 60)}m ${String(log.video_position % 60).padStart(2, '0')}s`
+                    : null;
+
+                  return (
+                    <div
+                      key={log.id}
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        fontSize: '12px',
+                        background: 'rgba(255, 255, 255, 0.03)',
+                        padding: '6px 10px',
+                        borderRadius: '6px',
+                        border: '1px solid rgba(255, 255, 255, 0.05)'
+                      }}
+                    >
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <span style={{ opacity: 0.6 }}>{formattedDate}</span>
+                        {positionText && (
+                          <span style={{
+                            background: 'rgba(59, 130, 246, 0.15)',
+                            color: 'var(--color-primary, #3b82f6)',
+                            padding: '1px 6px',
+                            borderRadius: '4px',
+                            fontSize: '11px',
+                            fontWeight: '500'
+                          }}>
+                            {positionText}
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => mutations.deletePeakMutation.mutate({ itemId: item.id, logId: log.id })}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--color-danger, #ef4444)',
+                          cursor: 'pointer',
+                          fontSize: '11px',
+                          opacity: 0.6,
+                          padding: '2px 6px'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                        onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -211,3 +211,57 @@ class AdultGraphQLClient:
             logger.error(f"Error fetching performer scenes: {e}")
             return [], 0
 
+    def get_scene_details(self, scene_id: str) -> Optional[Dict[str, Any]]:
+        if self.prefix not in ["stashdb", "fansdb"]:
+            return None
+            
+        gql_query = """
+        query GetScene($id: ID!) {
+          findScene(id: $id) {
+            id
+            title
+            date
+            duration
+            images {
+              url
+            }
+            studio {
+              id
+              name
+              images {
+                url
+              }
+              parent {
+                id
+                name
+                images {
+                  url
+                }
+              }
+            }
+            performers {
+              performer {
+                id
+                name
+                gender
+                images {
+                  url
+                }
+              }
+            }
+            tags {
+              id
+              name
+            }
+          }
+        }
+        """
+        try:
+            data = self.execute_query(gql_query, {"id": scene_id})
+            if not data or "findScene" not in data:
+                return None
+            return data["findScene"]
+        except Exception as e:
+            logger.error(f"Error fetching scene details: {e}")
+            return None
+

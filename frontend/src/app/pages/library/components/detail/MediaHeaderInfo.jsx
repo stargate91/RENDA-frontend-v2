@@ -23,7 +23,8 @@ export default function MediaHeaderInfo() {
     ratingImdb,
     showTmdb,
     ratingTmdb,
-    normalizedGenres
+    normalizedGenres,
+    item
   } = state;
 
   return (
@@ -40,6 +41,10 @@ export default function MediaHeaderInfo() {
             <h1 className="media-detail-page__fallback-title">{title}</h1>
           )}
         </div>
+
+        {logoUrl && item?.type === 'scene' && (
+          <h1 className="media-detail-page__scene-title-below-logo">{title}</h1>
+        )}
 
         <div className="media-detail-page__details-group">
           {showOriginalTitle && (

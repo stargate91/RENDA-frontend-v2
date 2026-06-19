@@ -20,6 +20,7 @@ export default function DetailPageShell({
   topRightControls,
   pageClassName = '',
   panelOpenClassName = 'media-detail-page__container--panel-open',
+  isScene = false,
 }) {
   const navigate = useNavigate();
 
@@ -41,7 +42,7 @@ export default function DetailPageShell({
         </NavButton>
       </UtilityBarPortal>
 
-      <HeroSection backdropUrl={backdropUrl || fallbackUrl} isFallback={!backdropUrl} />
+      <HeroSection backdropUrl={backdropUrl || fallbackUrl} isFallback={!backdropUrl && !isScene} />
 
       <div className="media-detail-page__layout-wrapper">
         {(topRightControls || onToggleSideNav) ? (

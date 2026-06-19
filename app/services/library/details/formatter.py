@@ -1,6 +1,7 @@
 import os
 from ..asset_resolver import has_local_asset, resolve_asset_path
-from app.utils.library_utils import _public_image_path, _tmdb_size_for_subfolder, _tmdb_image_url, _match_language_code
+from app.utils.library_utils import _tmdb_size_for_subfolder, _tmdb_image_url, _match_language_code
+from app.utils.library_helpers import public_image_path
 
 class DetailFormatterService:
     def resolve_image_response_path(
@@ -10,7 +11,7 @@ class DetailFormatterService:
         subfolder: str = "",
         tmdb_size: str | None = None,
     ):
-        local_public = _public_image_path(local_image_path, subfolder) or _public_image_path(image_path, subfolder)
+        local_public = public_image_path(local_image_path, subfolder) or public_image_path(image_path, subfolder)
         if local_public:
             return local_public
         size = tmdb_size or _tmdb_size_for_subfolder(subfolder)
@@ -18,6 +19,14 @@ class DetailFormatterService:
 
     def resolve_logo_response_path(self, logo_path: str | None = None, local_logo_path: str | None = None):
         return self.resolve_image_response_path(logo_path, local_logo_path, "logos")
+
+    def resolve_company_logo(self, company: dict) -> str | None:
+        if not company:
+            return None
+        return self.resolve_logo_response_path(
+            logo_path=company.get("logo_path"),
+            local_logo_path=company.get("local_logo_path"),
+        )
 
     def resolve_entity_asset_path(
         self,

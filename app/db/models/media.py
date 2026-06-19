@@ -75,7 +75,8 @@ class MediaItem(Base):
     matches: Mapped[List["MediaMatch"]] = relationship(back_populates="media_item", cascade="all, delete-orphan")
     extras: Mapped[List["ExtraFile"]] = relationship(back_populates="parent_item", cascade="all, delete-orphan")
     action_logs: Mapped[List["ActionLog"]] = relationship(back_populates="media_item")
-    playback_logs: Mapped[List["PlaybackLog"]] = relationship(back_populates="media_item", cascade="all, delete-orphan")
+    playback_logs: Mapped[List["PlaybackLog"]] = relationship("PlaybackLog", back_populates="media_item", cascade="all, delete-orphan")
+    peak_logs: Mapped[List["PlaybackPeakLog"]] = relationship("PlaybackPeakLog", back_populates="media_item", cascade="all, delete-orphan")
     def __repr__(self) -> str: return f"<MediaItem(id={self.id}, status={self.status.value}, path={self.current_path})>"
 
 
@@ -188,5 +189,16 @@ class Studio(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     matches: Mapped[List["MediaMatch"]] = relationship("MediaMatch", back_populates="studio")
+
+
+class PlaybackPeakLog(Base):
+    """Tracking history of climax/peak moments."""
+    __tablename__ = "playback_peak_logs"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    media_item_id: Mapped[int] = mapped_column(ForeignKey("media_items.id", ondelete="CASCADE"), index=True)
+    watched_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+    video_position: Mapped[Optional[int]] = mapped_column(Integer, nullable=True) # position in seconds
+
+    media_item: Mapped["MediaItem"] = relationship("MediaItem", back_populates="peak_logs")
 
 

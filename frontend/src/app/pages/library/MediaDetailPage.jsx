@@ -145,6 +145,7 @@ export default function MediaDetailPage({ type = 'movie' }) {
       <DetailPageShell
         backdropUrl={backdropUrl}
         fallbackUrl={posterUrl}
+        isScene={item?.type === 'scene'}
         backLabel={t('common.back') || 'Back'}
         activePanel={activePanel}
         isSideNavVisible={isSideNavVisible}

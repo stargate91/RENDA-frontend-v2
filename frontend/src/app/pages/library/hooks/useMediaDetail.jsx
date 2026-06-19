@@ -4,7 +4,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useLibraryItemDetailQuery, useLibrarySeriesDetailQuery } from '@/queries/metadataQueries';
 import {
   useUpdateMediaStatusMutation, usePlayMediaMutation,
-  useBulkUpdateWatchedMutation, useOverrideBackdropMutation, useToggleVirtualTrackedMutation
+  useBulkUpdateWatchedMutation, useOverrideBackdropMutation, useToggleVirtualTrackedMutation,
+  useAddPeakMutation, useDeletePeakMutation
 } from '@/queries/mediaQueries';
 import { useSettingsQuery } from '@/queries/settingsQueries';
 import { useLibraryModeStore } from '@/stores/useLibraryModeStore';
@@ -38,6 +39,8 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
   const updateStatusMutation = useUpdateMediaStatusMutation();
   const overrideBackdropMutation = useOverrideBackdropMutation();
   const toggleVirtualTrackedMutation = useToggleVirtualTrackedMutation();
+  const addPeakMutation = useAddPeakMutation();
+  const deletePeakMutation = useDeletePeakMutation();
   const playMutation = usePlayMediaMutation();
   const bulkUpdateWatchedMutation = useBulkUpdateWatchedMutation();
 
@@ -323,8 +326,9 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
 
   const ratingImdb = item?.rating_imdb;
   const ratingTmdb = item?.rating_tmdb;
-  const showImdb = !!ratingImdb;
-  const showTmdb = !ratingImdb && !!ratingTmdb;
+  const isSceneType = item?.type === 'scene';
+  const showImdb = !!ratingImdb && !isSceneType;
+  const showTmdb = !ratingImdb && !!ratingTmdb && !isSceneType;
 
   const normalizedGenres = item?.genres || [];
   const overview = item?.overview || '';
@@ -557,7 +561,9 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
       overrideBackdropMutation,
       toggleVirtualTrackedMutation,
       playMutation,
-      bulkUpdateWatchedMutation
+      bulkUpdateWatchedMutation,
+      addPeakMutation,
+      deletePeakMutation
     }
   };
 }

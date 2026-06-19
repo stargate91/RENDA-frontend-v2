@@ -484,3 +484,41 @@ export const useToggleVirtualTrackedMutation = () => {
     },
   });
 };
+
+export const useAddPeakMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (itemId) => api.media.addPeak(itemId),
+    onSuccess: (data, itemId) => {
+      const updateData = (oldData) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          peaks_count: data.peaks_count,
+          peaks_history: data.peaks_history,
+        };
+      };
+      queryClient.setQueryData(['library-item-detail', itemId], updateData);
+      queryClient.setQueryData(['library-series-detail', itemId], updateData);
+    },
+  });
+};
+
+export const useDeletePeakMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ itemId, logId }) => api.media.deletePeak(itemId, logId),
+    onSuccess: (data, variables) => {
+      const updateData = (oldData) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          peaks_count: data.peaks_count,
+          peaks_history: data.peaks_history,
+        };
+      };
+      queryClient.setQueryData(['library-item-detail', variables.itemId], updateData);
+      queryClient.setQueryData(['library-series-detail', variables.itemId], updateData);
+    },
+  });
+};

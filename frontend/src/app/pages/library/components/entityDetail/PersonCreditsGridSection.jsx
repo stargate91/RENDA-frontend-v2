@@ -130,6 +130,11 @@ export default function PersonCreditsGridSection({ title, personId, mediaType, t
       return;
     }
 
+    if ((item.media_type === 'scene' || item.type === 'scene') && !item.in_library && item.stash_id) {
+      navigate(`/library/movie/stash_${item.stash_id}`);
+      return;
+    }
+
     const movieId = item.in_library ? (item.library_item_id || item.id) : `tmdb_${item.tmdb_id || item.id}`;
     navigate(`/library/movie/${movieId}`);
   };

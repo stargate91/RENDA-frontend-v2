@@ -762,3 +762,141 @@ def get_watched_history(page: int = 1, limit: int = 20, include_adult: bool = Fa
     finally:
         db.close()
 
+
+def get_active_player_position(item_id: int) -> Optional[int]:
+    import requests
+    import re
+    from app.db.base import Session
+    from app.db.models import UserSetting, MediaItem
+
+    db = Session()
+    try:
+        item = db.query(MediaItem).filter(MediaItem.id == item_id).first()
+        if not item or not item.current_path:
+            return None
+        target_filename = os.path.basename(item.current_path)
+
+        # Check settings for players
+        vlc_path_setting = db.query(UserSetting).filter(UserSetting.key == "vlc_path").first()
+        mpc_path_setting = db.query(UserSetting).filter(UserSetting.key == "mpc_path").first()
+
+        # VLC
+        if vlc_path_setting and vlc_path_setting.value:
+            try:
+                # Default VLC port is 8080
+                r = requests.get(
+                    "http://127.0.0.1:8080/requests/status.json",
+                    auth=("", "renda"),
+                    timeout=1.0
+                )
+                if r.status_code == 200:
+                    data = r.json()
+                    playing_file = data.get("information", {}).get("category", {}).get("meta", {}).get("filename")
+                    if playing_file == target_filename:
+                        return int(data.get("time", 0))
+            except Exception:
+                pass
+
+        # MPC-HC
+        if mpc_path_setting and mpc_path_setting.value:
+            try:
+                # Default MPC-HC port is 13579
+                r = requests.get(
+                    "http://127.0.0.1:13579/variables.html",
+                    timeout=1.0
+                )
+                if r.status_code == 200:
+                    file_match = re.search(r'id="file">([^<]+)</p>', r.text)
+                    if file_match and os.path.basename(file_match.group(1)) == target_filename:
+                        pos_match = re.search(r'id="position">(\d+)</p>', r.text)
+                        if pos_match:
+                            return int(pos_match.group(1)) // 1000
+            except Exception:
+                pass
+    finally:
+        db.close()
+    return None
+
+
+@router.post("/library/item/{item_id}/peaks")
+def add_peak_entry(item_id: int, payload: Optional[dict] = None):
+    db = Session()
+    try:
+        from app.db.models import MediaItem, PlaybackPeakLog
+        item = db.query(MediaItem).filter(MediaItem.id == item_id).first()
+        if not item:
+            return JSONResponse(status_code=404, content={"error": "Item not found"})
+
+        video_position = get_active_player_position(item_id)
+        # If player is not active, fallback to last saved resume_position
+        if video_position is None and item.resume_position:
+            video_position = item.resume_position
+
+        log_entry = PlaybackPeakLog(
+            media_item_id=item.id,
+            watched_at=datetime.utcnow(),
+            video_position=video_position
+        )
+        db.add(log_entry)
+        db.commit()
+        db.refresh(item)
+
+        return {
+            "status": "success",
+            "peaks_count": len(item.peak_logs) if item.peak_logs else 0,
+            "peaks_history": [
+                {
+                    "id": log.id,
+                    "watched_at": log.watched_at.isoformat(),
+                    "video_position": log.video_position,
+                }
+                for log in sorted(item.peak_logs or [], key=lambda x: x.watched_at, reverse=True)
+            ]
+        }
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error adding peak log: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    finally:
+        db.close()
+
+
+@router.delete("/library/item/{item_id}/peaks/{log_id}")
+def delete_peak_entry(item_id: int, log_id: int):
+    db = Session()
+    try:
+        from app.db.models import MediaItem, PlaybackPeakLog
+        item = db.query(MediaItem).filter(MediaItem.id == item_id).first()
+        if not item:
+            return JSONResponse(status_code=404, content={"error": "Item not found"})
+
+        log = db.query(PlaybackPeakLog).filter(
+            PlaybackPeakLog.id == log_id,
+            PlaybackPeakLog.media_item_id == item_id
+        ).first()
+        if not log:
+            return JSONResponse(status_code=404, content={"error": "Peak log entry not found"})
+
+        db.delete(log)
+        db.commit()
+        db.refresh(item)
+
+        return {
+            "status": "success",
+            "peaks_count": len(item.peak_logs) if item.peak_logs else 0,
+            "peaks_history": [
+                {
+                    "id": log.id,
+                    "watched_at": log.watched_at.isoformat(),
+                    "video_position": log.video_position,
+                }
+                for log in sorted(item.peak_logs or [], key=lambda x: x.watched_at, reverse=True)
+            ]
+        }
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error deleting peak log: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    finally:
+        db.close()
+

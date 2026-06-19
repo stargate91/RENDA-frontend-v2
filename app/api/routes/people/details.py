@@ -604,7 +604,7 @@ def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str
         tmdb_id_to_fetch = ext_ids.get("tmdb_id")
         has_adult_db_id = any(ext_ids.get(f"{src}_id") for src in ["stashdb", "fansdb", "theporndb"])
         
-        if not tmdb_id_to_fetch and not has_adult_db_id and person_id < 100000000:
+        if not tmdb_id_to_fetch and person_id < 100000000:
             tmdb_id_to_fetch = person_id
 
         total_scenes_count = 0
@@ -699,6 +699,7 @@ def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str
                             "type": "scene",
                             "media_type": "scene",
                             "tmdb_id": stable_id,
+                            "stash_id": s.get("id"),
                             "year": year,
                             "poster_path": poster_url,
                             "backdrop_path": None,
@@ -883,6 +884,19 @@ def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str
                     parsed_movies.append(serialized_credit)
                 else:
                     parsed_series.append(serialized_credit)
+
+            # Merge back any local items not matched by TMDB
+            matched_local_movie_ids = {c["library_item_id"] for c in parsed_movies if c.get("library_item_id")}
+            for m in movies:
+                if m["id"] not in matched_local_movie_ids:
+                    parsed_movies.append(m)
+                    ordered_credits.append(m)
+
+            matched_local_series_ids = {c["library_series_tmdb_id"] for c in parsed_series if c.get("library_series_tmdb_id")}
+            for s in list(series_map.values()):
+                if s["series_tmdb_id"] not in matched_local_series_ids:
+                    parsed_series.append(s)
+                    ordered_credits.append(s)
 
             known_for = _select_known_for(
                 ordered_credits,
