@@ -55,10 +55,6 @@
   aspect-ratio: 2 / 3;
 }
 
-.entity-detail-page__media-card--profile {
-  aspect-ratio: 3 / 4;
-}
-
 .entity-detail-page__media-image,
 .entity-detail-page__media-placeholder {
   width: 100%;
@@ -69,6 +65,11 @@
   object-fit: cover;
   display: block;
 }
+
+.entity-detail-page__media-card--profile {
+  aspect-ratio: 2 / 3;
+}
+
 
 .entity-detail-page__media-placeholder {
   display: grid;

@@ -493,7 +493,7 @@ def _schedule_person_credit_poster_warmup(person_id: int, media_type: str, page:
     threading.Thread(target=_warmup, daemon=True).start()
 
 
-def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str, target_lang: str, lead_cast_order_threshold: int = 3) -> dict:
+def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str, target_lang: str, lead_cast_order_threshold: int = 3, scenes_page: Optional[int] = None, scenes_page_size: Optional[int] = None) -> dict:
     links = db.query(MediaPersonLink).join(MediaPersonLink.media_match).join(MediaMatch.media_item).filter(
         MediaPersonLink.person_id == person_id,
         MediaMatch.is_active == True,
@@ -607,6 +607,7 @@ def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str
         if not tmdb_id_to_fetch and not has_adult_db_id and person_id < 100000000:
             tmdb_id_to_fetch = person_id
 
+        total_scenes_count = 0
         # Adult database scene fetching
         if has_adult_db_id:
             stashdb_id = ext_ids.get("stashdb_id")
@@ -625,7 +626,12 @@ def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str
                 from app.api.graphql_clients import AdultGraphQLClient
                 client = AdultGraphQLClient(db, adult_source)
                 try:
-                    fetched_scenes = client.get_performer_scenes(performer_uuid, page=1, per_page=200)
+                    req_page = scenes_page or 1
+                    req_size = scenes_page_size or 12
+                    fetched_scenes, total_count = client.get_performer_scenes(performer_uuid, page=req_page, per_page=req_size)
+                    logger.info(f"Loaded performer scenes: page={req_page}, per_page={req_size}, fetched={len(fetched_scenes)}, total={total_count}")
+                    total_scenes_count = total_count
+                    
                     import hashlib
                     def get_stable_integer_id(src: str, u_str: str) -> int:
                         h = hashlib.sha256(f"{src}:{u_str}".encode()).hexdigest()
@@ -646,8 +652,7 @@ def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str
                     
                     local_match_map = {m.tmdb_id: m for m in local_matches}
                     
-                    seen_library_item_ids = {sc["library_item_id"] for sc in scenes if sc.get("library_item_id")}
-                    
+                    scenes.clear()
                     for s in fetched_scenes:
                         s_id = s.get("id")
                         if not s_id:
@@ -658,9 +663,6 @@ def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str
                         in_library = local_match is not None
                         library_item_id = local_match.media_item_id if local_match else None
                         
-                        if library_item_id and library_item_id in seen_library_item_ids:
-                            continue
-                            
                         resolution = local_match.media_item.resolution if (local_match and local_match.media_item) else None
                         
                         duration_sec = None
@@ -714,6 +716,12 @@ def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str
                         })
                 except Exception as ex:
                     logger.error(f"Error fetching remote scenes: {ex}")
+        else:
+            total_scenes_count = len(scenes)
+            req_page = scenes_page or 1
+            req_size = scenes_page_size or 12
+            start_idx = (req_page - 1) * req_size
+            scenes = scenes[start_idx : start_idx + req_size]
 
         if tmdb_id_to_fetch:
             tmdb_data = tmdb_client.get_person_details(int(tmdb_id_to_fetch), language=target_lang)
@@ -915,6 +923,7 @@ def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str
         "movies": all_movies,
         "series": all_series,
         "scenes": scenes,
+        "total_scene_credits": total_scenes_count,
     }
 
 
@@ -964,6 +973,8 @@ def get_person_detail(person_id: int):
             ui_lang=ui_lang,
             target_lang=target_lang,
             lead_cast_order_threshold=lead_cast_order_threshold,
+            scenes_page=1,
+            scenes_page_size=PERSON_INITIAL_CREDITS_PAGE_SIZE,
         )
         tmdb_data = credit_payload["tmdb_data"]
         person_backdrop = credit_payload["person_backdrop"]
@@ -971,11 +982,18 @@ def get_person_detail(person_id: int):
         all_movies = credit_payload["movies"]
         all_series = credit_payload["series"]
         all_scenes = credit_payload.get("scenes", [])
+        total_scene_credits = credit_payload["total_scene_credits"]
         prioritized_movies = _prioritize_person_credits(all_movies, credit_payload["known_for"])
         prioritized_series = _prioritize_person_credits(all_series, credit_payload["known_for"])
         initial_movies_page = _paginate_items(prioritized_movies, 1, PERSON_INITIAL_CREDITS_PAGE_SIZE)
         initial_series_page = _paginate_items(prioritized_series, 1, PERSON_INITIAL_CREDITS_PAGE_SIZE)
-        initial_scenes_page = _paginate_items(all_scenes, 1, PERSON_INITIAL_CREDITS_PAGE_SIZE)
+        initial_scenes_page = {
+            "items": all_scenes,
+            "page": 1,
+            "page_size": PERSON_INITIAL_CREDITS_PAGE_SIZE,
+            "total_items": total_scene_credits,
+            "total_pages": max(1, math.ceil(total_scene_credits / PERSON_INITIAL_CREDITS_PAGE_SIZE)),
+        }
         initial_movies_page["items"] = _apply_local_poster_paths(initial_movies_page["items"])
         initial_series_page["items"] = _apply_local_poster_paths(initial_series_page["items"])
         initial_scenes_page["items"] = _apply_local_poster_paths(initial_scenes_page["items"])
@@ -1063,7 +1081,7 @@ def get_person_detail(person_id: int):
             "known_for": known_for,
             "total_movie_credits": len(all_movies),
             "total_series_credits": len(all_series),
-            "total_scene_credits": len(all_scenes),
+            "total_scene_credits": total_scene_credits,
             "initial_movie_credits_page": initial_movies_page,
             "initial_series_credits_page": initial_series_page,
             "initial_scene_credits_page": initial_scenes_page,
@@ -1179,10 +1197,16 @@ def get_person_scenes(
 
         ui_lang = _preferred_metadata_language(db)
         target_lang = ui_lang or "en"
-        credit_payload = _load_person_credit_payload(db, person_id, person, ui_lang, target_lang)
+        credit_payload = _load_person_credit_payload(db, person_id, person, ui_lang, target_lang, scenes_page=page, scenes_page_size=page_size)
         base_items = credit_payload.get("scenes", [])
-        paged = _paginate_items(base_items, page, page_size)
-        paged["items"] = _apply_local_poster_paths(paged["items"])
+        total_scene_credits = credit_payload["total_scene_credits"]
+        paged = {
+            "items": _apply_local_poster_paths(base_items),
+            "page": page,
+            "page_size": page_size,
+            "total_items": total_scene_credits,
+            "total_pages": max(1, math.ceil(total_scene_credits / page_size)),
+        }
         return JSONResponse(content=paged, media_type="application/json; charset=utf-8")
     except Exception as e:
         logger.error(f"Error getting person scenes for {person_id}: {e}")
