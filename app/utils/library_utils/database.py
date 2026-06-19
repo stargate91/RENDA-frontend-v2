@@ -128,6 +128,31 @@ def _get_virtual_media_state_with_tracking(db, tmdb_id: int, media_type: str):
     return None, is_tracked
 
 
+def _has_virtual_episode_states(db, series_tmdb_id: int, season_numbers: Optional[list[int]] = None) -> bool:
+    if season_numbers is not None and len(season_numbers) == 0:
+        return False
+    query = db.query(VirtualEpisodeState.id).filter(
+        VirtualEpisodeState.series_tmdb_id == series_tmdb_id,
+    )
+    if season_numbers:
+        query = query.filter(VirtualEpisodeState.season_number.in_(list(season_numbers)))
+    return query.first() is not None
+
+
+def _get_virtual_episode_states_map(db, series_tmdb_id: int, season_numbers: Optional[list[int]] = None):
+    if season_numbers is not None and len(season_numbers) == 0:
+        return {}
+    query = db.query(VirtualEpisodeState).filter(
+        VirtualEpisodeState.series_tmdb_id == series_tmdb_id,
+    )
+    if season_numbers:
+        query = query.filter(VirtualEpisodeState.season_number.in_(list(season_numbers)))
+    return {
+        (row.season_number, row.episode_number): row
+        for row in query.all()
+    }
+
+
 def _get_virtual_episode_state(db, series_tmdb_id: int, season_number: int, episode_number: int):
     return db.query(VirtualEpisodeState).filter(
         VirtualEpisodeState.series_tmdb_id == series_tmdb_id,

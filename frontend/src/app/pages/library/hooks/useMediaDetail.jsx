@@ -30,6 +30,7 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
 
   const overviewRef = useRef(null);
   const fullPeoplePrefetchRef = useRef(new Set());
+  const virtualSeasonPrefetchRef = useRef(new Set());
   const queryClient = useQueryClient();
 
   const updateStatusMutation = useUpdateMediaStatusMutation();
@@ -39,7 +40,7 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
   const bulkUpdateWatchedMutation = useBulkUpdateWatchedMutation();
 
   const { data: movieDetail, isLoading: isMovieLoading } = useLibraryItemDetailQuery(cleanId, { enabled: isMovie });
-  const { data: seriesDetail, isLoading: isSeriesLoading } = useLibrarySeriesDetailQuery(cleanId, { enabled: !isMovie });
+  const { data: seriesDetail, isLoading: isSeriesLoading } = useLibrarySeriesDetailQuery(cleanId, { enabled: !isMovie, seasonsLimit: 5, initialEpisodesLimit: 4 });
   const item = isMovie ? movieDetail : seriesDetail;
   const isLoading = isMovie ? isMovieLoading : isSeriesLoading;
   const effectiveId = item?.id ?? cleanId;
@@ -90,6 +91,59 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
       .catch(() => {
         fullPeoplePrefetchRef.current.delete(cleanId);
       });
+  }, [cleanId, isMovie, item, queryClient]);
+
+  useEffect(() => {
+    if (isMovie || !cleanId || !item?.progressive_seasons || item?.in_library !== false) return;
+    const allSeasonNumbers = Array.isArray(item?.season_numbers) ? item.season_numbers : [];
+    if (allSeasonNumbers.length === 0) return;
+
+    let cancelled = false;
+    const loadedSeasonMap = new Map((item?.seasons || []).map((season) => [Number(season?.season_number), season]));
+    const pendingSeasonNumbers = allSeasonNumbers.filter((seasonNumber) => {
+      const numericSeasonNumber = Number(seasonNumber);
+      const season = loadedSeasonMap.get(numericSeasonNumber);
+      if (!Number.isFinite(numericSeasonNumber)) return false;
+      if (!season) return true;
+      return season.episodes_complete === false;
+    });
+
+    if (pendingSeasonNumbers.length === 0) return;
+
+    const mergeSeasonIntoDetail = (current, seasonPayload) => {
+      if (!current || !seasonPayload) return current;
+      const existingSeasons = Array.isArray(current.seasons) ? current.seasons : [];
+      const nextMap = new Map(existingSeasons.map((season) => [Number(season?.season_number), season]));
+      nextMap.set(Number(seasonPayload.season_number), {
+        ...(nextMap.get(Number(seasonPayload.season_number)) || {}),
+        ...seasonPayload,
+      });
+      return {
+        ...current,
+        seasons: Array.from(nextMap.values()).sort((a, b) => Number(a?.season_number || 0) - Number(b?.season_number || 0)),
+      };
+    };
+
+    const run = async () => {
+      for (const seasonNumber of pendingSeasonNumbers) {
+        const prefetchKey = `${cleanId}:${seasonNumber}`;
+        if (virtualSeasonPrefetchRef.current.has(prefetchKey)) continue;
+        virtualSeasonPrefetchRef.current.add(prefetchKey);
+        try {
+          const seasonPayload = await api.library.getSeriesSeasonDetail(cleanId, seasonNumber);
+          if (cancelled) return;
+          queryClient.setQueryData(['library-series-detail', cleanId], (current) => mergeSeasonIntoDetail(current, seasonPayload));
+        } catch {
+          virtualSeasonPrefetchRef.current.delete(prefetchKey);
+        }
+      }
+    };
+
+    void run();
+
+    return () => {
+      cancelled = true;
+    };
   }, [cleanId, isMovie, item, queryClient]);
 
   const togglePanel = (panelName) => {

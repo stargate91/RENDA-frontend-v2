@@ -52,11 +52,14 @@ export const useLibraryItemDetailQuery = (itemId, options = {}) => useQuery({
   ...options,
 });
 
-export const useLibrarySeriesDetailQuery = (seriesId, options = {}) => useQuery({
-  queryKey: ['library-series-detail', seriesId],
-  queryFn: () => api.library.getSeriesDetail(seriesId),
-  ...options,
-});
+export const useLibrarySeriesDetailQuery = (seriesId, options = {}) => {
+  const { seasonsLimit = 5, initialEpisodesLimit = 4, ...queryOptions } = options;
+  return useQuery({
+    queryKey: ['library-series-detail', seriesId],
+    queryFn: () => api.library.getSeriesDetail(seriesId, { seasonsLimit, initialEpisodesLimit }),
+    ...queryOptions,
+  });
+};
 
 export const useLibraryCollectionDetailQuery = (collectionId, options = {}) => {
   const { language, ...queryOptions } = options;

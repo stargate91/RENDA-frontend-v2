@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, ChevronRight, ChevronLeft, Check, Eye, Play, Clapperboard, Calendar, Tv, Star } from 'lucide-react';
 import IconButton from '@/ui/IconButton';
 import Pill from '@/ui/Pill';
 import { buildTmdbImageUrl, TMDB_IMAGE_SIZES } from '@/lib/imageUrls';
 import { countEpisodesInNumber, formatEpisodeNumber } from '../../../utils/detailUtils';
 import { useMediaDetailContext } from '../MediaDetailContext';
+import api from '@/lib/api';
 import './SeasonsPanel.css';
 
 const EPISODES_BATCH_SIZE = 20;
@@ -13,6 +15,7 @@ export default function SeasonsPanel() {
   const { state, mutations, t } = useMediaDetailContext();
   const { item, cleanId, nextEpisodeInfo } = state;
   const { updateStatusMutation, playMutation, bulkUpdateWatchedMutation } = mutations;
+  const queryClient = useQueryClient();
 
   const seasonsList = useMemo(() => item.seasons || [], [item.seasons]);
   const seasonsCount = seasonsList.length;
@@ -107,6 +110,39 @@ export default function SeasonsPanel() {
 
   // Find active season
   const activeSeason = seasonsList.find((s) => s.season_number === selectedSeasonNumber) || seasonsList[0];
+
+  useEffect(() => {
+    if (!item?.progressive_seasons || item?.in_library !== false || !activeSeason) return;
+    if (activeSeason.episodes_complete !== false) return;
+
+    let cancelled = false;
+    const run = async () => {
+      try {
+        const seasonPayload = await api.library.getSeriesSeasonDetail(cleanId, activeSeason.season_number);
+        if (cancelled) return;
+        queryClient.setQueryData(['library-series-detail', cleanId], (current) => {
+          if (!current || !seasonPayload) return current;
+          const existingSeasons = Array.isArray(current.seasons) ? current.seasons : [];
+          const nextMap = new Map(existingSeasons.map((season) => [Number(season?.season_number), season]));
+          nextMap.set(Number(seasonPayload.season_number), {
+            ...(nextMap.get(Number(seasonPayload.season_number)) || {}),
+            ...seasonPayload,
+          });
+          return {
+            ...current,
+            seasons: Array.from(nextMap.values()).sort((a, b) => Number(a?.season_number || 0) - Number(b?.season_number || 0)),
+          };
+        });
+      } catch {
+        // Ignore season prefetch failures here; the shell stays usable.
+      }
+    };
+
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeSeason, cleanId, item?.in_library, item?.progressive_seasons, queryClient]);
 
   const totalEpisodesCount = activeSeason?.episodes
     ? activeSeason.episodes.reduce((sum, ep) => sum + countEpisodesInNumber(ep.episode_number), 0)
@@ -416,7 +452,9 @@ export default function SeasonsPanel() {
 
         {(!activeSeason.episodes || activeSeason.episodes.length === 0) && (
           <div className="episodes-list__empty">
-            {t('library.details.noEpisodesFound') || 'No episodes found.'}
+            {item?.progressive_seasons && item?.in_library === false && activeSeason.episodes_complete === false
+              ? (t('library.details.loadingSeason') || 'Loading season...')
+              : (t('library.details.noEpisodesFound') || 'No episodes found.')}
           </div>
         )}
 

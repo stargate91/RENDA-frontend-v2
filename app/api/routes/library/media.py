@@ -16,12 +16,27 @@ def get_library_item_detail(item_id: str, full_people: bool = False):
 
 
 @router.get("/library/series/{series_tmdb_id}")
-def get_library_series_detail(series_tmdb_id: str, background_tasks: BackgroundTasks):
+def get_library_series_detail(
+    series_tmdb_id: str,
+    background_tasks: BackgroundTasks,
+    seasons_limit: int = 5,
+    initial_episodes_limit: int = 4,
+):
     """Returns comprehensive detail data for a full series, including seasons and episodes."""
     db = Session()
     try:
         service = LibraryDetailService(db)
-        return service.get_library_series_detail(series_tmdb_id)
+        return service.get_library_series_detail(series_tmdb_id, seasons_limit=seasons_limit, initial_episodes_limit=initial_episodes_limit)
+    finally:
+        db.close()
+
+
+@router.get("/library/series/{series_tmdb_id}/season/{season_number}")
+def get_library_series_season_detail(series_tmdb_id: str, season_number: int):
+    db = Session()
+    try:
+        service = LibraryDetailService(db)
+        return service.get_library_series_season_detail(series_tmdb_id, season_number)
     finally:
         db.close()
 

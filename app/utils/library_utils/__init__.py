@@ -24,6 +24,8 @@ from app.utils.library_utils.database import (
     _resolve_virtual_catalog_metadata,
     _get_virtual_media_state,
     _get_virtual_media_state_with_tracking,
+    _has_virtual_episode_states,
+    _get_virtual_episode_states_map,
     _get_virtual_episode_state,
     _is_virtual_media_tracked,
     _get_omdb_ratings_from_imdb,

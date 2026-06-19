@@ -356,9 +356,21 @@ class SeriesPhysicalMixin(SeriesAssetsMixin):
 
         return JSONResponse(content=series_data, media_type="application/json; charset=utf-8")
 
+    def _get_physical_series_season_detail(self, db, series_tmdb_id, series_tmdb_id_int, ui_lang, items, cached_seasons, cached_series, season_number):
+        full_response = self._get_physical_series_detail(db, series_tmdb_id, series_tmdb_id_int, ui_lang, items, cached_seasons, cached_series)
+        payload = getattr(full_response, "body", None)
+        if payload is None:
+            return full_response
+        import json
+        decoded = json.loads(payload.decode("utf-8"))
+        season = next((entry for entry in (decoded.get("seasons") or []) if int(entry.get("season_number") or -1) == int(season_number)), None)
+        if not season:
+            return JSONResponse(status_code=404, content={"error": "Season not found"})
+        return JSONResponse(content=season, media_type="application/json; charset=utf-8")
+
     def _merge_missing_tmdb_episodes(self, series_data, cached_series, series_tmdb_id_int, ui_lang):
         from app.api.tmdb_client import TMDBClient
-        from app.utils.library_utils import _get_virtual_episode_state
+        from app.utils.library_utils import _has_virtual_episode_states, _get_virtual_episode_states_map
 
         tmdb_client = TMDBClient(self.db)
         seasons_by_number = {
@@ -374,6 +386,7 @@ class SeriesPhysicalMixin(SeriesAssetsMixin):
             }.union(seasons_by_number.keys())
         )
 
+        episode_states_map = _get_virtual_episode_states_map(self.db, series_tmdb_id_int, season_sources) if _has_virtual_episode_states(self.db, series_tmdb_id_int, season_sources) else {}
         for season_number in season_sources:
             season_detail = _fetch_tv_season_detail(tmdb_client, series_tmdb_id_int, season_number, ui_lang)
             if not season_detail:
@@ -409,12 +422,7 @@ class SeriesPhysicalMixin(SeriesAssetsMixin):
                 if normalized_episode_number in existing_episode_numbers:
                     continue
 
-                episode_state = _get_virtual_episode_state(
-                    self.db,
-                    series_tmdb_id_int,
-                    season_number,
-                    normalized_episode_number,
-                )
+                episode_state = episode_states_map.get((season_number, normalized_episode_number))
 
                 season_entry["episodes"].append({
                     "id": f"tmdb_{series_tmdb_id_int}_{season_number}_{normalized_episode_number}",

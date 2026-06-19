@@ -74,13 +74,15 @@ export default function DetailsPanel() {
   const nonSpecialSeasons = !isMovie && Array.isArray(item?.seasons)
     ? item.seasons.filter(s => s.season_number !== 0)
     : [];
-  const seasonCount = nonSpecialSeasons.length;
-  const episodeCount = nonSpecialSeasons.reduce((acc, s) => {
+  const derivedSeasonCount = nonSpecialSeasons.length;
+  const derivedEpisodeCount = nonSpecialSeasons.reduce((acc, s) => {
     if (s.episodes && s.episodes.length > 0) {
       return acc + s.episodes.reduce((sum, ep) => sum + countEpisodesInNumber(ep.episode_number), 0);
     }
     return acc + 0;
   }, 0);
+  const seasonCount = Number(item?.number_of_seasons ?? 0) || derivedSeasonCount;
+  const episodeCount = Number(item?.number_of_episodes ?? 0) || derivedEpisodeCount;
   const seriesStatus = item?.release_status;
 
   return (
