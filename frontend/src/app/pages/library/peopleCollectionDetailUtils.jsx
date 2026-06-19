@@ -180,7 +180,7 @@ export function buildPersonExternalLinks(item, t) {
   const externalIds = item.external_ids || {};
   const links = [];
 
-  const tmdbId = externalIds.tmdb_id || (Number(item.id) < 100000000 ? item.id : null);
+  const tmdbId = externalIds.tmdb_id || (!item.is_adult && Number(item.id) < 100000000 ? item.id : null);
   if (tmdbId) {
     links.push({
       key: 'tmdb',

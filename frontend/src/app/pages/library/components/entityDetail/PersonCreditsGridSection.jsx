@@ -13,8 +13,9 @@ import './PersonCreditsShared.css';
 
 const PERSON_INITIAL_CREDITS_PAGE_SIZE = 12;
 
-export default function PersonCreditsGridSection({ title, personId, mediaType, totalCount, initialPageData, navigate, t }) {
-  const shouldLoad = Boolean(personId) && Number(totalCount) > 0;
+export default function PersonCreditsGridSection({ title, personId, mediaType, totalCount, initialPageData, navigate, t, onPaginationData }) {
+  const isScenes = mediaType === 'scenes';
+  const shouldLoad = Boolean(personId) && (Number(totalCount) > 0 || isScenes);
   const queryClient = useQueryClient();
   const containerRef = useRef(null);
   const [columns, setColumns] = useState(Math.max(1, Math.floor(PERSON_INITIAL_CREDITS_PAGE_SIZE / 2)));
@@ -79,6 +80,12 @@ export default function PersonCreditsGridSection({ title, personId, mediaType, t
   }
 
   const safePage = Math.min(page, totalPages);
+
+  useEffect(() => {
+    if (onPaginationData && !isScenes) {
+      onPaginationData({ page: safePage, totalPages, setPage });
+    }
+  }, [safePage, totalPages, setPage, onPaginationData, isScenes]);
   const visibleItems = creditsQuery.data?.items || [];
   const fillerCount = Math.max(0, itemsPerPage - visibleItems.length);
   const isInitialPageLoading = creditsQuery.isLoading && visibleItems.length === 0;
@@ -117,6 +124,35 @@ export default function PersonCreditsGridSection({ title, personId, mediaType, t
     return null;
   }
 
+  if (isScenes) {
+    return (
+      <section className="entity-detail-page__content-section">
+        <div className="entity-detail-page__section-header">
+          <h2>{title}</h2>
+        </div>
+        <div
+          ref={containerRef}
+          className="entity-detail-page__credits-list entity-detail-page__credits-list--people-grid"
+          style={{ opacity: 0.18 }}
+        >
+          {Array.from({ length: itemsPerPage }).map((_, index) => (
+            <div key={`scene-placeholder-${index}`} className="ui-credit-card ui-credit-card--people-grid entity-detail-page__skeleton-card">
+              <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-poster" />
+              <div className="ui-credit-card__body">
+                <div className="ui-credit-card__topline">
+                  <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-title" style={{ width: '65%' }} />
+                </div>
+                <div className="ui-credit-card__meta">
+                  <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-meta" style={{ width: '40%' }} />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
   const openItem = (item) => {
     if (isTvLikeMediaType(item.media_type || item.type)) {
       const seriesId = item.library_series_tmdb_id || item.series_tmdb_id || item.tmdb_id || item.id;
@@ -130,31 +166,6 @@ export default function PersonCreditsGridSection({ title, personId, mediaType, t
 
   return (
     <section className="entity-detail-page__content-section">
-      <div className="entity-detail-page__section-header">
-        <h2>{title}</h2>
-        {totalPages > 1 && (
-          <div className="entity-detail-page__section-pager">
-            <button
-              type="button"
-              className="entity-detail-page__section-pager-btn"
-              onClick={() => setPage((current) => Math.max(1, current - 1))}
-              disabled={safePage <= 1}
-              aria-label={t('common.previous') || 'Previous'}
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <button
-              type="button"
-              className="entity-detail-page__section-pager-btn"
-              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
-              disabled={safePage >= totalPages}
-              aria-label={t('common.next') || 'Next'}
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        )}
-      </div>
       <div
         ref={containerRef}
         className={`entity-detail-page__credits-list entity-detail-page__credits-list--people-grid${

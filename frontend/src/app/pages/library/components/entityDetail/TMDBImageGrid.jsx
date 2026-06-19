@@ -164,10 +164,15 @@ export default function TMDBImageGrid({
   const selectedIndex = useMemo(
     () => images.findIndex((img) => {
       const path = img.file_path || img.backdrop_path || img.poster_path || img.logo_path;
-      if (!path || !normalizedCurrent) return false;
+      if (!path || !currentPath) return false;
+      const isPathHttp = path.startsWith('http://') || path.startsWith('https://');
+      const isCurrentHttp = currentPath.startsWith('http://') || currentPath.startsWith('https://');
+      if (isPathHttp && isCurrentHttp) {
+        return path.toLowerCase() === currentPath.toLowerCase();
+      }
       return path.split('/').pop().toLowerCase() === normalizedCurrent;
     }),
-    [images, normalizedCurrent]
+    [images, currentPath, normalizedCurrent]
   );
 
   useEffect(() => {
@@ -258,7 +263,11 @@ export default function TMDBImageGrid({
 
           const normalizedPath = path.split('/').pop().toLowerCase();
           const isImagePending = isPending && pendingPath === path;
-          const isSelected = (normalizedCurrent !== '' && normalizedCurrent === normalizedPath) || isImagePending;
+          const isPathHttp = path.startsWith('http://') || path.startsWith('https://');
+          const isCurrentHttp = currentPath && (currentPath.startsWith('http://') || currentPath.startsWith('https://'));
+          const isSelected = (isPathHttp && isCurrentHttp)
+            ? (path.toLowerCase() === currentPath.toLowerCase() || isImagePending)
+            : ((normalizedCurrent !== '' && normalizedCurrent === normalizedPath) || isImagePending);
 
           const infoLeft = img.width && img.height ? `${img.width}×${img.height}` : '';
           const infoRight = img.vote_average ? `★ ${img.vote_average.toFixed(1)}` : '';
