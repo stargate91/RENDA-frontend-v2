@@ -249,3 +249,41 @@ def upload_person_profile(person_id: int, file: UploadFile = File(...)):
         return JSONResponse(status_code=500, content={"error": str(e)})
     finally:
         db.close()
+
+
+@router.post("/people/{person_id:int}/upload-backdrop")
+def upload_person_backdrop(person_id: int, file: UploadFile = File(...)):
+    """Uploads a local image file directly as the person's backdrop."""
+    db = Session()
+    try:
+        person = _get_or_create_person_db(db, person_id)
+        if not person:
+            return JSONResponse(status_code=404, content={"error": "Person not found"})
+
+        processor = ImageProcessingService("data/media/images")
+        processor.ensure_folders()
+
+        ext = file.filename.split('.')[-1] if file.filename and '.' in file.filename else 'jpg'
+        filename = f"/{uuid.uuid4().hex}.{ext}"
+        filepath = processor.build_local_path("backdrops", filename)
+        saved_path = processor.write_upload(filepath, file.file)
+        if not saved_path:
+            return JSONResponse(status_code=400, content={"error": "Invalid image upload"})
+
+        person.manual_local_backdrop_path = filename
+        person.manual_backdrop_path = filename
+
+        db.commit()
+        db.refresh(person)
+        return {
+            "status": "success",
+            "backdrop_path": _public_image_path(person.manual_local_backdrop_path, "backdrops") or person.manual_backdrop_path,
+            "local_backdrop_path": person.manual_local_backdrop_path,
+            "has_local_backdrop": bool(_public_image_path(person.manual_local_backdrop_path or person.manual_backdrop_path, "backdrops")),
+        }
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error uploading backdrop: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    finally:
+        db.close()

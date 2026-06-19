@@ -300,6 +300,29 @@ export const useOverrideBackdropMutation = () => {
   });
 };
 
+export const useUploadBackdropMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ itemId, file, mediaType }) => api.media.uploadBackdrop(itemId, file, mediaType),
+    onSuccess: (data, variables) => {
+      const cleanId = String(variables.itemId).replace('series_', '').replace('collection_', '');
+      const isCollection = String(variables.itemId).startsWith('collection_');
+      queryClient.invalidateQueries({ queryKey: ['full-metadata', variables.itemId] });
+      queryClient.invalidateQueries({ queryKey: ['full-metadata', cleanId] });
+      queryClient.invalidateQueries({ queryKey: ['library-item-detail', variables.itemId] });
+      queryClient.invalidateQueries({ queryKey: ['library-item-detail', cleanId] });
+      queryClient.invalidateQueries({ queryKey: ['library-series-detail', variables.itemId] });
+      queryClient.invalidateQueries({ queryKey: ['library-series-detail', cleanId] });
+      if (isCollection) {
+        queryClient.invalidateQueries({ queryKey: ['library-collection-detail', cleanId] });
+        queryClient.invalidateQueries({ queryKey: ['library-collection-detail', variables.itemId] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['library'] });
+      queryClient.invalidateQueries({ queryKey: ['libraryCollections'] });
+    },
+  });
+};
+
 export const useOverridePosterMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({

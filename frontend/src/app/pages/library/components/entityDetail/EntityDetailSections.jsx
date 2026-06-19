@@ -5,6 +5,7 @@ import Pill from '@/ui/Pill';
 import EmptyState from '@/ui/EmptyState';
 import CreditCard from '@/ui/CreditCard';
 import BackdropCard from '@/ui/BackdropCard';
+import ImageUploadPanel from '../../modals/ImageUploadPanel';
 import { API_BASE } from '@/lib/backend';
 import { isTvLikeMediaType } from '@/lib/mediaTypes';
 import { getPosterImagePath } from '@/lib/imageUrls';
@@ -213,7 +214,7 @@ function HorizontalCollectionItemsList({ items, navigate, t }) {
   );
 }
 
-export function CollectionBackdropsPanel({ item, collectionId, t, toast, overrideBackdropMutation }) {
+export function CollectionBackdropsPanel({ item, collectionId, t, toast, overrideBackdropMutation, uploadBackdropMutation }) {
   const [selectedBackdropPath, setSelectedBackdropPath] = useState(item?.backdrop_path || '');
   const backdropOptions = useMemo(() => {
     const seen = new Set();
@@ -276,6 +277,17 @@ export function CollectionBackdropsPanel({ item, collectionId, t, toast, overrid
   const currentBackdropPath = selectedBackdropPath || item?.backdrop_path || '';
   const currentBackdropKey = normalizeBackdropKey(currentBackdropPath);
 
+  const handleUploadBackdrop = async (file) => {
+    if (!file || uploadBackdropMutation?.isPending) return;
+    try {
+      const data = await uploadBackdropMutation.mutateAsync({ itemId: 'collection_' + collectionId, file });
+      setSelectedBackdropPath(data?.backdrop_path || item?.backdrop_path || '');
+      toast(t('library.details.imageUploaded') || 'Image uploaded and updated successfully!', 'success');
+    } catch (err) {
+      toast(err.message || t('library.details.imageUploadFailed') || 'Failed to upload image', 'danger');
+    }
+  };
+
   const handleSelectBackdrop = async (backdropPath) => {
     setSelectedBackdropPath(backdropPath);
     try {
@@ -291,6 +303,14 @@ export function CollectionBackdropsPanel({ item, collectionId, t, toast, overrid
 
   return (
     <div className="backdrops-panel">
+      <ImageUploadPanel
+        imageType="backdrop"
+        isPending={overrideBackdropMutation.isPending || Boolean(uploadBackdropMutation?.isPending)}
+        t={t}
+        onSaveUrl={handleSelectBackdrop}
+        onUploadFile={handleUploadBackdrop}
+      />
+
       <div className="backdrops-grid">
         {backdropOptions.map((option, idx) => {
           const backdropUrl = resolveDetailsImageUrl(option.backdrop_path, API_BASE, 'backdrop');
@@ -304,7 +324,7 @@ export function CollectionBackdropsPanel({ item, collectionId, t, toast, overrid
               imageUrl={backdropUrl}
               alt={label}
               isSelected={isSelected}
-              isPending={isPending}
+              isPending={isPending || Boolean(uploadBackdropMutation?.isPending)}
               infoLeft={label}
               infoRight={option.subtitle}
               onClick={() => handleSelectBackdrop(option.backdrop_path)}

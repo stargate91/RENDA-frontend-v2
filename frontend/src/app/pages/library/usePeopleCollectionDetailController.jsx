@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import Button from '@/ui/Button';
-import { useOverridePersonBackdropMutation, useUpdatePersonStatusMutation } from '@/queries/libraryQueries';
-import { useOverrideBackdropMutation } from '@/queries/mediaQueries';
+import { useOverridePersonBackdropMutation, useUploadPersonBackdropMutation, useUpdatePersonStatusMutation } from '@/queries/libraryQueries';
+import { useOverrideBackdropMutation, useUploadBackdropMutation } from '@/queries/mediaQueries';
 import {
   useLibraryCollectionDetailQuery,
   usePersonDetailQuery,
@@ -34,7 +34,9 @@ export default function usePeopleCollectionDetailController({
   const collectionQuery = useLibraryCollectionDetailQuery(id, { enabled: !isPeople && Boolean(id) });
   const updatePersonStatusMutation = useUpdatePersonStatusMutation();
   const overrideBackdropMutation = useOverrideBackdropMutation();
+  const uploadBackdropMutation = useUploadBackdropMutation();
   const overridePersonBackdropMutation = useOverridePersonBackdropMutation();
+  const uploadPersonBackdropMutation = useUploadPersonBackdropMutation();
 
   const item = isPeople ? personQuery.data : collectionQuery.data;
   const isLoading = isPeople ? personQuery.isLoading : collectionQuery.isLoading;
@@ -174,6 +176,7 @@ export default function usePeopleCollectionDetailController({
           t={t}
           toast={toast}
           overrideBackdropMutation={overrideBackdropMutation}
+          uploadBackdropMutation={uploadBackdropMutation}
         />
       ),
     });
@@ -195,6 +198,7 @@ export default function usePeopleCollectionDetailController({
           t={t}
           toast={toast}
           overridePersonBackdropMutation={overridePersonBackdropMutation}
+          uploadPersonBackdropMutation={uploadPersonBackdropMutation}
         />
       ),
     });

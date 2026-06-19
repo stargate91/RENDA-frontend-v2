@@ -633,6 +633,85 @@ def update_item_poster(item_id: str, payload: dict):
 
 
 
+
+@router.post("/item/{item_id}/upload-backdrop")
+def upload_item_backdrop(item_id: str, file: UploadFile = File(...)):
+    db = Session()
+    try:
+        filename, saved_path = _store_uploaded_asset(file, "backdrops")
+        if not saved_path or not filename:
+            return JSONResponse(status_code=400, content={"error": "Invalid backdrop upload"})
+
+        if isinstance(item_id, str) and item_id.startswith("collection_"):
+            try:
+                collection_tmdb_id = int(item_id.split("_")[1])
+            except (ValueError, IndexError):
+                return JSONResponse(status_code=400, content={"error": "Invalid collection TMDB ID format"})
+
+            collection = db.query(MediaCollection).filter(MediaCollection.tmdb_id == collection_tmdb_id).first()
+            if not collection:
+                collection = MediaCollection(tmdb_id=collection_tmdb_id)
+                db.add(collection)
+
+            collection.manual_backdrop_path = filename
+            collection.manual_local_backdrop_path = filename
+            db.commit()
+            return _serialize_asset_response(filename, saved_path, "backdrops", "backdrop_path")
+
+        if isinstance(item_id, str) and item_id.startswith("tmdb_"):
+            try:
+                tmdb_id = int(item_id.split("_")[1])
+            except (ValueError, IndexError):
+                return JSONResponse(status_code=400, content={"error": "Invalid TMDB ID format"})
+            state = _get_or_create_virtual_media_state(db, tmdb_id, "movie")
+            state.manual_backdrop_path = filename
+            state.manual_local_backdrop_path = filename
+            db.commit()
+            return _serialize_asset_response(filename, saved_path, "backdrops", "backdrop_path")
+
+        if isinstance(item_id, str) and item_id.startswith("series_"):
+            try:
+                series_tmdb_id = int(item_id.split("_")[1])
+            except (ValueError, IndexError):
+                return JSONResponse(status_code=400, content={"error": "Invalid series ID format"})
+            active_match = db.query(MediaMatch).filter(
+                ((MediaMatch.series_tmdb_id == series_tmdb_id) | (MediaMatch.tmdb_id == series_tmdb_id)),
+                MediaMatch.is_active == True,
+            ).first()
+            if not active_match:
+                state = _get_or_create_virtual_media_state(db, series_tmdb_id, "tv")
+                state.manual_backdrop_path = filename
+                state.manual_local_backdrop_path = filename
+                db.commit()
+                return _serialize_asset_response(filename, saved_path, "backdrops", "backdrop_path")
+            active_match.manual_backdrop_path = filename
+            active_match.manual_local_backdrop_path = filename
+            db.commit()
+            return _serialize_asset_response(filename, saved_path, "backdrops", "backdrop_path")
+
+        try:
+            target_item_id = int(item_id)
+        except ValueError:
+            return JSONResponse(status_code=400, content={"error": "Invalid item ID format"})
+
+        item = db.query(MediaItem).filter(MediaItem.id == target_item_id).first()
+        if not item:
+            return JSONResponse(status_code=404, content={"error": "Item not found"})
+        active_match = next((m for m in item.matches if m.is_active), None)
+        if not active_match:
+            return JSONResponse(status_code=404, content={"error": "No active match found for this item"})
+
+        active_match.manual_backdrop_path = filename
+        active_match.manual_local_backdrop_path = filename
+        db.commit()
+        return _serialize_asset_response(filename, saved_path, "backdrops", "backdrop_path")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error uploading backdrop: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    finally:
+        db.close()
+
 @router.post("/item/{item_id}/upload-poster")
 def upload_item_poster(item_id: str, file: UploadFile = File(...)):
     db = Session()

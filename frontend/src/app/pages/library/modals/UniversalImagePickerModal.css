@@ -171,3 +171,9 @@
   box-shadow: 0 0 0 2px var(--color-accent) !important;
 }
 
+
+.universal-image-picker__preview.is-backdrop {
+  width: 128px;
+  height: 72px;
+}
+

@@ -79,6 +79,28 @@ const syncPersonProfileCaches = (queryClient, personId, data) => {
   });
 };
 
+const syncPersonBackdropCaches = (queryClient, personId, data) => {
+  const personKeys = [
+    ['person-detail', personId],
+    ['person-detail', String(personId)],
+    ['person-detail', Number(personId)],
+  ];
+
+  personKeys.forEach((key) => {
+    queryClient.setQueryData(key, (oldData) => {
+      if (!oldData) {
+        return oldData;
+      }
+      return {
+        ...oldData,
+        backdrop_path: data?.backdrop_path ?? oldData.backdrop_path,
+        local_backdrop_path: data?.local_backdrop_path ?? oldData.local_backdrop_path,
+        has_local_backdrop: data?.has_local_backdrop ?? oldData.has_local_backdrop,
+      };
+    });
+  });
+};
+
 export const useStatsQuery = () => useQuery({
   queryKey: ['stats'],
   queryFn: () => api.library.getStats(),
@@ -400,6 +422,21 @@ export const useOverridePersonBackdropMutation = () => {
           };
         });
       });
+      queryClient.invalidateQueries({ queryKey: ['person-detail'] });
+      queryClient.invalidateQueries({ queryKey: ['people'] });
+      queryClient.invalidateQueries({ queryKey: ['people-infinite'] });
+      queryClient.invalidateQueries({ queryKey: ['library'] });
+    },
+  });
+};
+
+export const useUploadPersonBackdropMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ personId, file }) => api.people.uploadBackdrop(personId, file),
+    onSuccess: (data, variables) => {
+      syncPersonBackdropCaches(queryClient, variables.personId, data);
+      queryClient.invalidateQueries({ queryKey: ['person-detail', variables.personId] });
       queryClient.invalidateQueries({ queryKey: ['person-detail'] });
       queryClient.invalidateQueries({ queryKey: ['people'] });
       queryClient.invalidateQueries({ queryKey: ['people-infinite'] });

@@ -6,6 +6,7 @@ import Pill from '@/ui/Pill';
 import SegmentedControl from '@/ui/SegmentedControl';
 import CreditCard from '@/ui/CreditCard';
 import TMDBImageGrid from './TMDBImageGrid';
+import ImageUploadPanel from '../../modals/ImageUploadPanel';
 import { useUi } from '@/providers/UiProvider';
 import api from '@/lib/api';
 import { API_BASE } from '@/lib/backend';
@@ -26,7 +27,7 @@ const PERSON_BACKDROP_INITIAL_ROWS = 2;
 const PERSON_BACKDROP_COLUMNS = 4;
 const PERSON_BACKDROP_PAGE_SIZE = 20;
 
-export default function PersonBackdropPickerModal({ personId, item, t, toast, overridePersonBackdropMutation }) {
+export default function PersonBackdropPickerModal({ personId, item, t, toast, overridePersonBackdropMutation, uploadPersonBackdropMutation }) {
   const viewportRef = useRef(null);
   const { updateModal } = useUi();
   const sessionKey = String(personId || '');
@@ -306,6 +307,38 @@ export default function PersonBackdropPickerModal({ personId, item, t, toast, ov
     });
   };
 
+  const handleUploadBackdrop = async (file) => {
+    if (!file || uploadPersonBackdropMutation?.isPending) {
+      return;
+    }
+    try {
+      const data = await uploadPersonBackdropMutation.mutateAsync({
+        personId,
+        file,
+      });
+      patchSession(personId, { selectedBackdropPath: data?.backdrop_path || item?.backdrop_path || '' });
+      toast(t('library.details.imageUploaded') || 'Image uploaded and updated successfully!', 'success');
+    } catch (err) {
+      toast(err.message || t('library.details.imageUploadFailed') || 'Failed to upload image', 'danger');
+    }
+  };
+
+  const handleSaveBackdropUrl = async (backdropPath) => {
+    if (!backdropPath || overridePersonBackdropMutation.isPending) {
+      return;
+    }
+    patchSession(personId, { selectedBackdropPath: backdropPath });
+    try {
+      await overridePersonBackdropMutation.mutateAsync({
+        personId,
+        backdropPath,
+      });
+      toast(t('library.details.backdropUpdated') || 'Backdrop updated successfully!', 'success');
+    } catch (err) {
+      toast(err.message || t('library.details.backdropUpdateFailed') || 'Failed to update backdrop', 'danger');
+    }
+  };
+
   const handleSelectDetailedBackdrop = async (backdropPath) => {
     if (!backdropPath || overridePersonBackdropMutation.isPending) {
       return;
@@ -326,6 +359,7 @@ export default function PersonBackdropPickerModal({ personId, item, t, toast, ov
   };
 
   const isBackdropBrowserOpen = Boolean(selectedCredit);
+  const isUploadPending = Boolean(uploadPersonBackdropMutation?.isPending);
   const headerDescription = !isBackdropBrowserOpen && (validationPendingCount > 0 || hasMore || isLoading)
     ? t('library.details.backdropFilterRunning', {
       checked: validatedCount,
@@ -355,6 +389,16 @@ export default function PersonBackdropPickerModal({ personId, item, t, toast, ov
       ) : null}
 
       {!isBackdropBrowserOpen && (
+        <ImageUploadPanel
+          imageType="backdrop"
+          isPending={overridePersonBackdropMutation.isPending || isUploadPending}
+          t={t}
+          onSaveUrl={handleSaveBackdropUrl}
+          onUploadFile={handleUploadBackdrop}
+        />
+      )}
+
+      {!isBackdropBrowserOpen && (
         <SegmentedControl
           ariaLabel={t('library.details.chooseBackdrop') || 'Choose backdrop source'}
           className="person-backdrop-picker__tabs"
@@ -379,7 +423,7 @@ export default function PersonBackdropPickerModal({ personId, item, t, toast, ov
               imageType="backdrop"
               currentPath={selectedBackdropPath || item?.backdrop_path}
               onSelect={handleSelectDetailedBackdrop}
-              isPending={overridePersonBackdropMutation.isPending}
+              isPending={overridePersonBackdropMutation.isPending || isUploadPending}
               pendingPath={overridePersonBackdropMutation.variables?.backdropPath}
               t={t}
             />
@@ -432,7 +476,7 @@ export default function PersonBackdropPickerModal({ personId, item, t, toast, ov
                   isMissing={!credit.in_library}
                   className={`${isSelected ? 'person-backdrop-picker__card--selected' : ''} ${isPending ? 'backdrop-card--disabled' : ''}`}
                   onClick={() => handleOpenBackdropBrowser(credit)}
-                  disabled={overridePersonBackdropMutation.isPending}
+                  disabled={overridePersonBackdropMutation.isPending || isUploadPending}
                 >
                   <div className="ui-credit-card__meta">
                     {credit.year && <span>{credit.year}</span>}
