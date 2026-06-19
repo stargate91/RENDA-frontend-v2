@@ -160,6 +160,7 @@
   padding-right: calc(20rem + var(--space-5));
   padding-bottom: var(--page-bottom-offset);
   transition: padding-right var(--motion-fast);
+  will-change: padding-right;
 }
 
 .organizer-main.is-details-collapsed .organizer-main__content {

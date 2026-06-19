@@ -222,13 +222,24 @@
   flex-direction: column;
   z-index: 10;
   overflow: hidden;
-  animation: slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateX(calc(100% + 80px));
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
   --media-detail-panel-card-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(0, 0, 0, 0.28) 100%);
   --media-detail-panel-card-bg-hover: linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(0, 0, 0, 0.20) 100%);
   --media-detail-panel-card-border: rgba(255, 255, 255, 0.08);
   --media-detail-panel-card-border-hover: rgba(255, 255, 255, 0.16);
   --media-detail-panel-card-shadow: 0 6px 14px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   --media-detail-panel-card-shadow-hover: 0 10px 22px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.media-detail-page__side-panel.is-open {
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .media-detail-page__side-panel::before {
@@ -385,6 +396,7 @@
 .media-detail-page__container {
   padding-right: 80px;
   transition: padding-right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: padding-right;
 }
 
 .media-detail-page__container--panel-open {

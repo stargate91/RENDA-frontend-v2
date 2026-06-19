@@ -64,13 +64,11 @@ export default function DetailPageShell({
           {children}
         </div>
 
-        {activePanel ? (
-          <div className="media-detail-page__side-panel">
-            <div className="media-detail-page__side-panel-content">
-              {renderPanelContent?.()}
-            </div>
+        <div className={`media-detail-page__side-panel ${activePanel ? 'is-open' : ''}`}>
+          <div className="media-detail-page__side-panel-content">
+            {activePanel ? renderPanelContent?.() : null}
           </div>
-        ) : null}
+        </div>
 
         {isSideNavVisible ? (
           <div className="media-detail-page__side-nav">
