@@ -505,6 +505,7 @@ def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str
 
     movies = []
     series_map = {}
+    scenes = []
     person_backdrop = None
 
     for link in links:
@@ -515,7 +516,39 @@ def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str
         title = item_loc.title if item_loc else item.fn_title or item.filename
         poster_path = item_loc.poster_path if item_loc else None
 
-        if item.item_type == ItemType.MOVIE:
+        if item.item_type == ItemType.SCENE:
+            duration_sec = item.duration
+            duration_str = None
+            if duration_sec:
+                try:
+                    duration_min = int(float(duration_sec) / 60)
+                    if duration_min > 0:
+                        duration_str = f"{duration_min} min"
+                except:
+                    pass
+            studio_name = match.studio.name if match.studio else (match.companies[0].get("name") if match.companies else None)
+            scenes.append({
+                "id": item.id,
+                "title": title,
+                "type": "scene",
+                "media_type": "scene",
+                "tmdb_id": match.tmdb_id,
+                "year": match.release_date.year if match.release_date else None,
+                "poster_path": poster_path,
+                "backdrop_path": match.backdrop_path,
+                "rating": match.rating_tmdb or 0.0,
+                "rating_tmdb": match.rating_tmdb or 0.0,
+                "rating_imdb": match.rating_imdb,
+                "job": link.job,
+                "character": link.character_name,
+                "is_lead": False,
+                "in_library": True,
+                "library_item_id": item.id,
+                "resolution": item.resolution,
+                "duration": duration_str,
+                "studio": studio_name,
+            })
+        elif item.item_type == ItemType.MOVIE:
             movies.append({
                 "id": item.id,
                 "title": title,
@@ -564,7 +597,6 @@ def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str
     all_series = list(series_map.values())
     known_for = []
     tmdb_data = {}
-
     try:
         from app.api.tmdb_client import TMDBClient
         tmdb_client = TMDBClient(db)
@@ -574,7 +606,115 @@ def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str
         
         if not tmdb_id_to_fetch and not has_adult_db_id and person_id < 100000000:
             tmdb_id_to_fetch = person_id
+
+        # Adult database scene fetching
+        if has_adult_db_id:
+            stashdb_id = ext_ids.get("stashdb_id")
+            fansdb_id = ext_ids.get("fansdb_id")
+            adult_source = None
+            performer_uuid = None
             
+            if stashdb_id:
+                adult_source = "stashdb"
+                performer_uuid = stashdb_id
+            elif fansdb_id:
+                adult_source = "fansdb"
+                performer_uuid = fansdb_id
+                
+            if adult_source and performer_uuid:
+                from app.api.graphql_clients import AdultGraphQLClient
+                client = AdultGraphQLClient(db, adult_source)
+                try:
+                    fetched_scenes = client.get_performer_scenes(performer_uuid, page=1, per_page=200)
+                    import hashlib
+                    def get_stable_integer_id(src: str, u_str: str) -> int:
+                        h = hashlib.sha256(f"{src}:{u_str}".encode()).hexdigest()
+                        return int(h[:7], 16)
+                        
+                    stable_id_to_uuid = {}
+                    for s in fetched_scenes:
+                        s_id = s.get("id")
+                        if s_id:
+                            stable_id = get_stable_integer_id(adult_source, s_id)
+                            stable_id_to_uuid[stable_id] = s_id
+                            
+                    local_matches = db.query(MediaMatch).join(MediaItem).filter(
+                        MediaMatch.is_active == True,
+                        MediaMatch.tmdb_id.in_(list(stable_id_to_uuid.keys())),
+                        MediaItem.status.in_([ItemStatus.RENAMED, ItemStatus.ORGANIZED])
+                    ).options(joinedload(MediaMatch.media_item)).all()
+                    
+                    local_match_map = {m.tmdb_id: m for m in local_matches}
+                    
+                    seen_library_item_ids = {sc["library_item_id"] for sc in scenes if sc.get("library_item_id")}
+                    
+                    for s in fetched_scenes:
+                        s_id = s.get("id")
+                        if not s_id:
+                            continue
+                        stable_id = get_stable_integer_id(adult_source, s_id)
+                        local_match = local_match_map.get(stable_id)
+                        
+                        in_library = local_match is not None
+                        library_item_id = local_match.media_item_id if local_match else None
+                        
+                        if library_item_id and library_item_id in seen_library_item_ids:
+                            continue
+                            
+                        resolution = local_match.media_item.resolution if (local_match and local_match.media_item) else None
+                        
+                        duration_sec = None
+                        if local_match and local_match.media_item and local_match.media_item.duration:
+                            duration_sec = local_match.media_item.duration
+                        else:
+                            duration_sec = s.get("duration")
+                            
+                        duration_str = None
+                        if duration_sec:
+                            try:
+                                duration_min = int(float(duration_sec) / 60)
+                                if duration_min > 0:
+                                    duration_str = f"{duration_min} min"
+                            except Exception:
+                                pass
+                                
+                        date_str = s.get("date")
+                        year = None
+                        if date_str:
+                            try:
+                                year = int(str(date_str).split("-")[0])
+                            except Exception:
+                                pass
+                                
+                        studio_name = s.get("studio", {}).get("name") if s.get("studio") else None
+                        
+                        images_list = s.get("images") or []
+                        poster_url = images_list[0].get("url") if images_list else None
+                        
+                        scenes.append({
+                            "id": library_item_id or stable_id,
+                            "title": s.get("title") or "Unknown Scene",
+                            "type": "scene",
+                            "media_type": "scene",
+                            "tmdb_id": stable_id,
+                            "year": year,
+                            "poster_path": poster_url,
+                            "backdrop_path": None,
+                            "rating": 0.0,
+                            "rating_tmdb": 0.0,
+                            "rating_imdb": None,
+                            "job": "Actor",
+                            "character": None,
+                            "is_lead": False,
+                            "in_library": in_library,
+                            "library_item_id": library_item_id,
+                            "resolution": resolution,
+                            "duration": duration_str,
+                            "studio": studio_name,
+                        })
+                except Exception as ex:
+                    logger.error(f"Error fetching remote scenes: {ex}")
+
         if tmdb_id_to_fetch:
             tmdb_data = tmdb_client.get_person_details(int(tmdb_id_to_fetch), language=target_lang)
         else:
@@ -766,6 +906,7 @@ def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str
 
     all_movies.sort(key=lambda entry: entry.get("year") or 0, reverse=True)
     all_series.sort(key=lambda entry: entry.get("year") or 0, reverse=True)
+    scenes.sort(key=lambda entry: entry.get("year") or 0, reverse=True)
 
     return {
         "tmdb_data": tmdb_data,
@@ -773,6 +914,7 @@ def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str
         "known_for": known_for,
         "movies": all_movies,
         "series": all_series,
+        "scenes": scenes,
     }
 
 
@@ -828,12 +970,15 @@ def get_person_detail(person_id: int):
         known_for = _apply_local_poster_paths(credit_payload["known_for"])
         all_movies = credit_payload["movies"]
         all_series = credit_payload["series"]
+        all_scenes = credit_payload.get("scenes", [])
         prioritized_movies = _prioritize_person_credits(all_movies, credit_payload["known_for"])
         prioritized_series = _prioritize_person_credits(all_series, credit_payload["known_for"])
         initial_movies_page = _paginate_items(prioritized_movies, 1, PERSON_INITIAL_CREDITS_PAGE_SIZE)
         initial_series_page = _paginate_items(prioritized_series, 1, PERSON_INITIAL_CREDITS_PAGE_SIZE)
+        initial_scenes_page = _paginate_items(all_scenes, 1, PERSON_INITIAL_CREDITS_PAGE_SIZE)
         initial_movies_page["items"] = _apply_local_poster_paths(initial_movies_page["items"])
         initial_series_page["items"] = _apply_local_poster_paths(initial_series_page["items"])
+        initial_scenes_page["items"] = _apply_local_poster_paths(initial_scenes_page["items"])
         preload_movies, preload_series = _build_person_asset_preload_batches(
             all_movies,
             all_series,
@@ -918,8 +1063,10 @@ def get_person_detail(person_id: int):
             "known_for": known_for,
             "total_movie_credits": len(all_movies),
             "total_series_credits": len(all_series),
+            "total_scene_credits": len(all_scenes),
             "initial_movie_credits_page": initial_movies_page,
             "initial_series_credits_page": initial_series_page,
+            "initial_scene_credits_page": initial_scenes_page,
         }
         
         return JSONResponse(content=result, media_type="application/json; charset=utf-8")
@@ -1009,6 +1156,36 @@ def get_person_series(
         return JSONResponse(content=paged, media_type="application/json; charset=utf-8")
     except Exception as e:
         logger.error(f"Error getting person series for {person_id}: {e}")
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+    finally:
+        db.close()
+
+
+@router.get("/people/{person_id:int}/scenes")
+def get_person_scenes(
+    person_id: int,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=8, ge=1, le=60),
+):
+    db = Session()
+    try:
+        person = db.query(Person).options(joinedload(Person.localizations)).filter(Person.id == person_id).first()
+        if not person:
+            person = _get_or_create_person_db(db, person_id)
+            if person:
+                person = db.query(Person).options(joinedload(Person.localizations)).filter(Person.id == person_id).first()
+        if not person:
+            return JSONResponse(status_code=404, content={"error": "Person not found"})
+
+        ui_lang = _preferred_metadata_language(db)
+        target_lang = ui_lang or "en"
+        credit_payload = _load_person_credit_payload(db, person_id, person, ui_lang, target_lang)
+        base_items = credit_payload.get("scenes", [])
+        paged = _paginate_items(base_items, page, page_size)
+        paged["items"] = _apply_local_poster_paths(paged["items"])
+        return JSONResponse(content=paged, media_type="application/json; charset=utf-8")
+    except Exception as e:
+        logger.error(f"Error getting person scenes for {person_id}: {e}")
         return JSONResponse(content={"error": str(e)}, status_code=500)
     finally:
         db.close()

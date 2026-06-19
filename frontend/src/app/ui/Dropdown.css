@@ -168,6 +168,10 @@
   overflow: hidden;
 }
 
+.search-source-dropdown-menu .ui-dropdown__item {
+  text-align: center;
+}
+
 .ui-dropdown__item:hover {
   background: var(--color-surface-hover, var(--ui-control-bg-hover));
   color: var(--ui-control-text);

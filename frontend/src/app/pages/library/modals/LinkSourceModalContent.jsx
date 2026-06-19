@@ -72,6 +72,7 @@ export default function LinkSourceModalContent({ personId, onClose }) {
           <div className="link-source-modal__search-source">
             <Dropdown
               className="add-people-dropdown"
+              menuClassName="search-source-dropdown-menu"
               value={source}
               onChange={(e) => setSource(e.target.value)}
               options={[

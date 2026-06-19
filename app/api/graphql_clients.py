@@ -158,3 +158,55 @@ class AdultGraphQLClient:
                 performer["measurements"] = "-".join(parts) if parts else None
                 
         return performer
+
+    def get_performer_scenes(self, performer_id: str, page: int = 1, per_page: int = 60) -> List[Dict[str, Any]]:
+        if self.prefix not in ["stashdb", "fansdb"]:
+            return []
+            
+        gql_query = """
+        query QueryScenes($input: SceneQueryInput!) {
+          queryScenes(input: $input) {
+            count
+            scenes {
+              id
+              title
+              date
+              duration
+              urls {
+                url
+                site {
+                  name
+                }
+              }
+              images {
+                url
+              }
+              studio {
+                id
+                name
+              }
+            }
+          }
+        }
+        """
+        variables = {
+            "input": {
+                "performers": {
+                    "value": [performer_id],
+                    "modifier": "INCLUDES"
+                },
+                "page": page,
+                "per_page": per_page,
+                "direction": "DESC",
+                "sort": "DATE"
+            }
+        }
+        try:
+            data = self.execute_query(gql_query, variables)
+            if not data or "queryScenes" not in data:
+                return []
+            return data["queryScenes"].get("scenes") or []
+        except Exception as e:
+            logger.error(f"Error fetching performer scenes: {e}")
+            return []
+

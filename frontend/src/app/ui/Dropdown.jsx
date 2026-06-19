@@ -15,6 +15,7 @@ function DropdownMenu({
   onOptionClick,
   searchable,
   variant,
+  className = '',
 }) {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
@@ -50,7 +51,7 @@ function DropdownMenu({
   return createPortal(
     <div
       ref={menuRef}
-      className={`ui-dropdown__menu ${searchable ? 'has-search' : ''} ${menuCoords.openUpwards ? 'is-upwards' : ''} ${variant === 'sorter' ? 'ui-dropdown__menu--sorter' : ''}`.trim()}
+      className={`ui-dropdown__menu ${searchable ? 'has-search' : ''} ${menuCoords.openUpwards ? 'is-upwards' : ''} ${variant === 'sorter' ? 'ui-dropdown__menu--sorter' : ''} ${className}`.trim()}
     >
       {searchable ? (
         <div className="ui-dropdown__search-container">
@@ -101,6 +102,7 @@ export default function Dropdown({
   variant = 'default',
   sortDirection = 'asc',
   onSortDirectionToggle,
+  menuClassName = '',
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
@@ -202,6 +204,7 @@ export default function Dropdown({
           onOptionClick={handleOptionClick}
           searchable={searchable}
           variant={variant}
+          className={menuClassName}
         />
       </div>
     </div>

@@ -87,7 +87,10 @@ class MediaMatch(Base):
     local_still_path: Mapped[Optional[str]] = mapped_column(String)
     all_stills: Mapped[Optional[List[str]]] = mapped_column(JSON)
     local_all_stills: Mapped[Optional[List[str]]] = mapped_column(JSON)
+    studio_id: Mapped[Optional[int]] = mapped_column(ForeignKey("studios.id", ondelete="SET NULL"), index=True)
+    suggested_tags: Mapped[Optional[List[str]]] = mapped_column(JSON)
 
+    studio: Mapped[Optional["Studio"]] = relationship("Studio", back_populates="matches")
     localizations: Mapped[List["MetadataLocalization"]] = relationship(back_populates="match", cascade="all, delete-orphan")
     media_item: Mapped[Optional["MediaItem"]] = relationship(back_populates="matches")
     children: Mapped[List["MediaMatch"]] = relationship("MediaMatch", backref=backref("parent", remote_side=[id]))

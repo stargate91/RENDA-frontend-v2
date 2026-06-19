@@ -5,12 +5,14 @@ import PersonCreditsGridSection from './PersonCreditsGridSection';
 export default function PersonCreditsSections({ id, item, navigate, t }) {
   const hasMovies = Number(item?.total_movie_credits) > 0;
   const hasSeries = Number(item?.total_series_credits) > 0;
+  const hasScenes = Number(item?.total_scene_credits) > 0;
   
   const isAdult = !!item?.is_adult;
 
   const [activeTab, setActiveTab] = useState(() => {
     if (hasMovies) return 'movies';
     if (hasSeries) return 'series';
+    if (hasScenes) return 'scenes';
     return '';
   });
 
@@ -22,6 +24,9 @@ export default function PersonCreditsSections({ id, item, navigate, t }) {
   }
   if (hasSeries) {
     tabs.push({ id: 'series', label: t('library.details.tvShowsTitle') || 'TV Shows', count: item.total_series_credits });
+  }
+  if (hasScenes) {
+    tabs.push({ id: 'scenes', label: t('library.details.scenesTitle') || 'Scenes', count: item.total_scene_credits });
   }
 
   const handleTabChange = (tabId) => {
@@ -92,6 +97,20 @@ export default function PersonCreditsSections({ id, item, navigate, t }) {
           mediaType="series"
           totalCount={item?.total_series_credits}
           initialPageData={item?.initial_series_credits_page}
+          navigate={navigate}
+          t={t}
+          onPaginationData={setPaginationInfo}
+        />
+      )}
+
+      {activeTab === 'scenes' && hasScenes && (
+        <PersonCreditsGridSection
+          key={`${id}-scenes`}
+          title={t('library.details.scenesTitle') || 'Scenes'}
+          personId={id}
+          mediaType="scenes"
+          totalCount={item?.total_scene_credits}
+          initialPageData={item?.initial_scene_credits_page}
           navigate={navigate}
           t={t}
           onPaginationData={setPaginationInfo}

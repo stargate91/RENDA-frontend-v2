@@ -371,6 +371,7 @@ export default function AddPeopleModalContent({ isAdult, t, onClose }) {
                 <div className="add-people-modal__search-source">
                   <Dropdown
                     className="add-people-dropdown"
+                    menuClassName="search-source-dropdown-menu"
                     value={searchSource}
                     onChange={(e) => setSearchSource(e.target.value)}
                     options={[

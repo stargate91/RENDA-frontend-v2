@@ -14,8 +14,7 @@ import './PersonCreditsShared.css';
 const PERSON_INITIAL_CREDITS_PAGE_SIZE = 12;
 
 export default function PersonCreditsGridSection({ title, personId, mediaType, totalCount, initialPageData, navigate, t, onPaginationData }) {
-  const isScenes = mediaType === 'scenes';
-  const shouldLoad = Boolean(personId) && (Number(totalCount) > 0 || isScenes);
+  const shouldLoad = Boolean(personId) && Number(totalCount) > 0;
   const queryClient = useQueryClient();
   const containerRef = useRef(null);
   const [columns, setColumns] = useState(Math.max(1, Math.floor(PERSON_INITIAL_CREDITS_PAGE_SIZE / 2)));
@@ -82,10 +81,10 @@ export default function PersonCreditsGridSection({ title, personId, mediaType, t
   const safePage = Math.min(page, totalPages);
 
   useEffect(() => {
-    if (onPaginationData && !isScenes) {
+    if (onPaginationData) {
       onPaginationData({ page: safePage, totalPages, setPage });
     }
-  }, [safePage, totalPages, setPage, onPaginationData, isScenes]);
+  }, [safePage, totalPages, setPage, onPaginationData]);
   const visibleItems = creditsQuery.data?.items || [];
   const fillerCount = Math.max(0, itemsPerPage - visibleItems.length);
   const isInitialPageLoading = creditsQuery.isLoading && visibleItems.length === 0;
@@ -124,35 +123,6 @@ export default function PersonCreditsGridSection({ title, personId, mediaType, t
     return null;
   }
 
-  if (isScenes) {
-    return (
-      <section className="entity-detail-page__content-section">
-        <div className="entity-detail-page__section-header">
-          <h2>{title}</h2>
-        </div>
-        <div
-          ref={containerRef}
-          className="entity-detail-page__credits-list entity-detail-page__credits-list--people-grid"
-          style={{ opacity: 0.18 }}
-        >
-          {Array.from({ length: itemsPerPage }).map((_, index) => (
-            <div key={`scene-placeholder-${index}`} className="ui-credit-card ui-credit-card--people-grid entity-detail-page__skeleton-card">
-              <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-poster" />
-              <div className="ui-credit-card__body">
-                <div className="ui-credit-card__topline">
-                  <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-title" style={{ width: '65%' }} />
-                </div>
-                <div className="ui-credit-card__meta">
-                  <div className="entity-detail-page__skeleton-block entity-detail-page__skeleton-block--credit-meta" style={{ width: '40%' }} />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-    );
-  }
-
   const openItem = (item) => {
     if (isTvLikeMediaType(item.media_type || item.type)) {
       const seriesId = item.library_series_tmdb_id || item.series_tmdb_id || item.tmdb_id || item.id;
@@ -168,9 +138,8 @@ export default function PersonCreditsGridSection({ title, personId, mediaType, t
     <section className="entity-detail-page__content-section">
       <div
         ref={containerRef}
-        className={`entity-detail-page__credits-list entity-detail-page__credits-list--people-grid${
-          isPageFetching ? ' entity-detail-page__credits-list--fetching' : ''
-        }`}
+        className={`entity-detail-page__credits-list entity-detail-page__credits-list--people-grid${isPageFetching ? ' entity-detail-page__credits-list--fetching' : ''
+          }`}
       >
         {isInitialPageLoading && Array.from({ length: itemsPerPage }).map((_, index) => (
           <div key={`credit-grid-skeleton-${mediaType}-${index}`} className="ui-credit-card ui-credit-card--people-grid entity-detail-page__skeleton-card">
@@ -205,37 +174,75 @@ export default function PersonCreditsGridSection({ title, personId, mediaType, t
               isMissing={!item.in_library}
               onClick={() => openItem(item)}
             >
-              <div className="ui-credit-card__meta">
-                {item.year && <span>{item.year}</span>}
-                {(() => {
-                  const imdbRating = Number(item.rating_imdb);
-                  const tmdbRating = Number(item.rating_tmdb ?? item.rating);
-                  const hasImdbRating = Number.isFinite(imdbRating) && imdbRating > 0;
-                  const hasTmdbRating = Number.isFinite(tmdbRating) && tmdbRating > 0;
-
-                  if (!hasImdbRating && !hasTmdbRating) {
-                    return null;
-                  }
-
-                  return (
-                    <Pill
-                      variant={hasImdbRating ? 'imdb' : 'tmdb'}
-                      className="ui-credit-card__rating-pill"
+              {mediaType === 'scenes' ? (
+                <>
+                  {item.studio && (
+                    <div
+                      style={{
+                        fontSize: '0.82rem',
+                        fontWeight: 600,
+                        color: 'var(--color-text-secondary)',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        display: 'block'
+                      }}
+                      title={item.studio}
                     >
-                      <Star size={10} fill="currentColor" strokeWidth={1.8} />
-                      {hasImdbRating ? imdbRating.toFixed(1) : tmdbRating.toFixed(1)}
+                      {item.studio}
+                    </div>
+                  )}
+                  <div className="ui-credit-card__meta" style={{ marginTop: '0.05rem' }}>
+                    {item.year && <span>{item.year}</span>}
+                    {item.duration && <span>{item.duration}</span>}
+                    {item.resolution && (
+                      <Pill variant="accent" style={{ fontSize: '0.7rem', padding: '0.05rem 0.25rem' }}>
+                        {item.resolution}
+                      </Pill>
+                    )}
+                    <Pill
+                      variant={item.in_library ? 'success' : 'missing'}
+                      className="ui-credit-card__status-pill"
+                    >
+                      {item.in_library
+                        ? (t('library.details.have') || 'Have')
+                        : (t('library.details.missing') || 'Missing')}
                     </Pill>
-                  );
-                })()}
-                <Pill
-                  variant={item.in_library ? 'success' : 'missing'}
-                  className="ui-credit-card__status-pill"
-                >
-                  {item.in_library
-                    ? (t('library.details.have') || 'Have')
-                    : (t('library.details.missing') || 'Missing')}
-                </Pill>
-              </div>
+                  </div>
+                </>
+              ) : (
+                <div className="ui-credit-card__meta">
+                  {item.year && <span>{item.year}</span>}
+                  {(() => {
+                    const imdbRating = Number(item.rating_imdb);
+                    const tmdbRating = Number(item.rating_tmdb ?? item.rating);
+                    const hasImdbRating = Number.isFinite(imdbRating) && imdbRating > 0;
+                    const hasTmdbRating = Number.isFinite(tmdbRating) && tmdbRating > 0;
+
+                    if (!hasImdbRating && !hasTmdbRating) {
+                      return null;
+                    }
+
+                    return (
+                      <Pill
+                        variant={hasImdbRating ? 'imdb' : 'tmdb'}
+                        className="ui-credit-card__rating-pill"
+                      >
+                        <Star size={10} fill="currentColor" strokeWidth={1.8} />
+                        {hasImdbRating ? imdbRating.toFixed(1) : tmdbRating.toFixed(1)}
+                      </Pill>
+                    );
+                  })()}
+                  <Pill
+                    variant={item.in_library ? 'success' : 'missing'}
+                    className="ui-credit-card__status-pill"
+                  >
+                    {item.in_library
+                      ? (t('library.details.have') || 'Have')
+                      : (t('library.details.missing') || 'Missing')}
+                  </Pill>
+                </div>
+              )}
             </CreditCard>
           );
         })}

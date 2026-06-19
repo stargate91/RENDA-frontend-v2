@@ -173,3 +173,20 @@ class VirtualEpisodeState(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+
+class Studio(Base):
+    """Production studios / sites."""
+    __tablename__ = "studios"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String, nullable=False, unique=True, index=True)
+    logo_path: Mapped[Optional[str]] = mapped_column(String)
+    local_logo_path: Mapped[Optional[str]] = mapped_column(String)
+    manual_logo_path: Mapped[Optional[str]] = mapped_column(String)
+    manual_local_logo_path: Mapped[Optional[str]] = mapped_column(String)
+    parent_studio_id: Mapped[Optional[int]] = mapped_column(ForeignKey("studios.id", ondelete="SET NULL"), index=True)
+    external_ids: Mapped[Optional[dict]] = mapped_column(JSON) # e.g. {"stashdb_id": "..."}
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    matches: Mapped[List["MediaMatch"]] = relationship("MediaMatch", back_populates="studio")
+
+

@@ -1,7 +1,7 @@
 import enum
 
 class ItemType(enum.Enum):
-    MOVIE = "movie"; SERIES = "series"; SEASON = "season"; EPISODE = "episode"; PERSON = "person"
+    MOVIE = "movie"; SERIES = "series"; SEASON = "season"; EPISODE = "episode"; PERSON = "person"; SCENE = "scene"
 
 class ItemStatus(enum.Enum):
     NEW = "new"; NO_MATCH = "no_match"; UNCERTAIN = "uncertain"; MULTIPLE = "multiple"
