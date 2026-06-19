@@ -162,6 +162,13 @@ export default function MediaDetailPage({ type = 'movie' }) {
           <>
             {isMovie ? (
               <>
+                <button
+                  onClick={() => togglePanel('details')}
+                  className={`media-detail-page__side-nav-btn ${activePanel === 'details' ? 'active' : ''}`}
+                  title={t('library.details.details') || 'Details'}
+                >
+                  <BadgeInfo size={20} />
+                </button>
                 {item?.cast && item.cast.length > 0 && (
                   <button
                     onClick={() => togglePanel('cast')}
@@ -171,13 +178,6 @@ export default function MediaDetailPage({ type = 'movie' }) {
                     <Users size={20} />
                   </button>
                 )}
-                <button
-                  onClick={() => togglePanel('details')}
-                  className={`media-detail-page__side-nav-btn ${activePanel === 'details' ? 'active' : ''}`}
-                  title={t('library.details.details') || 'Details'}
-                >
-                  <BadgeInfo size={20} />
-                </button>
               </>
             ) : (
               <>

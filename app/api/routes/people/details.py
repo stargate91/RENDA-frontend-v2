@@ -2,11 +2,12 @@ from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import joinedload
 from typing import Optional
+from datetime import datetime, timedelta
 import logging
 import math
 import threading
 
-from app.db.base import Session
+from app.db.base import Session, CacheSession
 from app.db.models import (
     Person,
     MediaPersonLink,
@@ -15,6 +16,7 @@ from app.db.models import (
     ItemStatus,
     ItemType,
     ImageStatus,
+    TMDBCache,
 )
 
 from app.utils.people_utils import (
@@ -42,6 +44,51 @@ PERSON_INITIAL_CREDITS_PAGE_SIZE = 12
 _PERSON_CREDIT_WARMUP_LOCK = threading.Lock()
 _PERSON_CREDIT_WARMUP_CACHE: dict[tuple[int, str, int, int], float] = {}
 _PERSON_CREDIT_WARMUP_TTL_SECONDS = 300.0
+_PERSON_CREDIT_BACKDROPS_CACHE_TTL = timedelta(days=30)
+
+
+def _person_credit_backdrops_cache_key(person_id: int, tmdb_id: int, media_type: str, language: str) -> str:
+    return f"/people-credit-backdrops/{person_id}/{media_type}/{tmdb_id}?language={language or 'en-US'}"
+
+
+def _get_cached_person_credit_backdrops(person_id: int, tmdb_id: int, media_type: str, language: str) -> Optional[dict]:
+    cache_key = _person_credit_backdrops_cache_key(person_id, tmdb_id, media_type, language)
+    cache_db = CacheSession()
+    try:
+        cache_item = cache_db.query(TMDBCache).filter(TMDBCache.cache_key == cache_key).first()
+        if not cache_item or not isinstance(cache_item.raw_data, dict):
+            return None
+        if datetime.utcnow() - cache_item.updated_at >= _PERSON_CREDIT_BACKDROPS_CACHE_TTL:
+            return None
+        return cache_item.raw_data
+    except Exception as exc:
+        logger.warning(f"Failed to read person credit backdrop cache {cache_key}: {exc}")
+        return None
+    finally:
+        cache_db.close()
+        CacheSession.remove()
+
+
+def _set_cached_person_credit_backdrops(person_id: int, tmdb_id: int, media_type: str, language: str, payload: dict) -> None:
+    cache_key = _person_credit_backdrops_cache_key(person_id, tmdb_id, media_type, language)
+    cache_db = CacheSession()
+    try:
+        cache_item = cache_db.query(TMDBCache).filter(TMDBCache.cache_key == cache_key).first()
+        if not cache_item:
+            cache_item = TMDBCache(cache_key=cache_key)
+            cache_db.add(cache_item)
+        cache_item.tmdb_id = tmdb_id
+        cache_item.item_type = ItemType.SERIES if media_type == 'tv' else ItemType.MOVIE
+        cache_item.locale = language or 'en-US'
+        cache_item.raw_data = payload
+        cache_item.updated_at = datetime.utcnow()
+        cache_db.commit()
+    except Exception as exc:
+        cache_db.rollback()
+        logger.warning(f"Failed to write person credit backdrop cache {cache_key}: {exc}")
+    finally:
+        cache_db.close()
+        CacheSession.remove()
 
 TALK_LIKE_GENRE_IDS = {10763, 10764, 10767}
 SELF_ROLE_KEYWORDS = {
@@ -959,19 +1006,26 @@ def get_person_credit_backdrops(
 
         normalized_type = "tv" if str(media_type or "").lower() in {"tv", "series"} else "movie"
         ui_lang = _preferred_metadata_language(db) or "en-US"
+
+        cached_payload = _get_cached_person_credit_backdrops(person_id, tmdb_id, normalized_type, ui_lang)
+        if cached_payload:
+            return JSONResponse(content=cached_payload, media_type="application/json; charset=utf-8")
+
         tmdb_client = TMDBClient(db)
         raw_data = tmdb_client.get_details(tmdb_id, normalized_type, language=ui_lang, include_images=True)
         backdrops = ((raw_data or {}).get("images") or {}).get("backdrops") or []
+        has_valid_backdrops = any((not bd.get("iso_639_1") or bd.get("iso_639_1") == "") and int(bd.get("width") or 0) >= 1280 for bd in backdrops)
 
-        return JSONResponse(
-            content={
-                "tmdb_id": tmdb_id,
-                "media_type": normalized_type,
-                "title": raw_data.get("title") or raw_data.get("name") or raw_data.get("original_title") or raw_data.get("original_name"),
-                "backdrops": backdrops,
-            },
-            media_type="application/json; charset=utf-8",
-        )
+        payload = {
+            "tmdb_id": tmdb_id,
+            "media_type": normalized_type,
+            "title": raw_data.get("title") or raw_data.get("name") or raw_data.get("original_title") or raw_data.get("original_name"),
+            "backdrops": backdrops,
+            "has_valid_backdrops": has_valid_backdrops,
+        }
+        _set_cached_person_credit_backdrops(person_id, tmdb_id, normalized_type, ui_lang, payload)
+
+        return JSONResponse(content=payload, media_type="application/json; charset=utf-8")
     except Exception as e:
         logger.error(f"Error getting credit backdrops for person {person_id}, tmdb {tmdb_id}: {e}")
         return JSONResponse(content={"error": str(e)}, status_code=500)

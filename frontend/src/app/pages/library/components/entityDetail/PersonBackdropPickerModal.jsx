@@ -242,9 +242,11 @@ export default function PersonBackdropPickerModal({ personId, item, t, toast, ov
         const mediaType = isTvLikeMediaType(credit.media_type || credit.type) ? 'tv' : 'movie';
         try {
           const response = await api.people.getCreditBackdrops(personId, tmdbId, mediaType);
-          const hasValidBackdrops = Boolean((response?.backdrops || []).some(
-            (bd) => (!bd?.iso_639_1 || bd.iso_639_1 === '') && Number(bd?.width) >= 1280
-          ));
+          const hasValidBackdrops = typeof response?.has_valid_backdrops === 'boolean'
+            ? response.has_valid_backdrops
+            : Boolean((response?.backdrops || []).some(
+              (bd) => (!bd?.iso_639_1 || bd.iso_639_1 === '') && Number(bd?.width) >= 1280
+            ));
           return [creditKey, hasValidBackdrops];
         } catch {
           return [creditKey, true];
