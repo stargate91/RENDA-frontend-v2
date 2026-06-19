@@ -31,7 +31,7 @@
 }
 
 .link-source-modal__search-source {
-  width: 135px;
+  width: 130px;
   flex-shrink: 0;
   border-right: 1px solid var(--ui-control-border, var(--color-border-default));
 }

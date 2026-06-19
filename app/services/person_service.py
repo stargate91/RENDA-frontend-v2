@@ -121,6 +121,7 @@ class PersonService:
         for src in ["stashdb", "fansdb", "theporndb"]:
             uuid_str = external_ids.get(f"{src}_id")
             if uuid_str:
+                person.is_adult = True
                 from app.api.graphql_clients import AdultGraphQLClient
                 client = AdultGraphQLClient(self.db, src)
                 try:

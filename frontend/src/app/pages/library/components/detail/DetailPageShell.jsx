@@ -9,6 +9,7 @@ import '../../MediaDetailPage.css';
 export default function DetailPageShell({
   children,
   backdropUrl,
+  fallbackUrl,
   backLabel = 'Back',
   activePanel,
   isLoading = false,
@@ -40,7 +41,7 @@ export default function DetailPageShell({
         </NavButton>
       </UtilityBarPortal>
 
-      <HeroSection backdropUrl={backdropUrl} />
+      <HeroSection backdropUrl={backdropUrl || fallbackUrl} isFallback={!backdropUrl} />
 
       <div className="media-detail-page__layout-wrapper">
         {(topRightControls || onToggleSideNav) ? (

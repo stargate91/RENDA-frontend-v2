@@ -52,6 +52,7 @@ export default function MediaDetailPage({ type = 'movie' }) {
     activePanel,
     isSideNavVisible,
     backdropUrl,
+    posterUrl,
     item,
     isLoading,
     hasTechnicalPanel
@@ -143,6 +144,7 @@ export default function MediaDetailPage({ type = 'movie' }) {
     <MediaDetailProvider value={{ ...detailState, t, navigate, toast, type: normalizedType, id, handleOpenLogoModal, handleOpenPosterModal }}>
       <DetailPageShell
         backdropUrl={backdropUrl}
+        fallbackUrl={posterUrl}
         backLabel={t('common.back') || 'Back'}
         activePanel={activePanel}
         isSideNavVisible={isSideNavVisible}

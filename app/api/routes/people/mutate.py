@@ -511,6 +511,7 @@ def link_person_source(person_id: int, payload: dict):
             duplicate_person = db.query(Person).filter(Person.id == target_id).first()
         elif source in ["stashdb", "fansdb", "theporndb"]:
             ext_ids[f"{source}_id"] = str(external_id)
+            person.is_adult = True
             import hashlib
             h = hashlib.sha256(f"{source}:{external_id}".encode()).hexdigest()
             target_id = int(h[:7], 16)

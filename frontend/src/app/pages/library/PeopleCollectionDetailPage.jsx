@@ -95,6 +95,7 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
   return (
     <DetailPageShell
       backdropUrl={backdropUrl}
+      fallbackUrl={mediaUrl}
       backLabel={t('common.back') || 'Back'}
       isLoading={isLoading}
       pageClassName={`entity-detail-page ${isPeople ? 'entity-detail-page--people' : 'entity-detail-page--collection'}`}

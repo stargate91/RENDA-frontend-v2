@@ -568,7 +568,17 @@ def _load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str
     try:
         from app.api.tmdb_client import TMDBClient
         tmdb_client = TMDBClient(db)
-        tmdb_data = tmdb_client.get_person_details(person_id, language=target_lang)
+        ext_ids = person.external_ids or {}
+        tmdb_id_to_fetch = ext_ids.get("tmdb_id")
+        has_adult_db_id = any(ext_ids.get(f"{src}_id") for src in ["stashdb", "fansdb", "theporndb"])
+        
+        if not tmdb_id_to_fetch and not has_adult_db_id and person_id < 100000000:
+            tmdb_id_to_fetch = person_id
+            
+        if tmdb_id_to_fetch:
+            tmdb_data = tmdb_client.get_person_details(int(tmdb_id_to_fetch), language=target_lang)
+        else:
+            tmdb_data = {}
         credits_data = tmdb_data.get("combined_credits", {})
         cast_list = credits_data.get("cast", [])
         crew_list = credits_data.get("crew", [])

@@ -54,6 +54,11 @@
   object-fit: cover;
 }
 
+.media-detail-page__hero-backdrop--blurred {
+  filter: blur(50px) brightness(0.45);
+  transform: scale(1.2);
+}
+
 .media-detail-page__container {
   display: flex;
   flex-direction: column;
