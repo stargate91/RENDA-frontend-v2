@@ -62,18 +62,97 @@ def update_person_backdrop(person_id: int, payload: dict):
 
 @router.post("/people/add-tmdb")
 def add_person_tmdb(payload: dict):
-    """Fetches a person by TMDB ID, creates/updates them in the DB, sets as active, and enriches metadata in all configured languages."""
-    tmdb_id = payload.get("tmdb_id")
-    if not tmdb_id:
+    """Fetches a person by TMDB ID or adult performer ID, creates/updates them in the DB, sets as active, and enriches metadata."""
+    raw_id = payload.get("tmdb_id")
+    if not raw_id:
         return JSONResponse(status_code=400, content={"error": "tmdb_id is required"})
         
     db = Session()
     try:
-        person, _activated = _add_person_from_tmdb_internal(db, int(tmdb_id))
-        return JSONResponse(content=_serialize_person_summary(db, person))
+        raw_str = str(raw_id).strip()
+        if ":" in raw_str and any(raw_str.startswith(prefix) for prefix in ["stashdb:", "fansdb:", "theporndb:"]):
+            source, uuid_str = raw_str.split(":", 1)
+            import hashlib
+            from app.api.graphql_clients import AdultGraphQLClient
+            from app.db.models import Person, PersonLocalization
+            from app.services.person_service import PersonService
+            
+            def get_stable_integer_id(src: str, u_str: str) -> int:
+                h = hashlib.sha256(f"{src}:{u_str}".encode()).hexdigest()
+                return int(h[:7], 16)
+                
+            stable_id = get_stable_integer_id(source, uuid_str)
+            
+            client = AdultGraphQLClient(db, source)
+            data = client.get_performer_details(uuid_str)
+            if not data:
+                return JSONResponse(status_code=404, content={"error": f"Performer not found on {source}"})
+                
+            gender_str = str(data.get("gender") or "").upper()
+            if "FEMALE" in gender_str:
+                mapped_gender = 1
+            elif "MALE" in gender_str:
+                mapped_gender = 2
+            elif gender_str:
+                mapped_gender = 3
+            else:
+                mapped_gender = 0
+                
+            images = data.get("images") or []
+            profile_url = images[0].get("url") if images else None
+            
+            person = db.query(Person).filter(Person.id == stable_id).first()
+            if not person:
+                person = Person(
+                    id=stable_id,
+                    birthday=data.get("birthdate"),
+                    deathday=data.get("death_date"),
+                    place_of_birth=data.get("country"),
+                    gender=mapped_gender,
+                    known_for_department="Acting",
+                    profile_path=profile_url,
+                    is_adult=True,
+                    is_active=True,
+                    external_ids={
+                        "stashdb_id": uuid_str if source == "stashdb" else None,
+                        "fansdb_id": uuid_str if source == "fansdb" else None,
+                        "theporndb_id": uuid_str if source == "theporndb" else None,
+                        "source": source,
+                        "aliases": data.get("aliases") or [],
+                        "attributes": {
+                            "ethnicity": data.get("ethnicity"),
+                            "eye_color": data.get("eye_color"),
+                            "hair_color": data.get("hair_color"),
+                            "height": data.get("height"),
+                            "measurements": data.get("measurements"),
+                            "tattoos": data.get("tattoos"),
+                            "piercings": data.get("piercings"),
+                        }
+                    }
+                )
+                db.add(person)
+                loc = PersonLocalization(
+                    person_id=stable_id,
+                    locale="en",
+                    name=data.get("name") or "Unknown",
+                    biography=data.get("disambiguation")
+                )
+                db.add(loc)
+            else:
+                person.is_active = True
+                
+            db.commit()
+            
+            person_service = PersonService(db)
+            person_service.enrich_person_metadata(stable_id, ["en"])
+            
+            return JSONResponse(content=_serialize_person_summary(db, person))
+        else:
+            person, _activated = _add_person_from_tmdb_internal(db, int(raw_id))
+            return JSONResponse(content=_serialize_person_summary(db, person))
     except Exception as e:
         db.rollback()
-        logger.error(f"Error adding TMDB person: {e}")
+        logger.error(f"Error adding person: {e}")
         import traceback
         logger.error(traceback.format_exc())
         return JSONResponse(status_code=500, content={"error": str(e)})
@@ -284,6 +363,54 @@ def upload_person_backdrop(person_id: int, file: UploadFile = File(...)):
     except Exception as e:
         db.rollback()
         logger.error(f"Error uploading backdrop: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    finally:
+        db.close()
+
+
+@router.post("/people/{person_id:int}/link")
+def link_person_source(person_id: int, payload: dict):
+    """Links an external source (TMDb, StashDB, FansDB, THEPornDB) to an existing person, merging metadata."""
+    source = payload.get("source")
+    external_id = payload.get("external_id")
+    if not source or not external_id:
+        return JSONResponse(status_code=400, content={"error": "source and external_id are required"})
+        
+    db = Session()
+    try:
+        from app.db.models import Person
+        from app.services.person_service import PersonService
+        
+        person = db.query(Person).filter(Person.id == person_id).first()
+        if not person:
+            return JSONResponse(status_code=404, content={"error": "Person not found"})
+            
+        ext_ids = dict(person.external_ids or {})
+        
+        if source == "tmdb":
+            ext_ids["tmdb_id"] = int(external_id)
+        elif source in ["stashdb", "fansdb", "theporndb"]:
+            ext_ids[f"{source}_id"] = str(external_id)
+        else:
+            return JSONResponse(status_code=400, content={"error": f"Unsupported source: {source}"})
+            
+        # Update source preference to the newly linked source if requested, or keep existing
+        if "source" not in ext_ids:
+            ext_ids["source"] = source
+            
+        person.external_ids = ext_ids
+        db.commit()
+        
+        # Enrich metadata from all linked sources
+        person_service = PersonService(db)
+        person_service.enrich_person_metadata(person_id, ["en"])
+        
+        # Reload and serialize
+        db.refresh(person)
+        return JSONResponse(content=_serialize_person_summary(db, person))
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error linking person source: {e}")
         return JSONResponse(status_code=500, content={"error": str(e)})
     finally:
         db.close()

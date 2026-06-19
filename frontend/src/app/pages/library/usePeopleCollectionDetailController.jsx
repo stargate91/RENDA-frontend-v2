@@ -12,6 +12,7 @@ import { API_BASE } from '@/lib/backend';
 import { resolveDetailsImageUrl } from './utils/detailUtils';
 import {
   buildEntityMetaPills,
+  buildEntityExtraMetaPills,
   buildPersonExternalLinks,
 } from './peopleCollectionDetailUtils.jsx';
 import { getPosterImagePath, getProfileImagePath } from '@/lib/imageUrls';
@@ -75,6 +76,10 @@ export default function usePeopleCollectionDetailController({
   );
   const metaPills = useMemo(
     () => buildEntityMetaPills({ isPeople, item, t }),
+    [isPeople, item, t]
+  );
+  const extraMetaPills = useMemo(
+    () => buildEntityExtraMetaPills({ isPeople, item, t }),
     [isPeople, item, t]
   );
   const currentRating = item?.user_rating ?? null;
@@ -228,6 +233,7 @@ export default function usePeopleCollectionDetailController({
     backdropUrl,
     mediaUrl,
     metaPills,
+    extraMetaPills,
     displayRating,
     isActivateHovered,
     starsStyleSheetText,

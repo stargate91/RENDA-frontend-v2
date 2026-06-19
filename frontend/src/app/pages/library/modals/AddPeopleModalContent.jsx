@@ -61,6 +61,7 @@ export default function AddPeopleModalContent({ isAdult, t, onClose }) {
 
   // TMDB Search States
   const [tmdbQuery, setTmdbQuery] = useState('');
+  const [searchSource, setSearchSource] = useState('tmdb');
   const [tmdbResults, setTmdbResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchingError, setSearchingError] = useState('');
@@ -354,24 +355,41 @@ export default function AddPeopleModalContent({ isAdult, t, onClose }) {
               setIsSearching(true);
               setSearchingError('');
               try {
-                const results = await api.people.searchTmdb(tmdbQuery.trim(), { adultOnly: isAdult });
+                const results = await api.people.searchTmdb(tmdbQuery.trim(), { adultOnly: isAdult, source: searchSource });
                 setTmdbResults(results);
                 setHasSearched(true);
               } catch (err) {
-                setSearchingError(err.message || 'Failed to search TMDB');
+                setSearchingError(err.message || 'Failed to search');
               } finally {
                 setIsSearching(false);
               }
             }}
             className="add-people-modal__search-form"
           >
-            <div className="add-people-modal__form-input-wrapper">
-              <Input
-                type="text"
-                placeholder={t(textKey('library.addPeople.adultTmdbSearchPlaceholder', 'library.addPeople.tmdbSearchPlaceholder'))}
-                value={tmdbQuery}
-                onChange={(e) => setTmdbQuery(e.target.value)}
-              />
+            <div className="add-people-modal__search-input-group">
+              {isAdult && (
+                <div className="add-people-modal__search-source">
+                  <Dropdown
+                    className="add-people-dropdown"
+                    value={searchSource}
+                    onChange={(e) => setSearchSource(e.target.value)}
+                    options={[
+                      { value: 'tmdb', label: 'TMDb' },
+                      { value: 'stashdb', label: 'StashDB' },
+                      { value: 'fansdb', label: 'FansDB' },
+                      { value: 'theporndb', label: 'THEPornDB' },
+                    ]}
+                  />
+                </div>
+              )}
+              <div className="add-people-modal__form-input-wrapper">
+                <Input
+                  type="text"
+                  placeholder={t(textKey('library.addPeople.adultTmdbSearchPlaceholder', 'library.addPeople.tmdbSearchPlaceholder'))}
+                  value={tmdbQuery}
+                  onChange={(e) => setTmdbQuery(e.target.value)}
+                />
+              </div>
             </div>
             <Tooltip
               content={isSearching ? t('library.addPeople.searching') || 'Searching...' : t('common.search') || 'Search'}

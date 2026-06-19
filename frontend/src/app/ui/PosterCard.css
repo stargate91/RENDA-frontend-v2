@@ -91,7 +91,7 @@ div.ui-poster-card__image-wrapper:focus-visible {
 }
 
 .ui-poster-card__user-rating-badge {
-  position: absolute;
+  position: absolute !important;
   top: 12px;
   left: 12px;
   min-height: 28px;

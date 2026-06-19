@@ -1,4 +1,4 @@
-import { Image as ImageIcon } from 'lucide-react';
+import { Image as ImageIcon, Link as LinkIcon } from 'lucide-react';
 import PeopleTagPopover from './PeopleTagPopover';
 
 export default function EntityDetailTopControls({
@@ -10,6 +10,7 @@ export default function EntityDetailTopControls({
   updatePersonStatusMutation,
   handleOpenPeopleBackdropModal,
   handleOpenCollectionBackdropModal,
+  handleOpenLinkSourceModal,
 }) {
   if (isPeople) {
     return (
@@ -19,6 +20,16 @@ export default function EntityDetailTopControls({
           t={t}
           updatePersonStatusMutation={updatePersonStatusMutation}
         />
+        {item?.is_adult ? (
+          <button
+            type="button"
+            onClick={handleOpenLinkSourceModal}
+            className="media-detail-page__side-nav-toggle"
+            title={t('library.details.linkSource') || 'Link External Source'}
+          >
+            <LinkIcon size={18} />
+          </button>
+        ) : null}
         {canChoosePeopleBackdrop ? (
           <button
             type="button"

@@ -1,4 +1,4 @@
-import { Mars, User, Venus, VenusAndMars } from 'lucide-react';
+import { Mars, User, Venus, VenusAndMars, Ruler, Eye, Brush, Gem, Palette, Globe } from 'lucide-react';
 import { Briefcase, Calendar, CalendarX2, Check, Layers, MapPin, X } from 'lucide-react';
 import { isTvLikeMediaType } from '@/lib/mediaTypes';
 
@@ -178,173 +178,330 @@ export function buildPersonExternalLinks(item, t) {
   }
 
   const externalIds = item.external_ids || {};
-  const links = [
-    {
+  const links = [];
+
+  if (!item.is_adult) {
+    links.push({
       key: 'tmdb',
       label: t('library.details.tmdb') || 'TMDb',
       href: `https://www.themoviedb.org/person/${item.id}`,
       iconSrc: '/links/tmdb.svg',
       brandColor: 'var(--color-brand-tmdb)',
-    },
-    item.homepage
-      ? {
-          key: 'website',
-          label: t('library.details.website') || 'Website',
-          href: item.homepage,
+    });
+  }
+
+  if (item.homepage) {
+    links.push({
+      key: 'website',
+      label: t('library.details.website') || 'Website',
+      href: item.homepage,
+      iconSrc: '/links/website.svg',
+      brandColor: 'var(--color-text-primary)',
+    });
+  }
+
+  if (externalIds.imdb_id) {
+    links.push({
+      key: 'imdb',
+      label: t('library.details.imdb') || 'IMDb',
+      href: `https://www.imdb.com/name/${externalIds.imdb_id}`,
+      iconSrc: '/links/imdb.svg',
+      brandColor: 'var(--color-brand-imdb)',
+    });
+  }
+
+  if (externalIds.instagram_id) {
+    links.push({
+      key: 'instagram',
+      label: 'Instagram',
+      href: `https://www.instagram.com/${externalIds.instagram_id}`,
+      iconSrc: '/links/instagram.svg',
+      brandColor: '#f77737',
+    });
+  }
+
+  if (externalIds.facebook_id) {
+    links.push({
+      key: 'facebook',
+      label: 'Facebook',
+      href: `https://www.facebook.com/${externalIds.facebook_id}`,
+      iconSrc: '/links/facebook.svg',
+      brandColor: '#1877f2',
+    });
+  }
+
+  if (externalIds.twitter_id) {
+    links.push({
+      key: 'x',
+      label: 'X',
+      href: `https://x.com/${externalIds.twitter_id}`,
+      iconSrc: '/links/x.svg',
+      brandColor: '#ffffff',
+    });
+  }
+
+  if (externalIds.youtube_id) {
+    links.push({
+      key: 'youtube',
+      label: 'YouTube',
+      href: `https://www.youtube.com/${externalIds.youtube_id.startsWith('@') ? externalIds.youtube_id : `@${externalIds.youtube_id}`}`,
+      iconSrc: '/links/youtube.svg',
+      brandColor: '#ff0033',
+    });
+  }
+
+  if (externalIds.tiktok_id) {
+    links.push({
+      key: 'tiktok',
+      label: 'TikTok',
+      href: `https://www.tiktok.com/@${externalIds.tiktok_id.replace(/^@/, '')}`,
+      iconSrc: '/links/tiktok.svg',
+      brandColor: '#25f4ee',
+    });
+  }
+
+  // Adult Sources specific links
+  if (externalIds.stashdb_id) {
+    links.push({
+      key: 'stashdb',
+      label: 'StashDB',
+      href: `https://stashdb.org/performers/${externalIds.stashdb_id}`,
+      iconSrc: '/links/website.svg',
+      brandColor: '#081c24',
+    });
+  }
+
+  if (externalIds.fansdb_id) {
+    links.push({
+      key: 'fansdb',
+      label: 'FansDB',
+      href: `https://fansdb.cc/performers/${externalIds.fansdb_id}`,
+      iconSrc: '/links/website.svg',
+      brandColor: '#00aff0',
+    });
+  }
+
+  if (externalIds.theporndb_id) {
+    links.push({
+      key: 'theporndb',
+      label: 'THEPornDB',
+      href: `https://theporndb.net/performers/${externalIds.theporndb_id}`,
+      iconSrc: '/links/website.svg',
+      brandColor: '#ff0055',
+    });
+  }
+
+  // Dynamic performer links fetched from adult GraphQL
+  if (Array.isArray(externalIds.urls)) {
+    externalIds.urls.forEach((u, i) => {
+      if (u && u.url) {
+        links.push({
+          key: `extra-${i}`,
+          label: u.site || 'Link',
+          href: u.url,
           iconSrc: '/links/website.svg',
           brandColor: 'var(--color-text-primary)',
-        }
-      : null,
-    externalIds.imdb_id
-      ? {
-          key: 'imdb',
-          label: t('library.details.imdb') || 'IMDb',
-          href: `https://www.imdb.com/name/${externalIds.imdb_id}`,
-          iconSrc: '/links/imdb.svg',
-          brandColor: 'var(--color-brand-imdb)',
-        }
-      : null,
-    externalIds.instagram_id
-      ? {
-          key: 'instagram',
-          label: 'Instagram',
-          href: `https://www.instagram.com/${externalIds.instagram_id}`,
-          iconSrc: '/links/instagram.svg',
-          brandColor: '#f77737',
-        }
-      : null,
-    externalIds.facebook_id
-      ? {
-          key: 'facebook',
-          label: 'Facebook',
-          href: `https://www.facebook.com/${externalIds.facebook_id}`,
-          iconSrc: '/links/facebook.svg',
-          brandColor: '#1877f2',
-        }
-      : null,
-    externalIds.twitter_id
-      ? {
-          key: 'x',
-          label: 'X',
-          href: `https://x.com/${externalIds.twitter_id}`,
-          iconSrc: '/links/x.svg',
-          brandColor: '#ffffff',
-        }
-      : null,
-    externalIds.youtube_id
-      ? {
-          key: 'youtube',
-          label: 'YouTube',
-          href: `https://www.youtube.com/${externalIds.youtube_id.startsWith('@') ? externalIds.youtube_id : `@${externalIds.youtube_id}`}`,
-          iconSrc: '/links/youtube.svg',
-          brandColor: '#ff0033',
-        }
-      : null,
-    externalIds.tiktok_id
-      ? {
-          key: 'tiktok',
-          label: 'TikTok',
-          href: `https://www.tiktok.com/@${externalIds.tiktok_id.replace(/^@/, '')}`,
-          iconSrc: '/links/tiktok.svg',
-          brandColor: '#25f4ee',
-        }
-      : null,
-  ];
+        });
+      }
+    });
+  }
 
-  return links.filter(Boolean);
+  return links;
 }
 
 export function buildEntityMetaPills({ isPeople, item, t }) {
-  return isPeople
-    ? [
-        (() => {
-          const GenderIcon = getGenderIcon(item?.gender);
-          const genderLabel = getGenderLabel(item?.gender, t);
-          if (!genderLabel) {
-            return null;
-          }
-
-          return {
-            key: 'gender',
+  if (!isPeople) {
+    return [
+      item?.total_count !== undefined
+        ? {
+            key: 'total-count',
             content: (
               <span className="entity-detail-page__meta-pill-content">
-                <GenderIcon size={14} />
-                <span>{genderLabel}</span>
+                <Layers size={14} />
+                <span>
+                  {t('library.details.totalCount', {
+                    count: item.total_count,
+                    defaultValue: `${item.total_count} total`,
+                  })}
+                </span>
               </span>
             ),
-          };
-        })(),
-        item?.known_for_department ? {
-          key: 'department',
-          content: (
-            <span className="entity-detail-page__meta-pill-content">
-              <Briefcase size={14} />
-              <span>{item.known_for_department}</span>
-            </span>
-          ),
-        } : null,
-        item?.birthday ? {
-          key: 'birthday',
-          content: (
-            <span className="entity-detail-page__meta-pill-content">
-              <Calendar size={14} />
-              <span>{item.birthday}</span>
-            </span>
-          ),
-        } : null,
-        item?.deathday ? {
-          key: 'deathday',
-          content: (
-            <span className="entity-detail-page__meta-pill-content">
-              <CalendarX2 size={14} />
-              <span>{item.deathday}</span>
-            </span>
-          ),
-        } : null,
-        item?.place_of_birth ? {
-          key: 'place-of-birth',
-          content: (
-            <span className="entity-detail-page__meta-pill-content">
-              <MapPin size={14} />
-              <span>{item.place_of_birth}</span>
-            </span>
-          ),
-        } : null,
-      ].filter(Boolean)
-    : [
-        item?.total_count !== undefined
-          ? {
-              key: 'total-count',
-              content: (
-                <span className="entity-detail-page__meta-pill-content">
-                  <Layers size={14} />
-                  <span>
-                    {t('library.details.totalCount', {
-                      count: item.total_count,
-                      defaultValue: `${item.total_count} total`,
-                    })}
-                  </span>
+          }
+        : null,
+      item?.owned_count !== undefined
+        ? {
+            key: 'owned-count',
+            content: (
+              <span className="entity-detail-page__meta-pill-content">
+                {Number(item.owned_count) === 0 ? <X size={14} /> : <Check size={14} />}
+                <span>
+                  {t('library.details.inLibraryCount', {
+                    count: item.owned_count,
+                    defaultValue: `${item.owned_count} in library`,
+                  })}
                 </span>
-              ),
-            }
-          : null,
-        item?.owned_count !== undefined
-          ? {
-              key: 'owned-count',
-              content: (
-                <span className="entity-detail-page__meta-pill-content">
-                  {Number(item.owned_count) === 0 ? <X size={14} /> : <Check size={14} />}
-                  <span>
-                    {t('library.details.inLibraryCount', {
-                      count: item.owned_count,
-                      defaultValue: `${item.owned_count} in library`,
-                    })}
-                  </span>
-                </span>
-              ),
-            }
-          : null,
-      ].filter(Boolean);
+              </span>
+            ),
+          }
+        : null,
+    ].filter(Boolean);
+  }
+
+  const externalIds = item?.external_ids || {};
+  const attrs = externalIds.attributes || {};
+
+  return [
+    (() => {
+      const GenderIcon = getGenderIcon(item?.gender);
+      const genderLabel = getGenderLabel(item?.gender, t);
+      if (!genderLabel) {
+        return null;
+      }
+
+      return {
+        key: 'gender',
+        content: (
+          <span className="entity-detail-page__meta-pill-content">
+            <GenderIcon size={14} />
+            <span>{genderLabel}</span>
+          </span>
+        ),
+      };
+    })(),
+    item?.known_for_department ? {
+      key: 'department',
+      content: (
+        <span className="entity-detail-page__meta-pill-content">
+          <Briefcase size={14} />
+          <span>{item.known_for_department}</span>
+        </span>
+      ),
+    } : null,
+    item?.birthday ? {
+      key: 'birthday',
+      content: (
+        <span className="entity-detail-page__meta-pill-content">
+          <Calendar size={14} />
+          <span>{item.birthday}</span>
+        </span>
+      ),
+    } : null,
+    item?.deathday ? {
+      key: 'deathday',
+      content: (
+        <span className="entity-detail-page__meta-pill-content">
+          <CalendarX2 size={14} />
+          <span>{item.deathday}</span>
+        </span>
+      ),
+    } : null,
+     item?.place_of_birth ? {
+      key: 'place-of-birth',
+      content: (
+        <span className="entity-detail-page__meta-pill-content">
+          <MapPin size={14} />
+          <span>{item.place_of_birth}</span>
+        </span>
+      ),
+    } : null,
+  ].filter(Boolean);
+}
+
+const toTitleCase = (str) => {
+  if (!str) return '';
+  return str
+    .toLowerCase()
+    .split(/[\s_-]+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+const formatListAttribute = (list) => {
+  if (!list) return null;
+  if (Array.isArray(list)) {
+    if (list.length === 0) return null;
+    const locations = list.map(item => item.location || item.description).filter(Boolean);
+    if (locations.length === 0) return 'Yes';
+    return toTitleCase(locations.join(', '));
+  }
+  if (typeof list === 'string') return toTitleCase(list);
+  return null;
+};
+
+export function buildEntityExtraMetaPills({ isPeople, item, t }) {
+  if (!isPeople || !item) return [];
+
+  const externalIds = item.external_ids || {};
+  const attrs = externalIds.attributes || {};
+
+  const tattooText = formatListAttribute(attrs.tattoos);
+  const piercingText = formatListAttribute(attrs.piercings);
+
+  return [
+    attrs.height ? {
+      key: 'height',
+      content: (
+        <span className="entity-detail-page__meta-pill-content">
+          <Ruler size={14} />
+          <span>{attrs.height} cm</span>
+        </span>
+      ),
+    } : null,
+    attrs.measurements ? {
+      key: 'measurements',
+      content: (
+        <span className="entity-detail-page__meta-pill-content">
+          <Ruler size={14} />
+          <span>{attrs.measurements}</span>
+        </span>
+      ),
+    } : null,
+    attrs.ethnicity ? {
+      key: 'ethnicity',
+      content: (
+        <span className="entity-detail-page__meta-pill-content">
+          <Globe size={14} />
+          <span>{toTitleCase(attrs.ethnicity)}</span>
+        </span>
+      ),
+    } : null,
+    attrs.eye_color ? {
+      key: 'eye-color',
+      content: (
+        <span className="entity-detail-page__meta-pill-content">
+          <Eye size={14} />
+          <span>{toTitleCase(attrs.eye_color)}</span>
+        </span>
+      ),
+    } : null,
+    attrs.hair_color ? {
+      key: 'hair-color',
+      content: (
+        <span className="entity-detail-page__meta-pill-content">
+          <Palette size={14} />
+          <span>{toTitleCase(attrs.hair_color)}</span>
+        </span>
+      ),
+    } : null,
+    tattooText ? {
+      key: 'tattoos',
+      content: (
+        <span className="entity-detail-page__meta-pill-content">
+          <Brush size={14} />
+          <span>Tattoos: {tattooText}</span>
+        </span>
+      ),
+    } : null,
+    piercingText ? {
+      key: 'piercings',
+      content: (
+        <span className="entity-detail-page__meta-pill-content">
+          <Gem size={14} />
+          <span>Piercings: {piercingText}</span>
+        </span>
+      ),
+    } : null,
+  ].filter(Boolean);
 }
 
 export function enrichKnownForItems(knownForItems, movies, series) {

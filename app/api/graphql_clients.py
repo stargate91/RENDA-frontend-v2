@@ -1,0 +1,160 @@
+import requests
+import logging
+from typing import Dict, Any, List, Optional
+from sqlalchemy.orm import Session
+from ..db.models import UserSetting
+
+logger = logging.getLogger(__name__)
+
+class AdultGraphQLClient:
+    """
+    GraphQL client to communicate with StashDB, FansDB, and THEPornDB.
+    """
+    def __init__(self, db: Session, prefix: str):
+        self.db = db
+        self.prefix = prefix  # e.g., 'stashdb', 'fansdb', 'theporndb'
+
+    def _get_config(self) -> tuple[str, str]:
+        endpoint_setting = self.db.query(UserSetting).filter(UserSetting.key == f"{self.prefix}_endpoint").first()
+        api_key_setting = self.db.query(UserSetting).filter(UserSetting.key == f"{self.prefix}_api_key").first()
+        
+        endpoint = (endpoint_setting.value or "").strip() if endpoint_setting else ""
+        api_key = (api_key_setting.value or "").strip() if api_key_setting else ""
+        
+        # Fallbacks if not set in DB settings
+        if not endpoint:
+            if self.prefix == "stashdb":
+                endpoint = "https://stashdb.org/graphql"
+            elif self.prefix == "fansdb":
+                endpoint = "https://fansdb.cc/graphql"
+            elif self.prefix == "theporndb":
+                endpoint = "https://theporndb.net/graphql"
+                
+        return endpoint, api_key
+
+    def execute_query(self, query: str, variables: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
+        endpoint, api_key = self._get_config()
+        if not endpoint:
+            logger.warning(f"GraphQL endpoint for {self.prefix} is not configured.")
+            return None
+
+        headers = {
+            "Content-Type": "application/json",
+        }
+        if api_key:
+            headers["ApiKey"] = api_key
+
+        try:
+            response = requests.post(
+                endpoint,
+                json={"query": query, "variables": variables or {}},
+                headers=headers,
+                timeout=15
+            )
+            if response.status_code != 200:
+                logger.error(f"GraphQL API returned status {response.status_code}: {response.text}")
+            response.raise_for_status()
+            res_data = response.json()
+            if "errors" in res_data:
+                logger.error(f"GraphQL errors from {self.prefix}: {res_data['errors']}")
+                return None
+            return res_data.get("data")
+        except Exception as e:
+            logger.error(f"Error querying {self.prefix} GraphQL API: {e}")
+            return None
+
+    def search_performers(self, query_str: str) -> List[Dict[str, Any]]:
+        gql_query = """
+        query SearchPerformers($name: String!) {
+          searchPerformer(term: $name) {
+            id
+            name
+            disambiguation
+            aliases
+            gender
+            birthdate: birth_date
+            death_date
+            country
+            images {
+              url
+            }
+          }
+        }
+        """
+        data = self.execute_query(gql_query, {"name": query_str})
+        if not data or "searchPerformer" not in data:
+            return []
+        return data["searchPerformer"] or []
+
+    def get_performer_details(self, performer_id: str) -> Optional[Dict[str, Any]]:
+        gql_query = """
+        query GetPerformer($id: ID!) {
+          findPerformer(id: $id) {
+            id
+            name
+            disambiguation
+            aliases
+            gender
+            birthdate: birth_date
+            death_date
+            country
+            ethnicity
+            eye_color
+            hair_color
+            height
+            measurements {
+              cup_size
+              band_size
+              waist
+              hip
+            }
+            tattoos {
+              location
+              description
+            }
+            piercings {
+              location
+              description
+            }
+            images {
+              url
+            }
+            urls {
+              url
+              site {
+                name
+              }
+            }
+          }
+        }
+        """
+        data = self.execute_query(gql_query, {"id": performer_id})
+        if not data or "findPerformer" not in data:
+            return None
+        
+        performer = data["findPerformer"]
+        if performer and "measurements" in performer:
+            m = performer["measurements"]
+            if isinstance(m, dict):
+                parts = []
+                band = m.get("band_size")
+                cup = m.get("cup_size")
+                bust = ""
+                if band:
+                    bust += str(band)
+                if cup:
+                    bust += str(cup)
+                if bust:
+                    parts.append(bust)
+                
+                waist = m.get("waist")
+                if waist:
+                    parts.append(str(waist))
+                
+                hip = m.get("hip")
+                if hip:
+                    parts.append(str(hip))
+                
+                performer["measurements"] = "-".join(parts) if parts else None
+                
+        return performer

@@ -1,5 +1,6 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import TMDBImageGrid from '../components/entityDetail/TMDBImageGrid';
+import Dropdown from '@/ui/Dropdown';
 import {
   useOverrideBackdropMutation,
   useUploadBackdropMutation,
@@ -24,6 +25,7 @@ export default function UniversalImagePickerModal({
   t,
   toast,
   onClose,
+  externalIds,
 }) {
   const overrideBackdropMutation = useOverrideBackdropMutation();
   const uploadBackdropMutation = useUploadBackdropMutation();
@@ -34,7 +36,24 @@ export default function UniversalImagePickerModal({
   const overridePersonProfileMutation = useOverridePersonProfileMutation();
   const uploadPersonProfileMutation = useUploadPersonProfileMutation();
 
+  // Compute available sources
+  const sources = [];
+  if (entityType === 'person') {
+    const hasStash = !!externalIds?.stashdb_id;
+    const hasFans = !!externalIds?.fansdb_id;
+    const hasPornDb = !!externalIds?.theporndb_id;
+    const hasTMDb = !!externalIds?.tmdb_id || (!hasStash && !hasFans && !hasPornDb);
+
+    if (hasTMDb) sources.push({ value: 'tmdb', label: 'TMDb' });
+    if (hasStash) sources.push({ value: 'stashdb', label: 'StashDB' });
+    if (hasFans) sources.push({ value: 'fansdb', label: 'FansDB' });
+    if (hasPornDb) sources.push({ value: 'theporndb', label: 'THEPornDB' });
+  }
+
   const [selectedPath, setSelectedPath] = useState(currentPath);
+  const [imageSource, setImageSource] = useState(() => {
+    return sources.length > 0 ? sources[0].value : 'tmdb';
+  });
 
   useEffect(() => {
     setSelectedPath(currentPath);
@@ -125,6 +144,19 @@ export default function UniversalImagePickerModal({
         onUploadFile={handleUploadFile}
       />
 
+      {sources.length > 1 && (
+        <div className="universal-image-picker__source-filter">
+          <span className="universal-image-picker__source-label">{t('library.details.imageSource') || 'Image Source'}:</span>
+          <div className="universal-image-picker__source-dropdown-wrapper">
+            <Dropdown
+              value={imageSource}
+              onChange={(e) => setImageSource(e.target.value)}
+              options={sources}
+            />
+          </div>
+        </div>
+      )}
+
       <div className="universal-image-picker__grid">
         <TMDBImageGrid
           itemId={entityId}
@@ -135,6 +167,7 @@ export default function UniversalImagePickerModal({
           onSelect={handleSelectTmdbImage}
           isPending={isPending}
           t={t}
+          selectedSource={imageSource}
         />
       </div>
     </div>

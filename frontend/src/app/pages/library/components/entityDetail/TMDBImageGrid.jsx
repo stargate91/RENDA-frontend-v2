@@ -22,6 +22,7 @@ export default function TMDBImageGrid({
   initialVisibleCount,
   visibleStep,
   t,
+  selectedSource,
 }) {
   const { locale } = useTranslation();
   const isPerson = mediaType === 'person';
@@ -67,7 +68,19 @@ export default function TMDBImageGrid({
 
     if (isPerson) {
       if (!personDetail?.images) return [];
-      return personDetail.images.map((img) => ({
+      let list = personDetail.images;
+      if (selectedSource && selectedSource !== 'all') {
+        if (selectedSource === 'tmdb') {
+          list = list.filter(img => img.startsWith('/'));
+        } else if (selectedSource === 'stashdb') {
+          list = list.filter(img => img.includes('stashdb'));
+        } else if (selectedSource === 'fansdb') {
+          list = list.filter(img => img.includes('fansdb'));
+        } else if (selectedSource === 'theporndb') {
+          list = list.filter(img => img.includes('theporndb') || img.includes('metadataapi'));
+        }
+      }
+      return list.map((img) => ({
         file_path: img,
         width: 0,
         height: 0,
@@ -140,7 +153,7 @@ export default function TMDBImageGrid({
       height: img.height,
       vote_average: img.vote_average,
     }));
-  }, [collectionDetail, customImages, fullMetadata, imageType, isCollection, isPerson, metadataLanguage, normalizedMediaType, personDetail]);
+  }, [collectionDetail, customImages, fullMetadata, imageType, isCollection, isPerson, metadataLanguage, normalizedMediaType, personDetail, selectedSource]);
 
   const normalizedCurrent = useMemo(() => {
     if (!currentPath) return '';

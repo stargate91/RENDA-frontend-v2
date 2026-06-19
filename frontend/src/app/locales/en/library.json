@@ -359,6 +359,9 @@
     "imageUploadFailed": "Failed to upload image",
     "tmdbOptions": "TMDB Options",
     "uploadCustom": "Upload Custom",
-    "noImagesAvailable": "No images found."
+    "noImagesAvailable": "No images found.",
+    "linkSource": "Link External Source",
+    "sourceLinked": "Source linked successfully!",
+    "imageSource": "Image Source"
   }
 }

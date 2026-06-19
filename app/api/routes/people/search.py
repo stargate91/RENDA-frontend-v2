@@ -185,11 +185,12 @@ def get_people(
 
 
 @router.get("/people/search-tmdb")
-def search_people_tmdb(query: str, language: str = None, adult_only: bool = False, page: int = 1):
-    """Searches the TMDB API for people (actors/directors)."""
+def search_people_tmdb(query: str, language: str = None, adult_only: bool = False, page: int = 1, source: str = "all"):
+    """Searches the TMDB API or adult databases for people (actors/directors)."""
     db = Session()
     try:
         from app.api.tmdb_client import TMDBClient
+        import hashlib
         
         # Get language settings if not specified
         if not language:
@@ -201,22 +202,109 @@ def search_people_tmdb(query: str, language: str = None, adult_only: bool = Fals
             value = include_adult_setting.value
             include_adult = value.lower() == "true" if isinstance(value, str) else bool(value)
         page = max(1, int(page or 1))
+
+        if adult_only and source != "tmdb":
+            from app.api.graphql_clients import AdultGraphQLClient
             
-        client = TMDBClient(db)
-        results = client.search_person(query=query, language=language, include_adult=include_adult, page=page)
-        if adult_only:
+            def get_stable_integer_id(src: str, u_str: str) -> int:
+                h = hashlib.sha256(f"{src}:{u_str}".encode()).hexdigest()
+                return int(h[:7], 16)
+
+            adult_results = []
+            
+            # Select sources to search
+            sources_to_search = ["stashdb", "fansdb", "theporndb"] if source == "all" else [source]
+            
+            for source_name in sources_to_search:
+                client = AdultGraphQLClient(db, source_name)
+                endpoint, api_key = client._get_config()
+                if not endpoint:
+                    continue
+                try:
+                    performers = client.search_performers(query)
+                    for perf in performers:
+                        uuid_str = perf.get("id")
+                        if not uuid_str:
+                            continue
+                        
+                        stable_id = get_stable_integer_id(source_name, uuid_str)
+                        
+                        # Map gender
+                        gender_str = str(perf.get("gender") or "").upper()
+                        if "FEMALE" in gender_str:
+                            mapped_gender = 1
+                        elif "MALE" in gender_str:
+                            mapped_gender = 2
+                        elif gender_str:
+                            mapped_gender = 3
+                        else:
+                            mapped_gender = 0
+                            
+                        # Profile path
+                        images = perf.get("images") or []
+                        profile_url = images[0].get("url") if images else None
+                        
+                        # Check database for existing person
+                        person = db.query(Person).filter(Person.id == stable_id).first()
+                        
+                        # Check if linked to organized library
+                        linked_rows = (
+                            db.query(MediaPersonLink.person_id)
+                            .join(MediaMatch, MediaMatch.id == MediaPersonLink.media_match_id)
+                            .join(MediaItem, MediaItem.id == MediaMatch.media_item_id)
+                            .filter(
+                                MediaPersonLink.person_id == stable_id,
+                                MediaMatch.is_active.is_(True),
+                                MediaItem.status.in_([ItemStatus.RENAMED, ItemStatus.ORGANIZED]),
+                            )
+                            .distinct()
+                            .all()
+                        )
+                        is_linked = len(linked_rows) > 0
+                        
+                        adult_results.append({
+                            "id": f"{source_name}:{uuid_str}",
+                            "name": perf.get("name"),
+                            "adult": True,
+                            "gender": mapped_gender,
+                            "profile_path": profile_url,
+                            "known_for_department": "Acting",
+                            "known_for": [],
+                            "is_active": bool(person.is_active) if person else False,
+                            "is_pinned": bool(person.is_favorite) if person else False,
+                            "is_linked": is_linked
+                        })
+                except Exception as ex:
+                    logger.error(f"Error searching {source_name}: {ex}")
+            
+            # Apply gender filtering if set
             adult_pref = "all"
             pref_setting = db.query(UserSetting).filter(UserSetting.key == "adult_gender_preference").first()
             if pref_setting and pref_setting.value:
                 adult_pref = str(pref_setting.value).strip().lower()
             
-            results = [result for result in (results or []) if bool(result.get("adult"))]
             if adult_pref == "female":
-                results = [r for r in results if r.get("gender") == 1]
+                adult_results = [r for r in adult_results if r.get("gender") == 1]
             elif adult_pref == "male":
-                results = [r for r in results if r.get("gender") == 2]
+                adult_results = [r for r in adult_results if r.get("gender") == 2]
+
+            if source != "all":
+                return adult_results
+                
+        # If source is "all" or "tmdb", we query TMDB and merge/deduplicate with adult_results
+        seen_names = {r["name"].lower().strip() for r in adult_results}
+        
+        client = TMDBClient(db)
+        results = client.search_person(query=query, language=language, include_adult=include_adult, page=page)
+        
+        if adult_only:
+            results = [r for r in (results or []) if bool(r.get("adult"))]
+            
         person_ids = []
         for result in results:
+            name = result.get("name")
+            if not name or name.lower().strip() in seen_names:
+                continue
             try:
                 person_ids.append(int(result.get("id")))
             except (TypeError, ValueError):
@@ -245,24 +333,36 @@ def search_people_tmdb(query: str, language: str = None, adult_only: bool = Fals
             )
             linked_person_ids = {int(person_id) for (person_id,) in linked_rows if person_id is not None}
 
-        enriched_results = []
         for result in results:
-            enriched = dict(result)
+            name = result.get("name")
+            if not name or name.lower().strip() in seen_names:
+                continue
             try:
-                person_id = int(enriched.get("id"))
+                person_id = int(result.get("id"))
             except (TypeError, ValueError):
-                enriched_results.append(enriched)
                 continue
 
             local_person = local_people.get(person_id)
-            enriched["is_active"] = bool(local_person.is_active) if local_person else False
-            enriched["is_pinned"] = bool(local_person.is_favorite) if local_person else False
-            enriched["is_linked"] = person_id in linked_person_ids
-            enriched_results.append(enriched)
+            
+            # Map gender from TMDB (integer)
+            mapped_gender = result.get("gender") or 0
+            
+            adult_results.append({
+                "id": person_id,
+                "name": name,
+                "adult": bool(result.get("adult")),
+                "gender": mapped_gender,
+                "profile_path": result.get("profile_path"),
+                "known_for_department": result.get("known_for_department") or "Acting",
+                "known_for": result.get("known_for") or [],
+                "is_active": bool(local_person.is_active) if local_person else False,
+                "is_pinned": bool(local_person.is_favorite) if local_person else False,
+                "is_linked": person_id in linked_person_ids
+            })
 
-        return enriched_results
+        return adult_results
     except Exception as e:
-        logger.error(f"Error searching TMDB people: {e}")
+        logger.error(f"Error searching TMDB/adult people: {e}")
         return JSONResponse(status_code=500, content={"error": str(e)})
     finally:
         db.close()

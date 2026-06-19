@@ -9,6 +9,7 @@ import PersonCreditsSections from './components/entityDetail/PersonCreditsSectio
 import CollectionDetailSections from './components/entityDetail/CollectionDetailSections';
 import usePeopleCollectionDetailController from './usePeopleCollectionDetailController.jsx';
 import UniversalImagePickerModal from './modals/UniversalImagePickerModal';
+import LinkSourceModalContent from './modals/LinkSourceModalContent';
 import './PeopleCollectionDetailPage.css';
 import './components/detail/UserRatingSection.css';
 import './components/detail/panels/BackdropsPanel.css';
@@ -30,6 +31,7 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
     backdropUrl,
     mediaUrl,
     metaPills,
+    extraMetaPills,
     displayRating,
     isActivateHovered,
     starsStyleSheetText,
@@ -54,6 +56,20 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
     toast,
   });
 
+  const handleOpenLinkSourceModal = () => {
+    if (!item?.id) return;
+    openModal({
+      title: t('library.details.linkSource') || 'Link External Source',
+      variant: 'default',
+      content: (
+        <LinkSourceModalContent
+          personId={item.id}
+          onClose={closeModal}
+        />
+      ),
+    });
+  };
+
   const handleOpenImagePickerModal = () => {
     const idToUse = isPeople ? item?.id : `collection_${item?.tmdb_id}`;
     if (!idToUse) return;
@@ -70,6 +86,7 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
           t={t}
           toast={toast}
           onClose={closeModal}
+          externalIds={item?.external_ids}
         />
       ),
     });
@@ -91,6 +108,7 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
           updatePersonStatusMutation={updatePersonStatusMutation}
           handleOpenPeopleBackdropModal={handleOpenPeopleBackdropModal}
           handleOpenCollectionBackdropModal={handleOpenCollectionBackdropModal}
+          handleOpenLinkSourceModal={handleOpenLinkSourceModal}
         />
       }
     >
@@ -115,6 +133,7 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
           mediaUrl={mediaUrl}
           profileLinks={profileLinks}
           metaPills={metaPills}
+          extraMetaPills={extraMetaPills}
           overviewText={overviewText}
           overviewTitle={overviewTitle}
           overviewEmptyText={overviewEmptyText}

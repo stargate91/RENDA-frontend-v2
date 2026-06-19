@@ -868,7 +868,7 @@ def get_person_detail(person_id: int):
             "id": person.id,
             "name": loc.name if loc else "Unknown",
             "alternate_names": [
-                alias for alias in (tmdb_data.get("also_known_as") or [])
+                alias for alias in (tmdb_data.get("also_known_as") or (person.external_ids or {}).get("aliases") or [])
                 if isinstance(alias, str) and alias.strip() and alias.strip() != (loc.name if loc else "Unknown")
             ],
             "biography": loc.biography if loc else None,

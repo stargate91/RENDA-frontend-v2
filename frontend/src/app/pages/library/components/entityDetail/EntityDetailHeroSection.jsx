@@ -10,6 +10,7 @@ export default function EntityDetailHeroSection({
   mediaUrl,
   profileLinks,
   metaPills,
+  extraMetaPills,
   overviewText,
   overviewTitle,
   overviewEmptyText,
@@ -93,6 +94,14 @@ export default function EntityDetailHeroSection({
           {metaPills.length > 0 && (
             <div className="entity-detail-page__meta-row">
               {metaPills.map((metaItem) => (
+                <Pill key={metaItem.key} variant="meta">{metaItem.content}</Pill>
+              ))}
+            </div>
+          )}
+
+          {isPeople && extraMetaPills?.length > 0 && (
+            <div className="entity-detail-page__meta-row entity-detail-page__meta-row--extra" style={{ marginTop: 'calc(-1 * var(--space-sm) + 2px)' }}>
+              {extraMetaPills.map((metaItem) => (
                 <Pill key={metaItem.key} variant="meta">{metaItem.content}</Pill>
               ))}
             </div>

@@ -508,3 +508,17 @@ export const useUploadPersonProfileMutation = () => {
   });
 };
 
+export const useLinkPersonSourceMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ personId, source, externalId }) => api.people.linkSource(personId, source, externalId),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['person-detail', variables.personId] });
+      queryClient.invalidateQueries({ queryKey: ['person-detail', String(variables.personId)] });
+      queryClient.invalidateQueries({ queryKey: ['person-detail'] });
+      queryClient.invalidateQueries({ queryKey: ['people'] });
+      queryClient.invalidateQueries({ queryKey: ['people-infinite'] });
+    },
+  });
+};
+
