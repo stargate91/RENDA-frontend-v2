@@ -130,6 +130,7 @@ class LibraryPeopleService:
                 "library_count": project_counts.get(person.id, 0),
                 "people_role": self._primary_role(person),
                 "is_adult_person": is_adult_person,
+                "external_ids": person.external_ids or {},
             })
 
         return people_list

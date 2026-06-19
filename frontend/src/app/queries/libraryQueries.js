@@ -275,8 +275,14 @@ export const useUpdatePersonStatusMutation = () => {
       }
 
       // 1. Update people-infinite queries
-      queryClient.setQueriesData({ queryKey: ['people-infinite'] }, (oldData) => {
+      queryClient.setQueriesData({ queryKey: ['people-infinite'] }, (oldData, query) => {
         if (!oldData?.pages) return oldData;
+        const queryParams = query?.queryKey?.[1] || {};
+        const queryAdultOnly = queryParams.adult_only;
+        const isAdultPerson = foundPerson?.is_adult || foundPerson?.is_adult_person || false;
+        if (queryAdultOnly !== undefined && queryAdultOnly !== isAdultPerson) {
+          return oldData;
+        }
         return {
           ...oldData,
           pages: oldData.pages.map(page => ({
@@ -294,8 +300,14 @@ export const useUpdatePersonStatusMutation = () => {
       });
 
       // 2. Update people queries
-      queryClient.setQueriesData({ queryKey: ['people'] }, (oldData) => {
+      queryClient.setQueriesData({ queryKey: ['people'] }, (oldData, query) => {
         if (!oldData?.items) return oldData;
+        const queryParams = query?.queryKey?.[1] || {};
+        const queryAdultOnly = queryParams.adult_only;
+        const isAdultPerson = foundPerson?.is_adult || foundPerson?.is_adult_person || false;
+        if (queryAdultOnly !== undefined && queryAdultOnly !== isAdultPerson) {
+          return oldData;
+        }
         return {
           ...oldData,
           items: oldData.items.map(p => (p.id === personId || String(p.id) === idStr) ? {
@@ -328,8 +340,16 @@ export const useUpdatePersonStatusMutation = () => {
       }
 
       // 3. Update library queries (which renders the active people grid)
-      queryClient.setQueriesData({ queryKey: ['library'] }, (oldData) => {
+      queryClient.setQueriesData({ queryKey: ['library'] }, (oldData, query) => {
         if (!oldData?.items) return oldData;
+        const queryParams = query?.queryKey?.[1] || {};
+        const queryTab = queryParams.tab;
+
+        // Only modify people lists
+        const isPeopleTab = queryTab === 'people' || queryTab === 'adult_people';
+        if (!isPeopleTab) return oldData;
+
+        const hasFilters = queryParams.search || (queryParams.people_role && queryParams.people_role !== 'all') || (queryParams.filter_gender && queryParams.filter_gender !== 'all');
 
         const updatedItems = oldData.items.map(p => {
           if (p.id === personId || String(p.id) === idStr) {
@@ -350,6 +370,19 @@ export const useUpdatePersonStatusMutation = () => {
             items: updatedItems.filter(p => p.id !== personId && String(p.id) !== idStr)
           };
         } else if (effectiveIsActive === true && foundPerson) {
+          const isAdultPerson = foundPerson.is_adult || foundPerson.is_adult_person || false;
+          const targetTab = isAdultPerson ? 'adult_people' : 'people';
+          if (queryTab !== targetTab) {
+            return oldData;
+          }
+
+          if (hasFilters) {
+            return {
+              ...oldData,
+              items: updatedItems
+            };
+          }
+
           if (updatedItems.some(p => p.id === personId || String(p.id) === idStr)) {
             return {
               ...oldData,
@@ -359,7 +392,9 @@ export const useUpdatePersonStatusMutation = () => {
 
           const libraryPerson = {
             id: foundPerson.id,
+            name: foundPerson.name,
             title: foundPerson.name,
+            profile_path: foundPerson.profile_path,
             poster_path: foundPerson.profile_path,
             people_role: foundPerson.known_for || foundPerson.people_role || 'Actor',
             gender: foundPerson.gender,
