@@ -24,7 +24,8 @@
     "collections": "Collections",
     "apiKeys": "API Keys",
     "advanced": "Advanced",
-    "maintenance": "Maintenance"
+    "maintenance": "Maintenance",
+    "adult": "Adult Content"
   },
   "templateTags": {
     "common": "Common Tags",
@@ -110,11 +111,11 @@
       "appLanguage": "App Language",
       "hint": "English is available now. More languages will be added over time."
     },
-    "content": {
-      "title": "Content Filters",
-      "eyebrow": "Metadata",
+    "adult": {
+      "title": "Adult Content",
+      "eyebrow": "Security & Privacy",
       "includeAdult": "Include adult content",
-      "includeAdultHint": "RENDA will include adult and NSFW titles when searching and matching.",
+      "includeAdultHint": "RENDA will include adult and NSFW titles when searching and matching. Enabling this adds a flame toggle button to the Windows title bar to quickly switch between SFW and NSFW modes.",
       "eighteenPlus": "18+",
       "adultGenderPreference": "Adult Gender Preference",
       "adultGenderPreferenceHint": "Specify which gender you prefer to manage for adult content (All, Female, Male).",
@@ -123,6 +124,30 @@
         "female": "Female",
         "male": "Male"
       }
+    },
+    "stashdb": {
+      "title": "StashDB Integration",
+      "eyebrow": "Adult Metadata",
+      "apiKey": "StashDB API Key",
+      "apiKeyHint": "Enter your StashDB (stashdb.org) API key for fetching adult performer metadata.",
+      "endpoint": "StashDB GraphQL Endpoint",
+      "endpointHint": "The GraphQL API URL for StashDB."
+    },
+    "fansdb": {
+      "title": "FansDB Integration",
+      "eyebrow": "Adult Metadata",
+      "apiKey": "FansDB API Key",
+      "apiKeyHint": "Enter your FansDB (fansdb.cc) API key for indie performers and OnlyFans metadata.",
+      "endpoint": "FansDB GraphQL Endpoint",
+      "endpointHint": "The GraphQL API URL for FansDB."
+    },
+    "theporndb": {
+      "title": "ThePornDB Integration",
+      "eyebrow": "Adult Metadata",
+      "apiKey": "ThePornDB API Key",
+      "apiKeyHint": "Enter your ThePornDB (theporndb.net) API key.",
+      "endpoint": "ThePornDB GraphQL Endpoint",
+      "endpointHint": "The GraphQL API URL for ThePornDB."
     },
     "folders": {
       "title": "Folders",

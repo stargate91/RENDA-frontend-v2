@@ -388,14 +388,47 @@ export const useUpdatePersonStatusMutation = () => {
         queryClient.setQueryData(['person-detail', context.personId], context.previousPersonDetail);
       }
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['people'] });
-      queryClient.invalidateQueries({ queryKey: ['people-infinite'] });
-      queryClient.invalidateQueries({ queryKey: ['library'] });
-      queryClient.invalidateQueries({ queryKey: ['person-detail'] });
-      queryClient.invalidateQueries({ queryKey: ['libraryTags'] });
-      queryClient.invalidateQueries({ queryKey: ['allTags'] });
-      queryClient.invalidateQueries({ queryKey: ['stats'] });
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData(['person-detail', variables.personId], (oldData) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          is_active: data.is_active !== undefined ? data.is_active : oldData.is_active,
+          is_favorite: data.is_favorite !== undefined ? data.is_favorite : oldData.is_favorite,
+          user_rating: data.user_rating !== undefined ? data.user_rating : oldData.user_rating,
+          user_comment: data.user_comment !== undefined ? data.user_comment : oldData.user_comment,
+          custom_tags: data.custom_tags !== undefined ? data.custom_tags : oldData.custom_tags,
+          tags: data.tags !== undefined ? data.tags : oldData.tags,
+        };
+      });
+    },
+    onSettled: (data, error, variables) => {
+      const payload = variables?.payload || {};
+      
+      if (error) {
+        queryClient.invalidateQueries({ queryKey: ['people'] });
+        queryClient.invalidateQueries({ queryKey: ['people-infinite'] });
+        queryClient.invalidateQueries({ queryKey: ['library'] });
+        queryClient.invalidateQueries({ queryKey: ['person-detail', variables.personId] });
+        queryClient.invalidateQueries({ queryKey: ['stats'] });
+        return;
+      }
+
+      if ('is_active' in payload || 'is_favorite' in payload) {
+        queryClient.invalidateQueries({ queryKey: ['people'] });
+        queryClient.invalidateQueries({ queryKey: ['people-infinite'] });
+        queryClient.invalidateQueries({ queryKey: ['library'] });
+        queryClient.invalidateQueries({ queryKey: ['stats'] });
+      } else {
+        if ('user_rating' in payload) {
+          queryClient.invalidateQueries({ queryKey: ['stats'] });
+        }
+      }
+
+      if ('custom_tags' in payload) {
+        queryClient.invalidateQueries({ queryKey: ['libraryTags'] });
+        queryClient.invalidateQueries({ queryKey: ['allTags'] });
+      }
     },
   });
 };

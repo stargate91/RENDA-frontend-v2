@@ -107,9 +107,9 @@ export default function useSettingsOptions(t) {
   );
 
   const adultGenderPreferenceOptions = useMemo(() => [
-    { value: 'all', label: t('settingsPage.sections.content.adultGenderPreferenceOptions.all') },
-    { value: 'female', label: t('settingsPage.sections.content.adultGenderPreferenceOptions.female') },
-    { value: 'male', label: t('settingsPage.sections.content.adultGenderPreferenceOptions.male') },
+    { value: 'all', label: t('settingsPage.sections.adult.adultGenderPreferenceOptions.all') },
+    { value: 'female', label: t('settingsPage.sections.adult.adultGenderPreferenceOptions.female') },
+    { value: 'male', label: t('settingsPage.sections.adult.adultGenderPreferenceOptions.male') },
   ], [t]);
 
   return {

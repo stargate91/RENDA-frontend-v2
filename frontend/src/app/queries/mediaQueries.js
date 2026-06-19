@@ -219,20 +219,71 @@ export const useUpdateMediaStatusMutation = () => {
       }
     },
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['full-metadata', variables.itemId] });
-      queryClient.invalidateQueries({ queryKey: ['library-item-detail', variables.itemId] });
-      queryClient.invalidateQueries({ queryKey: ['library-series-detail', variables.itemId] });
+      const updateDetailCache = (oldData) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          user_rating: data.user_rating !== undefined ? data.user_rating : oldData.user_rating,
+          user_comment: data.user_comment !== undefined ? data.user_comment : oldData.user_comment,
+          is_watched: data.is_watched !== undefined ? data.is_watched : oldData.is_watched,
+          custom_tags: data.custom_tags !== undefined ? data.custom_tags : oldData.custom_tags,
+          tags: data.tags !== undefined ? data.tags : oldData.tags,
+        };
+      };
+
+      queryClient.setQueryData(['full-metadata', variables.itemId], updateDetailCache);
+      queryClient.setQueryData(['library-item-detail', variables.itemId], updateDetailCache);
+      queryClient.setQueryData(['library-series-detail', variables.itemId], updateDetailCache);
+
       if (variables.seriesId) {
-        queryClient.invalidateQueries({ queryKey: ['library-series-detail', variables.seriesId] });
-        queryClient.invalidateQueries({ queryKey: ['library-series-detail', `series_${variables.seriesId}`] });
-        queryClient.invalidateQueries({ queryKey: ['library-item-detail', variables.seriesId] });
-        queryClient.invalidateQueries({ queryKey: ['library-item-detail', `series_${variables.seriesId}`] });
+        queryClient.setQueryData(['library-series-detail', variables.seriesId], updateDetailCache);
+        queryClient.setQueryData(['library-series-detail', `series_${variables.seriesId}`], updateDetailCache);
+        queryClient.setQueryData(['library-item-detail', variables.seriesId], updateDetailCache);
+        queryClient.setQueryData(['library-item-detail', `series_${variables.seriesId}`], updateDetailCache);
       }
-      queryClient.invalidateQueries({ queryKey: ['library'] });
-      queryClient.invalidateQueries({ queryKey: ['libraryTags'] });
-      queryClient.invalidateQueries({ queryKey: ['allTags'] });
-      queryClient.invalidateQueries({ queryKey: ['libraryFilters'] });
-      queryClient.invalidateQueries({ queryKey: ['stats'] });
+
+      // Update matching items in the library query cache instead of invalidating everything
+      queryClient.setQueriesData({ queryKey: ['library'] }, (oldData) => {
+        if (!oldData) return oldData;
+        let changed = false;
+
+        const updateItem = (obj) => {
+          if (!obj || typeof obj !== 'object') return obj;
+          if (Array.isArray(obj)) {
+            return obj.map(x => {
+              if (x && (String(x.id) === String(variables.itemId) || String(x.id) === `series_${variables.itemId}`)) {
+                changed = true;
+                return {
+                  ...x,
+                  user_rating: data.user_rating !== undefined ? data.user_rating : x.user_rating,
+                  is_watched: data.is_watched !== undefined ? data.is_watched : x.is_watched,
+                  custom_tags: data.custom_tags !== undefined ? data.custom_tags : x.custom_tags,
+                  tags: data.tags !== undefined ? data.tags : x.tags,
+                };
+              }
+              return updateItem(x);
+            });
+          }
+          const nextObj = {};
+          for (const key in obj) {
+            nextObj[key] = updateItem(obj[key]);
+          }
+          return nextObj;
+        };
+
+        const nextData = updateItem(oldData);
+        return changed ? nextData : oldData;
+      });
+
+      const payload = variables.payload || {};
+      if ('user_rating' in payload || 'is_watched' in payload) {
+        queryClient.invalidateQueries({ queryKey: ['stats'] });
+      }
+      if ('custom_tags' in payload) {
+        queryClient.invalidateQueries({ queryKey: ['libraryTags'] });
+        queryClient.invalidateQueries({ queryKey: ['allTags'] });
+        queryClient.invalidateQueries({ queryKey: ['libraryFilters'] });
+      }
     },
   });
 };

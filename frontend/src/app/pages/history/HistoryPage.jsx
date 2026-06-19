@@ -44,7 +44,15 @@ export default function HistoryPage() {
   }, []);
 
   // Rename History
-  const { data: history, isLoading: isHistoryLoading } = useHistoryQuery();
+  const {
+    data: historyData,
+    isLoading: isHistoryLoading,
+    fetchNextPage: fetchNextHistoryPage,
+    hasNextPage: hasNextHistoryPage,
+    isFetchingNextPage: isFetchingNextHistoryPage,
+  } = useHistoryQuery();
+  const history = historyData?.pages.flatMap((page) => Array.isArray(page) ? page : (page?.items || [])) || [];
+
   const { data: scanStatus } = useScanStatusQuery();
   const undoMutation = useUndoMutation();
   const [revertingBatchIds, setRevertingBatchIds] = useState(new Set());
@@ -53,8 +61,47 @@ export default function HistoryPage() {
   const isUndoing = scanStatus?.active && scanStatus?.phase === 'undoing';
 
   // Playback History
-  const { data: watchedHistory, isLoading: isWatchedLoading } = useWatchedHistoryQuery();
+  const {
+    data: watchedHistoryData,
+    isLoading: isWatchedLoading,
+    fetchNextPage: fetchNextWatchedPage,
+    hasNextPage: hasNextWatchedPage,
+    isFetchingNextPage: isFetchingNextWatchedPage,
+  } = useWatchedHistoryQuery();
+  const watchedHistory = watchedHistoryData?.pages.flatMap((page) => Array.isArray(page) ? page : (page?.items || [])) || [];
+
   const playMutation = usePlayMediaMutation();
+
+  // Infinite scroll handlers
+  useEffect(() => {
+    if (!hasNextHistoryPage || isFetchingNextHistoryPage || activeTab !== 'rename') return;
+    const sentinel = document.getElementById('history-sentinel');
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        fetchNextHistoryPage();
+      }
+    }, { threshold: 0.1 });
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasNextHistoryPage, isFetchingNextHistoryPage, fetchNextHistoryPage, activeTab]);
+
+  useEffect(() => {
+    if (!hasNextWatchedPage || isFetchingNextWatchedPage || activeTab !== 'watched') return;
+    const sentinel = document.getElementById('watched-sentinel');
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        fetchNextWatchedPage();
+      }
+    }, { threshold: 0.1 });
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasNextWatchedPage, isFetchingNextWatchedPage, fetchNextWatchedPage, activeTab]);
 
   const handleConfirmUndo = (batch) => {
     openModal({
@@ -154,6 +201,11 @@ export default function HistoryPage() {
             onConfirmUndo={handleConfirmUndo}
           />
         ))}
+        {hasNextHistoryPage && (
+          <div id="history-sentinel" style={{ height: '40px', margin: '15px 0', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            {isFetchingNextHistoryPage && <Spinner size={20} />}
+          </div>
+        )}
       </div>
     );
   };
@@ -213,6 +265,7 @@ export default function HistoryPage() {
                   ) : (
                     <div className="watched-history-card__title-group">
                       <h3 className="watched-history-card__title">{log.series_title}</h3>
+                      {log.year && <span className="watched-history-card__year">({log.year})</span>}
                       <span className="watched-history-card__episode-info">
                         S{String(log.season_number).padStart(2, '0')}E{String(log.episode_number).padStart(2, '0')} - {log.episode_title || log.title}
                       </span>
@@ -278,6 +331,11 @@ export default function HistoryPage() {
             </div>
           );
         })}
+        {hasNextWatchedPage && (
+          <div id="watched-sentinel" style={{ height: '40px', margin: '15px 0', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            {isFetchingNextWatchedPage && <Spinner size={20} />}
+          </div>
+        )}
       </div>
     );
   };

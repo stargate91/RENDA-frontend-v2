@@ -2,15 +2,6 @@
   "title": "Media Library",
   "adultTitle": "Adult Library",
   "searchPlaceholder": "Search {{tab}}...",
-  "backToSelector": "Change Mode",
-  "chooser": {
-    "title": "Select Library Mode",
-    "subtitle": "Choose how you want to browse your media library in this session.",
-    "sfwTitle": "Normal Mode (SFW)",
-    "sfwDesc": "Browse your general movies, TV shows, and cast lists.",
-    "nsfwTitle": "Adult Mode (NSFW)",
-    "nsfwDesc": "Browse adult content library, specialized collections, and stars."
-  },
   "tabs": {
     "movies": "Movies",
     "collections": "Collections",

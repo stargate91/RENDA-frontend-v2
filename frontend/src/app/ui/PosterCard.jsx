@@ -1,10 +1,11 @@
+import { memo } from 'react';
 import MediaCard from './MediaCard';
 import Pill from './Pill';
 import IconButton from './IconButton';
 import { Star, Check } from 'lucide-react';
 import './PosterCard.css';
 
-export default function PosterCard({
+const PosterCard = memo(function PosterCard({
   as: Component,
   className = '',
   variant = 'default',
@@ -125,4 +126,6 @@ export default function PosterCard({
       )}
     </div>
   );
-}
+});
+
+export default PosterCard;

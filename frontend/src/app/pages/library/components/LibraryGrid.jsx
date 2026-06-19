@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePlayMediaMutation } from '@/queries';
 import api from '@/lib/api';
@@ -51,6 +51,180 @@ const renderFavoriteBadge = (item, t) => {
   );
 };
 
+const LibraryPosterCard = memo(({
+  item,
+  index,
+  resolvedTab,
+  isCollections,
+  emptyIcon,
+  t,
+  playMutationPending,
+  onItemClick,
+  onPlayOverlayClick,
+  onEditImageClick,
+}) => {
+  const isLibraryPeople = isLibraryPeopleTab(resolvedTab);
+  const isLibrarySeries = isLibrarySeriesTab(resolvedTab);
+  const isLibraryMovie = isLibraryMovieTab(resolvedTab);
+
+  const resolvePosterUrl = (path) => resolveMediaImageUrl(path, 'poster');
+
+  // Compute props stably
+  let title = item.title;
+  let subtitle;
+  let imageUrl;
+  let ratingImdb = item.rating_imdb;
+  let ratingTmdb = item.rating;
+
+  if (isLibraryPeople && (item.is_adult_person || item.is_adult || resolvedTab === 'adult_people')) {
+    ratingTmdb = undefined;
+    ratingImdb = undefined;
+  }
+
+  let topRightAction;
+  let badge = renderUserRatingBadge(item);
+  let topRightBadge = null;
+  let playOverlay = null;
+  let className = '';
+
+  const handleEditClick = (e) => {
+    e.stopPropagation();
+    onEditImageClick(item);
+  };
+
+  const editButton = (
+    <button
+      type="button"
+      className="ui-poster-card__edit-badge"
+      title={isLibraryPeople
+        ? (t('library.details.changeProfile') || 'Change Profile Picture')
+        : (t('library.details.changePoster') || 'Change Poster')}
+      aria-label={isLibraryPeople
+        ? (t('library.details.changeProfile') || 'Change Profile Picture')
+        : (t('library.details.changePoster') || 'Change Poster')}
+      onClick={handleEditClick}
+    >
+      <Pencil size={14} />
+    </button>
+  );
+
+  if (isCollections) {
+    title = item.name || item.title;
+    subtitle = t('library.collections.partsCount', { owned: item.owned_count, total: item.total_count });
+    imageUrl = resolvePosterUrl(getPosterImagePath(item));
+    topRightAction = editButton;
+  } else if (isLibraryPeople) {
+    title = item.name || item.title;
+    subtitle = item.people_role ? t(`library.people.roles.${item.people_role}`, { defaultValue: item.people_role }) : '';
+    imageUrl = resolvePosterUrl(getProfileImagePath(item));
+    className = 'library-person-card';
+    topRightBadge = renderFavoriteBadge(item, t);
+    topRightAction = editButton;
+  } else {
+    const subtitleParts = [];
+    if (item.year) subtitleParts.push(item.year);
+    if (item.info) {
+      subtitleParts.push(item.info);
+    }
+    subtitle = subtitleParts.join(' • ');
+    imageUrl = resolvePosterUrl(isLibrarySeries ? getSeriesPosterImagePath(item) : getPosterImagePath(item));
+    topRightAction = editButton;
+
+    if (item.in_library !== false && (isLibraryMovie || isLibrarySeries)) {
+      const playTitle = isLibrarySeries
+        ? (t('library.details.continue') || 'Continue')
+        : ((item.resume_position || 0) > 0 ? (t('library.details.resume') || 'Resume') : (t('library.details.play') || 'Play'));
+      
+      playOverlay = {
+        onClick: (event) => {
+          onPlayOverlayClick(event, item);
+        },
+        title: playTitle,
+        label: playTitle,
+        disabled: playMutationPending,
+        icon: <Play size={12} fill="currentColor" />,
+      };
+    }
+  }
+
+  const handleCardClick = () => {
+    onItemClick(item);
+  };
+
+  return (
+    <PosterCard
+      customStyle={{ '--item-index': index }}
+      onClick={handleCardClick}
+      isWatched={item.is_watched}
+      title={title}
+      subtitle={subtitle}
+      imageUrl={imageUrl}
+      icon={emptyIcon}
+      backgroundColor={item.color}
+      ratingImdb={ratingImdb}
+      ratingTmdb={ratingTmdb}
+      topRightAction={topRightAction}
+      badge={badge}
+      topRightBadge={topRightBadge}
+      playOverlay={playOverlay}
+      className={className}
+    />
+  );
+});
+
+LibraryPosterCard.displayName = 'LibraryPosterCard';
+
+const TagPosterCard = memo(({
+  item,
+  t,
+  resolvePosterUrl,
+  emptyIcon,
+  isFocusMode,
+  onClick,
+}) => {
+  const isPerson = isPersonMediaType(item.type);
+  let cardProps;
+  if (isPerson) {
+    cardProps = {
+      variant: isFocusMode ? 'overlay-title' : 'default',
+      title: item.name || item.title,
+      subtitle: item.people_role ? t(`library.people.roles.${item.people_role}`, { defaultValue: item.people_role }) : '',
+      imageUrl: resolvePosterUrl(getProfileImagePath(item)),
+      icon: emptyIcon,
+      className: 'library-person-card',
+      badge: renderUserRatingBadge(item),
+      topRightBadge: renderFavoriteBadge(item, t),
+    };
+  } else {
+    const subtitleParts = [];
+    if (item.year) subtitleParts.push(item.year);
+    if (item.info) subtitleParts.push(item.info);
+    cardProps = {
+      variant: isFocusMode ? 'overlay-title' : 'default',
+      title: item.title,
+      subtitle: subtitleParts.join(' • '),
+      imageUrl: resolvePosterUrl(
+        isTvLikeMediaType(item.type) ? getSeriesPosterImagePath(item) : getPosterImagePath(item)
+      ),
+      icon: emptyIcon,
+      backgroundColor: item.color,
+      badge: renderUserRatingBadge(item),
+      ratingImdb: item.rating_imdb,
+      ratingTmdb: item.rating,
+    };
+  }
+
+  return (
+    <PosterCard
+      isWatched={item.is_watched}
+      onClick={onClick}
+      {...cardProps}
+    />
+  );
+});
+
+TagPosterCard.displayName = 'TagPosterCard';
+
 export default function LibraryGrid({
   t,
   isDataLoading,
@@ -99,7 +273,7 @@ export default function LibraryGrid({
     return null;
   };
 
-  const handlePlayOverlayClick = async (event, item) => {
+  const handlePlayOverlayClick = useCallback(async (event, item) => {
     event.stopPropagation();
 
     if (playMutation.isPending) return;
@@ -121,9 +295,9 @@ export default function LibraryGrid({
     } catch {
       // Ignore overlay play failures and leave normal card navigation intact.
     }
-  };
+  }, [playMutation, resolvedTab]);
 
-  const handleItemClick = (item) => {
+  const handleItemClick = useCallback((item) => {
     if (isTags) return;
 
     if (isCollections) {
@@ -135,12 +309,9 @@ export default function LibraryGrid({
     } else if (isLibrarySeriesTab(resolvedTab)) {
       navigate(`/library/series/${item.id}`);
     }
-  };
-  const resolvePosterUrl = (path) => {
-    return resolveMediaImageUrl(path, 'poster');
-  };
+  }, [isTags, isCollections, resolvedTab, navigate]);
 
-  const openImagePicker = (item) => {
+  const openImagePicker = useCallback((item) => {
     const isPeopleCard = isLibraryPeopleTab(resolvedTab);
     const entityId = isCollections
       ? `collection_${item.tmdb_id || item.id}`
@@ -176,94 +347,11 @@ export default function LibraryGrid({
         />
       ),
     });
-  };
+  }, [resolvedTab, isCollections, openModal, t, toast, closeModal]);
 
-  const renderEditBadge = (item) => (
-    <button
-      type="button"
-      className="ui-poster-card__edit-badge"
-      title={isLibraryPeopleTab(resolvedTab)
-        ? (t('library.details.changeProfile') || 'Change Profile Picture')
-        : (t('library.details.changePoster') || 'Change Poster')}
-      aria-label={isLibraryPeopleTab(resolvedTab)
-        ? (t('library.details.changeProfile') || 'Change Profile Picture')
-        : (t('library.details.changePoster') || 'Change Poster')}
-      onClick={(event) => {
-        event.stopPropagation();
-        openImagePicker(item);
-      }}
-    >
-      <Pencil size={14} />
-    </button>
-  );
-
-
-
-  const getCardProps = (item) => {
-    if (isTags) {
-      return {
-        title: item.name,
-        subtitle: t('library.tags.itemsCount', { count: item.total_count }),
-        icon: emptyIcon,
-      };
-    }
-    if (isCollections) {
-      return {
-        title: item.name || item.title,
-        subtitle: t('library.collections.partsCount', { owned: item.owned_count, total: item.total_count }),
-        imageUrl: resolvePosterUrl(getPosterImagePath(item)),
-        icon: emptyIcon,
-        ratingImdb: item.rating_imdb,
-        ratingTmdb: item.rating,
-        topRightAction: renderEditBadge(item),
-      };
-    }
-    if (isLibraryPeopleTab(resolvedTab)) {
-      return {
-        title: item.name || item.title,
-        subtitle: item.people_role ? t(`library.people.roles.${item.people_role}`, { defaultValue: item.people_role }) : '',
-        imageUrl: resolvePosterUrl(getProfileImagePath(item)),
-        icon: emptyIcon,
-        className: 'library-person-card',
-        badge: renderUserRatingBadge(item),
-        topRightBadge: renderFavoriteBadge(item, t),
-        topRightAction: renderEditBadge(item),
-      };
-    }
-    const subtitleParts = [];
-    if (item.year) subtitleParts.push(item.year);
-    if (item.info) {
-      subtitleParts.push(item.info);
-    }
-    return {
-      title: item.title,
-      subtitle: subtitleParts.join(' • '),
-      imageUrl: resolvePosterUrl(
-        isLibrarySeriesTab(resolvedTab) ? getSeriesPosterImagePath(item) : getPosterImagePath(item)
-      ),
-      icon: emptyIcon,
-      backgroundColor: item.color,
-      badge: renderUserRatingBadge(item),
-      topRightAction: renderEditBadge(item),
-      ratingImdb: item.rating_imdb,
-      ratingTmdb: item.rating,
-      playOverlay: item.in_library !== false && (isLibraryMovieTab(resolvedTab) || isLibrarySeriesTab(resolvedTab))
-        ? {
-            onClick: (event) => {
-              void handlePlayOverlayClick(event, item);
-            },
-            title: isLibrarySeriesTab(resolvedTab)
-              ? (t('library.details.continue') || 'Continue')
-              : ((item.resume_position || 0) > 0 ? (t('library.details.resume') || 'Resume') : (t('library.details.play') || 'Play')),
-            label: isLibrarySeriesTab(resolvedTab)
-              ? (t('library.details.continue') || 'Continue')
-              : ((item.resume_position || 0) > 0 ? (t('library.details.resume') || 'Resume') : (t('library.details.play') || 'Play')),
-            disabled: playMutation.isPending,
-            icon: <Play size={12} fill="currentColor" />,
-          }
-        : null,
-    };
-  };
+  const resolvePosterUrl = useCallback((path) => {
+    return resolveMediaImageUrl(path, 'poster');
+  }, []);
 
   if (isDataLoading && paginatedItems.length === 0) {
     return (
@@ -302,81 +390,81 @@ export default function LibraryGrid({
                 const samplePreviews = Array.isArray(item.sample_previews) ? item.sample_previews.slice(0, 3) : [];
                 const previewCount = samplePreviews.length;
                 const singlePreview = previewCount === 1 ? samplePreviews[0] : null;
-                 const singlePreviewImage = (() => {
-                   if (!singlePreview) return '';
-                   const isPerson = isPersonMediaType(singlePreview.kind);
-                   if (isPerson) {
-                     return singlePreview.backdrop ? resolvePosterUrl(singlePreview.backdrop) : '';
-                   }
-                   return resolvePosterUrl(singlePreview.backdrop || singlePreview.poster);
-                 })();
+                const singlePreviewImage = (() => {
+                  if (!singlePreview) return '';
+                  const isPerson = isPersonMediaType(singlePreview.kind);
+                  if (isPerson) {
+                    return singlePreview.backdrop ? resolvePosterUrl(singlePreview.backdrop) : '';
+                  }
+                  return resolvePosterUrl(singlePreview.backdrop || singlePreview.poster);
+                })();
                 return (
-                <div
-                  key={item.name}
-                  role="button"
-                  tabIndex={0}
-                  className={`library-tag-card ${previewCount > 0 ? `library-tag-card--preview-${Math.min(previewCount, 3)}` : ''}`.trim()}
-                  onClick={() => onFocusTag?.(item.name)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      onFocusTag?.(item.name);
-                    }
-                  }}
-                  /* eslint-disable-next-line react/forbid-dom-props */
-                  style={{
-                    '--tag-color': item.color || 'var(--color-accent)',
-                    '--item-index': index,
-                  }}
-                >
-                  {(previewCount > 1 || singlePreviewImage) ? (
-                    <div className="library-tag-card__preview" aria-hidden="true">
-                      {samplePreviews.map((preview, index) => (
-                        <div
-                          key={`${item.name}-preview-${index}`}
-                          className="library-tag-card__preview-image"
-                          /* eslint-disable-next-line react/forbid-dom-props */
-                          style={{
-                            backgroundImage: `url(${previewCount === 1 ? singlePreviewImage : resolvePosterUrl(preview.poster)})`,
-                            backgroundPositionX: preview.position_x != null ? `${preview.position_x}%` : 'center',
-                            backgroundPositionY: preview.position_y != null ? `${preview.position_y}%` : 'center',
-                          }}
-                        />
-                      ))}
+                  <div
+                    key={item.name}
+                    role="button"
+                    tabIndex={0}
+                    className={`library-tag-card ${previewCount > 0 ? `library-tag-card--preview-${Math.min(previewCount, 3)}` : ''}`.trim()}
+                    onClick={() => onFocusTag?.(item.name)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onFocusTag?.(item.name);
+                      }
+                    }}
+                    /* eslint-disable-next-line react/forbid-dom-props */
+                    style={{
+                      '--tag-color': item.color || 'var(--color-accent)',
+                      '--item-index': index,
+                    }}
+                  >
+                    {(previewCount > 1 || singlePreviewImage) ? (
+                      <div className="library-tag-card__preview" aria-hidden="true">
+                        {samplePreviews.map((preview, index) => (
+                          <div
+                            key={`${item.name}-preview-${index}`}
+                            className="library-tag-card__preview-image"
+                            /* eslint-disable-next-line react/forbid-dom-props */
+                            style={{
+                              backgroundImage: `url(${previewCount === 1 ? singlePreviewImage : resolvePosterUrl(preview.poster)})`,
+                              backgroundPositionX: preview.position_x != null ? `${preview.position_x}%` : 'center',
+                              backgroundPositionY: preview.position_y != null ? `${preview.position_y}%` : 'center',
+                            }}
+                          />
+                        ))}
+                      </div>
+                    ) : null}
+                    <div className="library-tag-card__actions">
+                      <IconButton
+                        type="button"
+                        size="xs"
+                        variant="ghost"
+                        label={t('library.tags.editBtn') || 'Edit Tag'}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onEditTag?.(item);
+                        }}
+                      >
+                        <Pencil size={12} />
+                      </IconButton>
+                      <IconButton
+                        type="button"
+                        size="xs"
+                        variant="ghost"
+                        label={t('library.tags.deleteBtn') || 'Delete Tag'}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onDeleteTag?.(item);
+                        }}
+                      >
+                        <Trash2 size={12} />
+                      </IconButton>
                     </div>
-                  ) : null}
-                  <div className="library-tag-card__actions">
-                    <IconButton
-                      type="button"
-                      size="xs"
-                      variant="ghost"
-                      label={t('library.tags.editBtn') || 'Edit Tag'}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        onEditTag?.(item);
-                      }}
-                    >
-                      <Pencil size={12} />
-                    </IconButton>
-                    <IconButton
-                      type="button"
-                      size="xs"
-                      variant="ghost"
-                      label={t('library.tags.deleteBtn') || 'Delete Tag'}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        onDeleteTag?.(item);
-                      }}
-                    >
-                      <Trash2 size={12} />
-                    </IconButton>
-                  </div>
-                  <div className="library-tag-card__content">
-                    <span className="library-tag-card__name">{item.name}</span>
-                    <span className="library-tag-card__count">
-                      {t('library.tags.itemsCount', { count: item.total_count })}
-                    </span>
-                  </div>
+                    <div className="library-tag-card__content">
+                      <span className="library-tag-card__name">{item.name}</span>
+                      <span className="library-tag-card__count">
+                        {t('library.tags.itemsCount', { count: item.total_count })}
+                      </span>
+                    </div>
                   </div>
                 );
               })}
@@ -385,12 +473,18 @@ export default function LibraryGrid({
         ) : (
           <PosterGrid>
             {paginatedItems.map((item, index) => (
-              <PosterCard
+              <LibraryPosterCard
                 key={item.id}
-                customStyle={{ '--item-index': index }}
-                onClick={() => handleItemClick(item)}
-                isWatched={item.is_watched}
-                {...getCardProps(item)}
+                item={item}
+                index={index}
+                resolvedTab={resolvedTab}
+                isCollections={isCollections}
+                emptyIcon={emptyIcon}
+                t={t}
+                playMutationPending={playMutation.isPending}
+                onItemClick={handleItemClick}
+                onPlayOverlayClick={handlePlayOverlayClick}
+                onEditImageClick={openImagePicker}
               />
             ))}
           </PosterGrid>
@@ -432,38 +526,6 @@ function ExpandedTagPanel({ tag, t, resolvePosterUrl, emptyIcon, isFocusMode = f
   const [visibleCount, setVisibleCount] = useState(20);
   const paginatedItems = allItems.slice(0, visibleCount);
   const hasMore = allItems.length > visibleCount;
-
-  const getCardProps = (item) => {
-    const isPerson = isPersonMediaType(item.type);
-    if (isPerson) {
-      return {
-        variant: isFocusMode ? 'overlay-title' : 'default',
-        title: item.name || item.title,
-        subtitle: item.people_role ? t(`library.people.roles.${item.people_role}`, { defaultValue: item.people_role }) : '',
-        imageUrl: resolvePosterUrl(getProfileImagePath(item)),
-        icon: emptyIcon,
-        className: 'library-person-card',
-        badge: renderUserRatingBadge(item),
-        topRightBadge: renderFavoriteBadge(item, t),
-      };
-    }
-    const subtitleParts = [];
-    if (item.year) subtitleParts.push(item.year);
-    if (item.info) subtitleParts.push(item.info);
-    return {
-      variant: isFocusMode ? 'overlay-title' : 'default',
-      title: item.title,
-      subtitle: subtitleParts.join(' • '),
-      imageUrl: resolvePosterUrl(
-        isTvLikeMediaType(item.type) ? getSeriesPosterImagePath(item) : getPosterImagePath(item)
-      ),
-      icon: emptyIcon,
-      backgroundColor: item.color,
-      badge: renderUserRatingBadge(item),
-      ratingImdb: item.rating_imdb,
-      ratingTmdb: item.rating,
-    };
-  };
 
   if (allItems.length === 0) {
     return (
@@ -507,9 +569,13 @@ function ExpandedTagPanel({ tag, t, resolvePosterUrl, emptyIcon, isFocusMode = f
       ) : null}
       <PosterGrid>
         {paginatedItems.map((item) => (
-          <PosterCard
+          <TagPosterCard
             key={item.id}
-            isWatched={item.is_watched}
+            item={item}
+            t={t}
+            resolvePosterUrl={resolvePosterUrl}
+            emptyIcon={emptyIcon}
+            isFocusMode={isFocusMode}
             onClick={() => {
               const isPerson = isPersonMediaType(item.type);
               if (isPerson) {
@@ -522,7 +588,6 @@ function ExpandedTagPanel({ tag, t, resolvePosterUrl, emptyIcon, isFocusMode = f
                 navigate(`/library/series/${item.id}`);
               }
             }}
-            {...getCardProps(item)}
           />
         ))}
       </PosterGrid>

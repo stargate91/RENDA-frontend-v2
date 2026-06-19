@@ -15,3 +15,4 @@ export { default as SettingsLoadingState } from './SettingsLoadingState.jsx';
 export { default as SettingsLiveImpact } from './SettingsLiveImpact.jsx';
 export { default as SettingsSidebar } from './SettingsSidebar.jsx';
 export { default as ThemeTab } from './ThemeTab.jsx';
+export { default as AdultTab } from './AdultTab.jsx';

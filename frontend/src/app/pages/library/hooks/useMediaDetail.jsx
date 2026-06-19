@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLibraryItemDetailQuery, useLibrarySeriesDetailQuery } from '@/queries/metadataQueries';
 import {
@@ -6,6 +7,7 @@ import {
   useBulkUpdateWatchedMutation, useOverrideBackdropMutation, useToggleVirtualTrackedMutation
 } from '@/queries/mediaQueries';
 import { useSettingsQuery } from '@/queries/settingsQueries';
+import { useLibraryModeStore } from '@/stores/useLibraryModeStore';
 import { API_BASE } from '@/lib/backend';
 import api from '@/lib/api';
 import { isMovieMediaType } from '@/lib/mediaTypes';
@@ -45,6 +47,15 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
   const isLoading = isMovie ? isMovieLoading : isSeriesLoading;
   const effectiveId = item?.id ?? cleanId;
   const { data: settings } = useSettingsQuery();
+
+  const navigate = useNavigate();
+  const sessionMode = useLibraryModeStore((state) => state.sessionMode);
+
+  useEffect(() => {
+    if (!isLoading && (!item || (item && item.is_adult)) && sessionMode !== 'nsfw') {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isLoading, item, sessionMode, navigate]);
 
   const [prevItem, setPrevItem] = useState(item);
   const [prevCleanId, setPrevCleanId] = useState(cleanId);

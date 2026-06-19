@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Button from '@/ui/Button';
 import { useOverridePersonBackdropMutation, useUploadPersonBackdropMutation, useUpdatePersonStatusMutation } from '@/queries/libraryQueries';
 import { useOverrideBackdropMutation, useUploadBackdropMutation } from '@/queries/mediaQueries';
@@ -6,6 +7,7 @@ import {
   useLibraryCollectionDetailQuery,
   usePersonDetailQuery,
 } from '@/queries/metadataQueries';
+import { useLibraryModeStore } from '@/stores/useLibraryModeStore';
 import { API_BASE } from '@/lib/backend';
 import { resolveDetailsImageUrl } from './utils/detailUtils';
 import {
@@ -42,6 +44,16 @@ export default function usePeopleCollectionDetailController({
   const isLoading = isPeople ? personQuery.isLoading : collectionQuery.isLoading;
   const queryError = isPeople ? personQuery.error : collectionQuery.error;
   const hasError = isPeople ? personQuery.isError : collectionQuery.isError;
+
+  const navigate = useNavigate();
+  const sessionMode = useLibraryModeStore((state) => state.sessionMode);
+
+  useEffect(() => {
+    if (!isLoading && (!item || (item && item.is_adult)) && sessionMode !== 'nsfw') {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isLoading, item, sessionMode, navigate]);
+
   const overviewTitle = isPeople
     ? (t('library.details.biographyTitle') || 'Biography')
     : (t('library.details.collectionOverviewTitle') || 'Overview');

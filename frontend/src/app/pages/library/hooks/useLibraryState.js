@@ -18,6 +18,8 @@ import {
 } from '@/lib/libraryTabs';
 import { sortLibraryItems } from '../utils/librarySort';
 
+import { useLibraryModeStore } from '@/stores/useLibraryModeStore';
+
 export function useLibraryState({ initialTab = 'movies', lockTab = false, includeTagsTab = false } = {}) {
   const { data: settings, isLoading } = useSettingsQuery();
   const { t } = useTranslation();
@@ -39,28 +41,13 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
   const [sortKey, setSortKey] = useState('title');
   const [sortDirection, setSortDirection] = useState('asc');
 
-  const [sessionMode, setSessionMode] = useState(() => {
-    try {
-      return sessionStorage.getItem('library_session_mode');
-    } catch {
-      return null;
-    }
-  });
+  const { sessionMode, setSessionMode } = useLibraryModeStore();
 
   const hasAdultSupport = settings?.include_adult;
   const activeSessionMode = hasAdultSupport ? sessionMode : (settings ? 'sfw' : null);
 
   const handleSetSessionMode = (mode) => {
     setSessionMode(mode);
-    try {
-      if (mode) {
-        sessionStorage.setItem('library_session_mode', mode);
-      } else {
-        sessionStorage.removeItem('library_session_mode');
-      }
-    } catch {
-      // Ignore storage errors.
-    }
     setActiveTab('movies');
     setCurrentPage(1);
     setSearchQuery('');

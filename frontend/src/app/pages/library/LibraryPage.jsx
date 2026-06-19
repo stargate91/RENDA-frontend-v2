@@ -3,7 +3,6 @@ import LibraryPagination from './components/LibraryPagination';
 import NavButton from '@/ui/NavButton';
 import { useLibraryState } from './hooks/useLibraryState';
 import { useLibraryModals } from './hooks/useLibraryModals';
-import LibraryModeChooser from './components/LibraryModeChooser';
 import LibraryHeader from './components/LibraryHeader';
 import LibraryFilters from './components/LibraryFilters';
 import LibraryBulkImportBanner from './components/LibraryBulkImportBanner';
@@ -61,25 +60,8 @@ export default function LibraryPage({ initialTab = 'movies', lockTab = false, sh
     );
   }
 
-  if (state.activeSessionMode === null && initialTab !== 'tags') {
-    return (
-      <LibraryModeChooser
-        onSelectMode={state.setSessionMode}
-        t={state.t}
-      />
-    );
-  }
-
   return (
     <Page className={`library-page ${isAdultMode ? 'library-page--nsfw' : ''}`}>
-      <UtilityBarPortal enabled={state.activeSessionMode && state.settings?.include_adult}>
-        <NavButton
-          onClick={() => state.setSessionMode(null)}
-        >
-          {state.t('library.backToSelector') || 'Back'}
-        </NavButton>
-      </UtilityBarPortal>
-
       <div className="library-main">
         <div className="organizer-panel">
           <LibraryHeader

@@ -1,9 +1,10 @@
-import { Settings2, FolderTree, KeyRound, Wrench, Palette, Cpu } from 'lucide-react';
+import { Settings2, FolderTree, KeyRound, Wrench, Palette, Cpu, Flame } from 'lucide-react';
 import { ORGANIZATION_TAB_IDS, SETTINGS_TAB_GROUP_IDS, SETTINGS_TAB_IDS } from './settingsConstants.js';
 
 import {
   GeneralTab,
   ThemeTab,
+  AdultTab,
   PresetsTab,
   FileNamingTab,
   FolderStructureTab,
@@ -30,6 +31,11 @@ export const settingsTabGroups = [
     id: SETTINGS_TAB_GROUP_IDS.THEME,
     labelKey: 'settingsPage.sidebar.theme',
     icon: Palette,
+  },
+  {
+    id: SETTINGS_TAB_GROUP_IDS.ADULT,
+    labelKey: 'settingsPage.sidebar.adult',
+    icon: Flame,
   },
   {
     id: SETTINGS_TAB_GROUP_IDS.ORGANIZATION,
@@ -64,6 +70,11 @@ export const settingsTabDefinitions = [
     id: SETTINGS_TAB_IDS.THEME,
     group: SETTINGS_TAB_GROUP_IDS.THEME,
     component: ThemeTab,
+  },
+  {
+    id: SETTINGS_TAB_IDS.ADULT,
+    group: SETTINGS_TAB_GROUP_IDS.ADULT,
+    component: AdultTab,
   },
   {
     id: SETTINGS_TAB_IDS.PRESETS,

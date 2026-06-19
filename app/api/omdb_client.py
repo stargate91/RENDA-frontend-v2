@@ -10,6 +10,8 @@ from ..db.models import OMDBCache, OMDBRequestQueue, UserSetting
 
 logger = logging.getLogger(__name__)
 
+_session = requests.Session()
+
 
 class OMDBRateLimitError(Exception):
     def __init__(self, message: str, retry_at: Optional[datetime] = None):
@@ -62,7 +64,7 @@ class OMDBClient:
         }
 
         try:
-            response = requests.get(self.BASE_URL, params=params, timeout=15)
+            response = _session.get(self.BASE_URL, params=params, timeout=15)
             if response.status_code == 401:
                 self._mark_auth_failure()
                 if allow_stale_fallback:

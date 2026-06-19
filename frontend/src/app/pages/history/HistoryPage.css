@@ -404,12 +404,6 @@
   pointer-events: none;
 }
 
-.watched-history-card:hover {
-  transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--color-accent-blue) 38%, var(--color-border-subtle));
-  box-shadow: 0 8px 24px color-mix(in srgb, black 25%, transparent),
-              0 0 16px color-mix(in srgb, var(--color-accent-blue) 4%, transparent);
-}
 
 .watched-history-card__poster-wrapper {
   width: 48px;

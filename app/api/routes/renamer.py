@@ -127,15 +127,20 @@ def start_rename(background_tasks: BackgroundTasks, request: Optional[RenameRequ
         db.close()
 
 @router.get("/history")
-def get_history():
+def get_history(page: int = 1, limit: int = 20):
     """Returns a list of past organization batches and their logs."""
     db = Session()
     try:
         from app.db.models import ActionBatch, ActionLog, ActionStatus, MediaItem, ExtraFile, ItemType
         from sqlalchemy import desc, func
         
-        batches = db.query(ActionBatch).order_by(desc(ActionBatch.created_at)).all()
+        offset = (page - 1) * limit
+        batches = db.query(ActionBatch).order_by(desc(ActionBatch.created_at)).offset(offset).limit(limit + 1).all()
         
+        has_more = len(batches) > limit
+        if has_more:
+            batches = batches[:limit]
+
         result = []
         for b in batches:
             success_count = db.query(ActionLog).filter(
@@ -200,7 +205,11 @@ def get_history():
                 "logs": logs_list
             })
             
-        return result
+        return {
+            "items": result,
+            "page": page,
+            "has_more": has_more
+        }
     finally:
         db.close()
 

@@ -39,40 +39,72 @@ function safeSerialize(value) {
   }
 }
 
-function rotateElectronLogIfNeeded(nextLineBytes) {
-  if (!fs.existsSync(electronLogFile)) {
-    return;
-  }
-  const { size } = fs.statSync(electronLogFile);
-  if (size + nextLineBytes < ELECTRON_LOG_MAX_BYTES) {
-    return;
-  }
+const logQueue = [];
+let isProcessingLogQueue = false;
 
-  const oldest = `${electronLogFile}.${ELECTRON_LOG_BACKUP_COUNT}`;
-  if (fs.existsSync(oldest)) {
-    fs.unlinkSync(oldest);
-  }
-  for (let index = ELECTRON_LOG_BACKUP_COUNT - 1; index >= 1; index -= 1) {
-    const from = `${electronLogFile}.${index}`;
-    const to = `${electronLogFile}.${index + 1}`;
-    if (fs.existsSync(from)) {
-      fs.renameSync(from, to);
+async function rotateElectronLogIfNeeded(nextLineBytes) {
+  try {
+    const exists = await fs.promises.access(electronLogFile).then(() => true).catch(() => false);
+    if (!exists) {
+      return;
     }
+    const stat = await fs.promises.stat(electronLogFile);
+    if (stat.size + nextLineBytes < ELECTRON_LOG_MAX_BYTES) {
+      return;
+    }
+
+    const oldest = `${electronLogFile}.${ELECTRON_LOG_BACKUP_COUNT}`;
+    const oldestExists = await fs.promises.access(oldest).then(() => true).catch(() => false);
+    if (oldestExists) {
+      await fs.promises.unlink(oldest);
+    }
+    for (let index = ELECTRON_LOG_BACKUP_COUNT - 1; index >= 1; index -= 1) {
+      const from = `${electronLogFile}.${index}`;
+      const to = `${electronLogFile}.${index + 1}`;
+      const fromExists = await fs.promises.access(from).then(() => true).catch(() => false);
+      if (fromExists) {
+        await fs.promises.rename(from, to);
+      }
+    }
+    await fs.promises.rename(electronLogFile, `${electronLogFile}.1`);
+  } catch (err) {
+    console.error('Log rotation failed:', err);
   }
-  fs.renameSync(electronLogFile, `${electronLogFile}.1`);
+}
+
+async function processLogQueue() {
+  if (isProcessingLogQueue) {
+    return;
+  }
+  isProcessingLogQueue = true;
+
+  try {
+    await fs.promises.mkdir(electronLogDir, { recursive: true });
+
+    while (logQueue.length > 0) {
+      const line = logQueue.shift();
+      const lineBytes = Buffer.byteLength(line, 'utf8');
+      try {
+        await rotateElectronLogIfNeeded(lineBytes);
+        await fs.promises.appendFile(electronLogFile, line, 'utf8');
+      } catch (err) {
+        console.error('Failed to write electron-main log file:', err);
+      }
+    }
+  } catch (err) {
+    console.error('Failed to create electron log directory:', err);
+  } finally {
+    isProcessingLogQueue = false;
+  }
 }
 
 function writeElectronLog(level, message, details = null) {
-  try {
-    fs.mkdirSync(electronLogDir, { recursive: true });
-    const timestamp = new Date().toISOString();
-    const suffix = details == null ? '' : `\n${safeSerialize(details)}`;
-    const line = `[${timestamp}] [${level}] ${message}${suffix}\n`;
-    rotateElectronLogIfNeeded(Buffer.byteLength(line, 'utf8'));
-    fs.appendFileSync(electronLogFile, line, 'utf8');
-  } catch {
-    // Avoid crashing the process because logging failed.
-  }
+  const timestamp = new Date().toISOString();
+  const suffix = details == null ? '' : `\n${safeSerialize(details)}`;
+  const line = `[${timestamp}] [${level}] ${message}${suffix}\n`;
+
+  logQueue.push(line);
+  processLogQueue();
 
   const logFn = level === 'ERROR' ? console.error : level === 'WARN' ? console.warn : console.log;
   if (details == null) {

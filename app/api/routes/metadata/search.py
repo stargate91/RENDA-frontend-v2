@@ -239,10 +239,17 @@ def get_tv_seasons(tmdb_id: int, language: str = "en-US", db: Session = Depends(
     if not details or "seasons" not in details:
         raise HTTPException(status_code=404, detail="TV show not found or has no seasons")
         
-    seasons = []
-    for s in details["seasons"]:
+    from concurrent.futures import ThreadPoolExecutor
+    from app.db.base import Session as DBSession
+    
+    def fetch_season(s):
         season_num = s.get("season_number")
-        season_details = tmdb.get_season_details(tmdb_id, season_num, language=language)
+        worker_db = DBSession()
+        try:
+            worker_tmdb = TMDBClient(worker_db)
+            season_details = worker_tmdb.get_season_details(tmdb_id, season_num, language=language)
+        finally:
+            DBSession.remove()
         
         episodes = []
         if season_details and "episodes" in season_details:
@@ -254,14 +261,17 @@ def get_tv_seasons(tmdb_id: int, language: str = "en-US", db: Session = Depends(
                     "air_date": ep.get("air_date")
                 })
                 
-        seasons.append({
+        return {
             "season_number": season_num,
             "name": s.get("name"),
             "episode_count": s.get("episode_count"),
             "poster_path": s.get("poster_path"),
             "air_date": s.get("air_date"),
             "episodes": episodes
-        })
+        }
+
+    with ThreadPoolExecutor(max_workers=min(len(details["seasons"]), 8)) as executor:
+        seasons = list(executor.map(fetch_season, details["seasons"]))
         
     return {"seasons": seasons}
 

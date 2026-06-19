@@ -27,8 +27,9 @@ class PersonService:
             if person.gender is None and person_data.get("gender") is not None:
                 person.gender = person_data.get("gender")
                 updated = True
-            if person.popularity is None and person_data.get("popularity") is not None:
-                person.popularity = person_data.get("popularity")
+            new_pop = person_data.get("popularity")
+            if new_pop is not None and (person.popularity is None or person.popularity == 0.0 or person.popularity != new_pop):
+                person.popularity = new_pop
                 updated = True
             if not person.profile_path and person_data.get("profile_path"):
                 person.profile_path = person_data.get("profile_path")
@@ -133,7 +134,8 @@ class PersonService:
                 person.deathday = data.get("deathday") or person.deathday
                 person.place_of_birth = data.get("place_of_birth") or person.place_of_birth
                 person.gender = data.get("gender") if data.get("gender") is not None else person.gender
-                person.popularity = data.get("popularity") or person.popularity
+                if data.get("popularity") is not None:
+                    person.popularity = data.get("popularity")
                 person.known_for_department = data.get("known_for_department") or person.known_for_department
                 person.is_adult = bool(data.get("adult"))
                 

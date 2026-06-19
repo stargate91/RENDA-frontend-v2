@@ -31,37 +31,6 @@ export function createGeneralLanguageSection(t, appLanguageOptions) {
   };
 }
 
-export function createGeneralContentSection(t, adultGenderPreferenceOptions) {
-  return {
-    title: t('settingsPage.sections.content.title'),
-    eyebrow: t('settingsPage.sections.content.eyebrow'),
-    items: [
-      {
-        type: 'switch',
-        field: 'include_adult',
-        id: 'include_adult',
-        hint: t('settingsPage.sections.content.includeAdultHint'),
-        hintClassName: 'ui-field__hint settings-hint--spaced',
-        children: (
-          <Inline gap="sm" align="center" className="settings-inline-switch">
-            <span>{t('settingsPage.sections.content.includeAdult')}</span>
-            <span className="settings-badge settings-badge--danger">
-              {t('settingsPage.sections.content.eighteenPlus')}
-            </span>
-          </Inline>
-        ),
-      },
-      {
-        type: 'select',
-        field: 'adult_gender_preference',
-        label: t('settingsPage.sections.content.adultGenderPreference'),
-        hint: t('settingsPage.sections.content.adultGenderPreferenceHint'),
-        options: adultGenderPreferenceOptions,
-        visible: (context) => Boolean(context.include_adult),
-      },
-    ],
-  };
-}
 
 export function createGeneralCloseBehaviorSection(t, closeBehaviorOptions) {
   return {

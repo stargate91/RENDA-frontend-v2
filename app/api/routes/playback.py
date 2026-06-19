@@ -308,7 +308,7 @@ def monitor_playback(item_id: int, player_type: str, proc: subprocess.Popen, por
             try:
                 if player_type == "vlc":
                     r = requests.get(
-                        f"http://localhost:{port}/requests/status.json", 
+                        f"http://127.0.0.1:{port}/requests/status.json", 
                         auth=("", "renda"), 
                         timeout=1.5
                     )
@@ -318,7 +318,7 @@ def monitor_playback(item_id: int, player_type: str, proc: subprocess.Popen, por
                         total_length = int(data.get("length", 0))
                 elif player_type == "mpc":
                     r = requests.get(
-                        f"http://localhost:{port}/variables.html", 
+                        f"http://127.0.0.1:{port}/variables.html", 
                         timeout=1.5
                     )
                     if r.status_code == 200:
@@ -340,6 +340,7 @@ def monitor_playback(item_id: int, player_type: str, proc: subprocess.Popen, por
                             
                             # If watched over 90% of the video, mark as watched/completed and reset resume
                             if total_length > 0:
+                                item.duration = total_length
                                 progress = current_time / total_length
                                 if progress > 0.90:
                                     item.is_watched = True
@@ -359,6 +360,26 @@ def monitor_playback(item_id: int, player_type: str, proc: subprocess.Popen, por
     except Exception as e:
         logger.error(f"Error in playback monitoring thread: {e}")
     finally:
+        # Perform final save
+        if current_time > 0 and current_time != last_saved_time:
+            db = Session()
+            try:
+                item = db.query(MediaItem).filter(MediaItem.id == item_id).first()
+                if item:
+                    item.resume_position = current_time
+                    if total_length > 0:
+                        item.duration = total_length
+                        progress = current_time / total_length
+                        if progress > 0.90:
+                            item.is_watched = True
+                            item.resume_position = 0
+                    db.commit()
+                    logger.info(f"Final playback position saved: {current_time}s, duration: {total_length}s")
+            except Exception as ex:
+                db.rollback()
+                logger.error(f"Failed to update final playback position: {ex}")
+            finally:
+                db.close()
         logger.info(f"Playback monitoring thread finished for item_id={item_id}")
 
 
@@ -374,7 +395,7 @@ def _launch_media_file(file_path: str, start_seconds: int = 0) -> dict:
             args = [player_path, normalized_path]
             if start_seconds > 10:
                 args.append(f"--start-time={start_seconds}")
-            args.extend(["--extraintf=http", "--http-password=renda", f"--http-port={port}"])
+            args.extend(["--no-one-instance", "--extraintf=http", "--http-password=renda", f"--http-port={port}", "--http-host=127.0.0.1"])
             proc = subprocess.Popen(args)
         elif player_type == "mpc":
             args = [player_path, normalized_path]
@@ -437,13 +458,25 @@ def play_media_item(payload: dict):
         logger.info(f"Launching media file with hybrid tracking: {file_path}")
         
         # 1. Update general stats immediately
-        item.watch_count = (item.watch_count or 0) + 1
         item.last_watched_at = datetime.utcnow()
-        item.is_watched = False
         
-        # Create a new PlaybackLog entry
-        log_entry = PlaybackLog(media_item_id=item.id, watched_at=datetime.utcnow())
-        db.add(log_entry)
+        # Check if the item has an unfinished session (is_watched is False)
+        # and has an existing log entry we can update instead of duplicating it
+        existing_log = None
+        if not item.is_watched:
+            existing_log = db.query(PlaybackLog).filter(
+                PlaybackLog.media_item_id == item.id
+            ).order_by(PlaybackLog.watched_at.desc()).first()
+
+        if existing_log:
+            existing_log.watched_at = datetime.utcnow()
+            log_entry = existing_log
+        else:
+            log_entry = PlaybackLog(media_item_id=item.id, watched_at=datetime.utcnow())
+            db.add(log_entry)
+            item.watch_count = (item.watch_count or 0) + 1
+
+        item.is_watched = False
         db.commit()
         
         start_seconds = item.resume_position or 0
@@ -619,7 +652,7 @@ def reset_item_progress(item_id: int):
         db.close()
 
 @router.get("/library/watched-history")
-def get_watched_history(limit: int = 50):
+def get_watched_history(page: int = 1, limit: int = 20, include_adult: bool = False):
     db = Session()
     try:
         from app.db.models import PlaybackLog, MediaItem, ItemStatus
@@ -630,11 +663,25 @@ def get_watched_history(limit: int = 50):
 
         ui_lang = _preferred_metadata_language(db)
         
-        logs = db.query(PlaybackLog).join(MediaItem).options(
+        offset = (page - 1) * limit
+        query = db.query(PlaybackLog).join(MediaItem)
+        if not include_adult:
+            active_adult_match = db.query(MediaMatch.id).filter(
+                MediaMatch.media_item_id == MediaItem.id,
+                MediaMatch.is_active == True,
+                MediaMatch.is_adult == True,
+            ).exists()
+            query = query.filter(~active_adult_match)
+            
+        logs = query.options(
             joinedload(PlaybackLog.media_item).options(
                 joinedload(MediaItem.matches).joinedload(MediaMatch.localizations)
             )
-        ).order_by(PlaybackLog.watched_at.desc()).limit(limit).all()
+        ).order_by(PlaybackLog.watched_at.desc()).offset(offset).limit(limit + 1).all()
+
+        has_more = len(logs) > limit
+        if has_more:
+            logs = logs[:limit]
 
         results = []
         for log in logs:
@@ -671,14 +718,23 @@ def get_watched_history(limit: int = 50):
                 remote_path=(loc.series_poster_path or loc.poster_path) if loc else None,
             ) if loc else None
 
-            year = None
+            year_range = None
             if active_match:
-                if active_match.release_date:
-                    year = active_match.release_date.year
-                elif active_match.first_air_date:
-                    year = active_match.first_air_date.year
-            if not year:
-                year = item.fn_year or item.fd_year
+                if item.item_type.value == "episode":
+                    start_year = active_match.first_air_date.year if active_match.first_air_date else None
+                    end_year = active_match.last_air_date.year if active_match.last_air_date else None
+                    status = active_match.release_status
+                    if start_year:
+                        if status == "Ended" or (end_year and end_year != start_year and status != "Returning Series"):
+                            year_range = f"{start_year}–{end_year}" if end_year else str(start_year)
+                        else:
+                            year_range = f"{start_year}–"
+                else:
+                    if active_match.release_date:
+                        year_range = str(active_match.release_date.year)
+            if not year_range:
+                item_year = item.fn_year or item.fd_year
+                year_range = str(item_year) if item_year else None
 
             results.append({
                 "id": log.id,
@@ -688,7 +744,7 @@ def get_watched_history(limit: int = 50):
                 "series_title": series_title,
                 "episode_title": episode_title,
                 "type": item.item_type.value,
-                "year": year,
+                "year": year_range,
                 "season_number": active_match.season_number if active_match else None,
                 "episode_number": active_match.episode_number if active_match else None,
                 "poster_path": poster_path,
@@ -698,7 +754,11 @@ def get_watched_history(limit: int = 50):
                 "is_watched": item.is_watched or False,
             })
 
-        return results
+        return {
+            "items": results,
+            "page": page,
+            "has_more": has_more
+        }
     finally:
         db.close()
 

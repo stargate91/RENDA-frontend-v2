@@ -138,7 +138,7 @@ export default function HistoryCard({
               side="left"
             >
               <Button
-                variant="secondary-neutral"
+                variant="secondary"
                 size="sm"
                 disabled={isRevertDisabled}
                 onClick={() => onConfirmUndo(batch)}

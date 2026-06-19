@@ -1,4 +1,4 @@
-import { Minus, Square, X, AlertTriangle } from 'lucide-react';
+import { Minus, Square, X, AlertTriangle, Flame } from 'lucide-react';
 import UtilityButton from '../ui/UtilityButton';
 import ProgressBar from '../ui/ProgressBar';
 import Button from '../ui/Button';
@@ -8,10 +8,14 @@ import { useUi } from '../providers/UiProvider';
 import { useTranslation } from '../providers/LanguageContext';
 import useWindowProgress from './useWindowProgress';
 import useWindowControls from './useWindowControls';
+import { useSettingsQuery } from '../queries/settingsQueries';
+import { useLibraryModeStore } from '../stores/useLibraryModeStore';
 
 const BRAND_NAME = 'RENDA';
 
 export default function WindowTitlebar() {
+  const { data: settings } = useSettingsQuery();
+  const { sessionMode, toggleSessionMode } = useLibraryModeStore();
   const { hasProgress, scanProgress, imageProgress, hydrateProgress, syncProgress } = useWindowProgress();
   const { openModal, closeModal, toast } = useUi();
   const { t } = useTranslation();
@@ -72,6 +76,29 @@ export default function WindowTitlebar() {
       ) : null}
 
       <div className="window-titlebar__actions">
+        {settings?.include_adult && (
+          <Tooltip content={sessionMode === 'nsfw' ? 'SFW Mode' : 'NSFW Mode'} side="bottom">
+            <UtilityButton
+              type="button"
+              className="window-titlebar__button window-titlebar__button--adult-toggle"
+              style={{
+                marginRight: '24px',
+                color: sessionMode === 'nsfw' ? 'var(--color-state-danger)' : 'var(--color-muted)',
+                width: '32px',
+                height: '32px',
+                borderRadius: 'var(--radius-sm)',
+                boxShadow: 'none',
+                background: 'transparent',
+                alignSelf: 'center',
+              }}
+              tabIndex={-1}
+              aria-label="Toggle Adult Mode"
+              onClick={toggleSessionMode}
+            >
+              <Flame size={18} fill={sessionMode === 'nsfw' ? 'currentColor' : 'none'} />
+            </UtilityButton>
+          </Tooltip>
+        )}
         <Tooltip content={t('titlebar.minimize')} side="bottom">
           <UtilityButton
             type="button"

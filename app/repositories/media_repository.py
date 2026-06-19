@@ -279,13 +279,6 @@ class MediaRepository:
 
     def get_stats(self) -> Dict[str, Any]:
         library_statuses = [ItemStatus.RENAMED, ItemStatus.ORGANIZED]
-        review_statuses = [
-            ItemStatus.NEW,
-            ItemStatus.ERROR,
-            ItemStatus.UNCERTAIN,
-            ItemStatus.NO_MATCH,
-            ItemStatus.MULTIPLE,
-        ]
         active_adult_match = self.db.query(MediaMatch.id).filter(
             MediaMatch.media_item_id == MediaItem.id,
             MediaMatch.is_active == True,
@@ -380,26 +373,71 @@ class MediaRepository:
 
         total_bytes = movie_bytes + series_bytes + adult_bytes + extras_bytes
         
-        # Unmatched count
-        unmatched = self.db.query(func.count(MediaItem.id)).filter(
-            MediaItem.status.in_([
-                ItemStatus.NEW, ItemStatus.MATCHED,
-                ItemStatus.UNCERTAIN, ItemStatus.NO_MATCH,
-                ItemStatus.MULTIPLE, ItemStatus.ERROR
-            ])
-        ).scalar() or 0
-
+        # Optimized unmatched and manual review count using a single group-by query
+        unmatched_statuses = [
+            ItemStatus.NEW, ItemStatus.MATCHED,
+            ItemStatus.UNCERTAIN, ItemStatus.NO_MATCH,
+            ItemStatus.MULTIPLE, ItemStatus.ERROR
+        ]
+        status_counts = self.db.query(MediaItem.status, func.count(MediaItem.id)).filter(
+            MediaItem.status.in_(unmatched_statuses)
+        ).group_by(MediaItem.status).all()
+        
+        status_count_map = {status: count for status, count in status_counts}
+        
         manual_review_breakdown = {
-            "new": self.db.query(func.count(MediaItem.id)).filter(MediaItem.status == ItemStatus.NEW).scalar() or 0,
-            "error": self.db.query(func.count(MediaItem.id)).filter(MediaItem.status == ItemStatus.ERROR).scalar() or 0,
-            "uncertain": self.db.query(func.count(MediaItem.id)).filter(MediaItem.status == ItemStatus.UNCERTAIN).scalar() or 0,
-            "no_match": self.db.query(func.count(MediaItem.id)).filter(MediaItem.status == ItemStatus.NO_MATCH).scalar() or 0,
-            "multiple": self.db.query(func.count(MediaItem.id)).filter(MediaItem.status == ItemStatus.MULTIPLE).scalar() or 0,
+            "new": status_count_map.get(ItemStatus.NEW, 0),
+            "error": status_count_map.get(ItemStatus.ERROR, 0),
+            "uncertain": status_count_map.get(ItemStatus.UNCERTAIN, 0),
+            "no_match": status_count_map.get(ItemStatus.NO_MATCH, 0),
+            "multiple": status_count_map.get(ItemStatus.MULTIPLE, 0),
         }
         manual_review_total = sum(manual_review_breakdown.values())
+        unmatched = sum(status_count_map.values())
+
+        # Pre-fetch all TMDBCache entries for active matches to avoid N+1 queries
+        active_tmdb_ids = set()
+        for item in library_items:
+            active_match = next((m for m in item.matches if m.is_active), None)
+            if active_match and active_match.tmdb_id:
+                active_tmdb_ids.add(active_match.tmdb_id)
+
+        from collections import defaultdict
+        cache_by_tmdb_id = defaultdict(list)
+        if active_tmdb_ids:
+            cache_entries = self.db.query(TMDBCache).filter(TMDBCache.tmdb_id.in_(list(active_tmdb_ids))).all()
+            for cache in cache_entries:
+                cache_by_tmdb_id[cache.tmdb_id].append(cache)
+            for tmdb_id in cache_by_tmdb_id:
+                cache_by_tmdb_id[tmdb_id].sort(key=lambda c: c.updated_at, reverse=True)
+
+        preferred_lang = self._preferred_metadata_language()
+
+        def get_cached_genres_in_memory(match_tmdb_id: int) -> List[dict]:
+            caches = cache_by_tmdb_id.get(match_tmdb_id, [])
+            if not caches:
+                return []
+            
+            lang_candidates = [preferred_lang]
+            short_lang = preferred_lang.split("-")[0]
+            if short_lang not in lang_candidates:
+                lang_candidates.append(short_lang)
+            
+            for lang in lang_candidates:
+                for cache in caches:
+                    if f"language={lang}" in (cache.cache_key or ""):
+                        if isinstance(cache.raw_data, dict):
+                            genres = cache.raw_data.get("genres")
+                            if genres:
+                                return genres
+            
+            # Fallback to the latest cache entry
+            latest_cache = caches[0]
+            if isinstance(latest_cache.raw_data, dict):
+                return latest_cache.raw_data.get("genres") or []
+            return []
 
         # Genre and Decade distribution
-        preferred_lang = self._preferred_metadata_language()
         genre_dist = {}
         genre_dist_ids = {}
         genre_labels = {}
@@ -438,7 +476,7 @@ class MediaRepository:
                     decade_dist[decade_str] = decade_dist.get(decade_str, 0) + 1
                     
                 # Genre calculation using stable TMDB genre IDs, with labels from the preferred language cache
-                raw_genres = self._get_cached_genres_for_match(active_match, preferred_lang)
+                raw_genres = get_cached_genres_in_memory(active_match.tmdb_id)
                 if raw_genres:
                     unique_genre_ids = []
                     for genre in raw_genres:

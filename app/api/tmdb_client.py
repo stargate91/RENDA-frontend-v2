@@ -10,6 +10,8 @@ from sqlalchemy.orm import Session
 from ..db.models import TMDBCache, ItemType, UserSetting
 from datetime import datetime
 
+_session = requests.Session()
+
 class TMDBClient:
     """
     TMDB API Client with built-in cache.
@@ -131,7 +133,7 @@ class TMDBClient:
         url = self.BASE_URL + endpoint
         for attempt in range(max_retries):
             try:
-                response = requests.get(url, params=params, timeout=15)
+                response = _session.get(url, params=params, timeout=15)
                 
                 if response.status_code == 200:
                     data = response.json()

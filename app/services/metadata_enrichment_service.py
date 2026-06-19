@@ -68,18 +68,41 @@ class MetadataEnrichmentService:
             if l not in unique_langs:
                 unique_langs.append(l)
 
+        from concurrent.futures import ThreadPoolExecutor
+        from app.db.base import Session as DBSession
+        from app.api.tmdb_client import TMDBClient
+
+        def fetch_lang_details(lang):
+            worker_db = DBSession()
+            try:
+                worker_tmdb = TMDBClient(worker_db)
+                if active_match.item_type == ItemType.MOVIE:
+                    raw = worker_tmdb.get_details(active_match.tmdb_id, "movie", language=lang)
+                else:
+                    raw = worker_tmdb.get_details(active_match.tmdb_id, "tv", language=lang)
+                return lang, raw
+            finally:
+                DBSession.remove()
+
+        with ThreadPoolExecutor(max_workers=min(len(unique_langs), 4)) as executor:
+            raw_data_by_lang = dict(executor.map(fetch_lang_details, unique_langs))
+
         for lang in unique_langs:
+            raw_data = raw_data_by_lang.get(lang)
+            if not raw_data:
+                continue
             if active_match.item_type == ItemType.MOVIE:
-                self._enrich_movie(active_match, lang)
+                self._enrich_movie(active_match, lang, raw_data=raw_data)
             elif active_match.item_type in [ItemType.SERIES, ItemType.EPISODE]:
-                self._enrich_tv(active_match, lang)
+                self._enrich_tv(active_match, lang, raw_data=raw_data)
 
         # Sync physical planned path with new metadata
         self._refresh_planned_path(item, active_match)
         self.db.commit()
 
-    def _enrich_movie(self, match: MediaMatch, language: str):
-        raw_data = self.resolver.api.get_details(match.tmdb_id, "movie", language=language)
+    def _enrich_movie(self, match: MediaMatch, language: str, raw_data: Optional[Dict[str, Any]] = None):
+        if raw_data is None:
+            raw_data = self.resolver.api.get_details(match.tmdb_id, "movie", language=language)
         if not raw_data: return
         try:
             details = TMDBMovie(**raw_data)
@@ -129,8 +152,9 @@ class MetadataEnrichmentService:
         # Extract trailer
         loc.trailer_url = _pick_trailer_key(raw_data, language, details.original_language)
 
-    def _enrich_tv(self, match: MediaMatch, language: str):
-        raw_data = self.resolver.api.get_details(match.tmdb_id, "tv", language=language)
+    def _enrich_tv(self, match: MediaMatch, language: str, raw_data: Optional[Dict[str, Any]] = None):
+        if raw_data is None:
+            raw_data = self.resolver.api.get_details(match.tmdb_id, "tv", language=language)
         if not raw_data: return
         try:
             series = TMDBSeries(**raw_data)
@@ -210,12 +234,27 @@ class MetadataEnrichmentService:
             ep_nums = match.episode_number if isinstance(match.episode_number, list) else [match.episode_number]
             titles, overviews, stills = [], [], []
             
-            for enum in ep_nums:
-                raw_ep = self.resolver.api.get_episode_details(match.tmdb_id, match.season_number, enum, language=language)
+            from concurrent.futures import ThreadPoolExecutor
+            from app.db.base import Session as DBSession
+            from app.api.tmdb_client import TMDBClient
+
+            def fetch_ep_details(enum):
+                worker_db = DBSession()
+                try:
+                    worker_tmdb = TMDBClient(worker_db)
+                    raw_ep = worker_tmdb.get_episode_details(match.tmdb_id, match.season_number, enum, language=language)
+                    return enum, raw_ep
+                finally:
+                    DBSession.remove()
+
+            with ThreadPoolExecutor(max_workers=min(len(ep_nums), 8)) as executor:
+                ep_results = list(executor.map(fetch_ep_details, ep_nums))
+
+            for enum, raw_ep in ep_results:
                 ep = None
                 if raw_ep:
                     try:
-                        ep = TMDBEpisode(**raw_data) if 'raw_data' in locals() else TMDBEpisode(**raw_ep)
+                        ep = TMDBEpisode(**raw_ep)
                     except Exception as e:
                         logger.error(f"Failed to parse TMDBEpisode: {e}")
 
