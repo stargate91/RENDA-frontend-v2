@@ -42,8 +42,18 @@ class OMDBClient:
         raise_on_limit: bool = False,
         allow_stale_fallback: bool = True,
     ) -> Dict[str, Any]:
-        if not self._api_key or not imdb_id:
+        if not self._api_key or not imdb_id or not imdb_id.startswith("tt"):
             return {}
+
+        # Do not query ratings for scenes
+        from ..db.models import MediaMatch, ItemType
+        is_scene = self.db.query(MediaMatch.id).filter(
+            MediaMatch.imdb_id == imdb_id,
+            MediaMatch.item_type == ItemType.SCENE
+        ).first() is not None
+        if is_scene:
+            return {}
+
 
         if (
             self.__class__._auth_failure_until
@@ -173,8 +183,18 @@ class OMDBClient:
         next_retry_at: Optional[datetime] = None,
         priority: int = 100,
     ) -> None:
-        if not imdb_id:
+        if not imdb_id or not imdb_id.startswith("tt"):
             return
+
+        # Do not enqueue ratings for scenes
+        from ..db.models import MediaMatch, ItemType
+        is_scene = self.db.query(MediaMatch.id).filter(
+            MediaMatch.imdb_id == imdb_id,
+            MediaMatch.item_type == ItemType.SCENE
+        ).first() is not None
+        if is_scene:
+            return
+
 
         queue_item = self.db.query(OMDBRequestQueue).filter(OMDBRequestQueue.imdb_id == imdb_id).first()
         if not queue_item:

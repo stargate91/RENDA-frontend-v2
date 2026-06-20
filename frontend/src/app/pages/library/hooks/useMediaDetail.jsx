@@ -331,7 +331,14 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
   const showTmdb = !ratingImdb && !!ratingTmdb && !isSceneType;
 
   const normalizedGenres = item?.genres || [];
-  const overview = item?.overview || '';
+  const rawOverview = item?.overview || '';
+  const overview = item?.is_adult
+    ? rawOverview
+      .split('\n')
+      .filter(line => !line.trim().startsWith('Studio:'))
+      .join('\n')
+      .trim()
+    : rawOverview;
   const hasTechnicalPanel = Boolean(item?.technical && (
     item.technical.resolution
     || item.technical.video_codec
@@ -366,10 +373,10 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
   const canToggleWatched = isMovie
     ? Boolean(item)
     : Boolean(
-        item?.seasons
-          ?.filter((season) => season.season_number > 0)
-          .some((season) => (season.episodes || []).length > 0)
-      );
+      item?.seasons
+        ?.filter((season) => season.season_number > 0)
+        .some((season) => (season.episodes || []).length > 0)
+    );
 
   const getNextEpisodeInfo = () => {
     if (!item?.seasons) return null;
@@ -491,7 +498,7 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
 
   const logoPathRaw = item?.logo_path || '';
   let logoPath = logoPathRaw;
-  if (!logoPath && (item?.type === 'scene' || item?.is_adult)) {
+  if (!logoPath && item?.type === 'scene') {
     const studioLogo = item?.companies?.[0]?.logo_path;
     const networkLogo = item?.networks?.[0]?.logo_path;
     logoPath = studioLogo || networkLogo || '';

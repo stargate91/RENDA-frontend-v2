@@ -51,8 +51,18 @@ class ImageProcessingService:
         if not temp_file_path.exists() or temp_file_path.stat().st_size < MIN_CACHED_IMAGE_BYTES:
             return None
 
-        with Image.open(temp_file_path) as image:
-            image.verify()
+        is_svg = False
+        try:
+            with open(temp_file_path, "rb") as f:
+                header = f.read(4096).strip().lower()
+                if header.startswith(b"<svg") or header.startswith(b"<?xml") or b"<svg" in header:
+                    is_svg = True
+        except Exception:
+            pass
+
+        if not is_svg:
+            with Image.open(temp_file_path) as image:
+                image.verify()
 
         temp_file_path.replace(target)
         return str(target)

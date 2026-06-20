@@ -220,6 +220,7 @@ class AdultGraphQLClient:
           findScene(id: $id) {
             id
             title
+            details
             date
             duration
             images {

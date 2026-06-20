@@ -121,12 +121,36 @@ class ItemDetailProvider(BaseDetailProvider):
                 parent_name = parent_data.get("name")
                 parent_images = parent_data.get("images") or []
                 parent_logo = parent_images[0].get("url") if parent_images else None
+
+                from app.services.asset_service import AssetService
+                asset_service = AssetService()
+                
+                studio_logo_resolved = None
+                if studio_logo and (studio_logo.startswith("http://") or studio_logo.startswith("https://")):
+                    downloaded = asset_service.download_image(studio_logo, "logos")
+                    if downloaded:
+                        studio_logo_resolved = os.path.basename(downloaded)
+                
+                parent_logo_resolved = None
+                if parent_logo and (parent_logo.startswith("http://") or parent_logo.startswith("https://")):
+                    downloaded = asset_service.download_image(parent_logo, "logos")
+                    if downloaded:
+                        parent_logo_resolved = os.path.basename(downloaded)
                 
                 cast = []
                 for p_entry in scene_data.get("performers") or []:
                     perf = p_entry.get("performer") or {}
                     p_images = perf.get("images") or []
                     p_img = p_images[0].get("url") if p_images else None
+                    gender_str = str(perf.get("gender") or "").upper()
+                    mapped_gender = 0
+                    if "FEMALE" in gender_str:
+                        mapped_gender = 1
+                    elif "MALE" in gender_str:
+                        mapped_gender = 2
+                    elif gender_str:
+                        mapped_gender = 3
+                        
                     cast.append({
                         "id": perf.get("id"),
                         "name": perf.get("name"),
@@ -134,7 +158,7 @@ class ItemDetailProvider(BaseDetailProvider):
                         "job": "Actor",
                         "profile_path": p_img,
                         "popularity": 0,
-                        "gender": perf.get("gender")
+                        "gender": mapped_gender
                     })
                     
                 genres = []
@@ -142,10 +166,13 @@ class ItemDetailProvider(BaseDetailProvider):
                 result = {
                     "id": f"stash_{scene_uuid}",
                     "title": title,
-                    "logo_path": studio_logo or parent_logo,
+                    "logo_path": self.formatter.resolve_logo_response_path(
+                        logo_path=studio_logo or parent_logo,
+                        local_logo_path=studio_logo_resolved or parent_logo_resolved,
+                    ),
                     "original_title": None,
                     "tagline": None,
-                    "overview": f"Studio: {studio_name}" if studio_name else None,
+                    "overview": scene_data.get("details"),
                     "genres": genres,
                     "year": year,
                     "release_date": date_str,
@@ -153,8 +180,8 @@ class ItemDetailProvider(BaseDetailProvider):
                     "formatted_duration": duration_str,
                     "rating_tmdb": 0.0,
                     "vote_count_tmdb": 0,
-                    "companies": [{"name": studio_name, "logo_path": studio_logo}] if studio_name else [],
-                    "networks": [{"name": parent_name, "logo_path": parent_logo}] if parent_name else [],
+                    "companies": [{"name": studio_name, "logo_path": self.formatter.resolve_logo_response_path(studio_logo, studio_logo_resolved)}] if studio_name else [],
+                    "networks": [{"name": parent_name, "logo_path": self.formatter.resolve_logo_response_path(parent_logo, parent_logo_resolved)}] if parent_name else [],
                     "poster_path": poster_url,
                     "backdrop_path": None,
                     "original_language": None,
@@ -400,6 +427,7 @@ class ItemDetailProvider(BaseDetailProvider):
                 joinedload(MediaItem.matches).joinedload(MediaMatch.localizations),
                 joinedload(MediaItem.matches).joinedload(MediaMatch.collection_entity).joinedload(MediaCollection.localizations),
                 joinedload(MediaItem.matches).joinedload(MediaMatch.people).joinedload(MediaPersonLink.person).joinedload(Person.localizations),
+                joinedload(MediaItem.matches).joinedload(MediaMatch.studio),
                 joinedload(MediaItem.extras),
                 joinedload(MediaItem.peak_logs),
             ).filter(MediaItem.id == item_id_int).first()
@@ -513,6 +541,39 @@ class ItemDetailProvider(BaseDetailProvider):
                 elif link.job == "Actor":
                     cast.append(person_data)
 
+            if active_match.is_adult and active_match.imdb_id and not cast:
+                from app.api.graphql_clients import AdultGraphQLClient
+                scene_uuid = active_match.imdb_id
+                scene_data = None
+                for src in ["stashdb", "fansdb"]:
+                    client = AdultGraphQLClient(db, src)
+                    scene_data = client.get_scene_details(scene_uuid)
+                    if scene_data:
+                        break
+                if scene_data:
+                    for p_entry in scene_data.get("performers") or []:
+                        perf = p_entry.get("performer") or {}
+                        p_images = perf.get("images") or []
+                        p_img = p_images[0].get("url") if p_images else None
+                        gender_str = str(perf.get("gender") or "").upper()
+                        mapped_gender = 0
+                        if "FEMALE" in gender_str:
+                            mapped_gender = 1
+                        elif "MALE" in gender_str:
+                            mapped_gender = 2
+                        elif gender_str:
+                            mapped_gender = 3
+                            
+                        cast.append({
+                            "id": perf.get("id"),
+                            "name": perf.get("name"),
+                            "character": None,
+                            "job": "Actor",
+                            "profile_path": p_img,
+                            "popularity": 0,
+                            "gender": mapped_gender
+                        })
+
             # Technical info
             technical = {
                 "resolution": item.resolution,
@@ -541,13 +602,31 @@ class ItemDetailProvider(BaseDetailProvider):
             ) if target_tmdb_id else None
 
             companies_fallback = active_match.companies
-            if not companies_fallback and movie_cache and movie_cache.raw_data:
+            if not companies_fallback and active_match.studio:
+                companies_fallback = [{
+                    "name": active_match.studio.name,
+                    "logo_path": self.formatter.resolve_logo_response_path(
+                        logo_path=active_match.studio.logo_path,
+                        local_logo_path=active_match.studio.local_logo_path
+                    )
+                }]
+            elif not companies_fallback and movie_cache and movie_cache.raw_data:
                 companies_fallback = [{"name": c.get("name"), "logo_path": self.formatter.resolve_company_logo(c)} for c in movie_cache.raw_data.get("production_companies", [])]
             elif companies_fallback:
                 companies_fallback = [{"name": c.get("name"), "logo_path": self.formatter.resolve_company_logo(c)} for c in companies_fallback]
 
             networks_fallback = active_match.networks
-            if not networks_fallback and movie_cache and movie_cache.raw_data:
+            if not networks_fallback and active_match.studio and active_match.studio.parent_studio_id:
+                parent_studio = db.query(Studio).filter(Studio.id == active_match.studio.parent_studio_id).first()
+                if parent_studio:
+                    networks_fallback = [{
+                        "name": parent_studio.name,
+                        "logo_path": self.formatter.resolve_logo_response_path(
+                            logo_path=parent_studio.logo_path,
+                            local_logo_path=parent_studio.local_logo_path
+                        )
+                    }]
+            elif not networks_fallback and movie_cache and movie_cache.raw_data:
                 networks_fallback = [{"name": n.get("name"), "logo_path": self.formatter.resolve_company_logo(n)} for n in movie_cache.raw_data.get("networks", [])]
             elif networks_fallback:
                 networks_fallback = [{"name": n.get("name"), "logo_path": self.formatter.resolve_company_logo(n)} for n in networks_fallback]
@@ -567,6 +646,10 @@ class ItemDetailProvider(BaseDetailProvider):
                 else None
                 )
             )
+
+            if not effective_logo_path and item.item_type == ItemType.SCENE and active_match.is_adult and active_match.studio:
+                effective_logo_path = active_match.studio.logo_path
+                effective_local_logo_path = active_match.studio.local_logo_path
             preferred_backdrop_path = _pick_backdrop_path(movie_cache.raw_data if movie_cache else None, ui_lang) if movie_cache else None
             effective_backdrop_path = (
                 getattr(active_match, "manual_backdrop_path", None)

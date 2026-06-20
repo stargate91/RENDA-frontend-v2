@@ -50,15 +50,20 @@ class AssetService:
 
         is_remote_url = isinstance(tmdb_path, str) and tmdb_path.startswith(("http://", "https://"))
         if is_remote_url:
+            import hashlib
             parsed = urlparse(tmdb_path)
             suffix = Path(parsed.path).suffix or ".jpg"
-            filename = f"{uuid.uuid4().hex}{suffix}"
+            url_hash = hashlib.md5(tmdb_path.encode("utf-8")).hexdigest()
+            filename = f"{url_hash}{suffix}"
             url = tmdb_path
         else:
             filename = tmdb_path.lstrip("/")
             url = f"{self.TMDB_IMAGE_BASE}{size}{tmdb_path}"
 
         local_file_path = self.processor.build_local_path(subfolder, filename)
+
+        if self.processor.exists(local_file_path.with_suffix(".svg")):
+            return str(local_file_path.with_suffix(".svg"))
 
         lock = self._get_download_lock(local_file_path)
         with lock:
@@ -73,8 +78,12 @@ class AssetService:
                     logger.error(f"Image download failed ({url}): HTTP {response.status_code}")
                     return None
 
-                content_type = response.headers.get("Content-Type", "")
-                if content_type and "image" not in content_type.lower():
+                content_type = response.headers.get("Content-Type", "").lower()
+                if "svg" in content_type:
+                    local_file_path = local_file_path.with_suffix(".svg")
+                    if self.processor.exists(local_file_path):
+                        return str(local_file_path)
+                elif content_type and "image" not in content_type:
                     logger.warning(f"Suspicious content type for {url}: {content_type}. Trying to verify image payload anyway.")
 
                 saved_path = self.processor.write_chunks(local_file_path, response.iter_content(8192))

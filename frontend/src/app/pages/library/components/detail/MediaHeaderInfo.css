@@ -25,8 +25,7 @@
   display: block;
   width: auto;
   max-width: 100%;
-  max-height: 200px;
-  height: auto;
+  height: 80px;
   object-fit: contain;
   filter:
     drop-shadow(0 10px 34px rgba(0, 0, 0, 0.56)) drop-shadow(0 0 24px var(--color-border-default));

@@ -36,9 +36,9 @@ export default function PersonCreditsSections({ id, item, navigate, t }) {
 
   return (
     <div className="person-credits-section-container">
-      {tabs.length > 1 && (
+      {(tabs.length > 1 || (paginationInfo && paginationInfo.totalPages > 1)) && (
         <div className="person-credits-tabs">
-          {tabs.map((tab) => (
+          {tabs.length > 1 && tabs.map((tab) => (
             <button
               key={tab.id}
               type="button"

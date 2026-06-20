@@ -183,7 +183,7 @@ export default function DetailsPanel() {
       {companies.length > 0 && (
         <div className="details-panel__section">
           <h4 className="details-panel__section-title">
-            {t('library.details.productionCompanies') || 'Production Companies'}
+            {item.is_adult ? (t('library.details.studio') || 'Studio') : (t('library.details.productionCompanies') || 'Production Companies')}
           </h4>
           <div className="companies-networks-container">
             {companies.map((it, idx) => {
@@ -220,7 +220,7 @@ export default function DetailsPanel() {
       {networks.length > 0 && (
         <div className="details-panel__section">
           <h4 className="details-panel__section-title">
-            {t('library.details.platformsNetworks') || 'Platforms & Networks'}
+            {item.is_adult ? (t('library.details.network') || 'Network') : (t('library.details.platformsNetworks') || 'Platforms & Networks')}
           </h4>
           <div className="companies-networks-container">
             {networks.map((it, idx) => {

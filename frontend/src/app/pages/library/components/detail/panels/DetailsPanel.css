@@ -64,8 +64,8 @@
 }
 
 .specs-card__company-logo {
-  max-height: 26px;
-  max-width: 60px;
+  height: 26px;
+  width: 60px;
   object-fit: contain;
   filter: invert(1) opacity(0.82);
   transition: all var(--motion-base);
