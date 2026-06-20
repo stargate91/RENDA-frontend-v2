@@ -32,8 +32,14 @@ class LibraryVirtualQueryService:
         filter_favorite: str,
         filter_watched: str,
     ) -> tuple[list[dict], int, Optional[int], int]:
-        media_type = "tv" if tab in {"series", "adult_series"} else "movie"
-        adult_only = tab in {"adult", "adult_series"}
+        if tab in {"series", "adult_series"}:
+            media_type = "tv"
+        elif tab in {"scenes", "adult_scenes"}:
+            media_type = "scene"
+        else:
+            media_type = "movie"
+
+        adult_only = tab in {"adult", "adult_series", "adult_scenes"}
         safe_page = max(1, int(page or 1))
         safe_page_size = None if page_size is None or int(page_size) <= 0 else min(1000, max(20, int(page_size)))
         preferred_languages = _preferred_metadata_languages(self.db)
@@ -83,6 +89,20 @@ class LibraryVirtualQueryService:
                     MediaMatch.is_active == True,
                     MediaItem.status.in_([ItemStatus.ORGANIZED, ItemStatus.RENAMED]),
                     MediaItem.item_type == ItemType.MOVIE,
+                    MediaMatch.tmdb_id.isnot(None),
+                )
+                .group_by(MediaMatch.tmdb_id)
+                .subquery()
+            )
+        elif media_type == "scene":
+            local_owned_ids_sq = (
+                select(MediaMatch.tmdb_id)
+                .select_from(MediaMatch)
+                .join(MediaItem, MediaItem.id == MediaMatch.media_item_id)
+                .where(
+                    MediaMatch.is_active == True,
+                    MediaItem.status.in_([ItemStatus.ORGANIZED, ItemStatus.RENAMED]),
+                    MediaItem.item_type == ItemType.SCENE,
                     MediaMatch.tmdb_id.isnot(None),
                 )
                 .group_by(MediaMatch.tmdb_id)
@@ -142,25 +162,25 @@ class LibraryVirtualQueryService:
             base = base.outerjoin(cache_sq, cache_sq.c.tmdb_id == candidate_keys_sq.c.tmdb_id)
 
         if cache_sq is not None:
+            title_field = "$.name" if media_type == "tv" else "$.title"
             title_expr = func.coalesce(
-                cast(func.json_extract(cache_sq.c.raw_data, "$.name" if media_type == "tv" else "$.title"), String),
-                cast(func.json_extract(cache_sq.c.raw_data, "$.title" if media_type == "tv" else "$.name"), String),
+                cast(func.json_extract(cache_sq.c.raw_data, title_field), String),
                 list_snapshot_sq.c.list_title,
                 literal(""),
             )
             original_title_expr = func.coalesce(
                 cast(func.json_extract(cache_sq.c.raw_data, "$.original_name" if media_type == "tv" else "$.original_title"), String),
-                cast(func.json_extract(cache_sq.c.raw_data, "$.original_title" if media_type == "tv" else "$.original_name"), String),
                 literal(""),
             )
+            date_field = "$.date" if media_type == "scene" else ("$.first_air_date" if media_type == "tv" else "$.release_date")
             release_date_expr = cast(
-                func.json_extract(cache_sq.c.raw_data, "$.first_air_date" if media_type == "tv" else "$.release_date"),
+                func.json_extract(cache_sq.c.raw_data, date_field),
                 String,
             )
             year_expr = cast(func.substr(release_date_expr, 1, 4), Integer)
             rating_expr = cast(func.json_extract(cache_sq.c.raw_data, "$.vote_average"), Float)
             genres_expr = cast(func.json_extract(cache_sq.c.raw_data, "$.genres"), String)
-            adult_expr = cast(func.json_extract(cache_sq.c.raw_data, "$.adult"), Integer)
+            adult_expr = literal(1) if media_type == "scene" else cast(func.json_extract(cache_sq.c.raw_data, "$.adult"), Integer)
         else:
             title_expr = func.coalesce(list_snapshot_sq.c.list_title, literal(""))
             original_title_expr = literal("")
@@ -296,20 +316,30 @@ class LibraryVirtualQueryService:
         items = []
         for row in rows:
             raw_data = resolved_raw_payloads.get(row.tmdb_id, {})
-            raw_poster_path = row.manual_poster_path or raw_data.get("poster_path") or row.list_poster_path
+            if media_type == "scene":
+                raw_poster_path = row.manual_poster_path or (raw_data.get("images", [{}])[0].get("url") if raw_data.get("images") else None) or row.list_poster_path
+            else:
+                raw_poster_path = row.manual_poster_path or raw_data.get("poster_path") or row.list_poster_path
+
             local_poster_path = resolve_asset_path(
                 subfolder="posters",
                 manual_local_path=row.manual_local_poster_path,
                 manual_path=row.manual_poster_path,
-                remote_path=raw_data.get("poster_path") or row.list_poster_path,
+                remote_path=(raw_data.get("images", [{}])[0].get("url") if media_type == "scene" and raw_data.get("images") else raw_data.get("poster_path")) or row.list_poster_path,
             )
             title = row.list_title or "Unknown TMDB Item"
             if media_type == "tv":
                 title = raw_data.get("name") or raw_data.get("title") or title
+            elif media_type == "scene":
+                title = raw_data.get("title") or title
             else:
                 title = raw_data.get("title") or raw_data.get("name") or title
 
-            release_date = raw_data.get("first_air_date") if media_type == "tv" else raw_data.get("release_date")
+            if media_type == "scene":
+                release_date = raw_data.get("date")
+            else:
+                release_date = raw_data.get("first_air_date") if media_type == "tv" else raw_data.get("release_date")
+
             year_value = None
             if release_date and len(str(release_date)) >= 4:
                 try:
@@ -333,7 +363,7 @@ class LibraryVirtualQueryService:
             ])
 
             items.append({
-                "id": f"tmdb_{row.tmdb_id}",
+                "id": f"stash_{raw_data.get('id')}" if media_type == "scene" and raw_data.get("id") else f"tmdb_{row.tmdb_id}",
                 "title": title,
                 "original_title": raw_data.get("original_title"),
                 "original_series_title": raw_data.get("original_name") if media_type == "tv" else None,
@@ -342,11 +372,11 @@ class LibraryVirtualQueryService:
                 "release_date": release_date,
                 "poster_path": raw_poster_path,
                 "local_poster_path": local_poster_path,
-                "displayPosterRemote": f"https://image.tmdb.org/t/p/{POSTER_SIZE}{raw_poster_path}" if raw_poster_path else None,
+                "displayPosterRemote": raw_poster_path if media_type == "scene" else (f"https://image.tmdb.org/t/p/{POSTER_SIZE}{raw_poster_path}" if raw_poster_path else None),
                 "rating": raw_data.get("vote_average") or 0,
                 "rating_tmdb": raw_data.get("vote_average") or 0,
                 "rating_imdb": _get_virtual_imdb_rating(raw_data),
-                "type": "series" if media_type == "tv" else "movie",
+                "type": "scene" if media_type == "scene" else ("series" if media_type == "tv" else "movie"),
                 "series_tmdb_id": row.tmdb_id if media_type == "tv" else None,
                 "tmdb_id": row.tmdb_id,
                 "series_title": title if media_type == "tv" else None,

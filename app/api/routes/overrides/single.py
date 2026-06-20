@@ -72,6 +72,14 @@ def _resolve_stash_item_id(db, item_id: str) -> int | None:
     if isinstance(item_id, str) and item_id.startswith("stash_"):
         try:
             scene_uuid = item_id.split("_")[1]
+            try:
+                stable_id = int(scene_uuid)
+                from app.db.models import TMDBCache
+                cache_entry = db.query(TMDBCache).filter(TMDBCache.tmdb_id == stable_id, TMDBCache.cache_key.like("/scene/%")).first()
+                if cache_entry:
+                    scene_uuid = cache_entry.cache_key.split("/scene/")[1]
+            except ValueError:
+                pass
         except IndexError:
             return None
         match_row = db.query(MediaMatch).filter(
@@ -87,11 +95,30 @@ def _resolve_stash_item_id(db, item_id: str) -> int | None:
     return None
 
 
+def _sanitize_item_id(db, item_id: str) -> str:
+    if isinstance(item_id, str) and item_id.startswith("stash_"):
+        parts = item_id.split("_")
+        if len(parts) > 1:
+            uuid_part = parts[1]
+            try:
+                stable_id = int(uuid_part)
+                from app.db.models import TMDBCache
+                cache_entry = db.query(TMDBCache).filter(TMDBCache.tmdb_id == stable_id, TMDBCache.cache_key.like("/scene/%")).first()
+                if cache_entry:
+                    real_uuid = cache_entry.cache_key.split("/scene/")[1]
+                    return f"stash_{real_uuid}"
+            except ValueError:
+                pass
+    return item_id
+
+
 @router.post("/media/update")
 def update_media_item(payload: dict):
     """Updates media item or extra file properties manually."""
     db = Session()
     try:
+        if "id" in payload:
+            payload["id"] = _sanitize_item_id(db, payload["id"])
         item_id = payload.get("id")
         item_type = payload.get("type", "media")
         updates = payload.get("updates", {})
@@ -143,7 +170,8 @@ def update_item_status(item_id: str, payload: dict):
     """Updates the status (user_rating, is_watched) of a media item."""
     db = Session()
     try:
-        is_virtual = isinstance(item_id, str) and item_id.startswith("tmdb_")
+        item_id = _sanitize_item_id(db, item_id)
+        is_virtual = isinstance(item_id, str) and (item_id.startswith("tmdb_") or item_id.startswith("stash_"))
 
         if is_virtual:
             media_type = str(payload.get("media_type") or "movie").lower()
@@ -179,17 +207,28 @@ def update_item_status(item_id: str, payload: dict):
             if media_type == "series":
                 media_type = "tv"
 
-            if media_type not in ("movie", "tv"):
+            if media_type not in ("movie", "tv", "scene"):
                 return JSONResponse(status_code=400, content={"error": "Invalid media_type"})
 
-            try:
-                tmdb_id = int(item_id.split("_")[1])
-            except (ValueError, IndexError):
-                return JSONResponse(status_code=400, content={"error": "Invalid virtual item id"})
+            if item_id.startswith("stash_"):
+                try:
+                    scene_uuid = item_id.split("_")[1]
+                except IndexError:
+                    return JSONResponse(status_code=400, content={"error": "Invalid virtual item id"})
+                import hashlib
+                tmdb_id = int.from_bytes(hashlib.md5(scene_uuid.encode('utf-8')).digest()[:8], byteorder='big', signed=True)
+                media_type = "scene"
+                is_item_adult = True
+            else:
+                try:
+                    tmdb_id = int(item_id.split("_")[1])
+                except (ValueError, IndexError):
+                    return JSONResponse(status_code=400, content={"error": "Invalid virtual item id"})
+                media_type = str(payload.get("media_type") or "movie").lower()
+                cache = db.query(TMDBCache).filter(TMDBCache.tmdb_id == tmdb_id).first()
+                is_item_adult = bool(cache.raw_data.get("adult", False)) if (cache and cache.raw_data) else False
 
             state = _get_or_create_virtual_media_state(db, tmdb_id, media_type)
-            cache = db.query(TMDBCache).filter(TMDBCache.tmdb_id == tmdb_id).first()
-            is_item_adult = bool(cache.raw_data.get("adult", False)) if (cache and cache.raw_data) else False
 
             if "is_watched" in payload:
                 state.is_watched = bool(payload["is_watched"])
@@ -439,6 +478,7 @@ def update_item_backdrop(item_id: str, payload: dict):
 
     db = Session()
     try:
+        item_id = _sanitize_item_id(db, item_id)
         from app.services.asset_service import AssetService
         if isinstance(item_id, str) and item_id.startswith("collection_"):
             try:
@@ -578,6 +618,7 @@ def update_item_poster(item_id: str, payload: dict):
 
     db = Session()
     try:
+        item_id = _sanitize_item_id(db, item_id)
         from app.services.asset_service import AssetService
         asset_service = AssetService()
         local_p = asset_service.download_image(poster_path, "posters", size=POSTER_SIZE)
@@ -691,6 +732,7 @@ def update_item_poster(item_id: str, payload: dict):
 def upload_item_backdrop(item_id: str, file: UploadFile = File(...)):
     db = Session()
     try:
+        item_id = _sanitize_item_id(db, item_id)
         filename, saved_path = _store_uploaded_asset(file, "backdrops")
         if not saved_path or not filename:
             return JSONResponse(status_code=400, content={"error": "Invalid backdrop upload"})
@@ -784,6 +826,7 @@ def upload_item_backdrop(item_id: str, file: UploadFile = File(...)):
 def upload_item_poster(item_id: str, file: UploadFile = File(...)):
     db = Session()
     try:
+        item_id = _sanitize_item_id(db, item_id)
         filename, saved_path = _store_uploaded_asset(file, "posters")
         if not saved_path or not filename:
             return JSONResponse(status_code=400, content={"error": "Invalid poster upload"})
@@ -893,6 +936,7 @@ def upload_item_poster(item_id: str, file: UploadFile = File(...)):
 def upload_item_logo(item_id: str, file: UploadFile = File(...)):
     db = Session()
     try:
+        item_id = _sanitize_item_id(db, item_id)
         filename, saved_path = _store_uploaded_asset(file, "logos")
         if not saved_path or not filename:
             return JSONResponse(status_code=400, content={"error": "Invalid logo upload"})
@@ -976,6 +1020,7 @@ def update_item_logo(item_id: str, payload: dict):
 
     db = Session()
     try:
+        item_id = _sanitize_item_id(db, item_id)
         from app.services.asset_service import AssetService
         asset_service = AssetService()
         local_logo = asset_service.download_image(logo_path, "logos", size=LOGO_SIZE)

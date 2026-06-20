@@ -360,10 +360,10 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
   const isOwned = item && item.in_library !== false;
   const isTracked = Boolean(item?.is_tracked);
   const virtualTmdbId = !isOwned
-    ? Number(item?.series_tmdb_id || item?.tmdb_id || cleanId || 0)
+    ? (isScene ? (item?.external_ids?.stash_id || cleanId) : Number(item?.series_tmdb_id || item?.tmdb_id || cleanId || 0))
     : 0;
-  const virtualMediaType = isMovie ? 'movie' : 'tv';
-  const canToggleTracked = !isOwned && Number.isFinite(virtualTmdbId) && virtualTmdbId > 0;
+  const virtualMediaType = isScene ? 'scene' : (isMovie ? 'movie' : 'tv');
+  const canToggleTracked = !isOwned && (isScene ? !!virtualTmdbId : (Number.isFinite(virtualTmdbId) && virtualTmdbId > 0));
 
   const getIsSeriesWatched = () => {
     if (!item?.seasons) return false;
@@ -522,22 +522,8 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
   let showNetworkPill = false;
 
   if (item?.type === 'scene') {
-    if (!hasStudioLogo && !hasNetworkLogo) {
-      showStudioPill = !!studioName;
-      showNetworkPill = !!networkName;
-    } else if (hasStudioLogo && hasNetworkLogo) {
-      // Both logos exist. Identify which one is currently used as the main logo.
-      // logoPath represents the active logo path.
-      if (logoPath === studioLogo) {
-        showNetworkPill = !!networkName;
-      } else {
-        showStudioPill = !!studioName;
-      }
-    } else if (hasStudioLogo) {
-      showNetworkPill = !!networkName;
-    } else if (hasNetworkLogo) {
-      showStudioPill = !!studioName;
-    }
+    showStudioPill = !!studioName;
+    showNetworkPill = !!networkName;
   }
 
   return {

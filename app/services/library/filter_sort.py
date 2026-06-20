@@ -60,7 +60,7 @@ class LibraryFilterSortService:
                 matches_watched = item.get("is_watched") is True
 
             matches_ownership = True
-            if tab in {"movies", "series", "adult", "adult_series"}:
+            if tab in {"movies", "series", "adult", "adult_series", "scenes", "adult_scenes"}:
                 owned = item.get("in_library") is not False
                 if filter_ownership == "owned":
                     matches_ownership = owned

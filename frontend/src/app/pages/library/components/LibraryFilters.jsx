@@ -7,6 +7,7 @@ import {
   isLibrarySeriesTab,
   isLibraryTagsTab,
   isLibraryVideoTab,
+  isLibraryScenesTab,
 } from '@/lib/libraryTabs';
 
 export default function LibraryFilters({
@@ -48,6 +49,7 @@ export default function LibraryFilters({
   const isPeopleTab = isLibraryPeopleTab(resolvedTab);
   const isTagsTab = isLibraryTagsTab(resolvedTab);
   const isSeriesTab = isLibrarySeriesTab(resolvedTab);
+  const isScenesTab = isLibraryScenesTab(resolvedTab);
 
   return (
     <div className="organizer-panel__row library-filters-row">
@@ -90,8 +92,10 @@ export default function LibraryFilters({
                       { value: 'title', label: t('library.sort.title') || 'Title' },
                       { value: 'year', label: isSeriesTab ? (t('library.sort.firstAirYear') || 'First Air Year') : (t('library.sort.year') || 'Year') },
                       { value: 'release_date', label: isSeriesTab ? (t('library.sort.firstAirDate') || 'First Air Date') : (t('library.sort.releaseDate') || 'Release Date') },
-                      { value: 'rating_imdb', label: t('library.sort.imdbRating') || 'IMDb Rating' },
-                      { value: 'rating', label: t('library.sort.tmdbRating') || 'TMDb Rating' },
+                      ...(!isScenesTab ? [
+                        { value: 'rating_imdb', label: t('library.sort.imdbRating') || 'IMDb Rating' },
+                        { value: 'rating', label: t('library.sort.tmdbRating') || 'TMDb Rating' },
+                      ] : []),
                       { value: 'user_rating', label: t('library.sort.userRating') || 'User Rating' },
                       { value: 'duration', label: t('library.sort.duration') || 'Duration' },
                       { value: 'file_size', label: t('library.sort.fileSize') || 'File Size' },
@@ -197,7 +201,7 @@ export default function LibraryFilters({
           </div>
         )}
 
-        {isVideoTab && (
+        {isVideoTab && !isScenesTab && (
           <div className="library-sorter-container">
             <span className="library-sorter-label">{t('library.filter.genreLabel') || 'Genre:'}</span>
             <Dropdown

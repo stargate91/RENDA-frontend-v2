@@ -72,6 +72,13 @@ class ItemDetailProvider(BaseDetailProvider):
             if isinstance(item_id, str) and item_id.startswith("stash_"):
                 try:
                     scene_uuid = item_id.split("_")[1]
+                    try:
+                        stable_id = int(scene_uuid)
+                        cache_entry = db.query(TMDBCache).filter(TMDBCache.tmdb_id == stable_id, TMDBCache.cache_key.like("/scene/%")).first()
+                        if cache_entry:
+                            scene_uuid = cache_entry.cache_key.split("/scene/")[1]
+                    except ValueError:
+                        pass
                 except IndexError:
                     return JSONResponse(status_code=400, content={"error": "Invalid stash ID format"})
 
@@ -89,6 +96,25 @@ class ItemDetailProvider(BaseDetailProvider):
                         
                 if not scene_data:
                     return JSONResponse(status_code=404, content={"error": "Scene not found on StashDB/FansDB"})
+
+                # Cache the fetched scene details
+                import hashlib
+                stash_int_id = int.from_bytes(hashlib.md5(scene_uuid.encode('utf-8')).digest()[:8], byteorder='big', signed=True)
+                cache_key = f"/scene/{scene_uuid}"
+                cache_entry = db.query(TMDBCache).filter(TMDBCache.cache_key == cache_key).first()
+                if not cache_entry:
+                    cache_entry = TMDBCache(
+                        cache_key=cache_key,
+                        tmdb_id=stash_int_id,
+                        item_type=ItemType.SCENE,
+                        locale="en",
+                        raw_data=scene_data
+                    )
+                    db.add(cache_entry)
+                    db.commit()
+                else:
+                    cache_entry.raw_data = scene_data
+                    db.commit()
                 
                 title = scene_data.get("title") or "Unknown Scene"
                 images = scene_data.get("images") or []
@@ -268,8 +294,8 @@ class ItemDetailProvider(BaseDetailProvider):
                     },
                     "custom_tags": [],
                     "tags": [],
-                    "is_tracked": False,
-                    "watch_count": 0,
+                    "is_tracked": bool(virtual_state.is_tracked) if virtual_state else False,
+                    "watch_count": 1 if virtual_state and virtual_state.is_watched else 0,
                     "is_watched": bool(virtual_state.is_watched) if virtual_state else False,
                     "resume_position": 0,
                     "last_watched_at": None,

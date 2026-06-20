@@ -87,6 +87,17 @@ class AdultGraphQLClient:
         return data["searchPerformer"] or []
 
     def get_performer_details(self, performer_id: str) -> Optional[Dict[str, Any]]:
+        if self.prefix not in ["stashdb", "fansdb", "theporndb"]:
+            return None
+            
+        cache_key = f"/{self.prefix}/performer/{performer_id}"
+        from app.db.models import TMDBCache
+        from datetime import datetime, timedelta
+        
+        cache = self.db.query(TMDBCache).filter(TMDBCache.cache_key == cache_key).first()
+        if cache and cache.updated_at > datetime.utcnow() - timedelta(hours=24):
+            return cache.raw_data
+
         gql_query = """
         query GetPerformer($id: ID!) {
           findPerformer(id: $id) {
@@ -130,6 +141,8 @@ class AdultGraphQLClient:
         """
         data = self.execute_query(gql_query, {"id": performer_id})
         if not data or "findPerformer" not in data:
+            if cache:
+                return cache.raw_data
             return None
         
         performer = data["findPerformer"]
@@ -141,28 +154,50 @@ class AdultGraphQLClient:
                 cup = m.get("cup_size")
                 bust = ""
                 if band:
-                    bust += str(band)
+                     bust += str(band)
                 if cup:
-                    bust += str(cup)
+                     bust += str(cup)
                 if bust:
-                    parts.append(bust)
+                     parts.append(bust)
                 
                 waist = m.get("waist")
                 if waist:
-                    parts.append(str(waist))
+                     parts.append(str(waist))
                 
                 hip = m.get("hip")
                 if hip:
-                    parts.append(str(hip))
+                     parts.append(str(hip))
                 
                 performer["measurements"] = "-".join(parts) if parts else None
                 
+        if performer:
+            if not cache:
+                cache = TMDBCache(
+                    cache_key=cache_key,
+                    locale="en",
+                    raw_data=performer
+                )
+                self.db.add(cache)
+            else:
+                cache.raw_data = performer
+                cache.updated_at = datetime.utcnow()
+            self.db.commit()
+
         return performer
 
     def get_performer_scenes(self, performer_id: str, page: int = 1, per_page: int = 60) -> tuple[List[Dict[str, Any]], int]:
         if self.prefix not in ["stashdb", "fansdb"]:
             return [], 0
             
+        cache_key = f"/{self.prefix}/performer/{performer_id}/scenes?page={page}&per_page={per_page}"
+        from app.db.models import TMDBCache
+        from datetime import datetime, timedelta
+        
+        cache = self.db.query(TMDBCache).filter(TMDBCache.cache_key == cache_key).first()
+        if cache and cache.updated_at > datetime.utcnow() - timedelta(hours=24):
+            raw = cache.raw_data or {}
+            return raw.get("scenes") or [], raw.get("count") or 0
+
         gql_query = """
         query QueryScenes($input: SceneQueryInput!) {
           queryScenes(input: $input) {
@@ -204,11 +239,32 @@ class AdultGraphQLClient:
         try:
             data = self.execute_query(gql_query, variables)
             if not data or "queryScenes" not in data:
+                if cache:
+                    raw = cache.raw_data or {}
+                    return raw.get("scenes") or [], raw.get("count") or 0
                 return [], 0
             res = data["queryScenes"]
-            return res.get("scenes") or [], res.get("count") or 0
+            scenes = res.get("scenes") or []
+            count = res.get("count") or 0
+            
+            if not cache:
+                cache = TMDBCache(
+                    cache_key=cache_key,
+                    locale="en",
+                    raw_data={"scenes": scenes, "count": count}
+                )
+                self.db.add(cache)
+            else:
+                cache.raw_data = {"scenes": scenes, "count": count}
+                cache.updated_at = datetime.utcnow()
+            self.db.commit()
+            
+            return scenes, count
         except Exception as e:
             logger.error(f"Error fetching performer scenes: {e}")
+            if cache:
+                raw = cache.raw_data or {}
+                return raw.get("scenes") or [], raw.get("count") or 0
             return [], 0
 
     def get_scene_details(self, scene_id: str) -> Optional[Dict[str, Any]]:

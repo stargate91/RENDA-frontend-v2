@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_
 
 from ..db.models import ItemStatus, MediaItem, MediaPersonLink, Person, UserSetting
@@ -61,7 +61,10 @@ class LibraryPeopleService:
 
         adult_pref = self._adult_gender_preference()
 
-        query = self.db.query(Person)
+        query = self.db.query(Person).options(
+            joinedload(Person.localizations),
+            joinedload(Person.media_links)
+        )
 
         if filter_status == "active":
             query = query.filter(Person.is_active == True)

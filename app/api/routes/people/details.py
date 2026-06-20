@@ -122,6 +122,10 @@ def get_person_detail(person_id: int):
             lead_cast_order_threshold=lead_cast_order_threshold,
             scenes_page=1,
             scenes_page_size=PERSON_INITIAL_CREDITS_PAGE_SIZE,
+            movies_page=1,
+            movies_page_size=PERSON_INITIAL_CREDITS_PAGE_SIZE,
+            series_page=1,
+            series_page_size=PERSON_INITIAL_CREDITS_PAGE_SIZE,
         )
         tmdb_data = credit_payload["tmdb_data"]
         person_backdrop = credit_payload["person_backdrop"]
@@ -263,7 +267,7 @@ def get_person_movies(
 
         ui_lang = _preferred_metadata_language(db)
         target_lang = ui_lang or "en"
-        credit_payload = load_person_credit_payload(db, person_id, person, ui_lang, target_lang)
+        credit_payload = load_person_credit_payload(db, person_id, person, ui_lang, target_lang, movies_page=page, movies_page_size=page_size)
         base_items = credit_payload["movies"]
         if exclude_known_for:
             loc = _pick_person_localization(person, ui_lang)
@@ -306,7 +310,7 @@ def get_person_series(
 
         ui_lang = _preferred_metadata_language(db)
         target_lang = ui_lang or "en"
-        credit_payload = load_person_credit_payload(db, person_id, person, ui_lang, target_lang)
+        credit_payload = load_person_credit_payload(db, person_id, person, ui_lang, target_lang, series_page=page, series_page_size=page_size)
         base_items = credit_payload["series"]
         if exclude_known_for:
             loc = _pick_person_localization(person, ui_lang)

@@ -299,6 +299,7 @@ def resolve_person_known_for_backdrop(
     department: Optional[str] = None,
     adult_only: bool = False,
     respect_credit_order: bool = False,
+    local_pick_cache: Optional[Any] = None,
 ) -> Optional[str]:
     candidates: list[tuple[int, str]] = []
     seen_media: set[tuple[str, int]] = set()
@@ -331,13 +332,19 @@ def resolve_person_known_for_backdrop(
             break
 
         cache_media_type = "movie" if media_type == "movie" else "tv"
-        cached = _pick_tmdb_cache(db, parsed_credit_id, cache_media_type, preferred_languages)
+        if local_pick_cache is not None:
+            cached = local_pick_cache(parsed_credit_id, cache_media_type)
+        else:
+            cached = _pick_tmdb_cache(db, parsed_credit_id, cache_media_type, preferred_languages)
         raw_data = cached.raw_data if cached and isinstance(cached.raw_data, dict) else None
 
-        if raw_data is None:
-            raw_data = tmdb_client.get_details(parsed_credit_id, "movie" if media_type == "movie" else "series", language=preferred_languages[0])
+        if raw_data is None and not adult_only:
+            try:
+                raw_data = tmdb_client.get_details(parsed_credit_id, "movie" if media_type == "movie" else "series", language=preferred_languages[0])
+            except Exception:
+                raw_data = None
 
-        if adult_only and not bool((raw_data or {}).get("adult")):
+        if adult_only and (not raw_data or not bool(raw_data.get("adult"))):
             continue
 
         backdrop_path = _pick_backdrop_path(raw_data, preferred_languages[0], allow_low_res=not adult_only) if raw_data else None
@@ -503,14 +510,37 @@ def schedule_person_credit_poster_warmup(person_id: int, media_type: str, page: 
     threading.Thread(target=_warmup, daemon=True).start()
 
 
-def load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str, target_lang: str, lead_cast_order_threshold: int = 3, scenes_page: Optional[int] = None, scenes_page_size: Optional[int] = None, scenes_source: Optional[str] = None) -> dict:
-    links = db.query(MediaPersonLink).join(MediaPersonLink.media_match).join(MediaMatch.media_item).filter(
+
+def load_person_credit_payload(
+    db,
+    person_id: int,
+    person: Person,
+    ui_lang: str,
+    target_lang: str,
+    lead_cast_order_threshold: int = 3,
+    scenes_page: Optional[int] = None,
+    scenes_page_size: Optional[int] = None,
+    scenes_source: Optional[str] = None,
+    movies_page: Optional[int] = None,
+    movies_page_size: Optional[int] = None,
+    series_page: Optional[int] = None,
+    series_page_size: Optional[int] = None,
+) -> dict:
+    ext_ids = person.external_ids or {}
+    has_adult_db_id = any(ext_ids.get(f"{src}_id") for src in ["stashdb", "fansdb", "theporndb"])
+
+    links_query = db.query(MediaPersonLink).join(MediaPersonLink.media_match).join(MediaMatch.media_item).filter(
         MediaPersonLink.person_id == person_id,
         MediaMatch.is_active == True,
         MediaItem.status.in_([ItemStatus.RENAMED, ItemStatus.ORGANIZED])
-    ).options(
+    )
+    if has_adult_db_id:
+        links_query = links_query.filter(MediaItem.item_type != ItemType.SCENE)
+
+    links = links_query.options(
         joinedload(MediaPersonLink.media_match).joinedload(MediaMatch.media_item),
-        joinedload(MediaPersonLink.media_match).joinedload(MediaMatch.localizations)
+        joinedload(MediaPersonLink.media_match).joinedload(MediaMatch.localizations),
+        joinedload(MediaPersonLink.media_match).joinedload(MediaMatch.studio),
     ).all()
 
     movies = []
@@ -721,7 +751,7 @@ def load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str,
                         poster_url = images_list[0].get("url") if images_list else None
                         
                         scenes.append({
-                            "id": library_item_id or stable_id,
+                            "id": library_item_id or f"stash_{s.get('id')}",
                             "title": s.get("title") or "Unknown Scene",
                             "type": "scene",
                             "media_type": "scene",
@@ -761,33 +791,7 @@ def load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str,
         if cast_list or crew_list:
             preferred_languages = [target_lang, "en"]
 
-            def _get_virtual_credit_imdb_rating(tmdb_id: int, media_type: str):
-                cache = _pick_tmdb_cache(db, tmdb_id, media_type, preferred_languages)
-                if not cache or not isinstance(cache.raw_data, dict):
-                    return None
-                imdb_id = cache.raw_data.get("external_ids", {}).get("imdb_id") or cache.raw_data.get("imdb_id")
-                if not imdb_id:
-                    return None
-                omdb_raw = _get_omdb_ratings_from_imdb(db, imdb_id)
-                return _parse_omdb_float(omdb_raw.get("imdb_rating"))
-
             is_person_adult = bool(getattr(person, "is_adult", False))
-
-            def _get_credit_backdrop_path(tmdb_id: int, media_type: str, credit: dict) -> Optional[str]:
-                direct_backdrop = credit.get("backdrop_path")
-                if direct_backdrop and not is_person_adult:
-                    return direct_backdrop
-
-                cache = _pick_tmdb_cache(db, tmdb_id, media_type, preferred_languages)
-                raw_data = cache.raw_data if cache and isinstance(cache.raw_data, dict) else None
-                if not raw_data:
-                    return None
-
-                return (
-                    _pick_backdrop_path(raw_data, preferred_languages[0], allow_low_res=not is_person_adult)
-                    or (None if is_person_adult else raw_data.get("backdrop_path"))
-                )
-
 
             local_movies = db.query(MediaMatch.tmdb_id, MediaItem.id, MediaMatch.rating_imdb).join(MediaMatch.media_item).filter(
                 MediaMatch.is_active == True,
@@ -864,8 +868,6 @@ def load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str,
                         in_library = True
                         library_series_tmdb_id = cid
 
-                    virtual_imdb_rating = _get_virtual_credit_imdb_rating(cid, media_type)
-                    resolved_backdrop_path = _get_credit_backdrop_path(cid, media_type, credit)
                     combined_credits[key] = {
                         "id": cid,
                         "tmdb_id": cid,
@@ -874,7 +876,7 @@ def load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str,
                         "media_type": media_type,
                         "year": year,
                         "poster_path": credit.get("poster_path"),
-                        "backdrop_path": resolved_backdrop_path,
+                        "backdrop_path": None,
                         "rating": credit.get("vote_average") or 0.0,
                         "rating_tmdb": credit.get("vote_average") or 0.0,
                         "vote_count": credit.get("vote_count") or 0,
@@ -884,7 +886,7 @@ def load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str,
                             local_movies_map.get(cid, {}).get("rating_imdb")
                             if media_type == "movie"
                             else local_series_map.get(cid, {}).get("rating_imdb")
-                        ) or virtual_imdb_rating,
+                        ),
                         "roles": [role],
                         "is_lead": is_lead,
                         "order": credit.get("order") if isinstance(credit.get("order"), int) else None,
@@ -946,6 +948,128 @@ def load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str,
                 adult_only=bool(getattr(person, "is_adult", False)),
                 person_name=person_name,
             )
+
+            # Determine visible subset to query TMDBCache/OMDBCache
+            prioritized_movies = prioritize_person_credits(parsed_movies, known_for)
+            prioritized_series = prioritize_person_credits(parsed_series, known_for)
+            
+            paged_movies = paginate_items(prioritized_movies, movies_page or 1, movies_page_size or PERSON_INITIAL_CREDITS_PAGE_SIZE)["items"]
+            paged_series = paginate_items(prioritized_series, series_page or 1, series_page_size or PERSON_INITIAL_CREDITS_PAGE_SIZE)["items"]
+            
+            visible_items = list(known_for) + paged_movies + paged_series
+            visible_tmdb_ids = {item["tmdb_id"] for item in visible_items if item.get("tmdb_id")}
+            
+            caches_by_id = {}
+            if visible_tmdb_ids:
+                all_caches = db.query(TMDBCache).filter(TMDBCache.tmdb_id.in_(list(visible_tmdb_ids))).all()
+                for cache in all_caches:
+                    if cache.tmdb_id not in caches_by_id:
+                        caches_by_id[cache.tmdb_id] = []
+                    caches_by_id[cache.tmdb_id].append(cache)
+
+            from urllib.parse import urlsplit, parse_qs
+            from app.utils.library_utils.lang import _match_language_code
+            from app.db.models import OMDBCache
+
+            def local_pick_tmdb_cache(tmdb_id: Optional[int], media_type: str) -> Optional[TMDBCache]:
+                if not tmdb_id:
+                    return None
+                endpoint_prefix = f"/{media_type}/{tmdb_id}"
+                caches = caches_by_id.get(tmdb_id) or []
+                filtered_caches = []
+                for cache in caches:
+                    cache_key = cache.cache_key if isinstance(cache.cache_key, str) else ""
+                    if not cache_key.startswith(endpoint_prefix):
+                        continue
+                    suffix = cache_key[len(endpoint_prefix):]
+                    if suffix == "" or suffix.startswith("?"):
+                        filtered_caches.append(cache)
+                if not filtered_caches:
+                    return None
+                if len(filtered_caches) == 1:
+                    return filtered_caches[0]
+
+                def _cache_language(cache: TMDBCache) -> str:
+                    cache_key = cache.cache_key if isinstance(cache.cache_key, str) else ""
+                    try:
+                        parsed = urlsplit(cache_key)
+                        parsed_language = str((parse_qs(parsed.query).get("language") or [""])[0] or "")
+                        if parsed_language:
+                            return parsed_language
+                    except Exception:
+                        pass
+                    return str(cache.locale or "")
+
+                def rank_for(cache: TMDBCache) -> tuple[int, float]:
+                    cache_lang = _cache_language(cache)
+                    for idx, preferred in enumerate(preferred_languages):
+                        if _match_language_code(cache_lang, preferred):
+                            return idx, -cache.updated_at.timestamp()
+                    if _match_language_code(cache_lang, "en"):
+                        return len(preferred_languages), -cache.updated_at.timestamp()
+                    return len(preferred_languages) + 1, -cache.updated_at.timestamp()
+
+                return sorted(filtered_caches, key=rank_for)[0]
+
+            imdb_ids = set()
+            for tmdb_id, caches in caches_by_id.items():
+                for cache in caches:
+                    if isinstance(cache.raw_data, dict):
+                        iid = cache.raw_data.get("external_ids", {}).get("imdb_id") or cache.raw_data.get("imdb_id")
+                        if iid:
+                            imdb_ids.add(iid)
+            omdb_map = {}
+            if imdb_ids:
+                omdb_caches = db.query(OMDBCache).filter(OMDBCache.imdb_id.in_(list(imdb_ids))).all()
+                for o in omdb_caches:
+                    if o.imdb_id and isinstance(o.raw_data, dict):
+                        omdb_map[o.imdb_id] = o.raw_data
+
+            def _get_virtual_credit_imdb_rating(tmdb_id: int, media_type: str):
+                cache = local_pick_tmdb_cache(tmdb_id, media_type)
+                if not cache or not isinstance(cache.raw_data, dict):
+                    return None
+                imdb_id = cache.raw_data.get("external_ids", {}).get("imdb_id") or cache.raw_data.get("imdb_id")
+                if not imdb_id:
+                    return None
+                omdb_raw = omdb_map.get(imdb_id) or {}
+                return _parse_omdb_float(omdb_raw.get("imdb_rating"))
+
+            def _get_credit_backdrop_path(tmdb_id: int, media_type: str, direct_backdrop: Optional[str]) -> Optional[str]:
+                if direct_backdrop and not is_person_adult:
+                    return direct_backdrop
+
+                cache = local_pick_tmdb_cache(tmdb_id, media_type)
+                raw_data = cache.raw_data if cache and isinstance(cache.raw_data, dict) else None
+                if not raw_data:
+                    return None
+
+                return (
+                    _pick_backdrop_path(raw_data, preferred_languages[0], allow_low_res=not is_person_adult)
+                    or (None if is_person_adult else raw_data.get("backdrop_path"))
+                )
+
+            # Now resolve ratings and backdrops only for the visible items
+            for item in visible_items:
+                tid = item.get("tmdb_id")
+                mtype = item.get("media_type")
+                if not tid or mtype not in {"movie", "tv"}:
+                    continue
+                # Pick actual direct credit's backdrop_path if stored or fallback
+                # Find the credit object in TMDb data if available to get the original backdrop_path
+                orig_backdrop = None
+                for c in cast_list + crew_list:
+                    if c.get("id") == tid and c.get("media_type") == mtype:
+                        orig_backdrop = c.get("backdrop_path")
+                        break
+                
+                resolved_bd = _get_credit_backdrop_path(tid, mtype, orig_backdrop)
+                item["backdrop_path"] = resolved_bd
+                
+                # Fetch virtual imdb rating if needed
+                if item.get("rating_imdb") is None:
+                    item["rating_imdb"] = _get_virtual_credit_imdb_rating(tid, mtype)
+
             person_backdrop = resolve_person_known_for_backdrop(
                 db,
                 tmdb_client,
@@ -954,6 +1078,7 @@ def load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str,
                 department=person.known_for_department,
                 adult_only=bool(getattr(person, "is_adult", False)),
                 respect_credit_order=True,
+                local_pick_cache=local_pick_tmdb_cache,
             )
             all_movies = parsed_movies
             all_series = parsed_series

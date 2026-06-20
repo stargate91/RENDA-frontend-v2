@@ -78,7 +78,7 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
     : undefined;
 
   const libraryQueryParams = useMemo(() => {
-    if (isCollections || isTags || isScenes || !activeSessionMode) return null;
+    if (isCollections || isTags || !activeSessionMode) return null;
     return {
       tab: backendTab,
       page: currentPage,
@@ -239,17 +239,15 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
     }
   };
 
-  const isServerPaged = !isCollections && !isTags && !isScenes;
+  const isServerPaged = !isCollections && !isTags;
 
   const allItems = useMemo(() => {
     return isCollections
       ? (collectionsData?.items || [])
       : isTags
         ? processedTags
-        : isScenes
-          ? []
-          : (libraryData?.items || []);
-  }, [isCollections, collectionsData?.items, isTags, processedTags, libraryData?.items, isScenes]);
+        : (libraryData?.items || []);
+  }, [isCollections, collectionsData?.items, isTags, processedTags, libraryData?.items]);
 
   const localFilteredItems = useLocalListSearch(allItems, searchQuery);
 

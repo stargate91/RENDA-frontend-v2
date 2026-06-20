@@ -16,6 +16,10 @@ export const libraryRoutes = [
     element: <MediaDetailPage type="movie" />,
   },
   {
+    path: 'library/scene/:id',
+    element: <MediaDetailPage type="scene" />,
+  },
+  {
     path: 'library/series/:id',
     element: <MediaDetailPage type="series" />,
   },

@@ -48,7 +48,7 @@ def get_library_items(
     db = Session()
     try:
         service = MediaLibraryService(db)
-        if tab and tab.lower() in {"movies", "series", "adult", "adult_series", "people", "adult_people", "actors", "directors"}:
+        if tab and tab.lower() in {"movies", "series", "adult", "adult_series", "people", "adult_people", "actors", "directors", "scenes", "adult_scenes"}:
             parsed_tags = [tag for tag in (selected_tags or "").split(",") if tag]
             library = service.get_library_tab_page(
                 tab=tab,

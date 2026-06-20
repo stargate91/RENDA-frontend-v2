@@ -23,6 +23,7 @@ import {
   isLibraryPeopleTab,
   isLibrarySeriesTab,
   isLibraryTagsTab,
+  isLibraryScenesTab,
 } from '@/lib/libraryTabs';
 import { isMovieMediaType, isPersonMediaType, isTvLikeMediaType } from '@/lib/mediaTypes';
 import { Heart, Pencil, Play, Plus, Trash2, UserPlus } from 'lucide-react';
@@ -278,7 +279,7 @@ export default function LibraryGrid({
 
     if (playMutation.isPending) return;
 
-    if (isLibraryMovieTab(resolvedTab)) {
+    if (isLibraryMovieTab(resolvedTab) || isLibraryScenesTab(resolvedTab)) {
       playMutation.mutate(item.id);
       return;
     }
@@ -308,6 +309,8 @@ export default function LibraryGrid({
       navigate(`/library/movie/${item.id}`);
     } else if (isLibrarySeriesTab(resolvedTab)) {
       navigate(`/library/series/${item.id}`);
+    } else if (isLibraryScenesTab(resolvedTab)) {
+      navigate(`/library/scene/${item.id}`);
     }
   }, [isTags, isCollections, resolvedTab, navigate]);
 

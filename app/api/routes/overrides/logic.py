@@ -27,13 +27,47 @@ logger = logging.getLogger(__name__)
 from app.utils.library_utils import _preferred_metadata_language, _match_language_code
 
 
-def _hydrate_virtual_metadata(db, tmdb_id: int, media_type: str) -> None:
+def _hydrate_virtual_metadata(db, tmdb_id, media_type: str) -> None:
+    if media_type == "scene":
+        from app.db.models import TMDBCache, ItemType
+        scene_uuid = str(tmdb_id).split("_")[1] if "_" in str(tmdb_id) else str(tmdb_id)
+        try:
+            stable_id = int(scene_uuid)
+            cache_entry = db.query(TMDBCache).filter(TMDBCache.tmdb_id == stable_id, TMDBCache.cache_key.like("/scene/%")).first()
+            if cache_entry:
+                scene_uuid = cache_entry.cache_key.split("/scene/")[1]
+        except Exception:
+            pass
+        from app.api.graphql_clients import AdultGraphQLClient
+        import hashlib
+        stash_int_id = int.from_bytes(hashlib.md5(scene_uuid.encode('utf-8')).digest()[:8], byteorder='big', signed=True)
+        
+        cache_key = f"/scene/{scene_uuid}"
+        cache_entry = db.query(TMDBCache).filter(TMDBCache.cache_key == cache_key).first()
+        if not cache_entry:
+            scene_data = None
+            for src in ["stashdb", "fansdb"]:
+                client = AdultGraphQLClient(db, src)
+                scene_data = client.get_scene_details(scene_uuid)
+                if scene_data:
+                    break
+            if scene_data:
+                cache_entry = TMDBCache(
+                    cache_key=cache_key,
+                    tmdb_id=stash_int_id,
+                    item_type=ItemType.SCENE,
+                    locale="en",
+                    raw_data=scene_data
+                )
+                db.add(cache_entry)
+                db.commit()
+        return
     try:
         from app.services.lists_service import _hydrate_virtual_metadata as hydrate_virtual_metadata_for_list
 
         hydrate_virtual_metadata_for_list(
             db=db,
-            tmdb_id=tmdb_id,
+            tmdb_id=int(tmdb_id),
             media_type=media_type,
             language=_preferred_metadata_language(db),
         )

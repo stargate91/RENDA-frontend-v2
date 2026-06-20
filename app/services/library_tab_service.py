@@ -62,18 +62,18 @@ class LibraryTabService:
         people_role: str = "all",
     ) -> dict:
         normalized_tab = (tab or "movies").lower()
-        if normalized_tab not in {"movies", "series", "adult", "adult_series", "people", "adult_people", "actors", "directors"}:
+        if normalized_tab not in {"movies", "series", "adult", "adult_series", "people", "adult_people", "actors", "directors", "scenes", "adult_scenes"}:
             raise ValueError(f"Unsupported library tab: {tab}")
         if normalized_tab in {"actors", "directors"}:
             normalized_tab = "people"
 
         items, total_items, safe_page, safe_page_size, total_pages = [], 0, 1, page_size, 1
 
-        if normalized_tab in {"movies", "series", "adult", "adult_series"} and filter_ownership == "owned":
+        if normalized_tab in {"movies", "series", "adult", "adult_series", "scenes", "adult_scenes"} and filter_ownership == "owned":
             items, total_items, safe_page, safe_page_size, total_pages = self.owned_provider.get_page(
                 normalized_tab, page, page_size, sort_by, search, selected_tags, selected_genre, selected_decade, selected_year, filter_favorite, filter_watched, filter_ownership, filter_status, filter_gender
             )
-        elif normalized_tab in {"movies", "series", "adult", "adult_series"} and filter_ownership == "unowned":
+        elif normalized_tab in {"movies", "series", "adult", "adult_series", "scenes", "adult_scenes"} and filter_ownership == "unowned":
             items, total_items, safe_page, safe_page_size, total_pages = self.virtual_provider.get_page(
                 normalized_tab, page, page_size, sort_by, search, selected_tags, selected_genre, selected_decade, selected_year, filter_favorite, filter_watched, filter_ownership, filter_status, filter_gender
             )
@@ -90,12 +90,14 @@ class LibraryTabService:
 
         owned_counts = self.repository.get_library_owned_counts()
         counts = self.grouped_service.get_grouped_library(
-            requested_tabs={"movies", "series", "adult", "adult_series", "people", "adult_people"}
+            requested_tabs={"movies", "series", "adult", "adult_series", "people", "adult_people", "scenes", "adult_scenes"}
         ).get("counts", {})
         counts["movies"] = owned_counts.get("movies", 0)
         counts["series"] = owned_counts.get("series", 0)
         counts["adult"] = owned_counts.get("adult", 0)
         counts["adult_series"] = owned_counts.get("adult_series", 0)
+        counts["scenes"] = owned_counts.get("scenes", 0)
+        counts["adult_scenes"] = owned_counts.get("adult_scenes", 0)
 
         return {
             "tab": normalized_tab,

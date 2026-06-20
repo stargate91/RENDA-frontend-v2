@@ -109,6 +109,16 @@ class MediaRepository:
                     MediaMatch.is_adult == True,
                     MediaItem.item_type.in_([ItemType.SERIES, ItemType.EPISODE])
                 ).distinct()
+            elif tab == "scenes":
+                query = query.filter(MediaItem.item_type == ItemType.SCENE)
+            elif tab == "adult_scenes":
+                query = query.join(
+                    MediaMatch,
+                    (MediaMatch.media_item_id == MediaItem.id) & (MediaMatch.is_active == True)
+                ).filter(
+                    MediaMatch.is_adult == True,
+                    MediaItem.item_type == ItemType.SCENE
+                ).distinct()
 
         return query.all()
 
@@ -148,11 +158,23 @@ class MediaRepository:
             active_adult_match,
         ).scalar() or 0
 
+        scenes = base_query.filter(
+            MediaItem.item_type == ItemType.SCENE,
+            ~active_adult_match,
+        ).count()
+
+        adult_scenes = base_query.filter(
+            MediaItem.item_type == ItemType.SCENE,
+            active_adult_match,
+        ).count()
+
         return {
             "movies": movies,
             "series": series,
             "adult": adult,
             "adult_series": adult_series,
+            "scenes": scenes,
+            "adult_scenes": adult_scenes,
         }
 
     def get_owned_library_page(
@@ -200,6 +222,16 @@ class MediaRepository:
         elif tab == "adult_series":
             query = query.filter(
                 MediaItem.item_type.in_([ItemType.SERIES, ItemType.EPISODE]),
+                active_adult_match,
+            )
+        elif tab == "scenes":
+            query = query.filter(
+                MediaItem.item_type == ItemType.SCENE,
+                ~active_adult_match,
+            )
+        elif tab == "adult_scenes":
+            query = query.filter(
+                MediaItem.item_type == ItemType.SCENE,
                 active_adult_match,
             )
 

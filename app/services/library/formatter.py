@@ -136,12 +136,16 @@ class LibraryFormatterService:
         if active_match and active_match.is_adult:
             if item.item_type in [ItemType.SERIES, ItemType.EPISODE]:
                 target_group = "adult_series"
+            elif item.item_type == ItemType.SCENE:
+                target_group = "adult_scenes"
             else:
                 target_group = "adult"
         elif item.item_type == ItemType.MOVIE:
             target_group = "movies"
         elif item.item_type in [ItemType.SERIES, ItemType.EPISODE]:
             target_group = "series"
+        elif item.item_type == ItemType.SCENE:
+            target_group = "scenes"
 
         if not target_group:
             return None
