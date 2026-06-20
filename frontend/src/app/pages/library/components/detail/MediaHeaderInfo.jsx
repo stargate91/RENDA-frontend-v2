@@ -1,4 +1,4 @@
-import { Calendar, Clock } from 'lucide-react';
+import { Calendar, Clock, Video, Globe } from 'lucide-react';
 import Pill from '@/ui/Pill';
 import { useMediaDetailContext } from './MediaDetailContext';
 import './MediaHeaderInfo.css';
@@ -24,7 +24,11 @@ export default function MediaHeaderInfo() {
     showTmdb,
     ratingTmdb,
     normalizedGenres,
-    item
+    item,
+    showStudioPill,
+    showNetworkPill,
+    studioName,
+    networkName
   } = state;
 
   return (
@@ -59,8 +63,20 @@ export default function MediaHeaderInfo() {
             </div>
           )}
 
-          {(metaDate || formattedDuration || seasonsText || episodesText || langText || ratingImdb || ratingTmdb) && (
+          {(metaDate || formattedDuration || seasonsText || episodesText || langText || ratingImdb || ratingTmdb || showStudioPill || showNetworkPill) && (
             <div className="media-detail-page__meta-row">
+              {showStudioPill && (
+                <Pill variant="meta">
+                  <Video size={14} />
+                  {studioName}
+                </Pill>
+              )}
+              {showNetworkPill && (
+                <Pill variant="meta">
+                  <Globe size={14} />
+                  {networkName}
+                </Pill>
+              )}
               {metaDate && (
                 <Pill variant="meta">
                   <Calendar size={14} />

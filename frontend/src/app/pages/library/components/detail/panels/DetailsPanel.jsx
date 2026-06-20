@@ -180,7 +180,7 @@ export default function DetailsPanel() {
         </div>
       )}
 
-      {companies.length > 0 && (
+      {companies.length > 0 && !isSceneType && (
         <div className="details-panel__section">
           <h4 className="details-panel__section-title">
             {item.is_adult ? (t('library.details.studio') || 'Studio') : (t('library.details.productionCompanies') || 'Production Companies')}
@@ -217,7 +217,7 @@ export default function DetailsPanel() {
         </div>
       )}
 
-      {networks.length > 0 && (
+      {networks.length > 0 && !isSceneType && (
         <div className="details-panel__section">
           <h4 className="details-panel__section-title">
             {item.is_adult ? (t('library.details.network') || 'Network') : (t('library.details.platformsNetworks') || 'Platforms & Networks')}

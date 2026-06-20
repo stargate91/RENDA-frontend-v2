@@ -136,6 +136,29 @@ class ItemDetailProvider(BaseDetailProvider):
                     downloaded = asset_service.download_image(parent_logo, "logos")
                     if downloaded:
                         parent_logo_resolved = os.path.basename(downloaded)
+
+                use_parent_as_main = False
+                if studio_logo_resolved and parent_logo_resolved:
+                    studio_path = os.path.join("data", "media", "images", "logos", studio_logo_resolved)
+                    parent_path = os.path.join("data", "media", "images", "logos", parent_logo_resolved)
+                    
+                    if os.path.exists(studio_path) and os.path.exists(parent_path):
+                        studio_is_svg = studio_logo_resolved.lower().endswith('.svg')
+                        parent_is_svg = parent_logo_resolved.lower().endswith('.svg')
+                        
+                        if parent_is_svg and not studio_is_svg:
+                            use_parent_as_main = True
+                        elif studio_is_svg and not parent_is_svg:
+                            use_parent_as_main = False
+                        else:
+                            use_parent_as_main = os.path.getsize(parent_path) > os.path.getsize(studio_path)
+
+                if use_parent_as_main:
+                    main_logo = parent_logo
+                    main_resolved = parent_logo_resolved
+                else:
+                    main_logo = studio_logo or parent_logo
+                    main_resolved = studio_logo_resolved or parent_logo_resolved
                 
                 cast = []
                 for p_entry in scene_data.get("performers") or []:
@@ -167,8 +190,8 @@ class ItemDetailProvider(BaseDetailProvider):
                     "id": f"stash_{scene_uuid}",
                     "title": title,
                     "logo_path": self.formatter.resolve_logo_response_path(
-                        logo_path=studio_logo or parent_logo,
-                        local_logo_path=studio_logo_resolved or parent_logo_resolved,
+                        logo_path=main_logo,
+                        local_logo_path=main_resolved,
                     ),
                     "original_title": None,
                     "tagline": None,
@@ -195,6 +218,10 @@ class ItemDetailProvider(BaseDetailProvider):
                     "is_favorite": False,
                     "user_rating": None,
                     "user_comment": None,
+                    "external_ids": {
+                        "stash_id": scene_uuid,
+                        "source": used_source,
+                    },
                     "custom_tags": [],
                     "tags": [],
                     "is_tracked": False,
@@ -647,9 +674,39 @@ class ItemDetailProvider(BaseDetailProvider):
                 )
             )
 
-            if not effective_logo_path and item.item_type == ItemType.SCENE and active_match.is_adult and active_match.studio:
-                effective_logo_path = active_match.studio.logo_path
-                effective_local_logo_path = active_match.studio.local_logo_path
+            if not effective_logo_path and item.item_type == ItemType.SCENE and active_match.is_adult:
+                studio_logo = active_match.studio.logo_path if active_match.studio else None
+                studio_logo_resolved = active_match.studio.local_logo_path if active_match.studio else None
+                
+                parent_studio = None
+                if active_match.studio and active_match.studio.parent_studio_id:
+                    parent_studio = db.query(Studio).filter(Studio.id == active_match.studio.parent_studio_id).first()
+                parent_logo = parent_studio.logo_path if parent_studio else None
+                parent_logo_resolved = parent_studio.local_logo_path if parent_studio else None
+
+                use_parent_as_main = False
+                if studio_logo_resolved and parent_logo_resolved:
+                    studio_path = os.path.join("data", "media", "images", "logos", studio_logo_resolved)
+                    parent_path = os.path.join("data", "media", "images", "logos", parent_logo_resolved)
+                    if os.path.exists(studio_path) and os.path.exists(parent_path):
+                        studio_is_svg = studio_logo_resolved.lower().endswith('.svg')
+                        parent_is_svg = parent_logo_resolved.lower().endswith('.svg')
+                        if parent_is_svg and not studio_is_svg:
+                            use_parent_as_main = True
+                        elif studio_is_svg and not parent_is_svg:
+                            use_parent_as_main = False
+                        else:
+                            use_parent_as_main = os.path.getsize(parent_path) > os.path.getsize(studio_path)
+
+                if use_parent_as_main and parent_logo:
+                    effective_logo_path = parent_logo
+                    effective_local_logo_path = parent_logo_resolved
+                elif studio_logo:
+                    effective_logo_path = studio_logo
+                    effective_local_logo_path = studio_logo_resolved
+                elif parent_logo:
+                    effective_logo_path = parent_logo
+                    effective_local_logo_path = parent_logo_resolved
             preferred_backdrop_path = _pick_backdrop_path(movie_cache.raw_data if movie_cache else None, ui_lang) if movie_cache else None
             effective_backdrop_path = (
                 getattr(active_match, "manual_backdrop_path", None)

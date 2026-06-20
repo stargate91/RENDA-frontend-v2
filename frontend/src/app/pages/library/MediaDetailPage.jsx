@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Users, BadgeInfo, Layers3, Tags, Clapperboard,
-  SlidersHorizontal, CheckCheck, Image as ImageIcon, Flame
+  SlidersHorizontal, CheckCheck, Image as ImageIcon, Flame, ExternalLink
 } from 'lucide-react';
 import { useTranslation } from '@/providers/LanguageContext';
 import { useUi } from '@/providers/UiProvider';
@@ -169,13 +169,15 @@ export default function MediaDetailPage({ type = 'movie' }) {
           <>
             {isMovie ? (
               <>
-                <button
-                  onClick={() => togglePanel('details')}
-                  className={`media-detail-page__side-nav-btn ${activePanel === 'details' ? 'active' : ''}`}
-                  title={t('library.details.details') || 'Details'}
-                >
-                  <BadgeInfo size={20} />
-                </button>
+                {item?.type !== 'scene' && (
+                  <button
+                    onClick={() => togglePanel('details')}
+                    className={`media-detail-page__side-nav-btn ${activePanel === 'details' ? 'active' : ''}`}
+                    title={t('library.details.details') || 'Details'}
+                  >
+                    <BadgeInfo size={20} />
+                  </button>
+                )}
                 {item?.cast && item.cast.length > 0 && (
                   <button
                     onClick={() => togglePanel('cast')}
@@ -254,7 +256,17 @@ export default function MediaDetailPage({ type = 'movie' }) {
               </button>
             )}
 
-
+            {item?.external_ids?.stash_id && (
+              <a
+                href={item.external_ids.source === 'fansdb' ? `https://fansdb.cc/scenes/${item.external_ids.stash_id}` : `https://stashdb.org/scenes/${item.external_ids.stash_id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="media-detail-page__side-nav-btn"
+                title={item.external_ids.source === 'fansdb' ? 'FansDB Link' : 'StashDB Link'}
+              >
+                <ExternalLink size={20} />
+              </a>
+            )}
 
             {hasTechnicalPanel && (
               <button

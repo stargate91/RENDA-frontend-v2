@@ -62,7 +62,9 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
 
   const [prevItem, setPrevItem] = useState(item);
   const [prevCleanId, setPrevCleanId] = useState(cleanId);
+  const isScene = item?.type === 'scene';
   const [activePanel, setActivePanel] = useState(() => {
+    if (isScene) return null;
     if (isMovie) return 'details';
     if (item?.seasons?.length) return 'seasons';
     return item?.cast?.length ? 'cast' : 'details';
@@ -71,7 +73,9 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
   if (cleanId !== prevCleanId || item !== prevItem) {
     setPrevCleanId(cleanId);
     setPrevItem(item);
-    if (isMovie) {
+    if (isScene) {
+      setActivePanel(null);
+    } else if (isMovie) {
       setActivePanel('details');
     } else if (item?.seasons?.length) {
       setActivePanel('seasons');
@@ -507,8 +511,41 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
   const posterPath = item?.poster_path || '';
   const posterUrl = resolveDetailsImageUrl(posterPath, API_BASE, 'poster');
 
+  const studioName = item?.companies?.[0]?.name || '';
+  const networkName = item?.networks?.[0]?.name || '';
+  const studioLogo = item?.companies?.[0]?.logo_path || '';
+  const networkLogo = item?.networks?.[0]?.logo_path || '';
+  const hasStudioLogo = !!studioLogo;
+  const hasNetworkLogo = !!networkLogo;
+
+  let showStudioPill = false;
+  let showNetworkPill = false;
+
+  if (item?.type === 'scene') {
+    if (!hasStudioLogo && !hasNetworkLogo) {
+      showStudioPill = !!studioName;
+      showNetworkPill = !!networkName;
+    } else if (hasStudioLogo && hasNetworkLogo) {
+      // Both logos exist. Identify which one is currently used as the main logo.
+      // logoPath represents the active logo path.
+      if (logoPath === studioLogo) {
+        showNetworkPill = !!networkName;
+      } else {
+        showStudioPill = !!studioName;
+      }
+    } else if (hasStudioLogo) {
+      showNetworkPill = !!networkName;
+    } else if (hasNetworkLogo) {
+      showStudioPill = !!studioName;
+    }
+  }
+
   return {
     state: {
+      showStudioPill,
+      showNetworkPill,
+      studioName,
+      networkName,
       hoveredRating,
       activePanel,
       expandedSeasons,
