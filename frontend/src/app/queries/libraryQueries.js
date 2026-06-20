@@ -521,8 +521,8 @@ export const useOverridePersonBackdropMutation = () => {
           }
           return {
             ...oldData,
-            backdrop_path: data?.backdrop_path ?? oldData.backdrop_path,
-            has_local_backdrop: data?.has_local_backdrop ?? oldData.has_local_backdrop,
+            backdrop_path: data && data.backdrop_path !== undefined ? data.backdrop_path : null,
+            has_local_backdrop: data && data.has_local_backdrop !== undefined ? data.has_local_backdrop : false,
           };
         });
       });

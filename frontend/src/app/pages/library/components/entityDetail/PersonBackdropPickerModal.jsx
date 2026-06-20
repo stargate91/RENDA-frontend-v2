@@ -51,6 +51,9 @@ export default function PersonBackdropPickerModal({ personId, item, t, toast, ov
 
   const isTmdbPerformer = !!item?.external_ids?.tmdb_id || (!item?.external_ids?.stashdb_id && !item?.external_ids?.fansdb_id && !item?.external_ids?.theporndb_id);
 
+  const profilePath = item?.profile_path;
+  const profileUrl = profilePath ? resolveDetailsImageUrl(profilePath, API_BASE, 'person') : null;
+
   const selectedBackdropTmdbId = Number(selectedCredit?.series_tmdb_id || selectedCredit?.tmdb_id || selectedCredit?.id || 0);
   const selectedBackdropMediaType = isTvLikeMediaType(selectedCredit?.media_type || selectedCredit?.type) ? 'tv' : 'movie';
   const selectedBackdropMetadataQuery = usePersonCreditBackdropsQuery(personId, selectedBackdropTmdbId, selectedBackdropMediaType, {
@@ -327,7 +330,7 @@ export default function PersonBackdropPickerModal({ personId, item, t, toast, ov
   };
 
   const handleSaveBackdropUrl = async (backdropPath) => {
-    if (!backdropPath || overridePersonBackdropMutation.isPending) {
+    if (backdropPath === undefined || overridePersonBackdropMutation.isPending) {
       return;
     }
     patchSession(personId, { selectedBackdropPath: backdropPath });
@@ -399,6 +402,23 @@ export default function PersonBackdropPickerModal({ personId, item, t, toast, ov
           onSaveUrl={handleSaveBackdropUrl}
           onUploadFile={handleUploadBackdrop}
         />
+      )}
+
+      {!isBackdropBrowserOpen && profileUrl && (
+        <div className="scene-image-picker-options person-backdrop-fallback-section">
+          <h4 className="scene-image-picker-title">{t('library.details.defaultBackdrop') || 'Default Backdrop'}</h4>
+          <div className="scene-image-picker-grid">
+            <div 
+              className={`scene-image-picker-card ${!selectedBackdropPath ? 'active' : ''}`}
+              onClick={() => handleSaveBackdropUrl("")}
+            >
+              <div className="scene-image-picker-img-wrapper backdrop-variant person-backdrop-fallback-blur">
+                <img src={profileUrl} alt="Default blurred fallback" />
+              </div>
+              <span className="scene-image-picker-label">{t('library.details.defaultBlurredProfile') || 'Blurred Profile Picture'}</span>
+            </div>
+          </div>
+        </div>
       )}
 
       {isTmdbPerformer && !isBackdropBrowserOpen && (

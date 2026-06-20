@@ -340,13 +340,13 @@ def resolve_person_known_for_backdrop(
         if adult_only and not bool((raw_data or {}).get("adult")):
             continue
 
-        backdrop_path = _pick_backdrop_path(raw_data, preferred_languages[0]) if raw_data else None
+        backdrop_path = _pick_backdrop_path(raw_data, preferred_languages[0], allow_low_res=not adult_only) if raw_data else None
         if backdrop_path:
             candidates.append((_backdrop_resolution_from_raw(raw_data, backdrop_path), backdrop_path))
             continue
 
         fallback_backdrop = credit.get("backdrop_path")
-        if fallback_backdrop:
+        if fallback_backdrop and not adult_only:
             candidates.append((0, fallback_backdrop))
 
     if not candidates:
@@ -503,7 +503,7 @@ def schedule_person_credit_poster_warmup(person_id: int, media_type: str, page: 
     threading.Thread(target=_warmup, daemon=True).start()
 
 
-def load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str, target_lang: str, lead_cast_order_threshold: int = 3, scenes_page: Optional[int] = None, scenes_page_size: Optional[int] = None) -> dict:
+def load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str, target_lang: str, lead_cast_order_threshold: int = 3, scenes_page: Optional[int] = None, scenes_page_size: Optional[int] = None, scenes_source: Optional[str] = None) -> dict:
     links = db.query(MediaPersonLink).join(MediaPersonLink.media_match).join(MediaMatch.media_item).filter(
         MediaPersonLink.person_id == person_id,
         MediaMatch.is_active == True,
@@ -612,9 +612,19 @@ def load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str,
         tmdb_client = TMDBClient(db)
         ext_ids = person.external_ids or {}
         tmdb_id_to_fetch = ext_ids.get("tmdb_id")
+        if not tmdb_id_to_fetch:
+            for u in ext_ids.get("urls") or []:
+                url = u.get("url") if isinstance(u, dict) else u
+                if isinstance(url, str) and "themoviedb.org/person/" in url:
+                    import re
+                    match_tmdb = re.search(r"themoviedb\.org/person/(\d+)", url)
+                    if match_tmdb:
+                        tmdb_id_to_fetch = int(match_tmdb.group(1))
+                        break
+
         has_adult_db_id = any(ext_ids.get(f"{src}_id") for src in ["stashdb", "fansdb", "theporndb"])
         
-        if not tmdb_id_to_fetch and person_id < 100000000:
+        if not tmdb_id_to_fetch and not has_adult_db_id and person_id < 100000000:
             tmdb_id_to_fetch = person_id
 
         total_scenes_count = 0
@@ -625,12 +635,19 @@ def load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str,
             adult_source = None
             performer_uuid = None
             
-            if stashdb_id:
+            if scenes_source == "stashdb" and stashdb_id:
                 adult_source = "stashdb"
                 performer_uuid = stashdb_id
-            elif fansdb_id:
+            elif scenes_source == "fansdb" and fansdb_id:
                 adult_source = "fansdb"
                 performer_uuid = fansdb_id
+            else:
+                if stashdb_id:
+                    adult_source = "stashdb"
+                    performer_uuid = stashdb_id
+                elif fansdb_id:
+                    adult_source = "fansdb"
+                    performer_uuid = fansdb_id
                 
             if adult_source and performer_uuid:
                 from app.api.graphql_clients import AdultGraphQLClient
@@ -754,9 +771,11 @@ def load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str,
                 omdb_raw = _get_omdb_ratings_from_imdb(db, imdb_id)
                 return _parse_omdb_float(omdb_raw.get("imdb_rating"))
 
+            is_person_adult = bool(getattr(person, "is_adult", False))
+
             def _get_credit_backdrop_path(tmdb_id: int, media_type: str, credit: dict) -> Optional[str]:
                 direct_backdrop = credit.get("backdrop_path")
-                if direct_backdrop:
+                if direct_backdrop and not is_person_adult:
                     return direct_backdrop
 
                 cache = _pick_tmdb_cache(db, tmdb_id, media_type, preferred_languages)
@@ -765,14 +784,15 @@ def load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str,
                     return None
 
                 return (
-                    _pick_backdrop_path(raw_data, preferred_languages[0])
-                    or raw_data.get("backdrop_path")
+                    _pick_backdrop_path(raw_data, preferred_languages[0], allow_low_res=not is_person_adult)
+                    or (None if is_person_adult else raw_data.get("backdrop_path"))
                 )
+
 
             local_movies = db.query(MediaMatch.tmdb_id, MediaItem.id, MediaMatch.rating_imdb).join(MediaMatch.media_item).filter(
                 MediaMatch.is_active == True,
                 MediaItem.status.in_([ItemStatus.RENAMED, ItemStatus.ORGANIZED]),
-                MediaItem.item_type == ItemType.MOVIE
+                MediaItem.item_type.in_([ItemType.MOVIE, ItemType.SCENE])
             ).all()
             local_movies_map = {}
             for movie in local_movies:
@@ -940,9 +960,10 @@ def load_person_credit_payload(db, person_id: int, person: Person, ui_lang: str,
     except Exception as ex:
         logger.error(f"Failed to load or parse TMDB credits for person {person_id}: {ex}")
 
+    is_person_adult = bool(getattr(person, "is_adult", False))
     if getattr(person, "manual_backdrop_path", None):
         person_backdrop = person.manual_backdrop_path
-    elif not person_backdrop:
+    elif not person_backdrop and not is_person_adult:
         for link in links:
             if link.media_match and (getattr(link.media_match, "manual_backdrop_path", None) or link.media_match.backdrop_path):
                 person_backdrop = getattr(link.media_match, "manual_backdrop_path", None) or link.media_match.backdrop_path

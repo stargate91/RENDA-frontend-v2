@@ -67,6 +67,26 @@ def _store_uploaded_asset(file: UploadFile, subfolder: str) -> tuple[str | None,
     saved_path = processor.write_upload(target_path, file.file)
     return filename, saved_path
 
+
+def _resolve_stash_item_id(db, item_id: str) -> int | None:
+    if isinstance(item_id, str) and item_id.startswith("stash_"):
+        try:
+            scene_uuid = item_id.split("_")[1]
+        except IndexError:
+            return None
+        match_row = db.query(MediaMatch).filter(
+            (MediaMatch.imdb_id == scene_uuid) | (MediaMatch.imdb_id == f"stash_{scene_uuid}"),
+            MediaMatch.is_active == True
+        ).first()
+        if not match_row:
+            match_row = db.query(MediaMatch).filter(
+                (MediaMatch.imdb_id == scene_uuid) | (MediaMatch.imdb_id == f"stash_{scene_uuid}")
+            ).first()
+        if match_row:
+            return match_row.media_item_id
+    return None
+
+
 @router.post("/media/update")
 def update_media_item(payload: dict):
     """Updates media item or extra file properties manually."""
@@ -487,6 +507,24 @@ def update_item_backdrop(item_id: str, payload: dict):
                 db.commit()
                 return {"status": "success", "backdrop_path": backdrop_path, "local_backdrop_path": local_b}
             target_item_id = match_row.media_item_id
+        elif isinstance(item_id, str) and item_id.startswith("stash_"):
+            target_item_id = _resolve_stash_item_id(db, item_id)
+            if not target_item_id:
+                try:
+                    scene_uuid = item_id.split("_")[1]
+                except IndexError:
+                    return JSONResponse(status_code=400, content={"error": "Invalid stash ID format"})
+                import hashlib
+                stash_int_id = int.from_bytes(hashlib.md5(scene_uuid.encode('utf-8')).digest()[:8], byteorder='big', signed=True)
+                asset_service = AssetService()
+                local_b = asset_service.download_image(backdrop_path, "backdrops", size=BACKDROP_SIZE)
+                if not local_b:
+                    return JSONResponse(status_code=500, content={"error": "Failed to download backdrop"})
+                state = _get_or_create_virtual_media_state(db, stash_int_id, "scene")
+                state.manual_backdrop_path = backdrop_path
+                state.manual_local_backdrop_path = local_b
+                db.commit()
+                return {"status": "success", "backdrop_path": backdrop_path, "local_backdrop_path": local_b}
         else:
             try:
                 target_item_id = int(item_id)
@@ -605,10 +643,25 @@ def update_item_poster(item_id: str, payload: dict):
             db.commit()
             return _serialize_asset_response(poster_path, local_p, "posters", "poster_path")
 
-        try:
-            target_item_id = int(item_id)
-        except ValueError:
-            return JSONResponse(status_code=400, content={"error": "Invalid item ID format"})
+        if isinstance(item_id, str) and item_id.startswith("stash_"):
+            target_item_id = _resolve_stash_item_id(db, item_id)
+            if not target_item_id:
+                try:
+                    scene_uuid = item_id.split("_")[1]
+                except IndexError:
+                    return JSONResponse(status_code=400, content={"error": "Invalid stash ID format"})
+                import hashlib
+                stash_int_id = int.from_bytes(hashlib.md5(scene_uuid.encode('utf-8')).digest()[:8], byteorder='big', signed=True)
+                state = _get_or_create_virtual_media_state(db, stash_int_id, "scene")
+                state.manual_poster_path = poster_path
+                state.manual_local_poster_path = local_p
+                db.commit()
+                return _serialize_asset_response(poster_path, local_p, "posters", "poster_path")
+        else:
+            try:
+                target_item_id = int(item_id)
+            except ValueError:
+                return JSONResponse(status_code=400, content={"error": "Invalid item ID format"})
 
         item = db.query(MediaItem).filter(MediaItem.id == target_item_id).first()
         if not item:
@@ -689,10 +742,25 @@ def upload_item_backdrop(item_id: str, file: UploadFile = File(...)):
             db.commit()
             return _serialize_asset_response(filename, saved_path, "backdrops", "backdrop_path")
 
-        try:
-            target_item_id = int(item_id)
-        except ValueError:
-            return JSONResponse(status_code=400, content={"error": "Invalid item ID format"})
+        if isinstance(item_id, str) and item_id.startswith("stash_"):
+            target_item_id = _resolve_stash_item_id(db, item_id)
+            if not target_item_id:
+                try:
+                    scene_uuid = item_id.split("_")[1]
+                except IndexError:
+                    return JSONResponse(status_code=400, content={"error": "Invalid stash ID format"})
+                import hashlib
+                stash_int_id = int.from_bytes(hashlib.md5(scene_uuid.encode('utf-8')).digest()[:8], byteorder='big', signed=True)
+                state = _get_or_create_virtual_media_state(db, stash_int_id, "scene")
+                state.manual_backdrop_path = filename
+                state.manual_local_backdrop_path = filename
+                db.commit()
+                return _serialize_asset_response(filename, saved_path, "backdrops", "backdrop_path")
+        else:
+            try:
+                target_item_id = int(item_id)
+            except ValueError:
+                return JSONResponse(status_code=400, content={"error": "Invalid item ID format"})
 
         item = db.query(MediaItem).filter(MediaItem.id == target_item_id).first()
         if not item:
@@ -779,10 +847,25 @@ def upload_item_poster(item_id: str, file: UploadFile = File(...)):
             db.commit()
             return _serialize_asset_response(filename, saved_path, "posters", "poster_path")
 
-        try:
-            target_item_id = int(item_id)
-        except ValueError:
-            return JSONResponse(status_code=400, content={"error": "Invalid item ID format"})
+        if isinstance(item_id, str) and item_id.startswith("stash_"):
+            target_item_id = _resolve_stash_item_id(db, item_id)
+            if not target_item_id:
+                try:
+                    scene_uuid = item_id.split("_")[1]
+                except IndexError:
+                    return JSONResponse(status_code=400, content={"error": "Invalid stash ID format"})
+                import hashlib
+                stash_int_id = int.from_bytes(hashlib.md5(scene_uuid.encode('utf-8')).digest()[:8], byteorder='big', signed=True)
+                state = _get_or_create_virtual_media_state(db, stash_int_id, "scene")
+                state.manual_poster_path = filename
+                state.manual_local_poster_path = filename
+                db.commit()
+                return _serialize_asset_response(filename, saved_path, "posters", "poster_path")
+        else:
+            try:
+                target_item_id = int(item_id)
+            except ValueError:
+                return JSONResponse(status_code=400, content={"error": "Invalid item ID format"})
 
         item = db.query(MediaItem).filter(MediaItem.id == target_item_id).first()
         if not item:
@@ -844,10 +927,25 @@ def upload_item_logo(item_id: str, file: UploadFile = File(...)):
             db.commit()
             return _serialize_asset_response(filename, saved_path, "logos", "logo_path")
 
-        try:
-            target_item_id = int(item_id)
-        except ValueError:
-            return JSONResponse(status_code=400, content={"error": "Invalid item ID format"})
+        if isinstance(item_id, str) and item_id.startswith("stash_"):
+            target_item_id = _resolve_stash_item_id(db, item_id)
+            if not target_item_id:
+                try:
+                    scene_uuid = item_id.split("_")[1]
+                except IndexError:
+                    return JSONResponse(status_code=400, content={"error": "Invalid stash ID format"})
+                import hashlib
+                stash_int_id = int.from_bytes(hashlib.md5(scene_uuid.encode('utf-8')).digest()[:8], byteorder='big', signed=True)
+                state = _get_or_create_virtual_media_state(db, stash_int_id, "scene")
+                state.manual_logo_path = filename
+                state.manual_local_logo_path = filename
+                db.commit()
+                return _serialize_asset_response(filename, saved_path, "logos", "logo_path")
+        else:
+            try:
+                target_item_id = int(item_id)
+            except ValueError:
+                return JSONResponse(status_code=400, content={"error": "Invalid item ID format"})
 
         item = db.query(MediaItem).filter(MediaItem.id == target_item_id).first()
         if not item:
@@ -915,10 +1013,25 @@ def update_item_logo(item_id: str, payload: dict):
             db.commit()
             return _serialize_asset_response(logo_path, local_logo, "logos", "logo_path")
 
-        try:
-            target_item_id = int(item_id)
-        except ValueError:
-            return JSONResponse(status_code=400, content={"error": "Invalid item ID format"})
+        if isinstance(item_id, str) and item_id.startswith("stash_"):
+            target_item_id = _resolve_stash_item_id(db, item_id)
+            if not target_item_id:
+                try:
+                    scene_uuid = item_id.split("_")[1]
+                except IndexError:
+                    return JSONResponse(status_code=400, content={"error": "Invalid stash ID format"})
+                import hashlib
+                stash_int_id = int.from_bytes(hashlib.md5(scene_uuid.encode('utf-8')).digest()[:8], byteorder='big', signed=True)
+                state = _get_or_create_virtual_media_state(db, stash_int_id, "scene")
+                state.manual_logo_path = logo_path
+                state.manual_local_logo_path = local_logo
+                db.commit()
+                return _serialize_asset_response(logo_path, local_logo, "logos", "logo_path")
+        else:
+            try:
+                target_item_id = int(item_id)
+            except ValueError:
+                return JSONResponse(status_code=400, content={"error": "Invalid item ID format"})
 
         item = db.query(MediaItem).filter(MediaItem.id == target_item_id).first()
         if not item:

@@ -35,7 +35,15 @@ def update_person_backdrop(person_id: int, payload: dict):
 
         backdrop_path = payload.get("backdrop_path")
         if not backdrop_path:
-            return JSONResponse(status_code=400, content={"error": "backdrop_path is required"})
+            person.manual_backdrop_path = None
+            person.manual_local_backdrop_path = None
+            db.commit()
+            return {
+                "status": "success",
+                "backdrop_path": None,
+                "local_backdrop_path": None,
+                "has_local_backdrop": False,
+            }
 
         asset_service = AssetService()
         local_path = asset_service.download_image(backdrop_path, "backdrops", size=BACKDROP_SIZE)

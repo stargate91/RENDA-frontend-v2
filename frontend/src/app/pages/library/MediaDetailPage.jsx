@@ -110,6 +110,7 @@ export default function MediaDetailPage({ type = 'movie' }) {
           t={t}
           toast={toast}
           onClose={closeModal}
+          item={item}
         />
       ),
     });

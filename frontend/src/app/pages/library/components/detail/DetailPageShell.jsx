@@ -24,9 +24,11 @@ export default function DetailPageShell({
 }) {
   const navigate = useNavigate();
 
+  const combinedClassName = `media-detail-page ${isScene ? 'media-detail-page--scene' : ''} ${pageClassName}`.trim();
+
   if (isLoading) {
     return (
-      <Page className={`media-detail-page ${pageClassName}`.trim()}>
+      <Page className={combinedClassName}>
         <div className="library-loading">
           <div className="library-spinner" />
         </div>
@@ -35,7 +37,7 @@ export default function DetailPageShell({
   }
 
   return (
-    <Page className={`media-detail-page ${pageClassName}`.trim()}>
+    <Page className={combinedClassName}>
       <UtilityBarPortal>
         <NavButton className="media-detail-page__back-button" onClick={() => navigate(-1)}>
           {backLabel}

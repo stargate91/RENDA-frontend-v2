@@ -1,0 +1,95 @@
+.entity-detail-page__links-popover-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.entity-detail-page__links-popover {
+  position: absolute;
+  top: calc(100% + var(--space-xs, 8px));
+  right: 0;
+  width: 280px;
+  max-height: 380px;
+  overflow-y: auto;
+  background-color: color-mix(in srgb, var(--color-panel-strong, #121824) 94%, transparent);
+  backdrop-filter: blur(16px);
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 45%, transparent);
+  border-radius: var(--radius-md, 16px);
+  box-shadow: 0 16px 40px color-mix(in srgb, black 52%, transparent);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  animation: linksPopoverFadeIn 0.16s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+@keyframes linksPopoverFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.entity-detail-page__links-popover-header {
+  padding: var(--space-sm, 10px) var(--space-md, 16px);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 20%, transparent);
+}
+
+.entity-detail-page__links-popover-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: var(--space-md, 14px);
+}
+
+.entity-detail-page__links-popover-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 25%, transparent);
+  background: color-mix(in srgb, var(--color-surface-glass) 8%, transparent);
+  color: color-mix(in srgb, var(--color-text-secondary) 90%, transparent);
+  font-size: 0.64rem;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: all var(--motion-fast, 0.12s);
+}
+
+.entity-detail-page__links-popover-item:hover {
+  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--color-accent-blue) 12%, transparent);
+  border-color: color-mix(in srgb, var(--color-accent-blue) 50%, transparent);
+  color: var(--color-accent-blue);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--color-accent-blue) 15%, transparent);
+}
+
+/* Custom Scrollbar for popover */
+.entity-detail-page__links-popover::-webkit-scrollbar {
+  width: 6px;
+}
+
+.entity-detail-page__links-popover::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.entity-detail-page__links-popover::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--color-border-default) 30%, transparent);
+  border-radius: 9999px;
+}
+
+.entity-detail-page__links-popover::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--color-border-default) 50%, transparent);
+}

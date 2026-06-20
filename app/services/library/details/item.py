@@ -186,13 +186,49 @@ class ItemDetailProvider(BaseDetailProvider):
                     
                 genres = []
                 
+                import hashlib
+                stash_int_id = int.from_bytes(hashlib.md5(scene_uuid.encode('utf-8')).digest()[:8], byteorder='big', signed=True)
+                virtual_state = db.query(VirtualMediaState).filter(
+                    VirtualMediaState.tmdb_id == stash_int_id,
+                    VirtualMediaState.media_type == "scene"
+                ).first()
+
+                effective_logo = (
+                    virtual_state.manual_logo_path if virtual_state and virtual_state.manual_logo_path else main_logo
+                )
+                effective_logo_resolved = (
+                    virtual_state.manual_local_logo_path if virtual_state and virtual_state.manual_local_logo_path else main_resolved
+                )
+
+                effective_backdrop = (
+                    virtual_state.manual_backdrop_path if virtual_state and virtual_state.manual_backdrop_path else None
+                )
+                effective_backdrop_resolved = (
+                    virtual_state.manual_local_backdrop_path if virtual_state and virtual_state.manual_local_backdrop_path else None
+                )
+
+                effective_poster = (
+                    virtual_state.manual_poster_path if virtual_state and virtual_state.manual_poster_path else poster_url
+                )
+                effective_poster_resolved = (
+                    virtual_state.manual_local_poster_path if virtual_state and virtual_state.manual_local_poster_path else None
+                )
+
+                original_logo_path = self.formatter.resolve_logo_response_path(
+                    logo_path=main_logo,
+                    local_logo_path=main_resolved,
+                )
+                original_backdrop_path = poster_url
+
                 result = {
                     "id": f"stash_{scene_uuid}",
                     "title": title,
                     "logo_path": self.formatter.resolve_logo_response_path(
-                        logo_path=main_logo,
-                        local_logo_path=main_resolved,
+                        logo_path=effective_logo,
+                        local_logo_path=effective_logo_resolved,
                     ),
+                    "original_logo_path": original_logo_path,
+                    "original_backdrop_path": original_backdrop_path,
                     "original_title": None,
                     "tagline": None,
                     "overview": scene_data.get("details"),
@@ -205,8 +241,16 @@ class ItemDetailProvider(BaseDetailProvider):
                     "vote_count_tmdb": 0,
                     "companies": [{"name": studio_name, "logo_path": self.formatter.resolve_logo_response_path(studio_logo, studio_logo_resolved)}] if studio_name else [],
                     "networks": [{"name": parent_name, "logo_path": self.formatter.resolve_logo_response_path(parent_logo, parent_logo_resolved)}] if parent_name else [],
-                    "poster_path": poster_url,
-                    "backdrop_path": None,
+                    "poster_path": self.formatter.resolve_image_response_path(
+                        image_path=effective_poster,
+                        local_image_path=effective_poster_resolved,
+                        subfolder="posters",
+                    ) if effective_poster_resolved else effective_poster,
+                    "backdrop_path": self.formatter.resolve_image_response_path(
+                        image_path=effective_backdrop,
+                        local_image_path=effective_backdrop_resolved,
+                        subfolder="backdrops",
+                    ) if effective_backdrop else None,
                     "original_language": None,
                     "type": "scene",
                     "cast": cast,
@@ -215,9 +259,9 @@ class ItemDetailProvider(BaseDetailProvider):
                     "directors": [],
                     "writers": [],
                     "is_adult": True,
-                    "is_favorite": False,
-                    "user_rating": None,
-                    "user_comment": None,
+                    "is_favorite": bool(virtual_state.is_favorite) if virtual_state else False,
+                    "user_rating": virtual_state.user_rating if virtual_state else None,
+                    "user_comment": virtual_state.user_comment if virtual_state else None,
                     "external_ids": {
                         "stash_id": scene_uuid,
                         "source": used_source,
@@ -226,7 +270,7 @@ class ItemDetailProvider(BaseDetailProvider):
                     "tags": [],
                     "is_tracked": False,
                     "watch_count": 0,
-                    "is_watched": False,
+                    "is_watched": bool(virtual_state.is_watched) if virtual_state else False,
                     "resume_position": 0,
                     "last_watched_at": None,
                     "playback_logs": [],
@@ -722,6 +766,23 @@ class ItemDetailProvider(BaseDetailProvider):
                 )
             )
 
+            original_logo_path = self.formatter.resolve_logo_response_path(
+                logo_path=loc.logo_path if loc else None,
+                local_logo_path=loc.local_logo_path if loc else None,
+            ) if loc else None
+            original_backdrop_path = self.formatter.resolve_entity_asset_path(
+                subfolder="backdrops",
+                local_path=active_match.local_backdrop_path if active_match else None,
+                remote_path=active_match.backdrop_path if active_match else None,
+            ) if active_match else None
+
+            if not original_backdrop_path and item.item_type.value == 'scene' and loc:
+                original_backdrop_path = self.formatter.resolve_image_response_path(
+                    image_path=loc.poster_path,
+                    local_image_path=loc.local_poster_path,
+                    subfolder="posters"
+                )
+
             result = {
                 "id": item.id,
                 "title": loc.title if loc else item.fn_title or item.filename,
@@ -729,6 +790,8 @@ class ItemDetailProvider(BaseDetailProvider):
                     logo_path=effective_logo_path,
                     local_logo_path=effective_local_logo_path,
                 ),
+                "original_logo_path": original_logo_path,
+                "original_backdrop_path": original_backdrop_path,
                 "original_title": loc.original_title if loc else None,
                 "tagline": loc.tagline if loc else None,
                 "overview": loc.overview if loc else None,

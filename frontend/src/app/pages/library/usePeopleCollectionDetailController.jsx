@@ -84,6 +84,14 @@ export default function usePeopleCollectionDetailController({
     },
     [externalLinks, isPeople, item?.is_adult]
   );
+  const extraLinks = useMemo(
+    () => {
+      if (!isPeople) return [];
+      const profileLinkKeys = profileLinks.map((pl) => pl.key);
+      return externalLinks.filter((link) => !profileLinkKeys.includes(link.key));
+    },
+    [isPeople, externalLinks, profileLinks]
+  );
   const backdropUrl = resolveDetailsImageUrl(item?.backdrop_path, API_BASE, 'backdrop');
   const mediaUrl = resolveDetailsImageUrl(
     isPeople ? getProfileImagePath(item) : getPosterImagePath(item),
@@ -244,6 +252,7 @@ export default function usePeopleCollectionDetailController({
     overviewText,
     overviewEmptyText,
     profileLinks,
+    extraLinks,
     backdropUrl,
     mediaUrl,
     metaPills,

@@ -414,3 +414,12 @@
   gap: var(--space-lg);
   width: 100%;
 }
+
+/* Scene Detail Page - Layout adjustments to bring metadata, user rating, and description closer to title */
+.media-detail-page--scene .media-detail-page__details-group {
+  margin-top: -36px;
+}
+
+.media-detail-page--scene .media-detail-page__container {
+  gap: var(--space-lg, 20px);
+}

@@ -179,10 +179,67 @@ export function buildPersonExternalLinks(item, t) {
 
   const externalIds = item.external_ids || {};
   const links = [];
+  const seenUrls = new Set();
+
+  const addLink = (linkObj) => {
+    if (!linkObj.href) return;
+    try {
+      const normalized = new URL(linkObj.href).href.replace(/\/$/, '').toLowerCase();
+      if (seenUrls.has(normalized)) return;
+      seenUrls.add(normalized);
+      links.push(linkObj);
+    } catch (e) {
+      if (seenUrls.has(linkObj.href.toLowerCase())) return;
+      seenUrls.add(linkObj.href.toLowerCase());
+      links.push(linkObj);
+    }
+  };
+
+  const detectSiteName = (url, site) => {
+    if (site && site !== 'Link' && site !== 'Website' && site !== 'Other') {
+      return site;
+    }
+    try {
+      const hostname = new URL(url).hostname.replace('www.', '').toLowerCase();
+      if (hostname.includes('onlyfans.com')) return 'OnlyFans';
+      if (hostname.includes('fansly.com')) return 'Fansly';
+      if (hostname.includes('twitter.com') || hostname.includes('x.com')) return 'X (Twitter)';
+      if (hostname.includes('instagram.com')) return 'Instagram';
+      if (hostname.includes('tiktok.com')) return 'TikTok';
+      if (hostname.includes('pornhub.com')) return 'Pornhub';
+      if (hostname.includes('stashdb.org')) return 'StashDB';
+      if (hostname.includes('theporndb.net') || hostname.includes('theporndb.org')) return 'ThePornDB';
+      if (hostname.includes('fansdb.cc') || hostname.includes('fansdb.xyz')) return 'FansDB';
+      if (hostname.includes('manyvids.com')) return 'ManyVids';
+      if (hostname.includes('fancentro.com')) return 'Fancentro';
+      if (hostname.includes('babepedia.com')) return 'Babepedia';
+      if (hostname.includes('freeones.com')) return 'FreeOnes';
+      if (hostname.includes('iafd.com')) return 'IAFD';
+      if (hostname.includes('data18.com')) return 'Data18';
+      if (hostname.includes('wikidata.org')) return 'Wikidata';
+      if (hostname.includes('imdb.com')) return 'IMDb';
+      if (hostname.includes('themoviedb.org')) return 'TMDb';
+      if (hostname.includes('linktr.ee')) return 'Linktree';
+      if (hostname.includes('thenude.com')) return 'theNude';
+      if (hostname.includes('eurobabeindex.com')) return 'EuroBabeIndex';
+      if (hostname.includes('adultfilmdatabase.com')) return 'AFDB';
+      if (hostname.includes('facebook.com')) return 'Facebook';
+      if (hostname.includes('youtube.com') || hostname.includes('youtu.be')) return 'YouTube';
+      
+      const parts = hostname.split('.');
+      if (parts.length > 1) {
+        const domain = parts[parts.length - 2];
+        return domain.charAt(0).toUpperCase() + domain.slice(1);
+      }
+      return hostname;
+    } catch (e) {
+      return site || 'Link';
+    }
+  };
 
   const tmdbId = externalIds.tmdb_id || (!item.is_adult && Number(item.id) < 100000000 ? item.id : null);
   if (tmdbId) {
-    links.push({
+    addLink({
       key: 'tmdb',
       label: t('library.details.tmdb') || 'TMDb',
       href: `https://www.themoviedb.org/person/${tmdbId}`,
@@ -192,7 +249,7 @@ export function buildPersonExternalLinks(item, t) {
   }
 
   if (item.homepage) {
-    links.push({
+    addLink({
       key: 'website',
       label: t('library.details.website') || 'Website',
       href: item.homepage,
@@ -202,7 +259,7 @@ export function buildPersonExternalLinks(item, t) {
   }
 
   if (externalIds.imdb_id) {
-    links.push({
+    addLink({
       key: 'imdb',
       label: t('library.details.imdb') || 'IMDb',
       href: `https://www.imdb.com/name/${externalIds.imdb_id}`,
@@ -212,7 +269,7 @@ export function buildPersonExternalLinks(item, t) {
   }
 
   if (externalIds.instagram_id) {
-    links.push({
+    addLink({
       key: 'instagram',
       label: 'Instagram',
       href: `https://www.instagram.com/${externalIds.instagram_id}`,
@@ -222,7 +279,7 @@ export function buildPersonExternalLinks(item, t) {
   }
 
   if (externalIds.facebook_id) {
-    links.push({
+    addLink({
       key: 'facebook',
       label: 'Facebook',
       href: `https://www.facebook.com/${externalIds.facebook_id}`,
@@ -232,7 +289,7 @@ export function buildPersonExternalLinks(item, t) {
   }
 
   if (externalIds.twitter_id) {
-    links.push({
+    addLink({
       key: 'x',
       label: 'X',
       href: `https://x.com/${externalIds.twitter_id}`,
@@ -242,7 +299,7 @@ export function buildPersonExternalLinks(item, t) {
   }
 
   if (externalIds.youtube_id) {
-    links.push({
+    addLink({
       key: 'youtube',
       label: 'YouTube',
       href: `https://www.youtube.com/${externalIds.youtube_id.startsWith('@') ? externalIds.youtube_id : `@${externalIds.youtube_id}`}`,
@@ -252,7 +309,7 @@ export function buildPersonExternalLinks(item, t) {
   }
 
   if (externalIds.tiktok_id) {
-    links.push({
+    addLink({
       key: 'tiktok',
       label: 'TikTok',
       href: `https://www.tiktok.com/@${externalIds.tiktok_id.replace(/^@/, '')}`,
@@ -263,7 +320,7 @@ export function buildPersonExternalLinks(item, t) {
 
   // Adult Sources specific links
   if (externalIds.stashdb_id) {
-    links.push({
+    addLink({
       key: 'stashdb',
       label: 'StashDB',
       href: `https://stashdb.org/performers/${externalIds.stashdb_id}`,
@@ -273,7 +330,7 @@ export function buildPersonExternalLinks(item, t) {
   }
 
   if (externalIds.fansdb_id) {
-    links.push({
+    addLink({
       key: 'fansdb',
       label: 'FansDB',
       href: `https://fansdb.cc/performers/${externalIds.fansdb_id}`,
@@ -283,7 +340,7 @@ export function buildPersonExternalLinks(item, t) {
   }
 
   if (externalIds.theporndb_id) {
-    links.push({
+    addLink({
       key: 'theporndb',
       label: 'THEPornDB',
       href: `https://theporndb.net/performers/${externalIds.theporndb_id}`,
@@ -296,9 +353,9 @@ export function buildPersonExternalLinks(item, t) {
   if (Array.isArray(externalIds.urls)) {
     externalIds.urls.forEach((u, i) => {
       if (u && u.url) {
-        links.push({
+        addLink({
           key: `extra-${i}`,
-          label: u.site || 'Link',
+          label: detectSiteName(u.url, u.site),
           href: u.url,
           iconSrc: '/links/website.svg',
           brandColor: 'var(--color-text-primary)',
@@ -309,6 +366,7 @@ export function buildPersonExternalLinks(item, t) {
 
   return links;
 }
+
 
 export function buildEntityMetaPills({ isPeople, item, t }) {
   if (!isPeople) {

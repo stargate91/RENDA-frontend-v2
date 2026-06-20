@@ -177,6 +177,17 @@ class PersonService:
                             url_map[nu["url"]] = nu
                         new_ext["urls"] = list(url_map.values())
                         
+                        # Extract and save tmdb_id from urls if not already present
+                        if not new_ext.get("tmdb_id"):
+                            for u in new_ext.get("urls") or []:
+                                url = u.get("url") if isinstance(u, dict) else u
+                                if isinstance(url, str) and "themoviedb.org/person/" in url:
+                                    import re
+                                    match_tmdb = re.search(r"themoviedb\.org/person/(\d+)", url)
+                                    if match_tmdb:
+                                        new_ext["tmdb_id"] = int(match_tmdb.group(1))
+                                        break
+                        
                         person.external_ids = new_ext
                         
                         for lang in languages:
@@ -214,6 +225,11 @@ class PersonService:
                         except (ValueError, TypeError):
                             pass
                     
+                    # If the person is an adult performer originating from adult DBs and we don't have a linked tmdb_id, we can't search TMDb using person_id
+                    has_adult_id = any(external_ids.get(f"{src}_id") for src in ["stashdb", "fansdb", "theporndb"])
+                    if not ("tmdb_id" in external_ids and external_ids["tmdb_id"]) and has_adult_id:
+                        continue
+
                     # If the ID to fetch is a hash-based stable integer and we don't have tmdb_id, we can't search TMDb.
                     if tmdb_id_to_fetch > 100000000 and "tmdb_id" not in external_ids:
                         continue

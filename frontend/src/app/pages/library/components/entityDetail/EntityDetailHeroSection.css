@@ -132,32 +132,13 @@
 }
 
 .entity-detail-page__inline-links {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 0.2rem;
+  gap: var(--space-xs, 8px);
   flex-wrap: wrap;
   justify-content: flex-start;
-  padding-top: 0;
-  flex: 0 0 auto;
-}
-
-.entity-detail-page__inline-links--subline {
-  position: relative;
-  width: fit-content;
-  margin-top: -0.15rem;
-  padding-left: 0.7rem;
-  opacity: 0.72;
-}
-
-.entity-detail-page__inline-links--subline::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  width: 1px;
-  height: 20px;
-  transform: translateY(-50%);
-  background: color-mix(in srgb, var(--color-border-default) 56%, transparent);
+  padding: 0.1rem 0;
+  margin-top: 0.1rem;
 }
 
 .entity-detail-page__inline-link {
@@ -165,29 +146,26 @@
   align-items: center;
   justify-content: center;
   min-height: 24px;
-  padding: 0.1rem 0.35rem;
-  border-radius: var(--radius-sm, 10px);
-  border: 1px solid transparent;
-  background: transparent;
-  color: color-mix(in srgb, var(--color-text-secondary) 92%, transparent);
-  font-size: 0.72rem;
-  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 30%, transparent);
+  background: color-mix(in srgb, var(--color-surface-glass) 12%, transparent);
+  color: color-mix(in srgb, var(--color-text-secondary) 85%, transparent);
+  font-size: 0.66rem;
+  font-weight: 700;
   line-height: 1;
   text-decoration: none;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  transition: background var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast), transform var(--motion-fast);
-}
-
-.entity-detail-page__inline-links:hover {
-  opacity: 0.9;
+  transition: all var(--motion-fast);
 }
 
 .entity-detail-page__inline-link:hover {
   transform: translateY(-1px);
-  background: color-mix(in srgb, var(--color-surface-glass-strong) 52%, transparent);
-  border-color: color-mix(in srgb, var(--color-border-strong, color-mix(in srgb, var(--color-text-primary) 18%, transparent)) 54%, transparent);
-  color: var(--color-text-primary);
+  background: color-mix(in srgb, var(--color-accent-blue) 12%, transparent);
+  border-color: color-mix(in srgb, var(--color-accent-blue) 45%, transparent);
+  color: var(--color-accent-blue);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--color-accent-blue) 15%, transparent);
 }
 
 .entity-detail-page__inline-link-label {

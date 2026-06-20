@@ -28,6 +28,7 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
     overviewText,
     overviewEmptyText,
     profileLinks,
+    extraLinks,
     backdropUrl,
     mediaUrl,
     metaPills,
@@ -111,6 +112,7 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
           handleOpenPeopleBackdropModal={handleOpenPeopleBackdropModal}
           handleOpenCollectionBackdropModal={handleOpenCollectionBackdropModal}
           handleOpenLinkSourceModal={handleOpenLinkSourceModal}
+          extraLinks={extraLinks}
         />
       }
     >
@@ -134,6 +136,7 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
           item={item}
           mediaUrl={mediaUrl}
           profileLinks={profileLinks}
+          extraLinks={extraLinks}
           metaPills={metaPills}
           extraMetaPills={extraMetaPills}
           overviewText={overviewText}

@@ -14,6 +14,7 @@ import {
   useUploadPersonProfileMutation,
 } from '@/queries/libraryQueries';
 import ImageUploadPanel from './ImageUploadPanel';
+import { resolveMediaImageUrl } from '@/lib/imageUrls';
 import './UniversalImagePickerModal.css';
 
 export default function UniversalImagePickerModal({
@@ -26,6 +27,7 @@ export default function UniversalImagePickerModal({
   toast,
   onClose,
   externalIds,
+  item,
 }) {
   const overrideBackdropMutation = useOverrideBackdropMutation();
   const uploadBackdropMutation = useUploadBackdropMutation();
@@ -144,7 +146,7 @@ export default function UniversalImagePickerModal({
     overridePersonProfileMutation.isPending ||
     uploadPersonProfileMutation.isPending;
 
-  const isScene = entityType === 'scene' || (typeof entityId === 'string' && entityId.startsWith('stash_'));
+  const isScene = entityType === 'scene' || item?.type === 'scene' || (typeof entityId === 'string' && entityId.startsWith('stash_'));
 
   return (
     <div className="universal-image-picker">
@@ -155,6 +157,58 @@ export default function UniversalImagePickerModal({
         onSaveUrl={handleSelectTmdbImage}
         onUploadFile={handleUploadFile}
       />
+
+      {isScene && imageType === 'logo' && (
+        <div className="scene-image-picker-options">
+          <h4 className="scene-image-picker-title">{t('library.details.availableLogos') || 'Available Logos'}</h4>
+          <div className="scene-image-picker-grid">
+            {(() => {
+              const logoOptions = [];
+              const seenLogos = new Set();
+
+              if (item?.original_logo_path) {
+                logoOptions.push({
+                  path: item.original_logo_path,
+                  label: t('library.details.originalSceneLogo') || 'Original Scene Logo',
+                  alt: 'Original Logo',
+                });
+                seenLogos.add(item.original_logo_path);
+              }
+
+              if (item?.companies?.[0]?.logo_path && !seenLogos.has(item.companies[0].logo_path)) {
+                logoOptions.push({
+                  path: item.companies[0].logo_path,
+                  label: item.companies[0].name || 'Studio Logo',
+                  alt: item.companies[0].name || 'Studio',
+                });
+                seenLogos.add(item.companies[0].logo_path);
+              }
+
+              if (item?.networks?.[0]?.logo_path && !seenLogos.has(item.networks[0].logo_path)) {
+                logoOptions.push({
+                  path: item.networks[0].logo_path,
+                  label: item.networks[0].name || 'Network Logo',
+                  alt: item.networks[0].name || 'Network',
+                });
+                seenLogos.add(item.networks[0].logo_path);
+              }
+
+              return logoOptions.map((opt, idx) => (
+                <div 
+                  key={idx}
+                  className={`scene-image-picker-card ${selectedPath === opt.path ? 'active' : ''}`}
+                  onClick={() => handleSelectTmdbImage(opt.path)}
+                >
+                  <div className="scene-image-picker-img-wrapper">
+                    <img src={resolveMediaImageUrl(opt.path, 'logo')} alt={opt.alt} />
+                  </div>
+                  <span className="scene-image-picker-label">{opt.label}</span>
+                </div>
+              ));
+            })()}
+          </div>
+        </div>
+      )}
 
       {sources.length > 1 && (
         <div className="universal-image-picker__source-filter">

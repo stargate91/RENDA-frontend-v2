@@ -230,10 +230,27 @@ def _probe_backdrop_tone(file_path: str) -> Optional[tuple[float, float]]:
     return tone
 
 
-def _pick_backdrop_path(raw_data, preferred_language: Optional[str] = None, min_width: int = BACKDROP_MIN_WIDTH) -> Optional[str]:
+def _pick_backdrop_path(
+    raw_data,
+    preferred_language: Optional[str] = None,
+    min_width: int = BACKDROP_MIN_WIDTH,
+    allow_low_res: bool = True,
+) -> Optional[str]:
     raw = raw_data or {}
     backdrops = ((raw.get("images") or {}).get("backdrops") or [])
     main_backdrop_path = raw.get("backdrop_path")
+
+    if not allow_low_res:
+        main_is_ok = True
+        if main_backdrop_path and backdrops:
+            main_is_ok = any(
+                bd.get("file_path") == main_backdrop_path and int(bd.get("width") or 0) >= min_width
+                for bd in backdrops
+            )
+        if not main_is_ok:
+            main_backdrop_path = None
+
+        backdrops = [bd for bd in backdrops if int(bd.get("width") or 0) >= min_width]
 
     if not backdrops:
         return main_backdrop_path
@@ -278,7 +295,7 @@ def _pick_backdrop_path(raw_data, preferred_language: Optional[str] = None, min_
     for backdrop in ranked_backdrops:
         file_path = backdrop.get("file_path")
         width = int(backdrop.get("width") or 0)
-        if not file_path or width < 1920:
+        if not file_path or width < min_width:
             continue
         tone = _probe_backdrop_tone(file_path)
         if tone is None:
@@ -290,6 +307,7 @@ def _pick_backdrop_path(raw_data, preferred_language: Optional[str] = None, min_
             fallback_tone = tone
 
     return fallback_candidate or ranked_all_backdrops[0].get("file_path") or main_backdrop_path or ranked_backdrops[0].get("file_path")
+
 
 
 def _pick_trailer_key(

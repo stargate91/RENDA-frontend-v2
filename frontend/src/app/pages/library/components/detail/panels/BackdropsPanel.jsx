@@ -3,6 +3,7 @@ import { useMediaDetailContext } from '../MediaDetailContext';
 import TMDBImageGrid from '../../entityDetail/TMDBImageGrid';
 import ImageUploadPanel from '../../../modals/ImageUploadPanel';
 import { useUploadBackdropMutation } from '@/queries/mediaQueries';
+import { resolveMediaImageUrl } from '@/lib/imageUrls';
 import './BackdropsPanel.css';
 
 export default function BackdropsPanel({ showTitle = true }) {
@@ -66,6 +67,23 @@ export default function BackdropsPanel({ showTitle = true }) {
         onSaveUrl={handleSelectBackdrop}
         onUploadFile={handleUploadBackdrop}
       />
+
+      {isScene && item?.original_backdrop_path && (
+        <div className="scene-image-picker-options">
+          <h4 className="scene-image-picker-title">{t('library.details.availableBackdrops') || 'Available Backdrops'}</h4>
+          <div className="scene-image-picker-grid">
+            <div 
+              className={`scene-image-picker-card ${selectedBackdropPath === item.original_backdrop_path ? 'active' : ''}`}
+              onClick={() => handleSelectBackdrop(item.original_backdrop_path)}
+            >
+              <div className="scene-image-picker-img-wrapper backdrop-variant">
+                <img src={resolveMediaImageUrl(item.original_backdrop_path, 'backdrop')} alt="Original Scene Backdrop" />
+              </div>
+              <span className="scene-image-picker-label">{t('library.details.originalSceneBackdrop') || 'Original Scene Still'}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {!isScene && (
         <TMDBImageGrid

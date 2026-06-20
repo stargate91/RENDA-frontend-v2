@@ -197,3 +197,103 @@
   width: 160px;
 }
 
+/* Scene specific image options styling */
+.scene-image-picker-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+  width: 100%;
+}
+
+.scene-image-picker-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--modal-title-color, var(--color-text-primary));
+}
+
+.scene-image-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--space-md);
+  width: 100%;
+}
+
+.scene-image-picker-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  background: var(--modal-surface-card, var(--color-bg-elevated));
+  border: 1px solid var(--modal-border, var(--color-border-subtle));
+  border-radius: var(--radius-lg, 16px);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  align-items: center;
+  text-align: center;
+  min-width: 0;
+}
+
+.scene-image-picker-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-accent, var(--app-shell-color-accent));
+  box-shadow: var(--shadow-md);
+}
+
+.scene-image-picker-card.active {
+  border-color: var(--color-accent, var(--app-shell-color-accent));
+  box-shadow: 0 0 0 2px var(--color-accent, var(--app-shell-color-accent));
+  background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+}
+
+.scene-image-picker-img-wrapper {
+  width: 100%;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: var(--radius-md, 8px);
+  background: rgba(0,0,0,0.1);
+  padding: var(--space-xs);
+}
+
+.scene-image-picker-img-wrapper.backdrop-variant {
+  height: 100px;
+  padding: 0;
+}
+
+.scene-image-picker-img-wrapper img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.scene-image-picker-img-wrapper.backdrop-variant img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-md, 8px);
+}
+
+.scene-image-picker-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.person-backdrop-fallback-blur img {
+  filter: blur(8px) brightness(0.6);
+  transform: scale(1.2);
+}
+
+.person-backdrop-fallback-section {
+  margin-bottom: var(--space-md);
+}
+

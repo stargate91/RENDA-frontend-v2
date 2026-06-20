@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Film, Tv } from 'lucide-react';
 import './CreditCard.css';
 
@@ -18,6 +19,8 @@ export default function CreditCard({
   children,
   ...props
 }) {
+  const [imageError, setImageError] = useState(false);
+
   const cardClass = [
     'ui-credit-card',
     isPeopleGrid && 'ui-credit-card--people-grid',
@@ -41,8 +44,13 @@ export default function CreditCard({
       {...props}
     >
       <div className="ui-credit-card__poster-wrap">
-        {!isPlaceholder && (imageUrl ? (
-          <img src={imageUrl} alt="" className="ui-credit-card__poster" />
+        {!isPlaceholder && (imageUrl && !imageError ? (
+          <img
+            src={imageUrl}
+            alt=""
+            className="ui-credit-card__poster"
+            onError={() => setImageError(true)}
+          />
         ) : (
           <div className="ui-credit-card__poster ui-credit-card__poster--placeholder">
             {isTv ? <Tv size={16} /> : <Film size={16} />}
@@ -59,3 +67,4 @@ export default function CreditCard({
     </button>
   );
 }
+

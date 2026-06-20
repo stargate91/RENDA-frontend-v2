@@ -48,6 +48,16 @@ class AssetService:
         if not tmdb_path:
             return None
 
+        if isinstance(tmdb_path, str) and (tmdb_path.startswith("/media/") or "media/images/" in tmdb_path):
+            clean_path = tmdb_path.replace("\\", "/")
+            marker = f"media/images/{subfolder}/"
+            filename = clean_path.split(marker, 1)[1] if marker in clean_path else clean_path.lstrip("/")
+            if "media/images/" in filename:
+                parts = filename.split("/")
+                filename = parts[-1]
+            local_file_path = self.processor.build_local_path(subfolder, filename)
+            return str(local_file_path)
+
         is_remote_url = isinstance(tmdb_path, str) and tmdb_path.startswith(("http://", "https://"))
         if is_remote_url:
             import hashlib

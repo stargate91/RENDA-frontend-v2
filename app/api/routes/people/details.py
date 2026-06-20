@@ -78,13 +78,30 @@ def get_person_detail(person_id: int):
                 
         if not person:
             return JSONResponse(status_code=404, content={"error": "Person not found"})
+
+        # Automatically extract and save tmdb_id from urls if not already present
+        ext_ids = dict(person.external_ids or {})
+        if not ext_ids.get("tmdb_id"):
+            for u in ext_ids.get("urls") or []:
+                url = u.get("url") if isinstance(u, dict) else u
+                if isinstance(url, str) and "themoviedb.org/person/" in url:
+                    import re
+                    match_tmdb = re.search(r"themoviedb\.org/person/(\d+)", url)
+                    if match_tmdb:
+                        ext_ids["tmdb_id"] = int(match_tmdb.group(1))
+                        person.external_ids = ext_ids
+                        db.commit()
+                        break
             
         ui_lang = _preferred_metadata_language(db)
 
         # Ensure we have rich metadata for the person (language support)
         target_lang = ui_lang or "en"
         fetched_langs = (person.fetched_languages or "").split(",")
-        if target_lang.split("-")[0] not in fetched_langs or not person.images:
+        has_tmdb = bool(ext_ids.get("tmdb_id"))
+        has_tmdb_images = any(img.startswith("/") for img in (person.images or []))
+
+        if target_lang.split("-")[0] not in fetched_langs or not person.images or (has_tmdb and not has_tmdb_images):
             try:
                 from app.services.person_service import PersonService
                 person_service = PersonService(db)
@@ -318,6 +335,7 @@ def get_person_scenes(
     person_id: int,
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=8, ge=1, le=60),
+    source: Optional[str] = Query(default=None),
 ):
     db = Session()
     try:
@@ -331,7 +349,7 @@ def get_person_scenes(
 
         ui_lang = _preferred_metadata_language(db)
         target_lang = ui_lang or "en"
-        credit_payload = load_person_credit_payload(db, person_id, person, ui_lang, target_lang, scenes_page=page, scenes_page_size=page_size)
+        credit_payload = load_person_credit_payload(db, person_id, person, ui_lang, target_lang, scenes_page=page, scenes_page_size=page_size, scenes_source=source)
         base_items = credit_payload.get("scenes", [])
         total_scene_credits = credit_payload["total_scene_credits"]
         paged = {

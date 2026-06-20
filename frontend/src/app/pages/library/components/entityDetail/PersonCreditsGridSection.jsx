@@ -13,8 +13,8 @@ import './PersonCreditsShared.css';
 
 const PERSON_INITIAL_CREDITS_PAGE_SIZE = 12;
 
-export default function PersonCreditsGridSection({ title, personId, mediaType, totalCount, initialPageData, navigate, t, onPaginationData }) {
-  const shouldLoad = Boolean(personId) && Number(totalCount) > 0;
+export default function PersonCreditsGridSection({ title, personId, mediaType, totalCount, initialPageData, navigate, t, onPaginationData, source }) {
+  const shouldLoad = Boolean(personId) && (Number(totalCount) > 0 || !!source);
   const queryClient = useQueryClient();
   const containerRef = useRef(null);
   const [columns, setColumns] = useState(Math.max(1, Math.floor(PERSON_INITIAL_CREDITS_PAGE_SIZE / 2)));
@@ -69,6 +69,7 @@ export default function PersonCreditsGridSection({ title, personId, mediaType, t
   const creditsQuery = usePersonCreditsQuery(personId, mediaType, page, itemsPerPage, {
     enabled: shouldLoad,
     initialData: page === 1 && itemsPerPage === PERSON_INITIAL_CREDITS_PAGE_SIZE ? initialPageData : undefined,
+    source,
   });
   const totalPages = Math.max(1, Number(creditsQuery.data?.total_pages) || Math.ceil(Number(totalCount) / itemsPerPage) || 1);
 
@@ -82,9 +83,9 @@ export default function PersonCreditsGridSection({ title, personId, mediaType, t
 
   useEffect(() => {
     if (onPaginationData) {
-      onPaginationData({ page: safePage, totalPages, setPage });
+      onPaginationData({ page: safePage, totalPages, setPage, totalCount: creditsQuery.data?.total_items });
     }
-  }, [safePage, totalPages, setPage, onPaginationData]);
+  }, [safePage, totalPages, setPage, onPaginationData, creditsQuery.data?.total_items]);
   const visibleItems = creditsQuery.data?.items || [];
   const fillerCount = Math.max(0, itemsPerPage - visibleItems.length);
   const isInitialPageLoading = creditsQuery.isLoading && visibleItems.length === 0;
@@ -105,8 +106,8 @@ export default function PersonCreditsGridSection({ title, personId, mediaType, t
     }
 
     queryClient.prefetchQuery({
-      queryKey: ['person-credits', personId, mediaType, nextPage, itemsPerPage, false],
-      queryFn: () => api.people.getCredits(personId, mediaType, { page: nextPage, pageSize: itemsPerPage }),
+      queryKey: ['person-credits', personId, mediaType, nextPage, itemsPerPage, false, source || null],
+      queryFn: () => api.people.getCredits(personId, mediaType, { page: nextPage, pageSize: itemsPerPage, source }),
     });
   }, [
     creditsQuery.data?.items,
@@ -117,6 +118,7 @@ export default function PersonCreditsGridSection({ title, personId, mediaType, t
     queryClient,
     shouldLoad,
     totalPages,
+    source,
   ]);
 
   if (!shouldLoad) {
