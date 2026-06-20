@@ -240,6 +240,8 @@ export const useUpdateMediaStatusMutation = () => {
         queryClient.setQueryData(['library-series-detail', `series_${variables.seriesId}`], updateDetailCache);
         queryClient.setQueryData(['library-item-detail', variables.seriesId], updateDetailCache);
         queryClient.setQueryData(['library-item-detail', `series_${variables.seriesId}`], updateDetailCache);
+        queryClient.invalidateQueries({ queryKey: ['library-series-detail', variables.seriesId] });
+        queryClient.invalidateQueries({ queryKey: ['library-series-detail', `series_${variables.seriesId}`] });
       }
 
       // Update matching items in the library query cache instead of invalidating everything
@@ -500,6 +502,7 @@ export const useAddPeakMutation = () => {
       };
       queryClient.setQueryData(['library-item-detail', itemId], updateData);
       queryClient.setQueryData(['library-series-detail', itemId], updateData);
+      queryClient.invalidateQueries({ queryKey: ['library-series-detail'] });
     },
   });
 };
@@ -519,6 +522,7 @@ export const useDeletePeakMutation = () => {
       };
       queryClient.setQueryData(['library-item-detail', variables.itemId], updateData);
       queryClient.setQueryData(['library-series-detail', variables.itemId], updateData);
+      queryClient.invalidateQueries({ queryKey: ['library-series-detail'] });
     },
   });
 };

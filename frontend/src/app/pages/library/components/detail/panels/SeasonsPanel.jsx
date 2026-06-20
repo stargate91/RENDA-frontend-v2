@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { ChevronDown, ChevronRight, ChevronLeft, Check, Eye, Play, Clapperboard, Calendar, Tv, Star } from 'lucide-react';
+import { ChevronDown, ChevronRight, ChevronLeft, Check, Eye, Play, Clapperboard, Calendar, Tv, Star, Flame, Trash2 } from 'lucide-react';
 import IconButton from '@/ui/IconButton';
 import Pill from '@/ui/Pill';
-import { buildTmdbImageUrl, TMDB_IMAGE_SIZES } from '@/lib/imageUrls';
-import { countEpisodesInNumber, formatEpisodeNumber } from '../../../utils/detailUtils';
+import { buildTmdbImageUrl, TMDB_IMAGE_SIZES, resolveMediaImageUrl } from '@/lib/imageUrls';
+import { countEpisodesInNumber, formatEpisodeNumber, formatTime } from '../../../utils/detailUtils';
 import { useMediaDetailContext } from '../MediaDetailContext';
 import api from '@/lib/api';
 import './SeasonsPanel.css';
@@ -14,7 +14,7 @@ const EPISODES_BATCH_SIZE = 20;
 export default function SeasonsPanel() {
   const { state, mutations, t } = useMediaDetailContext();
   const { item, cleanId, nextEpisodeInfo } = state;
-  const { updateStatusMutation, playMutation, bulkUpdateWatchedMutation } = mutations;
+  const { updateStatusMutation, playMutation, bulkUpdateWatchedMutation, addPeakMutation, deletePeakMutation } = mutations;
   const queryClient = useQueryClient();
 
   const seasonsList = useMemo(() => item.seasons || [], [item.seasons]);
@@ -79,12 +79,12 @@ export default function SeasonsPanel() {
 
   const getPosterUrl = (path) => {
     if (!path) return '';
-    return buildTmdbImageUrl(path, TMDB_IMAGE_SIZES.posterThumb);
+    return resolveMediaImageUrl(path, 'poster');
   };
 
   const getStillUrl = (path) => {
     if (!path) return '';
-    return buildTmdbImageUrl(path, TMDB_IMAGE_SIZES.thumbnail);
+    return resolveMediaImageUrl(path, 'still');
   };
 
   const selectedSeasonIndex = seasonsList.findIndex((s) => s.season_number === selectedSeasonNumber);
@@ -402,6 +402,41 @@ export default function SeasonsPanel() {
                     {episode.overview}
                   </p>
                 )}
+
+                {item.is_adult && episode.peaks_history && episode.peaks_history.length > 0 && isExpanded && (
+                  <div className="episode-card__peaks-list" onClick={(e) => e.stopPropagation()}>
+                    <div className="episode-card__peaks-title">
+                      <Flame size={12} fill="currentColor" />
+                      <span>{t('library.details.peaksTitle') || 'Peak Moments'} ({episode.peaks_history.length})</span>
+                    </div>
+                    <div className="episode-card__peaks-items">
+                      {episode.peaks_history.map((log) => (
+                        <div key={log.id} className="episode-card__peak-item">
+                          <span className="episode-card__peak-date">
+                            {new Date(log.watched_at).toLocaleString()}
+                          </span>
+                          {log.video_position != null && (
+                            <span className="episode-card__peak-position">
+                              {formatTime(log.video_position)}
+                            </span>
+                          )}
+                          <button
+                            type="button"
+                            className="episode-card__peak-delete"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deletePeakMutation.mutate({ itemId: episode.id, logId: log.id });
+                            }}
+                            disabled={deletePeakMutation.isPending}
+                            title={t('library.details.deletePeakBtn') || 'Delete Peak'}
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Right Side: Actions */}
@@ -409,6 +444,22 @@ export default function SeasonsPanel() {
               <div className="episode-card__actions" onClick={(e) => e.stopPropagation()}>
                 {isExpanded && (
                   <>
+                    {/* Flame/Peak button */}
+                    {item.is_adult && episode.path && !episode.is_missing && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addPeakMutation.mutate(episode.id);
+                        }}
+                        disabled={addPeakMutation.isPending}
+                        className="episode-card__action-btn episode-card__action-btn--peak"
+                        title={t('library.details.addPeak') || 'Add Peak'}
+                      >
+                        <Flame size={16} />
+                      </button>
+                    )}
+
                     {/* Watch toggle */}
                     <button
                       type="button"

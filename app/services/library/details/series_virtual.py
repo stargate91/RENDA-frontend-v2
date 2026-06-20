@@ -62,6 +62,8 @@ class SeriesVirtualMixin:
                 "resume_position": 0,
                 "last_watched_at": None,
                 "playback_logs": [],
+                "peaks_count": 0,
+                "peaks_history": [],
                 "in_library": False,
                 "is_missing": True,
             })

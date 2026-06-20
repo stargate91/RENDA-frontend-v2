@@ -180,7 +180,6 @@ def get_full_item_metadata(item_id: str, media_type: str | None = Query(None), d
                 },
                 "matches": [virtual_match],
             }, media_type="application/json; charset=utf-8")
-
         if isinstance(item_id, str) and item_id.startswith("series_"):
             try:
                 series_tmdb_id = int(item_id.split("_")[1])
@@ -196,6 +195,24 @@ def get_full_item_metadata(item_id: str, media_type: str | None = Query(None), d
             if not match_row:
                 return get_full_item_metadata(f"tmdb_{series_tmdb_id}", media_type or "tv", db)
             target_item_id = match_row.media_item_id
+        elif isinstance(item_id, str) and item_id.startswith("stash_"):
+            return JSONResponse(content={
+                "id": item_id,
+                "filename": f"stash_{item_id.split('_')[1]}" if "_" in item_id else item_id,
+                "folder": None,
+                "technical": {},
+                "guessit": {},
+                "poster_path": None,
+                "backdrop_path": None,
+                "overrides": {
+                    "target_language": None,
+                    "source": None,
+                    "edition": None,
+                    "audio_type": None,
+                    "user_rating": None,
+                },
+                "matches": [],
+            }, media_type="application/json; charset=utf-8")
         else:
             try:
                 target_item_id = int(item_id)

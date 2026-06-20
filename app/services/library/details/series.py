@@ -49,6 +49,7 @@ class SeriesDetailProvider(BaseDetailProvider, SeriesVirtualMixin, SeriesPhysica
             joinedload(MediaItem.matches).joinedload(MediaMatch.localizations),
             joinedload(MediaItem.matches).joinedload(MediaMatch.people).joinedload(MediaPersonLink.person),
             joinedload(MediaItem.extras),
+            joinedload(MediaItem.peak_logs),
         ).filter(
             or_(
                 MediaMatch.series_tmdb_id == series_tmdb_id_int,

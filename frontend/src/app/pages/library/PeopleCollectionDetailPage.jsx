@@ -64,6 +64,7 @@ export default function PeopleCollectionDetailPage({ type = 'people' }) {
       content: (
         <LinkSourceModalContent
           personId={item.id}
+          defaultQuery={item.name}
           onClose={closeModal}
         />
       ),

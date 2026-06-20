@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from '@/providers/LanguageContext';
 import { useUi } from '@/providers/UiProvider';
 import { useLinkPersonSourceMutation } from '@/queries/libraryQueries';
@@ -14,11 +14,11 @@ import { Search, Link as LinkIcon, User } from 'lucide-react';
 import './LinkSourceModalContent.css';
 import MergeComparisonModalContent from './MergeComparisonModalContent';
 
-export default function LinkSourceModalContent({ personId, onClose }) {
+export default function LinkSourceModalContent({ personId, defaultQuery = '', onClose }) {
   const { t } = useTranslation();
   const { toast } = useUi();
   const [source, setSource] = useState('stashdb');
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(defaultQuery);
   const [results, setResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState('');
@@ -43,6 +43,25 @@ export default function LinkSourceModalContent({ personId, onClose }) {
       setIsSearching(false);
     }
   };
+
+  useEffect(() => {
+    if (defaultQuery) {
+      const performSearch = async () => {
+        setIsSearching(true);
+        setError('');
+        try {
+          const res = await api.people.searchTmdb(defaultQuery.trim(), { adultOnly: true, source });
+          setResults(res || []);
+          setHasSearched(true);
+        } catch (err) {
+          setError(err.message || 'Search failed');
+        } finally {
+          setIsSearching(false);
+        }
+      };
+      performSearch();
+    }
+  }, [defaultQuery, source]);
 
   const handleLink = (externalId) => {
     // Strip source prefix if it exists in the result ID (e.g. stashdb:uuid -> uuid)

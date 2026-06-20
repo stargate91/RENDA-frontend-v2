@@ -478,3 +478,82 @@
     margin-top: var(--space-sm);
   }
 }
+
+/* Episode Peaks */
+.episode-card__peaks-list {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px dashed var(--color-border-default);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.episode-card__peaks-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.episode-card__peaks-title svg {
+  color: #ef4444;
+}
+
+.episode-card__peaks-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+
+.episode-card__peak-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  background: var(--color-border-subtle);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm, 6px);
+  font-size: 11px;
+}
+
+.episode-card__peak-date {
+  color: var(--color-text-secondary);
+}
+
+.episode-card__peak-position {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  background: var(--color-surface-glass);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.episode-card__peak-delete {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: var(--space-2xs);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--motion-fast);
+}
+
+.episode-card__peak-delete:hover {
+  color: #ef4444;
+  background: color-mix(in srgb, #ef4444 10%, transparent);
+}
+
+.episode-card__action-btn--peak {
+  color: var(--color-text-secondary);
+}
+
+.episode-card__action-btn--peak:hover {
+  color: #ef4444;
+  background: color-mix(in srgb, #ef4444 12%, transparent);
+}

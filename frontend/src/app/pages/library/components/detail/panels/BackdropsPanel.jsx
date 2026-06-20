@@ -49,6 +49,8 @@ export default function BackdropsPanel({ showTitle = true }) {
     }
   };
 
+  const isScene = type === 'scene' || item?.type === 'scene' || (typeof id === 'string' && id.startsWith('stash_'));
+
   return (
     <div className="backdrops-panel">
       {showTitle && (
@@ -65,19 +67,21 @@ export default function BackdropsPanel({ showTitle = true }) {
         onUploadFile={handleUploadBackdrop}
       />
 
-      <TMDBImageGrid
-        itemId={id}
-        tmdbId={item?.tmdb_id || item?.series_tmdb_id}
-        mediaType={type}
-        imageType="backdrop"
-        currentPath={selectedBackdropPath}
-        onSelect={handleSelectBackdrop}
-        isPending={overrideBackdropMutation.isPending || uploadBackdropMutation.isPending}
-        pendingPath={overrideBackdropMutation.variables?.backdropPath}
-        initialVisibleCount={12}
-        visibleStep={12}
-        t={t}
-      />
+      {!isScene && (
+        <TMDBImageGrid
+          itemId={id}
+          tmdbId={item?.tmdb_id || item?.series_tmdb_id}
+          mediaType={type}
+          imageType="backdrop"
+          currentPath={selectedBackdropPath}
+          onSelect={handleSelectBackdrop}
+          isPending={overrideBackdropMutation.isPending || uploadBackdropMutation.isPending}
+          pendingPath={overrideBackdropMutation.variables?.backdropPath}
+          initialVisibleCount={12}
+          visibleStep={12}
+          t={t}
+        />
+      )}
     </div>
   );
 }

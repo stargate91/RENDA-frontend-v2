@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Users, BadgeInfo, Layers3, Tags, Clapperboard,
-  SlidersHorizontal, CheckCheck, Image as ImageIcon
+  SlidersHorizontal, CheckCheck, Image as ImageIcon, Flame
 } from 'lucide-react';
 import { useTranslation } from '@/providers/LanguageContext';
 import { useUi } from '@/providers/UiProvider';
@@ -29,6 +29,7 @@ import ExtrasPanel from './components/detail/panels/ExtrasPanel';
 import WatchedPanel from './components/detail/panels/WatchedPanel';
 import TagsPanel from './components/detail/panels/TagsPanel';
 import BackdropsPanel from './components/detail/panels/BackdropsPanel';
+import PeaksPanel from './components/detail/panels/PeaksPanel';
 
 export default function MediaDetailPage({ type = 'movie' }) {
   const { id } = useParams();
@@ -55,7 +56,8 @@ export default function MediaDetailPage({ type = 'movie' }) {
     posterUrl,
     item,
     isLoading,
-    hasTechnicalPanel
+    hasTechnicalPanel,
+    isOwned
   } = state;
 
   const {
@@ -129,6 +131,8 @@ export default function MediaDetailPage({ type = 'movie' }) {
         return <ExtrasPanel />;
       case 'watched':
         return <WatchedPanel />;
+      case 'peaks':
+        return <PeaksPanel />;
       case 'tags':
         return <TagsPanel />;
       default:
@@ -239,6 +243,18 @@ export default function MediaDetailPage({ type = 'movie' }) {
                 <CheckCheck size={20} />
               </button>
             )}
+
+            {item && item.is_adult && isOwned && (
+              <button
+                onClick={() => togglePanel('peaks')}
+                className={`media-detail-page__side-nav-btn ${activePanel === 'peaks' ? 'active' : ''}`}
+                title={t('library.details.peaksPanel') || 'Peaks Panel'}
+              >
+                <Flame size={20} />
+              </button>
+            )}
+
+
 
             {hasTechnicalPanel && (
               <button

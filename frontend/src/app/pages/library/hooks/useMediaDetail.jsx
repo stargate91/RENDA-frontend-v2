@@ -489,7 +489,13 @@ export default function useMediaDetail({ id, type, t, openModal, closeModal }) {
   const backdropPath = item?.backdrop_path || '';
   const backdropUrl = resolveDetailsImageUrl(backdropPath, API_BASE, 'backdrop');
 
-  const logoPath = item?.logo_path || '';
+  const logoPathRaw = item?.logo_path || '';
+  let logoPath = logoPathRaw;
+  if (!logoPath && (item?.type === 'scene' || item?.is_adult)) {
+    const studioLogo = item?.companies?.[0]?.logo_path;
+    const networkLogo = item?.networks?.[0]?.logo_path;
+    logoPath = studioLogo || networkLogo || '';
+  }
   const logoUrl = resolveDetailsImageUrl(logoPath, API_BASE, 'logo');
   const posterPath = item?.poster_path || '';
   const posterUrl = resolveDetailsImageUrl(posterPath, API_BASE, 'poster');

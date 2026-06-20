@@ -7,13 +7,14 @@ import { useLibraryTags } from './useLibraryTags';
 import { usePaginationVisibility } from '../../../hooks/usePaginationVisibility';
 import { useTranslation } from '@/providers/LanguageContext';
 import { useLocalListSearch } from '../../../hooks/useLocalListSearch';
-import { Clapperboard, Tv, Users, Tag, Layers } from 'lucide-react';
+import { Clapperboard, Tv, Users, Tag, Layers, Video } from 'lucide-react';
 import {
   getLibraryEmptyStateKey,
   getLibraryTabTranslationKey,
   isLibraryCollectionTab,
   isLibraryPeopleTab,
   isLibraryTagsTab,
+  isLibraryScenesTab,
   resolveLibraryBackendTab,
 } from '@/lib/libraryTabs';
 import { sortLibraryItems } from '../utils/librarySort';
@@ -63,6 +64,7 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
   const isCollections = isLibraryCollectionTab(activeTab);
   const isTags = isLibraryTagsTab(activeTab);
   const isPeople = isLibraryPeopleTab(activeTab);
+  const isScenes = isLibraryScenesTab(activeTab);
 
   const backendTab = useMemo(
     () => resolveLibraryBackendTab(activeTab, activeSessionMode),
@@ -76,7 +78,7 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
     : undefined;
 
   const libraryQueryParams = useMemo(() => {
-    if (isCollections || isTags || !activeSessionMode) return null;
+    if (isCollections || isTags || isScenes || !activeSessionMode) return null;
     return {
       tab: backendTab,
       page: currentPage,
@@ -133,16 +135,19 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
 
   const counts = libraryData?.counts || {};
   const movieCountKey = resolveLibraryBackendTab('movies', activeSessionMode);
+  const seriesCountKey = resolveLibraryBackendTab('series', activeSessionMode);
   const collectionCountKey = resolveLibraryBackendTab('collections', activeSessionMode);
   const peopleCountKey = resolveLibraryBackendTab('people', activeSessionMode);
+  const scenesCountKey = resolveLibraryBackendTab('scenes', activeSessionMode);
 
   const tabs = [
     { value: 'movies', label: t('library.tabs.movies'), count: counts[movieCountKey], icon: Clapperboard },
     ...(settings?.folder_collection_mode !== 'never' ? [
       { value: 'collections', label: t('library.tabs.collections'), count: counts[collectionCountKey], icon: Layers }
     ] : []),
-    ...(activeSessionMode !== 'nsfw' ? [
-      { value: 'series', label: t('library.tabs.series'), count: counts.series, icon: Tv }
+    { value: 'series', label: t('library.tabs.series'), count: counts[seriesCountKey], icon: Tv },
+    ...(activeSessionMode === 'nsfw' ? [
+      { value: 'scenes', label: t('library.tabs.scenes') || 'Scenes', count: counts[scenesCountKey] ?? 0, icon: Video }
     ] : []),
     { value: 'people', label: t('library.tabs.people'), count: counts[peopleCountKey], icon: Users },
     ...(includeTagsTab ? [
@@ -229,19 +234,22 @@ export function useLibraryState({ initialTab = 'movies', lockTab = false, includ
       case 'series': return Tv;
       case 'people': return Users;
       case 'tags': return Tag;
+      case 'scenes': return Video;
       default: return initialTab === 'tags' ? Tag : Clapperboard;
     }
   };
 
-  const isServerPaged = !isCollections && !isTags;
+  const isServerPaged = !isCollections && !isTags && !isScenes;
 
   const allItems = useMemo(() => {
     return isCollections
       ? (collectionsData?.items || [])
       : isTags
         ? processedTags
-        : (libraryData?.items || []);
-  }, [isCollections, collectionsData?.items, isTags, processedTags, libraryData?.items]);
+        : isScenes
+          ? []
+          : (libraryData?.items || []);
+  }, [isCollections, collectionsData?.items, isTags, processedTags, libraryData?.items, isScenes]);
 
   const localFilteredItems = useLocalListSearch(allItems, searchQuery);
 

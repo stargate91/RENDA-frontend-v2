@@ -10,7 +10,9 @@
     "adult": "Adult",
     "adultPeople": "Adult People",
     "adultCollections": "Adult Collections",
-    "tags": "Tags"
+    "tags": "Tags",
+    "scenes": "Scenes",
+    "adult_scenes": "Scenes"
   },
   "people": {
     "addPeopleBtn": "Add People",
@@ -127,6 +129,14 @@
     "adult_series": {
       "title": "No Adult TV Shows Found",
       "description": "Your adult TV shows library is empty. Ensure files are correctly matched and organized."
+    },
+    "scenes": {
+      "title": "No Scenes Found",
+      "description": "Your scenes library is empty. Scan and match adult content in the organizer."
+    },
+    "adult_scenes": {
+      "title": "No Scenes Found",
+      "description": "Your scenes library is empty. Scan and match adult content in the organizer."
     },
     "adultPeople": {
       "title": "No Adult Stars Found",
@@ -365,6 +375,12 @@
     "noImagesAvailable": "No images found.",
     "linkSource": "Link External Source",
     "sourceLinked": "Source linked successfully!",
-    "imageSource": "Image Source"
+    "imageSource": "Image Source",
+    "peaksTitle": "Peak Moments",
+    "peakDate": "Date",
+    "peakPosition": "Position",
+    "addPeak": "Add Peak",
+    "deletePeakBtn": "Delete Peak",
+    "noPeaks": "No peak moments recorded yet."
   }
 }

@@ -144,6 +144,8 @@ export default function UniversalImagePickerModal({
     overridePersonProfileMutation.isPending ||
     uploadPersonProfileMutation.isPending;
 
+  const isScene = entityType === 'scene' || (typeof entityId === 'string' && entityId.startsWith('stash_'));
+
   return (
     <div className="universal-image-picker">
       <ImageUploadPanel
@@ -167,19 +169,21 @@ export default function UniversalImagePickerModal({
         </div>
       )}
 
-      <div className="universal-image-picker__grid">
-        <TMDBImageGrid
-          itemId={entityId}
-          tmdbId={tmdbId}
-          mediaType={entityType}
-          imageType={imageType === 'profile' ? 'poster' : imageType}
-          currentPath={selectedPath}
-          onSelect={handleSelectTmdbImage}
-          isPending={isPending}
-          t={t}
-          selectedSource={imageSource}
-        />
-      </div>
+      {!isScene && (
+        <div className="universal-image-picker__grid">
+          <TMDBImageGrid
+            itemId={entityId}
+            tmdbId={tmdbId}
+            mediaType={entityType}
+            imageType={imageType === 'profile' ? 'poster' : imageType}
+            currentPath={selectedPath}
+            onSelect={handleSelectTmdbImage}
+            isPending={isPending}
+            t={t}
+            selectedSource={imageSource}
+          />
+        </div>
+      )}
     </div>
   );
 }

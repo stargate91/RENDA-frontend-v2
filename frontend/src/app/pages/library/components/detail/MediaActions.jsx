@@ -1,4 +1,4 @@
-import { FolderOpen, Video, Check, Eye, Play, BellPlus } from 'lucide-react';
+import { FolderOpen, Video, Check, Eye, Play, BellPlus, Flame } from 'lucide-react';
 import Button from '@/ui/Button';
 import { formatEpisodeNumber } from '../../utils/detailUtils';
 import { useMediaDetailContext } from './MediaDetailContext';
@@ -27,7 +27,8 @@ export default function MediaActions() {
     updateStatusMutation,
     bulkUpdateWatchedMutation,
     toggleVirtualTrackedMutation,
-    playMutation
+    playMutation,
+    addPeakMutation
   } = mutations;
 
   const hasCollection = isMovie && item?.collection_data;
@@ -81,6 +82,17 @@ export default function MediaActions() {
 
       {isOwned && (
         <>
+          {(item?.is_adult && isMovie) && (
+            <Button
+              variant="ghost"
+              onClick={() => addPeakMutation.mutate(item.id)}
+              disabled={addPeakMutation.isPending}
+            >
+              <Flame size={16} />
+              {t('library.details.addPeak') || 'Add Peak'}
+            </Button>
+          )}
+
           {isMovie ? (
             <Button
               variant="secondary"

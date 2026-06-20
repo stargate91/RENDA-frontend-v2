@@ -301,7 +301,16 @@ class SeriesPhysicalMixin(SeriesAssetsMixin):
                 "is_watched": getattr(item, "is_watched", False),
                 "resume_position": getattr(item, "resume_position", 0),
                 "last_watched_at": getattr(item, "last_watched_at").isoformat() if getattr(item, "last_watched_at", None) else None,
-                "playback_logs": _serialize_playback_logs(item)
+                "playback_logs": _serialize_playback_logs(item),
+                "peaks_count": len(item.peak_logs) if item.peak_logs else 0,
+                "peaks_history": [
+                     {
+                         "id": log.id,
+                         "watched_at": log.watched_at.isoformat(),
+                         "video_position": log.video_position,
+                     }
+                     for log in sorted(item.peak_logs or [], key=lambda x: x.watched_at, reverse=True)
+                 ] if item.peak_logs else [],
             }
             series_data["seasons"][s_num]["episodes"].append(episode_data)
 
@@ -442,6 +451,8 @@ class SeriesPhysicalMixin(SeriesAssetsMixin):
                     "resume_position": 0,
                     "last_watched_at": None,
                     "playback_logs": [],
+                    "peaks_count": 0,
+                    "peaks_history": [],
                     "in_library": False,
                     "is_missing": True,
                 })
